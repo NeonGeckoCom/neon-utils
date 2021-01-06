@@ -18,7 +18,6 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 from mycroft_bus_client import Message
-from neon_utils import SKILL, TYPE
 
 
 def neon_must_respond(message: Message):
@@ -77,6 +76,7 @@ def speak_dialog(key, data=None, expect_response=False, message=None, private=Fa
         :param private: private flag (server use only)
         :param message: associated message from request
     """
+    from neon_utils import SKILL, TYPE
     super(TYPE, SKILL).speak_dialog(key, data, expect_response, wait)
 
 
@@ -93,4 +93,5 @@ def speak(utterance, expect_response=False, message=None, private=False, speaker
         wait (bool):            set to True to block while the text is being spoken.
         meta:                   Information of what built the sentence.
     """
+    from neon_utils import SKILL, TYPE
     super(TYPE, SKILL).speak(utterance, expect_response, wait, meta)
