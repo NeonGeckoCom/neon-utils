@@ -22,7 +22,10 @@ from neon_utils.skill_override_functions import *
 
 def stub_missing_parameters(skill):
     skill.server = False
+    skill.gui_enabled = False  # TODO: Actually check for this somehow? DM
+
     # TODO: Iterate over functions instead of individual DM
     skill.neon_in_request = neon_in_request
     skill.neon_must_respond = neon_must_respond
-    skill.gui_enabled = False  # TODO: Actually check for this somehow? DM
+    skill.speak_dialog = speak_dialog
+    skill.speak = speak

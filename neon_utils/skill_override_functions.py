@@ -64,3 +64,32 @@ def build_user_dict(message: Message = None):
     return merged_dict
 
 
+def speak_dialog(key, data=None, expect_response=False, message=None, private=False, speaker=None, wait=False):
+    """ Speak a random sentence from a dialog file.
+
+    Arguments:
+        :param key: dialog file key (e.g. "hello" to speak from the file "locale/en-us/hello.dialog")
+        :param data: information used to populate key
+        :param expect_response: set to True if Mycroft should listen for a response immediately after speaking.
+        :param wait: set to True to block while the text is being spoken.
+        :param speaker: optional dict of speaker info to use
+        :param private: private flag (server use only)
+        :param message: associated message from request
+    """
+    super().speak_dialog(key, data, expect_response, wait)
+
+
+def speak(utterance, expect_response=False, message=None, private=False, speaker=None, wait=False, meta=None):
+    """
+    Speak a sentence.
+    Arguments:
+        utterance (str):        sentence mycroft should speak
+        expect_response (bool): set to True if Mycroft should listen for a response immediately after
+                                speaking the utterance.
+        message (Message):      message associated with the input that this speak is associated with
+        private (bool):         flag to indicate this message contains data that is private to the requesting user
+        speaker (dict):         dict containing language or voice data to override user preference values
+        wait (bool):            set to True to block while the text is being spoken.
+        meta:                   Information of what built the sentence.
+    """
+    super().speak(utterance, expect_response, wait, meta)
