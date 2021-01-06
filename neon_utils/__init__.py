@@ -18,9 +18,21 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 from neon_utils.skill_override_functions import *
+from neon_utils.logger import LOG
+
+SKILL = None
+TYPE = None
 
 
 def stub_missing_parameters(skill):
+    global SKILL
+    global TYPE
+
+    SKILL = skill
+    TYPE = type(skill)
+    LOG.debug(SKILL)
+    LOG.debug(TYPE)
+
     skill.server = False
     skill.gui_enabled = False  # TODO: Actually check for this somehow? DM
 
