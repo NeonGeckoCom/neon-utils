@@ -19,7 +19,34 @@
 
 import requests
 from bs4 import BeautifulSoup
+from abc import ABC
+from html.parser import HTMLParser
 from neon_utils.logger import LOG
+
+
+class MLStripper(HTMLParser, ABC):
+    def __init__(self):
+        super().__init__()
+        self.reset()
+        self.strict = False
+        self.convert_charrefs = True
+        self.fed = []
+
+    def handle_data(self, d):
+        self.fed.append(d)
+
+    def get_data(self):
+        return ''.join(self.fed)
+
+
+def strip_tags(html):
+    s = MLStripper()
+    s.feed(html)
+    return s.get_data()
+
+
+def chunks(l, n):
+    return [l[i:i + n] for i in range(0, len(l), n)]
 
 
 def scrape_page_for_links(url):

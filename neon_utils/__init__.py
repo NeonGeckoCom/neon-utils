@@ -24,6 +24,15 @@ SKILL = None
 TYPE = None
 
 
+def skill_needs_patching(skill):
+    """
+    Determines if the passed skill is running under a non-Neon core and needs to be patched for compatibility
+    :param skill: MycroftSkill object to test
+    :return: True if skill needs to be patched
+    """
+    return not hasattr(skill, "server")
+
+
 def stub_missing_parameters(skill):
     global SKILL
     global TYPE
