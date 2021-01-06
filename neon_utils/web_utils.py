@@ -19,7 +19,7 @@
 
 import requests
 from bs4 import BeautifulSoup
-from .logger import LOG
+from neon_utils.logger import LOG
 
 
 def scrape_page_for_links(url):
