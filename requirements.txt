@@ -1,0 +1,3 @@
+mycroft-messagebus-client
+requests
+bs4

@@ -17,37 +17,11 @@
 # US Patents 2008-2020: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-import setuptools
+from skill_override_functions import *
 
-with open("README.md", "r") as f:
-    long_description = f.read()
 
-with open("./version.py", "r", encoding="utf-8") as v:
-    for line in v.readlines():
-        if line.startswith("__version__"):
-            if '"' in line:
-                version = line.split('"')[1]
-            else:
-                version = line.split("'")[1]
-
-with open("./requirements.txt", "r", encoding="utf-8") as r:
-    requirements = r.readlines()
-
-setuptools.setup(
-    name="neon-utils",
-    version=version,
-    author="NeonDaniel",
-    author_email="daniel@neon.ai",
-    description="Utilities for running Neon skills in Mycroft/OVOS",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/neongeckocom/neon-skill-utils",
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: Apache License 2.0",
-        "Operating System :: OS Independent"
-    ],
-    python_requires='>=3.6',
-    install_requires=requirements
-)
+def stub_missing_parameters(skill):
+    skill.server = False
+    # TODO: Iterate over functions instead of individual DM
+    skill.neon_in_request = neon_in_request
+    skill.neon_must_respond = neon_must_respond

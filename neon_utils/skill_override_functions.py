@@ -17,37 +17,50 @@
 # US Patents 2008-2020: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-import setuptools
+from mycroft_bus_client import Message
 
-with open("README.md", "r") as f:
-    long_description = f.read()
 
-with open("./version.py", "r", encoding="utf-8") as v:
-    for line in v.readlines():
-        if line.startswith("__version__"):
-            if '"' in line:
-                version = line.split('"')[1]
-            else:
-                version = line.split("'")[1]
+def neon_must_respond(message: Message):
+    return True
 
-with open("./requirements.txt", "r", encoding="utf-8") as r:
-    requirements = r.readlines()
 
-setuptools.setup(
-    name="neon-utils",
-    version=version,
-    author="NeonDaniel",
-    author_email="daniel@neon.ai",
-    description="Utilities for running Neon skills in Mycroft/OVOS",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/neongeckocom/neon-skill-utils",
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "License :: Apache License 2.0",
-        "Operating System :: OS Independent"
-    ],
-    python_requires='>=3.6',
-    install_requires=requirements
-)
+def neon_in_request(message: Message):
+    return True
+
+
+def request_from_mobile(message: Message):
+    return True
+
+
+def preference_brands(message: Message):
+    return {'ignored_brands': {},
+            'favorite_brands': {},
+            'specially_requested': {}}
+
+
+def preference_user(message: Message):
+    return {}
+
+
+def preference_location(message: Message):
+    return {}
+
+
+def preference_unit(message: Message):
+    return {}
+
+
+def preference_speech(message: Message):
+    return {}
+
+
+def build_user_dict(message: Message = None):
+    merged_dict = {**preference_speech(message), **preference_user(message),
+                   **preference_brands(message), **preference_location(message),
+                   **preference_unit(message)}
+    for key, value in merged_dict.items():
+        if value == "":
+            merged_dict[key] = -1
+    return merged_dict
+
+
