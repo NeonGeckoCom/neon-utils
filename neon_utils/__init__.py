@@ -17,7 +17,7 @@
 # US Patents 2008-2020: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-from skill_override_functions import *
+from .skill_override_functions import *
 
 
 def stub_missing_parameters(skill):
@@ -25,3 +25,4 @@ def stub_missing_parameters(skill):
     # TODO: Iterate over functions instead of individual DM
     skill.neon_in_request = neon_in_request
     skill.neon_must_respond = neon_must_respond
+    skill.gui_enabled = False  # TODO: Actually check for this somehow? DM
