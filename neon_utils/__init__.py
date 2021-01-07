@@ -42,6 +42,7 @@ def stub_missing_parameters(skill):
     LOG.debug(SKILL)
     LOG.debug(TYPE)
 
+    skill.default_intent_timeout = None
     skill.server = False
     skill.gui_enabled = False  # TODO: Actually check for this somehow? DM
 
