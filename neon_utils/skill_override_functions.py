@@ -209,3 +209,8 @@ def _create_file(filename):
         pass
     with open(filename, 'w') as f:
         f.write('')
+
+
+def request_check_timeout(time_wait, intent_to_check):
+    pass
+
