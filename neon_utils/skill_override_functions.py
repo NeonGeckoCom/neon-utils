@@ -17,6 +17,8 @@
 # US Patents 2008-2020: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
+import os
+
 from mycroft_bus_client import Message
 
 
@@ -95,3 +97,43 @@ def speak(utterance, expect_response=False, message=None, private=False, speaker
     """
     from neon_utils import SKILL, TYPE
     super(TYPE, SKILL).speak(utterance, expect_response, wait, meta)
+
+
+def create_signal(signal_name):
+    """Create a named signal. i.e. "CORE_signalName" or "nick_SKILL_signalName
+    Args:
+        signal_name (str): The signal's name.  Must only contain characters
+            valid in filenames.
+    """
+    try:
+        path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name)
+        _create_file(path)
+        return os.path.isfile(path)
+    except IOError:
+        return False
+
+
+def clear_signals(prefix):
+    """
+    Clears all signals that begin with the passed prefix. Used with skill prefix for a skill to clear any signals it
+    may have set
+    :param prefix: (str) prefix to match
+    """
+    os.makedirs("tmp/mycroft/ipc/signal", exist_ok=True)
+    for signal in os.listdir("tmp/mycroft/ipc/signal"):
+        if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
+            os.remove(os.path.join("tmp/mycroft/ipc/signal", signal))
+
+
+def _create_file(filename):
+    """ Create the file filename and create any directories needed
+
+        Args:
+            filename: Path to the file to be created
+    """
+    try:
+        os.makedirs(os.path.dirname(filename))
+    except OSError:
+        pass
+    with open(filename, 'w') as f:
+        f.write('')

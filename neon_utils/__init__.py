@@ -50,3 +50,5 @@ def stub_missing_parameters(skill):
     skill.neon_must_respond = neon_must_respond
     skill.speak_dialog = speak_dialog
     skill.speak = speak
+    skill.create_signal = create_signal
+    skill.clear_signals = clear_signals
