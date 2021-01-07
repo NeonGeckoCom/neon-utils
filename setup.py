@@ -30,8 +30,11 @@ with open("./version.py", "r", encoding="utf-8") as v:
             else:
                 version = line.split("'")[1]
 
+with open("./requirements.txt", "r", encoding="utf-8") as r:
+    requirements = r.readlines()
+
 setuptools.setup(
-    name="neon-skill-utils",
+    name="neon-utils",
     version=version,
     author="NeonDaniel",
     author_email="daniel@neon.ai",
@@ -45,5 +48,6 @@ setuptools.setup(
         "License :: Apache License 2.0",
         "Operating System :: OS Independent"
     ],
-    python_requires='>=3.6'
+    python_requires='>=3.6',
+    install_requires=requirements
 )
