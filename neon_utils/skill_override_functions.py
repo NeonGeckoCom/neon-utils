@@ -125,6 +125,41 @@ def clear_signals(prefix):
             os.remove(os.path.join("tmp/mycroft/ipc/signal", signal))
 
 
+def check_for_signal(signal_name, sec_lifetime=0):
+    """See if a named signal exists
+
+    Args:
+        signal_name (str): The signal's name.  Must only contain characters
+            valid in filenames.
+        sec_lifetime (int, optional): How many seconds the signal should
+            remain valid.  If 0 or not specified, it is a single-use signal.
+            If -1, it never expires.
+
+    Returns:
+        bool: True if the signal is defined, False otherwise
+    """
+    path = os.path.join('/tmp/neon/ipc', "signal", signal_name)
+    if os.path.isfile(path):
+        # noinspection PyTypeChecker
+        if sec_lifetime == 0:
+            # consume this single-use signal
+            try:
+                os.remove(path)
+            except Exception as x:
+                print(' >>> ERROR removing signal ' + signal_name + ', error == ' + str(x))
+
+        elif sec_lifetime == -1:
+            return True
+        elif int(os.path.getctime(path) + sec_lifetime) < int(time.time()):
+            # remove once expired
+            os.remove(path)
+            return False
+        return True
+
+    # No such signal exists
+    return False
+
+
 def _create_file(filename):
     """ Create the file filename and create any directories needed
 
