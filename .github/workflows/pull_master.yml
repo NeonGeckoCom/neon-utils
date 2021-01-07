@@ -18,3 +18,4 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           pr_reviewer: 'neonreviewers'
           pr_assignee: 'neondaniel'
+          pr_draft: true
