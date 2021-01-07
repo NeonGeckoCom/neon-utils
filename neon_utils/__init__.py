@@ -30,7 +30,7 @@ def skill_needs_patching(skill):
     :param skill: MycroftSkill object to test
     :return: True if skill needs to be patched
     """
-    return not hasattr(skill, "server")
+    return not hasattr(skill, "neon_core")
 
 
 def stub_missing_parameters(skill):
@@ -52,3 +52,5 @@ def stub_missing_parameters(skill):
     skill.speak = speak
     skill.create_signal = create_signal
     skill.clear_signals = clear_signals
+
+    skill.neon_core = False
