@@ -45,7 +45,6 @@ def stub_missing_parameters(skill):
     skill.server = False
     skill.gui_enabled = False  # TODO: Actually check for this somehow? DM
 
-    # TODO: Iterate over functions instead of individual DM
     skill.neon_in_request = neon_in_request
     skill.neon_must_respond = neon_must_respond
     skill.speak_dialog = speak_dialog
@@ -53,5 +52,12 @@ def stub_missing_parameters(skill):
     skill.create_signal = create_signal
     skill.check_for_signal = check_for_signal
     skill.clear_signals = clear_signals
+
+    skill.preference_brands = preference_brands
+    skill.preference_user = preference_user
+    skill.preference_location = preference_location
+    skill.preference_unit = preference_unit
+    skill.preference_speech = preference_speech
+    skill.build_user_dict = build_user_dict
 
     skill.neon_core = False

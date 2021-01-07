@@ -41,19 +41,55 @@ def preference_brands(message: Message):
 
 
 def preference_user(message: Message):
-    return {}
+    return {'first_name': '',
+            'middle_name': '',
+            'last_name': '',
+            'preferred_name': '',
+            'full_name': '',
+            'dob': 'YYYY/MM/DD',
+            'age': '',
+            'email': '',
+            'username': '',
+            'password': '',
+            'picture': '',
+            'about': '',
+            'phone': '',
+            'email_verified': False,
+            'phone_verified': False
+            }
 
 
 def preference_location(message: Message):
-    return {}
+    return {'lat': 47.4799078,
+            'lng': -122.2034496,
+            'city': 'Renton',
+            'state': 'Washington',
+            'country': 'USA',
+            'tz': 'America/Los_Angeles',
+            'utc': -8.0
+            }
 
 
 def preference_unit(message: Message):
-    return {}
+    return {'time': 12,
+            'date': 'MDY',
+            'measure': 'imperial'
+            }
 
 
 def preference_speech(message: Message):
-    return {}
+    return {'stt_language': 'en',
+            'stt_region': 'US',
+            'alt_languages': ['en'],
+            'tts_language': "en-us",
+            'tts_gender': 'female',
+            'neon_voice': 'Joanna',
+            'secondary_tts_language': '',
+            'secondary_tts_gender': '',
+            'secondary_neon_voice': '',
+            'speed_multiplier': 1.0,
+            'synonyms': {}
+            }
 
 
 def build_user_dict(message: Message = None):
@@ -138,6 +174,7 @@ def check_for_signal(signal_name, sec_lifetime=0):
     Returns:
         bool: True if the signal is defined, False otherwise
     """
+    import time
     path = os.path.join('/tmp/neon/ipc', "signal", signal_name)
     if os.path.isfile(path):
         # noinspection PyTypeChecker
