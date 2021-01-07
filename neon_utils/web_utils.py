@@ -24,36 +24,35 @@ from html.parser import HTMLParser
 from neon_utils.logger import LOG
 
 
-class MLStripper(HTMLParser, ABC):
-    def __init__(self):
-        super().__init__()
-        self.reset()
-        self.strict = False
-        self.convert_charrefs = True
-        self.fed = []
+def strip_tags(html):  # TODO: Document this! DM
+    class MLStripper(HTMLParser, ABC):
+        def __init__(self):
+            super().__init__()
+            self.reset()
+            self.strict = False
+            self.convert_charrefs = True
+            self.fed = []
 
-    def handle_data(self, d):
-        self.fed.append(d)
+        def handle_data(self, d):
+            self.fed.append(d)
 
-    def get_data(self):
-        return ''.join(self.fed)
+        def get_data(self):
+            return ''.join(self.fed)
 
-
-def strip_tags(html):
     s = MLStripper()
     s.feed(html)
     return s.get_data()
 
 
-def chunks(l, n):
+def chunks(l, n):  # TODO: Document this! DM
     return [l[i:i + n] for i in range(0, len(l), n)]
 
 
-def scrape_page_for_links(url):
+def scrape_page_for_links(url: str) -> dict:
     """
     Scrapes the passed url for any links and returns a dictionary of link labels to URLs
-    :param url: (str) Web page to scrape
-    :return: (dict) Links on page
+    :param url: Web page to scrape
+    :return: Lowercase names to links on page
     """
     import unicodedata
     available_links = {}
@@ -72,29 +71,15 @@ def scrape_page_for_links(url):
             # LOG.debug(f"DM: found link: {i.text.rstrip()}")
             # LOG.debug(f"DM: found href: {i['href']}")
 
-            # Assume this is a fully defined address
-            if '://' in i['href']:
-                # if '://' in i['href']:
-                if url.split('://')[1] in i['href']:
-                    available_links[unicodedata.normalize('NFKD', i.text.rstrip()
-                                                          .replace(u'\u2013', '')
-                                                          .replace(u'\u201d', '')
-                                                          .replace(u'\u201c', '')
-                                                          .replace('"', "")
-                                                          .replace("'", "")
-                                                          .replace("&apos;", "")
-                                                          .lower())] = i['href']
-                    LOG.debug("found link: " + unicodedata.normalize("NFKD", i.text.rstrip().replace(u"\u2013", "")
-                                                                         .replace(u"\u201d", "").replace(u"\u201c", "")
-                                                                         .replace('"', "").replace("'", "")
-                                                                         .replace("&apos;", "").replace("\n", "")
-                                                                         .lower()))
-                    LOG.debug("found href: " + i['href'])
-
-            # Assume this is relative to the parent page
+            if '://' not in i['href']:
+                # Assume this is a relative address
+                href = url + i['href'].lower()
+            elif url.split('://')[1] in i['href']:
+                href = i['href'].lower()
             else:
-                href = url + i['href']
-                # href = url + '/' + i['href']
+                href = None
+
+            if href:
                 available_links[unicodedata.normalize('NFKD', i.text.rstrip()
                                                       .replace(u'\u2013', '')
                                                       .replace(u'\u201d', '')
