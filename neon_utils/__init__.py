@@ -20,6 +20,8 @@
 from neon_utils.skill_override_functions import *
 from neon_utils.logger import LOG
 
+from ovos_utils.gui import is_gui_installed
+
 SKILL = None
 TYPE = None
 
@@ -44,7 +46,7 @@ def stub_missing_parameters(skill):
 
     skill.default_intent_timeout = None
     skill.server = False
-    skill.gui_enabled = False  # TODO: Actually check for this somehow? DM
+    skill.gui_enabled = is_gui_installed()  # This isn't a check for running, just available DM
 
     skill.neon_in_request = neon_in_request
     skill.neon_must_respond = neon_must_respond
@@ -61,5 +63,6 @@ def stub_missing_parameters(skill):
     skill.preference_speech = preference_speech
     skill.build_user_dict = build_user_dict
     skill.request_check_timeout = request_check_timeout
+    skill.get_utterance_user = get_utterance_user
 
     skill.neon_core = False

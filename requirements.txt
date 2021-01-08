@@ -2,3 +2,4 @@ mycroft-messagebus-client
 requests
 beautifulsoup4~=4.8.2
 lxml
+ovos_utils@git+https://github.com/OpenVoiceOS/ovos_utils@gui_detector#egg=ovos_utils

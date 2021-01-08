@@ -19,6 +19,7 @@ class TestSkillPatching(unittest.TestCase):
         stub_missing_parameters(skill)
         self.assertTrue(hasattr(skill, "server"))
         self.assertFalse(skill.neon_core)
+        self.assertIsInstance(skill.gui_enabled, bool)
 
 
 if __name__ == '__main__':
