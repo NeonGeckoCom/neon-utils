@@ -61,5 +61,6 @@ def stub_missing_parameters(skill):
     skill.preference_speech = preference_speech
     skill.build_user_dict = build_user_dict
     skill.request_check_timeout = request_check_timeout
+    skill.get_utterance_user = get_utterance_user
 
     skill.neon_core = False
