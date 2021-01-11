@@ -214,3 +214,7 @@ def _create_file(filename):
 def request_check_timeout(time_wait, intent_to_check):
     pass
 
+
+def get_utterance_user(message):
+    return "local"
+
