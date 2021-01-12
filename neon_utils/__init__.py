@@ -44,6 +44,7 @@ def stub_missing_parameters(skill):
     LOG.debug(SKILL)
     LOG.debug(TYPE)
 
+    skill.actions_to_confirm = dict()
     skill.default_intent_timeout = None
     skill.server = False
     skill.gui_enabled = is_gui_installed()  # This isn't a check for running, just available DM
@@ -66,3 +67,15 @@ def stub_missing_parameters(skill):
     skill.get_utterance_user = get_utterance_user
 
     skill.neon_core = False
+
+    try:
+        # TODO: This should really be global to match Neon.. Maybe /opt/mycroft? DM
+        skill.cache_loc = os.path.join(skill.__location__, "cache")
+    except Exception as e:
+        LOG.error(e)
+        skill.cache_loc = os.path.join("tmp", "mycroft", "cache")
+
+    skill.get_cached_data = get_cached_data
+    skill.update_cached_data = update_cached_data
+
+    skill.build_message = build_message

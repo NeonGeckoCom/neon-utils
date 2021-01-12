@@ -17,4 +17,37 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-__version__ = "0.1.3"
+import unittest
+import sys
+import os
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from neon_utils.parse_utils import *
+
+
+class ParseUtilTests(unittest.TestCase):
+    def test_quote_cleaning_simple(self):
+        raw_str = '"this is a double-quoted-string"'
+        output = clean_quotes(raw_str)
+        self.assertEqual(output, "this is a double-quoted-string")
+
+        raw_str = 'this has a trailing double quote"'
+        output = clean_quotes(raw_str)
+        self.assertEqual(raw_str, output)
+
+        raw_str = '"this has a leading double quote'
+        output = clean_quotes(raw_str)
+        self.assertEqual(raw_str, output)
+
+    def test_special_quote(self):
+        raw_str = '「this has Japanese quotes」'
+        output = clean_quotes(raw_str)
+        self.assertEqual(output, "this has Japanese quotes")
+
+        raw_str = "«this has French quotes»"
+        output = clean_quotes(raw_str)
+        self.assertEqual(output, "this has French quotes")
+
+
+if __name__ == '__main__':
+    unittest.main()
