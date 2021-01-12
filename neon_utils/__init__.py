@@ -66,3 +66,8 @@ def stub_missing_parameters(skill):
     skill.get_utterance_user = get_utterance_user
 
     skill.neon_core = False
+
+    skill.cache_loc = os.path.join(skill.__location__, "script_txt")
+
+    skill.get_cached_data = (lambda skill=skill: get_cached_data)
+    skill.update_cached_data = (lambda skill=skill: update_cached_data)
