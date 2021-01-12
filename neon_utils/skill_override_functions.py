@@ -21,6 +21,8 @@ import os
 
 from mycroft_bus_client import Message
 
+from neon_utils.logger import LOG
+
 
 def neon_must_respond(message: Message):
     return True
@@ -218,3 +220,116 @@ def request_check_timeout(time_wait, intent_to_check):
 def get_utterance_user(message):
     return "local"
 
+
+def get_cached_data(filename, file_loc=None):
+    """
+    Retrieves cache data from a file created/updated with update_cached_data
+    :param filename: (str) filename of cache object to update
+    :param file_loc: (str) path to directory containing filename (defaults to cache dir)
+    :return: (dict) cache data
+    """
+    import pickle
+    import pathlib
+
+    from neon_utils import SKILL
+
+    if not file_loc:
+        file_loc = SKILL.cache_loc
+    cached_location = os.path.join(file_loc, filename)
+    if pathlib.Path(cached_location).exists():
+        with open(cached_location, 'rb') as file:
+            return pickle.load(file)
+    else:
+        return {}
+
+
+def update_cached_data(filename, new_element):
+    """
+    Updates cache file of skill responses to translated responses when non-english responses are requested.
+    :param filename: (str) filename of cache object to update (relative to cacheDir)
+    :param new_element: (any) object to cache at passed location
+    """
+    import pickle
+
+    from neon_utils import SKILL
+
+    with open(os.path.join(SKILL.cache_loc, filename), 'wb+') as file_to_update:
+        pickle.dump(new_element, file_to_update, protocol=pickle.HIGHEST_PROTOCOL)
+
+
+def build_message(kind, utt, message, signal_to_check=None, speaker=None):
+    """
+    Build a message for user input or neon response
+    :param kind: "neon speak" or "execute"
+    :param utt: string to emit
+    :param message: incoming message object
+    :param signal_to_check: signal to check in speech
+    :param speaker: speaker data dictionary
+    :return: Message object
+    """
+    from copy import deepcopy
+
+    from neon_utils import SKILL
+    # utt = utt.strip('"')  This is done before calling build_message now
+
+    # Use utt as default signal to check
+    if not signal_to_check:
+        signal_to_check = utt
+    LOG.debug(speaker)
+
+    default_speech = SKILL.preference_speech(message)
+    # Override user preference for all script responses
+    if not speaker:
+        speaker = {"name": "Neon",
+                   "language": default_speech["tts_language"],
+                   "gender": default_speech["tts_gender"],
+                   "voice": default_speech["neon_voice"],
+                   "override_user": True}
+    else:
+        speaker["override_user"] = True
+
+    LOG.debug(f"data={message.data}")
+    LOG.debug(f"context={message.context}")
+
+    emit_response = False
+    if kind == "skill_data":
+        emit_response = True
+        kind = "execute"
+
+    try:
+        if kind == "execute":
+            message.context["cc_data"] = message.context.get("cc_data", {})
+            # This is picked up in the intent handler
+            return message.reply("skills:execute.utterance", {
+                "utterances": [utt.lower()],
+                "lang": message.data.get("lang", "en-US"),
+                "session": None,
+                "ident": None,
+                "speaker": speaker
+            }, {
+                # "mobile": message.context.get("mobile", False),
+                # "client": message.context.get("client", None),
+                # "flac_filename": message.context.get("flac_filename", ''),
+                # "nick_profiles": message.context.get("nick_profiles", {}),
+                "neon_should_respond": True,
+                "cc_data": {"signal_to_check": signal_to_check,
+                            "request": utt,
+                            "emit_response": emit_response,
+                            # "Neon": True,
+                            "execute_from_script": True,
+                            "audio_file": message.context["cc_data"].get("audio_file", None),
+                            "raw_utterance": utt
+                            }
+            })
+        elif kind == "neon speak":
+            context = deepcopy(message.context)
+            LOG.info(f"CONTEXT IS {context}")
+            context["cc_data"] = context.get("cc_data", {})
+            context["cc_data"]["signal_to_check"] = signal_to_check
+            context["cc_data"]["request"] = utt
+
+            return message.reply("speak", {"lang": message.data.get("lang", "en-US"),
+                                           "speaker": speaker
+                                           }, context)
+    except Exception as x:
+        LOG.error(x)
