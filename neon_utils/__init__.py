@@ -71,3 +71,5 @@ def stub_missing_parameters(skill):
 
     skill.get_cached_data = get_cached_data
     skill.update_cached_data = update_cached_data
+
+    skill.build_message = build_message
