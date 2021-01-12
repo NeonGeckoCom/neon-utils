@@ -68,7 +68,12 @@ def stub_missing_parameters(skill):
 
     skill.neon_core = False
 
-    skill.cache_loc = os.path.join(skill.__location__, "script_txt")
+    try:
+        # TODO: This should really be global to match Neon.. Maybe /opt/mycroft? DM
+        skill.cache_loc = os.path.join(skill.__location__, "cache")
+    except Exception as e:
+        LOG.error(e)
+        skill.cache_loc = os.path.join("tmp", "mycroft", "cache")
 
     skill.get_cached_data = get_cached_data
     skill.update_cached_data = update_cached_data
