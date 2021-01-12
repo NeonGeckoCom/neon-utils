@@ -21,7 +21,7 @@ import os
 
 from mycroft_bus_client import Message
 
-from logger import LOG
+from neon_utils.logger import LOG
 
 
 def neon_must_respond(message: Message):
