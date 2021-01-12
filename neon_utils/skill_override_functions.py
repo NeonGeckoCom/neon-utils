@@ -219,7 +219,7 @@ def get_utterance_user(message):
     return "local"
 
 
-def get_cached_data(skill, filename, file_loc=None):
+def get_cached_data(filename, file_loc=None):
     """
     Retrieves cache data from a file created/updated with update_cached_data
     :param filename: (str) filename of cache object to update
@@ -229,8 +229,10 @@ def get_cached_data(skill, filename, file_loc=None):
     import pickle
     import pathlib
 
+    from neon_utils import SKILL
+
     if not file_loc:
-        file_loc = skill.cache_loc
+        file_loc = SKILL.cache_loc
     cached_location = os.path.join(file_loc, filename)
     if pathlib.Path(cached_location).exists():
         with open(cached_location, 'rb') as file:
@@ -239,7 +241,7 @@ def get_cached_data(skill, filename, file_loc=None):
         return {}
 
 
-def update_cached_data(skill, filename, new_element):
+def update_cached_data(filename, new_element):
     """
     Updates cache file of skill responses to translated responses when non-english responses are requested.
     :param filename: (str) filename of cache object to update (relative to cacheDir)
@@ -247,6 +249,8 @@ def update_cached_data(skill, filename, new_element):
     """
     import pickle
 
-    with open(os.path.join(skill.cache_loc, filename), 'wb+') as file_to_update:
+    from neon_utils import SKILL
+
+    with open(os.path.join(SKILL.cache_loc, filename), 'wb+') as file_to_update:
         pickle.dump(new_element, file_to_update, protocol=pickle.HIGHEST_PROTOCOL)
 

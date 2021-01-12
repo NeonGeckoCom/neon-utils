@@ -69,5 +69,5 @@ def stub_missing_parameters(skill):
 
     skill.cache_loc = os.path.join(skill.__location__, "script_txt")
 
-    skill.get_cached_data = (lambda skill=skill, *args: get_cached_data)
-    skill.update_cached_data = (lambda skill=skill, *args: update_cached_data)
+    skill.get_cached_data = get_cached_data
+    skill.update_cached_data = update_cached_data
