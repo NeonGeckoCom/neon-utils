@@ -322,6 +322,7 @@ def build_message(kind, utt, message, signal_to_check=None, speaker=None):
             })
         elif kind == "neon speak":
             context = deepcopy(message.context)
+            context["cc_data"] = context.get("cc_data") or {}
             context["cc_data"]["signal_to_check"] = signal_to_check
             context["cc_data"]["request"] = utt
 
