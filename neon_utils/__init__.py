@@ -44,6 +44,7 @@ def stub_missing_parameters(skill):
     LOG.debug(SKILL)
     LOG.debug(TYPE)
 
+    skill.actions_to_confirm = dict()
     skill.default_intent_timeout = None
     skill.server = False
     skill.gui_enabled = is_gui_installed()  # This isn't a check for running, just available DM
