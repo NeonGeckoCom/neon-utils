@@ -297,7 +297,7 @@ def build_message(kind, utt, message, signal_to_check=None, speaker=None):
         kind = "execute"
 
     try:
-        if kind == "execute":
+        if kind in ("execute", "skill"):
             message.context["cc_data"] = message.context.get("cc_data", {})
             # This is picked up in the intent handler
             # return message.reply("skills:execute.utterance", {
