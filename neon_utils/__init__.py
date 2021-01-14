@@ -18,6 +18,7 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 from neon_utils.skill_override_functions import *
+from neon_utils.mycroft_override_functions import *
 from neon_utils.logger import LOG
 
 from ovos_utils.gui import is_gui_installed
@@ -79,3 +80,5 @@ def stub_missing_parameters(skill):
     skill.update_cached_data = update_cached_data
 
     skill.build_message = build_message
+
+    skill.speak = speak
