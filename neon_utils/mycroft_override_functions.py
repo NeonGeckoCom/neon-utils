@@ -40,7 +40,7 @@ def speak(utterance, expect_response=False, message=None, private=False, speaker
             message = dig_for_message()
 
         if message:
-            filename = message.context.get("flac_filename", "")
+            # filename = message.context.get("flac_filename", "")
             # cc_data = message.context.get("cc_data", {})
             # profiles = message.context.get("nick_profiles", {})
             if not speaker:
@@ -55,7 +55,7 @@ def speak(utterance, expect_response=False, message=None, private=False, speaker
             # cc_data = {}
             # profiles = {}
             if message:
-                filename = message.context.get("flac_filename", "")
+                # filename = message.context.get("flac_filename", "")
                 # cc_data = message.context.get("cc_data", {})
                 # profiles = message.context.get("nick_profiles", {})
                 if not speaker:
@@ -93,8 +93,8 @@ def speak(utterance, expect_response=False, message=None, private=False, speaker
             LOG.info("message True, " + str(data))
             # LOG.info(message)
             # TODO: This is where we have the most complete timing profile for an utterance
-            LOG.debug(f"TIME: to_speak, {time.time()}, {message.context['flac_filename']}, {data['utterance']}, "
-                      f"{message.context}")
+            # LOG.debug(f"TIME: to_speak, {time.time()}, {message.context['flac_filename']}, {data['utterance']}, "
+            #           f"{message.context}")
             # self.bus.emit(message.reply("speak", data))
             msg_to_emit = message.reply("speak", data)
             LOG.debug(f">>>> Skill speak! {data}, {message.context}")
