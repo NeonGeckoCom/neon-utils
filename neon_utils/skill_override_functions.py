@@ -177,7 +177,7 @@ def check_for_signal(signal_name, sec_lifetime=0):
         bool: True if the signal is defined, False otherwise
     """
     import time
-    path = os.path.join('/tmp/neon/ipc', "signal", signal_name)
+    path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name)
     if os.path.isfile(path):
         # noinspection PyTypeChecker
         if sec_lifetime == 0:
