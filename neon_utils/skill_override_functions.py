@@ -94,17 +94,6 @@ def preference_speech(message: Message):
             }
 
 
-def configuration_available():
-    return {'ttsVoice': {
-        "en-au" : {"female": "Nicole", "male": "Russell"},
-        "en-gb": {"female": "Emma", "male": "Brian"},
-        "en-in": {"female": "Raveena", "male": "Aditi"},
-        "en-us": {"female": "Joanna", "male": "Joey"},
-        "en-gb-wls": {"female": "Geraint", "male": "Geraint"}
-        }
-    }
-
-
 def build_user_dict(message: Message = None):
     merged_dict = {**preference_speech(message), **preference_user(message),
                    **preference_brands(message), **preference_location(message),
