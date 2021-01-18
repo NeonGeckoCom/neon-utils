@@ -157,10 +157,10 @@ def clear_signals(prefix):
     may have set
     :param prefix: (str) prefix to match
     """
-    os.makedirs("tmp/mycroft/ipc/signal", exist_ok=True)
-    for signal in os.listdir("tmp/mycroft/ipc/signal"):
+    os.makedirs("/tmp/mycroft/ipc/signal", exist_ok=True)
+    for signal in os.listdir("/tmp/mycroft/ipc/signal"):
         if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
-            os.remove(os.path.join("tmp/mycroft/ipc/signal", signal))
+            os.remove(os.path.join("/tmp/mycroft/ipc/signal", signal))
 
 
 def check_for_signal(signal_name, sec_lifetime=0):
