@@ -334,3 +334,18 @@ def build_message(kind, utt, message, signal_to_check=None, speaker=None):
                                            }, context)
     except Exception as x:
         LOG.error(x)
+
+
+def to_system_time(dt):
+    """
+    Converts a timezone aware datetime object to an object to be used in the messagebus scheduler
+    :param dt: datetime object to convert
+    :return: timezone aware datetime object that can be scheduled
+    """
+    from dateutil.tz import tzlocal, gettz
+
+    tz = tzlocal()
+    if dt.tzinfo:
+        return dt.astimezone(tz)
+    else:
+        return dt.replace(tzinfo=gettz("UTC")).astimezone(tz)
