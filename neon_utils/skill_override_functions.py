@@ -144,7 +144,7 @@ def create_signal(signal_name):
             valid in filenames.
     """
     try:
-        path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name)
+        path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name.lower())
         _create_file(path)
         return os.path.isfile(path)
     except IOError:
