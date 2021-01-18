@@ -157,6 +157,7 @@ def clear_signals(prefix):
     may have set
     :param prefix: (str) prefix to match
     """
+    prefix = prefix.lower()
     os.makedirs("/tmp/mycroft/ipc/signal", exist_ok=True)
     for signal in os.listdir("/tmp/mycroft/ipc/signal"):
         if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
@@ -177,7 +178,7 @@ def check_for_signal(signal_name, sec_lifetime=0):
         bool: True if the signal is defined, False otherwise
     """
     import time
-    path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name)
+    path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name.lower())
     if os.path.isfile(path):
         # noinspection PyTypeChecker
         if sec_lifetime == 0:
