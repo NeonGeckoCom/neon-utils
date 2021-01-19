@@ -1,5 +1,5 @@
-mycroft-messagebus-client
-requests
+mycroft-messagebus-client~=0.8.4
+requests~=2.23.0
 beautifulsoup4~=4.8.2
-lxml
+lxml~=4.5.2
 ovos_utils@git+https://github.com/OpenVoiceOS/ovos_utils@dev#egg=ovos_utils
