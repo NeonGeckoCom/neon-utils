@@ -145,4 +145,4 @@ def is_speaking():
         bool: True while still speaking
     """
     from neon_utils.skill_override_functions import check_for_signal
-    return check_for_signal("isSpeaking", -1)
+    return check_for_signal("CORE_isSpeaking", -1)
