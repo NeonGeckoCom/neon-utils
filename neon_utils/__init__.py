@@ -83,5 +83,5 @@ def stub_missing_parameters(skill):
 
     skill.build_message = build_message
 
-    # skill.speak = speak
+    skill.speak = speak
     skill.to_system_time = to_system_time
