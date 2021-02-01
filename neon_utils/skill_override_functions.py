@@ -34,6 +34,8 @@ def neon_in_request(message: Message):
 
 
 def request_from_mobile(message: Message):
+    if message.context.get("mobile"):
+        return True
     return False
 
 
