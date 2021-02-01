@@ -34,7 +34,7 @@ def neon_in_request(message: Message):
 
 
 def request_from_mobile(message: Message):
-    return True
+    return False
 
 
 def preference_brands(message: Message):
@@ -187,7 +187,6 @@ def check_for_signal(signal_name, sec_lifetime=0):
                 os.remove(path)
             except Exception as x:
                 print(' >>> ERROR removing signal ' + signal_name + ', error == ' + str(x))
-
         elif sec_lifetime == -1:
             return True
         elif int(os.path.getctime(path) + sec_lifetime) < int(time.time()):
@@ -195,7 +194,6 @@ def check_for_signal(signal_name, sec_lifetime=0):
             os.remove(path)
             return False
         return True
-
     # No such signal exists
     return False
 
@@ -485,11 +483,15 @@ def wait_while_speaking():
         time.sleep(0.1)
 
 
-def is_speaking():
+def is_speaking(sec_lifetime=-1):
     """Determine if Text to Speech is occurring
+
+    Args:
+        sec_lifetime (int, optional): How many seconds the signal should
+            remain valid.  If 0 or not specified, it is a single-use signal.
+            If -1, it never expires.
 
     Returns:
         bool: True while still speaking
     """
-    from neon_utils.skill_override_functions import check_for_signal
-    return check_for_signal("isSpeaking", -1)
+    return check_for_signal("isSpeaking", sec_lifetime)
