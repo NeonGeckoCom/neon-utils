@@ -123,21 +123,21 @@ def speak_dialog(key, data=None, expect_response=False, message=None, private=Fa
     super(TYPE, SKILL).speak_dialog(key, data, expect_response, wait)
 
 
-def speak(utterance, expect_response=False, message=None, private=False, speaker=None, wait=False, meta=None):
-    """
-    Speak a sentence.
-    Arguments:
-        utterance (str):        sentence mycroft should speak
-        expect_response (bool): set to True if Mycroft should listen for a response immediately after
-                                speaking the utterance.
-        message (Message):      message associated with the input that this speak is associated with
-        private (bool):         flag to indicate this message contains data that is private to the requesting user
-        speaker (dict):         dict containing language or voice data to override user preference values
-        wait (bool):            set to True to block while the text is being spoken.
-        meta:                   Information of what built the sentence.
-    """
-    from neon_utils import SKILL, TYPE
-    super(TYPE, SKILL).speak(utterance, expect_response, wait, meta)
+# def speak(utterance, expect_response=False, message=None, private=False, speaker=None, wait=False, meta=None):
+#     """
+#     Speak a sentence.
+#     Arguments:
+#         utterance (str):        sentence mycroft should speak
+#         expect_response (bool): set to True if Mycroft should listen for a response immediately after
+#                                 speaking the utterance.
+#         message (Message):      message associated with the input that this speak is associated with
+#         private (bool):         flag to indicate this message contains data that is private to the requesting user
+#         speaker (dict):         dict containing language or voice data to override user preference values
+#         wait (bool):            set to True to block while the text is being spoken.
+#         meta:                   Information of what built the sentence.
+#     """
+#     from neon_utils import SKILL, TYPE
+#     super(TYPE, SKILL).speak(utterance, expect_response, wait, meta)
 
 
 def create_signal(signal_name):
