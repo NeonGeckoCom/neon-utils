@@ -16,11 +16,16 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+
 import os
 from datetime import timedelta, datetime
+from typing import Optional
+
+from neon_utils.logger import LOG
 
 
-def get_likes_from_csv(file: str, user: str, line_limit: int = 500, date_limit: timedelta = timedelta(days=7)) -> dict:
+def get_likes_from_csv(file: str, user: Optional[str],
+                       line_limit: int = 500, date_limit: timedelta = timedelta(days=7)) -> dict:
     """
     Reads likes data from the specified csv file (default: selected_ts.csv). The lesser of the passed limits will be
     evaluated. Pass `None` for user to get data for all users within specified limits
@@ -57,3 +62,36 @@ def get_likes_from_csv(file: str, user: str, line_limit: int = 500, date_limit: 
                              "file": os.path.join(transcription_subdir, transcription_filename),
                              "utterance": phrase})
     return likes
+
+
+def update_csv(info: list, location: str):
+    """
+    Neon function used to generate CSV files for transcripts
+    :param info: list of data to export to csv
+    :param location: fully defined file path
+    :return:
+    """
+    import csv
+
+    def _write_line(data, file):
+        try:
+            with open(file, 'a+') as to_write:
+                writer = csv.writer(to_write)
+                writer.writerow(data)
+        except IOError as e:
+            LOG.error(e)
+
+    # Check if file exists with first row
+    csv_dir = os.path.dirname(location)
+    if not os.path.isfile(location):
+        os.makedirs(csv_dir, exist_ok=True)
+        if os.path.basename(location) == "full_ts.csv":
+            list_transcription_headers = ["Date", "Time", "Profile", "Device",
+                                          "Input", "Location", "Wav_Length"]
+            _write_line(list_transcription_headers, location)
+        elif os.path.basename(location) == "selected_ts.csv":
+            list_selected_headers = ["Date", "Profile", "Device", "Phrase", "Instance",
+                                     "Brand"]
+            _write_line(list_selected_headers, location)
+    # Write out  data
+    _write_line(info, location)
