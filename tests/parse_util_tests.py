@@ -17,36 +17,37 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-import setuptools
+import unittest
+import sys
+import os
 
-with open("README.md", "r") as f:
-    long_description = f.read()
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from neon_utils.parse_utils import *
 
-with open("./version.py", "r", encoding="utf-8") as v:
-    for line in v.readlines():
-        if line.startswith("__version__"):
-            if '"' in line:
-                version = line.split('"')[1]
-            else:
-                version = line.split("'")[1]
 
-with open("./requirements.txt", "r", encoding="utf-8") as r:
-    requirements = r.readlines()
+class ParseUtilTests(unittest.TestCase):
+    def test_quote_cleaning_simple(self):
+        raw_str = '"this is a double-quoted-string"'
+        output = clean_quotes(raw_str)
+        self.assertEqual(output, "this is a double-quoted-string")
 
-setuptools.setup(
-    name="neon-utils",
-    version=version,
-    author="NeonDaniel",
-    author_email="daniel@neon.ai",
-    description="Utilities for running Neon skills in Mycroft/OVOS",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/neongeckocom/neon-skill-utils",
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "Operating System :: OS Independent"
-    ],
-    python_requires='>=3.6',
-    install_requires=requirements
-)
+        raw_str = 'this has a trailing double quote"'
+        output = clean_quotes(raw_str)
+        self.assertEqual(raw_str, output)
+
+        raw_str = '"this has a leading double quote'
+        output = clean_quotes(raw_str)
+        self.assertEqual(raw_str, output)
+
+    def test_special_quote(self):
+        raw_str = '「this has Japanese quotes」'
+        output = clean_quotes(raw_str)
+        self.assertEqual(output, "this has Japanese quotes")
+
+        raw_str = "«this has French quotes»"
+        output = clean_quotes(raw_str)
+        self.assertEqual(output, "this has French quotes")
+
+
+if __name__ == '__main__':
+    unittest.main()

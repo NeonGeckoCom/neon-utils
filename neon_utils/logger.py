@@ -17,36 +17,20 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-import setuptools
+import logging
 
-with open("README.md", "r") as f:
-    long_description = f.read()
+# fmt = '%(asctime)s - %(levelname)-8s - %(name)s:%(filename)s:%(module)s:%(funcName)s:%(lineno)d - %(message)s'
+# logging.basicConfig(level=logging.DEBUG, format=fmt, datefmt='%Y-%m-%d:%H:%M:%S')
+LOG = logging.getLogger("neon-utils")
+# logging.getLogger("socketio.client").setLevel(logging.WARNING)
+# logging.getLogger("engineio.client").setLevel(logging.WARNING)
+# logging.getLogger("urllib3").setLevel(logging.WARNING)
 
-with open("./version.py", "r", encoding="utf-8") as v:
-    for line in v.readlines():
-        if line.startswith("__version__"):
-            if '"' in line:
-                version = line.split('"')[1]
-            else:
-                version = line.split("'")[1]
 
-with open("./requirements.txt", "r", encoding="utf-8") as r:
-    requirements = r.readlines()
-
-setuptools.setup(
-    name="neon-utils",
-    version=version,
-    author="NeonDaniel",
-    author_email="daniel@neon.ai",
-    description="Utilities for running Neon skills in Mycroft/OVOS",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/neongeckocom/neon-skill-utils",
-    packages=setuptools.find_packages(),
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "Operating System :: OS Independent"
-    ],
-    python_requires='>=3.6',
-    install_requires=requirements
-)
+def make_logger(name, level=logging.DEBUG):
+    """
+    Create a logger with the specified name (used to create bot loggers)
+    """
+    logger = logging.getLogger(name)
+    logger.setLevel(level)
+    return logging.getLogger(name)
