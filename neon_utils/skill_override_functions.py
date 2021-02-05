@@ -18,6 +18,7 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 import os
+import time
 
 from mycroft_bus_client import Message
 
@@ -33,7 +34,9 @@ def neon_in_request(message: Message):
 
 
 def request_from_mobile(message: Message):
-    return True
+    if message.context.get("mobile"):
+        return True
+    return False
 
 
 def preference_brands(message: Message):
@@ -120,21 +123,21 @@ def speak_dialog(key, data=None, expect_response=False, message=None, private=Fa
     super(TYPE, SKILL).speak_dialog(key, data, expect_response, wait)
 
 
-def speak(utterance, expect_response=False, message=None, private=False, speaker=None, wait=False, meta=None):
-    """
-    Speak a sentence.
-    Arguments:
-        utterance (str):        sentence mycroft should speak
-        expect_response (bool): set to True if Mycroft should listen for a response immediately after
-                                speaking the utterance.
-        message (Message):      message associated with the input that this speak is associated with
-        private (bool):         flag to indicate this message contains data that is private to the requesting user
-        speaker (dict):         dict containing language or voice data to override user preference values
-        wait (bool):            set to True to block while the text is being spoken.
-        meta:                   Information of what built the sentence.
-    """
-    from neon_utils import SKILL, TYPE
-    super(TYPE, SKILL).speak(utterance, expect_response, wait, meta)
+# def speak(utterance, expect_response=False, message=None, private=False, speaker=None, wait=False, meta=None):
+#     """
+#     Speak a sentence.
+#     Arguments:
+#         utterance (str):        sentence mycroft should speak
+#         expect_response (bool): set to True if Mycroft should listen for a response immediately after
+#                                 speaking the utterance.
+#         message (Message):      message associated with the input that this speak is associated with
+#         private (bool):         flag to indicate this message contains data that is private to the requesting user
+#         speaker (dict):         dict containing language or voice data to override user preference values
+#         wait (bool):            set to True to block while the text is being spoken.
+#         meta:                   Information of what built the sentence.
+#     """
+#     from neon_utils import SKILL, TYPE
+#     super(TYPE, SKILL).speak(utterance, expect_response, wait, meta)
 
 
 def create_signal(signal_name):
@@ -157,10 +160,10 @@ def clear_signals(prefix):
     may have set
     :param prefix: (str) prefix to match
     """
-    os.makedirs("tmp/mycroft/ipc/signal", exist_ok=True)
-    for signal in os.listdir("tmp/mycroft/ipc/signal"):
+    os.makedirs("/tmp/mycroft/ipc/signal", exist_ok=True)
+    for signal in os.listdir("/tmp/mycroft/ipc/signal"):
         if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
-            os.remove(os.path.join("tmp/mycroft/ipc/signal", signal))
+            os.remove(os.path.join("/tmp/mycroft/ipc/signal", signal))
 
 
 def check_for_signal(signal_name, sec_lifetime=0):
@@ -177,7 +180,7 @@ def check_for_signal(signal_name, sec_lifetime=0):
         bool: True if the signal is defined, False otherwise
     """
     import time
-    path = os.path.join('/tmp/neon/ipc', "signal", signal_name)
+    path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name)
     if os.path.isfile(path):
         # noinspection PyTypeChecker
         if sec_lifetime == 0:
@@ -186,7 +189,6 @@ def check_for_signal(signal_name, sec_lifetime=0):
                 os.remove(path)
             except Exception as x:
                 print(' >>> ERROR removing signal ' + signal_name + ', error == ' + str(x))
-
         elif sec_lifetime == -1:
             return True
         elif int(os.path.getctime(path) + sec_lifetime) < int(time.time()):
@@ -194,7 +196,6 @@ def check_for_signal(signal_name, sec_lifetime=0):
             os.remove(path)
             return False
         return True
-
     # No such signal exists
     return False
 
@@ -297,10 +298,11 @@ def build_message(kind, utt, message, signal_to_check=None, speaker=None):
         kind = "execute"
 
     try:
-        if kind == "execute":
+        if kind in ("execute", "skill"):
             message.context["cc_data"] = message.context.get("cc_data", {})
             # This is picked up in the intent handler
-            return message.reply("skills:execute.utterance", {
+            # return message.reply("skills:execute.utterance", {
+            return message.reply("recognizer_loop:utterance", {
                 "utterances": [utt.lower()],
                 "lang": message.data.get("lang", "en-US"),
                 "session": None,
@@ -333,3 +335,157 @@ def build_message(kind, utt, message, signal_to_check=None, speaker=None):
                                            }, context)
     except Exception as x:
         LOG.error(x)
+
+
+def to_system_time(dt):
+    """
+    Converts a timezone aware datetime object to an object to be used in the messagebus scheduler
+    :param dt: datetime object to convert
+    :return: timezone aware datetime object that can be scheduled
+    """
+    from dateutil.tz import tzlocal, gettz
+
+    tz = tzlocal()
+    if dt.tzinfo:
+        return dt.astimezone(tz)
+    else:
+        return dt.replace(tzinfo=gettz("UTC")).astimezone(tz)
+
+
+def speak(utterance, expect_response=False, message=None, private=False, speaker=None, wait=False, meta=None):
+    """
+    Speak a sentence.
+    Arguments:
+        utterance (str):        sentence mycroft should speak
+        expect_response (bool): set to True if Mycroft should listen for a response immediately after
+                                speaking the utterance.
+        message (Message):      message associated with the input that this speak is associated with
+        private (bool):         flag to indicate this message contains data that is private to the requesting user
+        speaker (dict):         dict containing language or voice data to override user preference values
+        wait (bool):            set to True to block while the text is being spoken.
+        meta:                   Information of what built the sentence.
+    """
+    from neon_utils import SKILL
+
+    # registers the skill as being active
+    meta = meta or {}
+    meta['skill'] = SKILL.name
+    SKILL.enclosure.register(SKILL.name)
+    if utterance:
+        LOG.debug(f">>>>> Skill speak! {utterance}")
+
+        # Find the associated message
+        if message:
+            LOG.info('message passed to speak = ' + str(message.data))
+            if not speaker:
+                speaker = message.data.get("speaker", None)
+        else:
+            LOG.debug('message is None.')
+            message = dig_for_message()
+
+        if message:
+            # filename = message.context.get("flac_filename", "")
+            # cc_data = message.context.get("cc_data", {})
+            # profiles = message.context.get("nick_profiles", {})
+            if not speaker:
+                speaker = message.data.get("speaker", speaker)
+            # if message.data['flac_filename']:
+            #     filename = message.data['flac_filename']
+            # else:
+            #     filename = ''
+        else:
+            message = dig_for_message()
+            filename = ''
+            # cc_data = {}
+            # profiles = {}
+            if message:
+                # filename = message.context.get("flac_filename", "")
+                # cc_data = message.context.get("cc_data", {})
+                # profiles = message.context.get("nick_profiles", {})
+                if not speaker:
+                    speaker = message.data.get("speaker", {})
+
+        # registers the skill as being active
+        # print(f'{cc_data} is cc_data')
+        # self.enclosure.register(self.name)
+        nick = ""
+        # LOG.debug(nick)
+        data = {"utterance": utterance,
+                "expect_response": expect_response,
+                "meta": meta,
+                "speaker": speaker}
+
+        # devices might not want to do these logs either... weird characters cause a logging error
+        if not SKILL.server:
+            LOG.info(f'{speaker} Speak: {utterance}')
+            # LOG.info('Speak data = ' + str(data))
+        # LOG.info(filename)
+        if not message:
+            message = dig_for_message()
+
+        if message and message.context.get("cc_data", {}).get("emit_response"):
+            LOG.debug(f"DM: {data}")
+            msg_to_emit = message.reply("skills:execute.response", data)
+
+        elif message and message.msg_type != "mycroft.ready":
+            message.context.get("timing", {})["speech_start"] = time.time()
+            LOG.info("message True, " + str(data))
+            # LOG.info(message)
+            # TODO: This is where we have the most complete timing profile for an utterance
+            # LOG.debug(f"TIME: to_speak, {time.time()}, {message.context['flac_filename']}, {data['utterance']}, "
+            #           f"{message.context}")
+            # self.bus.emit(message.reply("speak", data))
+            msg_to_emit = message.reply("speak", data)
+            LOG.debug(f">>>> Skill speak! {data}, {message.context}")
+        else:
+            LOG.warning("message False, " + str(data))
+            # self.bus.emit(Message("speak", data))
+            msg_to_emit = Message("speak", data)
+        LOG.debug(msg_to_emit.msg_type)
+        SKILL.bus.emit(msg_to_emit)
+    else:
+        LOG.warning("Null utterance passed to speak")
+        LOG.warning(f"{SKILL.name} | message={message}")
+
+    if wait:
+        wait_while_speaking()
+
+
+def dig_for_message():
+    """Dig Through the stack for message."""
+    import inspect
+
+    stack = inspect.stack()
+    # Limit search to 10 frames back
+    stack = stack if len(stack) < 10 else stack[:10]
+    local_vars = [frame[0].f_locals for frame in stack]
+    for var in local_vars:
+        if 'message' in var and isinstance(var['message'], Message):
+            return var['message']
+
+
+def wait_while_speaking():
+    """Pause as long as Text to Speech is still happening
+
+    Pause while Text to Speech is still happening.  This always pauses
+    briefly to ensure that any preceding request to speak has time to
+    begin.
+    """
+    LOG.debug("Wait while speaking!")
+    time.sleep(0.3)  # Wait briefly in for any queued speech to begin
+    while is_speaking():
+        time.sleep(0.1)
+
+
+def is_speaking(sec_lifetime=-1):
+    """Determine if Text to Speech is occurring
+
+    Args:
+        sec_lifetime (int, optional): How many seconds the signal should
+            remain valid.  If 0 or not specified, it is a single-use signal.
+            If -1, it never expires.
+
+    Returns:
+        bool: True while still speaking
+    """
+    return check_for_signal("isSpeaking", sec_lifetime)

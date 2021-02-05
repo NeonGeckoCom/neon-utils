@@ -18,6 +18,7 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 from neon_utils.skill_override_functions import *
+from neon_utils.variables_override import *
 from neon_utils.logger import LOG
 
 from ovos_utils.gui import is_gui_installed
@@ -51,6 +52,7 @@ def stub_missing_parameters(skill):
 
     skill.neon_in_request = neon_in_request
     skill.neon_must_respond = neon_must_respond
+    skill.request_from_mobile = request_from_mobile
     skill.speak_dialog = speak_dialog
     skill.speak = speak
     skill.create_signal = create_signal
@@ -67,6 +69,7 @@ def stub_missing_parameters(skill):
     skill.get_utterance_user = get_utterance_user
 
     skill.neon_core = False
+    skill.configuration_available = configuration_available
 
     try:
         # TODO: This should really be global to match Neon.. Maybe /opt/mycroft? DM
@@ -77,5 +80,9 @@ def stub_missing_parameters(skill):
 
     skill.get_cached_data = get_cached_data
     skill.update_cached_data = update_cached_data
-
     skill.build_message = build_message
+
+    skill.speak = speak
+    skill.wait_while_speaking = wait_while_speaking
+    skill.is_speaking = is_speaking
+    skill.to_system_time = to_system_time
