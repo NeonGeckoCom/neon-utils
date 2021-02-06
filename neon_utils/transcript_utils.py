@@ -21,6 +21,8 @@ import os
 from datetime import timedelta, datetime
 from typing import Optional
 
+from ovos_utils.signal import ensure_directory_exists
+
 from neon_utils.logger import LOG
 
 
@@ -95,3 +97,30 @@ def update_csv(info: list, location: str):
             _write_line(list_selected_headers, location)
     # Write out  data
     _write_line(info, location)
+
+
+def write_transcript_file(utterance: str, path: str, transcript_name: str, username: str, timestamp: float) -> str:
+    """
+    Writes out a transcript at the specified path and filename
+    :param utterance: Text to transcribe
+    :param path: Path to transcriptions
+    :param transcript_name: Name of transcript (directory name)
+    :param username: User associated with utterance
+    :param timestamp: Timestamp associated with utterance
+    :return: formatted line written to the transcript
+    """
+    import datetime
+    ensure_directory_exists(path, transcript_name)
+
+    f_time = str(datetime.datetime.fromtimestamp(timestamp))
+    f_date = str(datetime.date.fromtimestamp(timestamp))
+    shared_file = os.path.join(path, transcript_name, f"{f_date}.txt")
+    person_file = os.path.join(path, transcript_name, f"{username}-{f_date}.txt")
+
+    formatted_line = f"{username}-{f_time} {utterance}\n"
+
+    with open(shared_file, 'a+') as shared:
+        shared.write(formatted_line)
+    with open(person_file, 'a+') as person:
+        person.write(formatted_line)
+    return formatted_line
