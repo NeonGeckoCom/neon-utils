@@ -39,8 +39,8 @@ jobs:
           path: tests/parse-util-test-results.xml
 
       - name: Test Transcript Utils
-      run: |
-        pytest tests/transcript_util_tests.py --doctest-modules --junitxml=tests/transcript-util-test-results.xml
+        run: |
+          pytest tests/transcript_util_tests.py --doctest-modules --junitxml=tests/transcript-util-test-results.xml
       - name: Upload transcript util test results
         uses: actions/upload-artifact@v2
         with:
