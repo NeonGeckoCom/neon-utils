@@ -88,12 +88,13 @@ def update_csv(info: list, location: str):
     if not os.path.isfile(location):
         os.makedirs(csv_dir, exist_ok=True)
         if os.path.basename(location) == "full_ts.csv":
-            list_transcription_headers = ["Date", "Time", "Profile", "Device",
-                                          "Input", "Location", "Wav_Length"]
+            list_transcription_headers = ["Date", "Time", "Profile", "Device", "Input", "Location", "Wav_Length"]
             _write_line(list_transcription_headers, location)
         elif os.path.basename(location) == "selected_ts.csv":
-            list_selected_headers = ["Date", "Profile", "Device", "Phrase", "Instance",
-                                     "Brand"]
+            list_selected_headers = ["Date", "Profile", "Device", "Phrase", "Instance", "Brand"]
+            _write_line(list_selected_headers, location)
+        elif os.path.basename(location) == "running_out.csv":
+            list_selected_headers = ["Date", "Profile", "Device", "Phrase", "Instance", "Item"]
             _write_line(list_selected_headers, location)
     # Write out  data
     _write_line(info, location)
@@ -124,3 +125,24 @@ def write_transcript_file(utterance: str, path: str, transcript_name: str, usern
     with open(person_file, 'a+') as person:
         person.write(formatted_line)
     return formatted_line
+
+
+def get_transcript_file(path: str, transcript_name: str, username: Optional[str], f_date: str) -> Optional[str]:
+    """
+    Returns the path to a requested transcript file if exists
+    :param path: Path to transcripts
+    :param transcript_name: Name of transcript to return
+        (ts_selected_transcripts, running_out_transcripts, ts_transcripts, etc.)
+    :param username: Username requested (None for combined daily transcripts)
+    :param f_date: String formatted date requested (YYYY-MM-DD)
+    :return: Path to requested transcript (None if not exists)
+    """
+    if username:
+        transcript_file = os.path.join(path, transcript_name, f"{username}-{f_date}.txt")
+    else:
+        transcript_file = os.path.join(path, transcript_name, f"{f_date}.txt")
+
+    if os.path.isfile(transcript_file):
+        return transcript_file
+    else:
+        return None

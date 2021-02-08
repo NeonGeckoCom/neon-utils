@@ -17,4 +17,29 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-__version__ = "0.2.2"
+import unittest
+from neon_utils.file_utils import *
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+
+class FileUtilTests(unittest.TestCase):
+    def test_encode_file(self):
+        byte_string = encode_file_to_base64_string(os.path.join(ROOT_DIR, "LICENSE.md"))
+        self.assertIsInstance(byte_string, str)
+
+    def test_write_encoded_file(self):
+        byte_string = encode_file_to_base64_string(os.path.join(ROOT_DIR, "LICENSE.md"))
+        output_path = os.path.join(ROOT_DIR, "tests", "LICENSE.md")
+        output_file = decode_base64_string_to_file(byte_string, output_path)
+        self.assertEqual(output_path, output_file)
+        with open(os.path.join(ROOT_DIR, "LICENSE.md"), "r") as original:
+            original_text = original.read()
+        with open(output_file, "r") as duplicated:
+            duplicate_text = duplicated.read()
+        self.assertEqual(original_text, duplicate_text)
+        os.remove(output_file)
+
+
+if __name__ == '__main__':
+    unittest.main()
