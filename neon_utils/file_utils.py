@@ -31,6 +31,8 @@ def encode_file_to_base64_string(path: str) -> str:
     :param path: Path to file to be encoded
     :return: encoded string
     """
+    if not isinstance(path, str):
+        raise TypeError
     path = os.path.expanduser(path)
     if not os.path.isfile(path):
         LOG.error(f"File Not Found: {path}")
@@ -44,9 +46,11 @@ def decode_base64_string_to_file(encoded_string: str, output_path: str) -> str:
     """
     Writes out a base64 string to a file object at the specified path
     :param encoded_string: Base64 encoded string
-    :param output_path: Path to file to write (throws exception if file exists
+    :param output_path: Path to file to write (throws exception if file exists)
     :return: Path to output file
     """
+    if not isinstance(output_path, str):
+        raise TypeError
     output_path = os.path.expanduser(output_path)
     if os.path.isfile(output_path):
         LOG.error(f"File already exists: {output_path}")
