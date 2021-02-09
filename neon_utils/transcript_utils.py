@@ -37,6 +37,8 @@ def get_likes_from_csv(file: str, user: Optional[str],
     :param date_limit: maximum time history to process
     :return: dict of likes data
     """
+    if not os.path.isfile(file):
+        raise FileNotFoundError
     with open(file, "r") as csv:
         lines_to_evaluate = csv.readlines()
 
