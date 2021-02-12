@@ -17,6 +17,9 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
+from neon_utils.logger import LOG
+
+
 def clean_quotes(raw_utt: str) -> str:
     """
     Method for stripping quotes from fully quoted strings in different languages
@@ -25,7 +28,6 @@ def clean_quotes(raw_utt: str) -> str:
     """
     chars_to_remove = ['“', '"', '«', u'\u201d', u'\u00bb', u'\u201e', '「', '」', u'u\xa0', u'\u00a0']
     raw_utt = raw_utt.strip()
-    # LOG.debug(f"clean_utterance({raw_utt})")
     utt = raw_utt
     trailing_punctuation = False
     if utt.endswith("."):
@@ -40,7 +42,6 @@ def clean_quotes(raw_utt: str) -> str:
                 (utt.endswith('“') or utt.endswith(u'\u201d') or utt.endswith('"') or utt.endswith(u'\u00bb') or
                  utt.endswith(u'\u201e') or utt.endswith('」') or utt.endswith(u'u\xa0') or
                  utt.endswith(u'\u00a0') or utt.endswith('»')):
-            # LOG.debug("DM: Handling Quotations")
             quotes_cleaned = True
             removed_left, removed_right = False, False
             for c in chars_to_remove:
@@ -50,12 +51,6 @@ def clean_quotes(raw_utt: str) -> str:
                 if not removed_right and utt.endswith(c):
                     utt = utt[:-1]
                     removed_right = True
-            # utt = raw_utt.lstrip('“').lstrip(u'\u201d').lstrip('"').lstrip('«') \
-            #     .lstrip(u'\u00bb').lstrip(u'\u201e').rstrip('“').rstrip(u'\u201d').rstrip('"').rstrip('«') \
-            #     .rstrip(u'\u00bb').rstrip(u'\u201e')
-        # else:
-        #     utt = raw_utt
-        # LOG.debug(f"DM: {utt}")
         if quotes_cleaned:
             if trailing_punctuation:
                 return f"{utt}."
@@ -63,5 +58,36 @@ def clean_quotes(raw_utt: str) -> str:
         else:
             return raw_utt
     except Exception as x:
-        print(x)
+        LOG.error(x)
         return raw_utt
+
+
+def clean_filename(raw_name: str, to_lowercase: bool = False) -> str:
+    """
+    Cleans a filename of any invalid characters
+    :param raw_name: input file basename to clean
+    :param to_lowercase: cast string to lowercase
+    :return: cleaned file basename
+    """
+    if not raw_name:
+        raise ValueError
+    invalid_chars = ('/', '\\', '*', '~', ':', '"', '<', '>', '|', '?')
+    name = raw_name
+    for char in invalid_chars:
+        name = name.replace(char, "_")
+    if to_lowercase:
+        name = name.lower()
+    return name
+
+
+def clean_transcription(raw_string: str) -> str:
+    """
+    Cleans up input transcriptions to replace any special characters with text
+    :param raw_string: Input string to be cleaned
+    :return: Cleaned string of alphas
+    """
+    if not raw_string:
+        raise ValueError
+    parsed = raw_string.lower().replace('%', ' percent').replace('.', ' ').replace('?', '').replace('-', ' ').strip()
+    # TODO: Cleanup to alpha string (replace all chars)
+    return parsed
