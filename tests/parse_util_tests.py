@@ -48,6 +48,18 @@ class ParseUtilTests(unittest.TestCase):
         output = clean_quotes(raw_str)
         self.assertEqual(output, "this has French quotes")
 
+    def test_clean_filename(self):
+        raw_filename = "'My*Weird~Filename I want to use?__'"
+        cleaned = clean_filename(raw_filename)
+        self.assertEqual(cleaned, "'My_Weird_Filename I want to use___'")
+        lowered = clean_filename(raw_filename, True)
+        self.assertEqual(lowered, cleaned.lower())
+
+    def test_clean_transcription(self):
+        raw_input = "50% is acceptable-ish. Right?"
+        cleaned_input = clean_transcription(raw_input)
+        self.assertEqual(cleaned_input, "50 percent is acceptable ish  right")
+
 
 if __name__ == '__main__':
     unittest.main()
