@@ -56,7 +56,9 @@ def scrape_page_for_links(url: str) -> dict:
     """
     import unicodedata
     available_links = {}
-    try:
+    retry_count = 0
+
+    def _get_links(url):
         LOG.debug(url)
         if not str(url).startswith("http"):
             url = f"http://{url}"
@@ -95,8 +97,17 @@ def scrape_page_for_links(url: str) -> dict:
                 LOG.debug("found href: " + href)
 
         LOG.debug(available_links)
+
+    try:
+        _get_links(url)
+    except TimeoutError:
+        retry_count += 1
+        if retry_count < 3:
+            _get_links(url)
+        else:
+            raise TimeoutError
     except Exception as x:
         LOG.error(x)
         LOG.debug(available_links)
-        available_links = "Invalid Domain"
+        raise ReferenceError
     return available_links
