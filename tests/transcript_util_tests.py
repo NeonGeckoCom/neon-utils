@@ -30,14 +30,9 @@ TRANSCRIPTS_DIR = os.path.join(os.path.dirname(os.path.realpath(__file__)), "tra
 class TranscriptUtilTests(unittest.TestCase):
     def test_get_likes(self):
         selected_ts = os.path.join(TRANSCRIPTS_DIR, "csv_files", "selected_ts.csv")
-        print(selected_ts)
         self.assertTrue(os.path.isfile(selected_ts), f"{selected_ts} FNF!")
-        with open(selected_ts, "r") as f:
-            print(f.read())
-        demo_likes = get_likes_from_csv(selected_ts, "DemoTest")
-        all_likes = get_likes_from_csv(selected_ts, None)
-        print(demo_likes)
-        print(all_likes)
+        demo_likes = get_likes_from_csv(selected_ts, "DemoTest", date_limit=None)
+        all_likes = get_likes_from_csv(selected_ts, None, date_limit=None)
         self.assertIsInstance(demo_likes, dict)
         self.assertIsInstance(all_likes, dict)
         self.assertIn("neon", demo_likes, demo_likes)
