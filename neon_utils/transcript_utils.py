@@ -27,7 +27,7 @@ from neon_utils.logger import LOG
 
 
 def get_likes_from_csv(file: str, user: Optional[str],
-                       line_limit: int = 500, date_limit: timedelta = timedelta(days=7)) -> dict:
+                       line_limit: int = 500, date_limit: Optional[timedelta] = timedelta(days=7)) -> dict:
     """
     Reads likes data from the specified csv file (default: selected_ts.csv). The lesser of the passed limits will be
     evaluated. Pass `None` for user to get data for all users within specified limits
