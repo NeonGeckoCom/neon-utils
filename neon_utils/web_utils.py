@@ -63,7 +63,7 @@ def scrape_page_for_links(url: str) -> dict:
         if not str(url).startswith("http"):
             url = f"http://{url}"
         LOG.debug(url)
-        html = requests.get(url).text
+        html = requests.get(url, timeout=2.0).text
         soup = BeautifulSoup(html, 'lxml')
         # LOG.debug(html)
         # LOG.debug(soup)
@@ -102,7 +102,7 @@ def scrape_page_for_links(url: str) -> dict:
         _get_links(url)
     except TimeoutError:
         retry_count += 1
-        if retry_count < 3:
+        if retry_count < 8:
             _get_links(url)
         else:
             raise TimeoutError
