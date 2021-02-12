@@ -49,9 +49,18 @@ jobs:
 
       - name: Test Web Utils
         run: |
-         pytest tests/web_util_tests.py --doctest-modules --junitxml=tests/web-util-test-results.xml
+          pytest tests/web_util_tests.py --doctest-modules --junitxml=tests/web-util-test-results.xml
       - name: Upload web utils test results
         uses: actions/upload-artifact@v2
         with:
           name: web-util-test-results
           path: tests/web-util-test-results.xml
+
+      - name: Test Net Utils
+        run: |
+          pytest tests/net_util_tests.py --doctest-modules --junitxml=tests/net-util-test-results.xml
+      - name: Upload net utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: net-util-test-results
+          path: tests/net-util-test-results.xml
