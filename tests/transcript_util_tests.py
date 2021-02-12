@@ -31,6 +31,8 @@ class TranscriptUtilTests(unittest.TestCase):
     def test_get_likes(self):
         demo_likes = get_likes_from_csv(os.path.join(TRANSCRIPTS_DIR, "csv_files", "selected_ts.csv"), "DemoTest")
         all_likes = get_likes_from_csv(os.path.join(TRANSCRIPTS_DIR, "csv_files", "selected_ts.csv"), None)
+        print(demo_likes)
+        print(all_likes)
         self.assertIsInstance(demo_likes, dict)
         self.assertIsInstance(all_likes, dict)
 
