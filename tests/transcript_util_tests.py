@@ -32,6 +32,8 @@ class TranscriptUtilTests(unittest.TestCase):
         selected_ts = os.path.join(TRANSCRIPTS_DIR, "csv_files", "selected_ts.csv")
         print(selected_ts)
         self.assertTrue(os.path.isfile(selected_ts), f"{selected_ts} FNF!")
+        with open(selected_ts, "r") as f:
+            print(f.read())
         demo_likes = get_likes_from_csv(selected_ts, "DemoTest")
         all_likes = get_likes_from_csv(selected_ts, None)
         print(demo_likes)
