@@ -17,4 +17,14 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-__version__ = "0.2.3"
+import socket
+
+
+def get_ip_address() -> str:
+    """
+    Returns the IPv4 address of the default interface (This is a public IP for server implementations)
+    :return: IP Address
+    """
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    return s.getsockname()[0]

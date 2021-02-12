@@ -17,4 +17,19 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-__version__ = "0.2.3"
+import os
+import sys
+import unittest
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from neon_utils.net_utils import *
+
+
+class NetUtilTests(unittest.TestCase):
+    def test_get_ip_address(self):
+        ip_addr = get_ip_address()
+        self.assertIsInstance(ip_addr, str)
+
+
+if __name__ == '__main__':
+    unittest.main()

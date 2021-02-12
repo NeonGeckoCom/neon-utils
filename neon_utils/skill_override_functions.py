@@ -19,33 +19,34 @@
 
 import os
 import time
+from typing import Optional
 
 from mycroft_bus_client import Message
 
 from neon_utils.logger import LOG
 
 
-def neon_must_respond(message: Message):
+def neon_must_respond(message: Message) -> bool:
     return True
 
 
-def neon_in_request(message: Message):
+def neon_in_request(message: Message) -> bool:
     return True
 
 
-def request_from_mobile(message: Message):
+def request_from_mobile(message: Message) -> bool:
     if message.context.get("mobile"):
         return True
     return False
 
 
-def preference_brands(message: Message):
+def preference_brands(message: Message) -> dict:
     return {'ignored_brands': {},
             'favorite_brands': {},
             'specially_requested': {}}
 
 
-def preference_user(message: Message):
+def preference_user(message: Message) -> dict:
     return {'first_name': '',
             'middle_name': '',
             'last_name': '',
@@ -64,7 +65,7 @@ def preference_user(message: Message):
             }
 
 
-def preference_location(message: Message):
+def preference_location(message: Message) -> dict:
     return {'lat': 47.4799078,
             'lng': -122.2034496,
             'city': 'Renton',
@@ -75,14 +76,14 @@ def preference_location(message: Message):
             }
 
 
-def preference_unit(message: Message):
+def preference_unit(message: Message) -> dict:
     return {'time': 12,
             'date': 'MDY',
             'measure': 'imperial'
             }
 
 
-def preference_speech(message: Message):
+def preference_speech(message: Message) -> dict:
     return {'stt_language': 'en',
             'stt_region': 'US',
             'alt_languages': ['en'],
@@ -97,7 +98,7 @@ def preference_speech(message: Message):
             }
 
 
-def build_user_dict(message: Message = None):
+def build_user_dict(message: Message = None) -> dict:
     merged_dict = {**preference_speech(message), **preference_user(message),
                    **preference_brands(message), **preference_location(message),
                    **preference_unit(message)}
@@ -123,24 +124,7 @@ def speak_dialog(key, data=None, expect_response=False, message=None, private=Fa
     super(TYPE, SKILL).speak_dialog(key, data, expect_response, wait)
 
 
-# def speak(utterance, expect_response=False, message=None, private=False, speaker=None, wait=False, meta=None):
-#     """
-#     Speak a sentence.
-#     Arguments:
-#         utterance (str):        sentence mycroft should speak
-#         expect_response (bool): set to True if Mycroft should listen for a response immediately after
-#                                 speaking the utterance.
-#         message (Message):      message associated with the input that this speak is associated with
-#         private (bool):         flag to indicate this message contains data that is private to the requesting user
-#         speaker (dict):         dict containing language or voice data to override user preference values
-#         wait (bool):            set to True to block while the text is being spoken.
-#         meta:                   Information of what built the sentence.
-#     """
-#     from neon_utils import SKILL, TYPE
-#     super(TYPE, SKILL).speak(utterance, expect_response, wait, meta)
-
-
-def create_signal(signal_name):
+def create_signal(signal_name: str) -> bool:
     """Create a named signal. i.e. "CORE_signalName" or "nick_SKILL_signalName
     Args:
         signal_name (str): The signal's name.  Must only contain characters
@@ -154,7 +138,7 @@ def create_signal(signal_name):
         return False
 
 
-def clear_signals(prefix):
+def clear_signals(prefix: str):
     """
     Clears all signals that begin with the passed prefix. Used with skill prefix for a skill to clear any signals it
     may have set
@@ -166,7 +150,7 @@ def clear_signals(prefix):
             os.remove(os.path.join("/tmp/mycroft/ipc/signal", signal))
 
 
-def check_for_signal(signal_name, sec_lifetime=0):
+def check_for_signal(signal_name: str, sec_lifetime: Optional[int] = 0):
     """See if a named signal exists
 
     Args:
@@ -200,7 +184,7 @@ def check_for_signal(signal_name, sec_lifetime=0):
     return False
 
 
-def _create_file(filename):
+def _create_file(filename: str):
     """ Create the file filename and create any directories needed
 
         Args:
@@ -218,11 +202,11 @@ def request_check_timeout(time_wait, intent_to_check):
     pass
 
 
-def get_utterance_user(message):
+def get_utterance_user(message) -> str:
     return "local"
 
 
-def get_cached_data(filename, file_loc=None):
+def get_cached_data(filename: str, file_loc: Optional[str] = None) -> dict:
     """
     Retrieves cache data from a file created/updated with update_cached_data
     :param filename: (str) filename of cache object to update
@@ -244,7 +228,7 @@ def get_cached_data(filename, file_loc=None):
         return {}
 
 
-def update_cached_data(filename, new_element):
+def update_cached_data(filename: str, new_element):
     """
     Updates cache file of skill responses to translated responses when non-english responses are requested.
     :param filename: (str) filename of cache object to update (relative to cacheDir)

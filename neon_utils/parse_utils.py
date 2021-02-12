@@ -17,7 +17,7 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-def clean_quotes(raw_utt):
+def clean_quotes(raw_utt: str) -> str:
     """
     Method for stripping quotes from fully quoted strings in different languages
     :param raw_utt: Input string to be cleaned

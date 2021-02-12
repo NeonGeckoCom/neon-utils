@@ -21,6 +21,9 @@ import requests
 from bs4 import BeautifulSoup
 from abc import ABC
 from html.parser import HTMLParser
+
+from requests.exceptions import ConnectTimeout
+
 from neon_utils.logger import LOG
 
 
@@ -56,12 +59,14 @@ def scrape_page_for_links(url: str) -> dict:
     """
     import unicodedata
     available_links = {}
-    try:
+    retry_count = 0
+
+    def _get_links(url):
         LOG.debug(url)
         if not str(url).startswith("http"):
             url = f"http://{url}"
         LOG.debug(url)
-        html = requests.get(url).text
+        html = requests.get(url, timeout=2.0).text
         soup = BeautifulSoup(html, 'lxml')
         # LOG.debug(html)
         # LOG.debug(soup)
@@ -95,8 +100,17 @@ def scrape_page_for_links(url: str) -> dict:
                 LOG.debug("found href: " + href)
 
         LOG.debug(available_links)
+
+    try:
+        _get_links(url)
+    except ConnectTimeout:
+        retry_count += 1
+        if retry_count < 8:
+            _get_links(url)
+        else:
+            raise ConnectTimeout
     except Exception as x:
         LOG.error(x)
         LOG.debug(available_links)
-        available_links = "Invalid Domain"
+        raise ReferenceError
     return available_links
