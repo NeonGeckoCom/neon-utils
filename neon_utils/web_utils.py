@@ -21,6 +21,9 @@ import requests
 from bs4 import BeautifulSoup
 from abc import ABC
 from html.parser import HTMLParser
+
+from requests.exceptions import ConnectTimeout
+
 from neon_utils.logger import LOG
 
 
@@ -100,12 +103,12 @@ def scrape_page_for_links(url: str) -> dict:
 
     try:
         _get_links(url)
-    except TimeoutError:
+    except ConnectTimeout:
         retry_count += 1
         if retry_count < 8:
             _get_links(url)
         else:
-            raise TimeoutError
+            raise ConnectTimeout
     except Exception as x:
         LOG.error(x)
         LOG.debug(available_links)
