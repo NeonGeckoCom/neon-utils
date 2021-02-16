@@ -17,9 +17,11 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
+import glob
 import os
 import base64
 
+from typing import Optional
 from ovos_utils.signal import ensure_directory_exists
 
 from neon_utils import LOG
@@ -60,3 +62,17 @@ def decode_base64_string_to_file(encoded_string: str, output_path: str) -> str:
         byte_data = base64.b64decode(encoded_string.encode("utf-8"))
         file_out.write(byte_data)
     return output_path
+
+
+def get_most_recent_file_in_dir(path: str) -> Optional[str]:
+    """
+    Gets the most recently created file in the specified path
+    :param path: File path to check
+    :return: Path to newest file in specified path (None if no files in path)
+    """
+    list_of_files = glob.glob(path)  # * means all if need specific format then *.csv
+    if list_of_files:
+        latest_file = max(list_of_files, key=os.path.getctime)
+        return latest_file
+    else:
+        return None
