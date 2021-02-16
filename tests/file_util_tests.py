@@ -40,6 +40,19 @@ class FileUtilTests(unittest.TestCase):
         self.assertEqual(original_text, duplicate_text)
         os.remove(output_file)
 
+    def test_get_most_recent_file_in_dir(self):
+        newest = get_most_recent_file_in_dir(ROOT_DIR)
+        self.assertIsInstance(newest, str)
+        print(newest)
+        self.assertTrue(os.path.exists(newest))
+
+        newest_py = get_most_recent_file_in_dir(os.path.join(ROOT_DIR, "*.py"))
+        self.assertIsInstance(newest_py, str)
+        self.assertTrue(os.path.isfile(newest_py))
+
+        newest_dne = get_most_recent_file_in_dir(os.path.join(ROOT_DIR, "*.fake"))
+        self.assertIsNone(newest_dne)
+
 
 if __name__ == '__main__':
     unittest.main()
