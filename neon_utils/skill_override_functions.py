@@ -98,6 +98,11 @@ def preference_speech(message: Message) -> dict:
             }
 
 
+def preference_skill(message: Message) -> dict:
+    from neon_utils import SKILL
+    return SKILL.settings
+
+
 def build_user_dict(message: Message = None) -> dict:
     merged_dict = {**preference_speech(message), **preference_user(message),
                    **preference_brands(message), **preference_location(message),

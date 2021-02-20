@@ -64,6 +64,7 @@ def stub_missing_parameters(skill):
     skill.preference_location = preference_location
     skill.preference_unit = preference_unit
     skill.preference_speech = preference_speech
+    skill.preference_skill = preference_skill
     skill.build_user_dict = build_user_dict
     skill.request_check_timeout = request_check_timeout
     skill.get_utterance_user = get_utterance_user
