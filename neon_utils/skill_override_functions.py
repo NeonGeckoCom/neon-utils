@@ -98,6 +98,12 @@ def preference_speech(message: Message) -> dict:
             }
 
 
+def converse(utterances, lang=None):
+    from neon_utils import SKILL
+    SKILL.converse(Message("compat_message", {"utterances": utterances,
+                                              "lang": lang}, {}))
+
+
 def preference_skill(message: Message) -> dict:
     from neon_utils import SKILL
     return SKILL.settings
@@ -341,7 +347,7 @@ def to_system_time(dt):
         return dt.replace(tzinfo=gettz("UTC")).astimezone(tz)
 
 
-def speak(utterance, expect_response=False, message=None, private=False, speaker=None, wait=False, meta=None):
+def speak(utterance, expect_response=False, wait=False, meta=None, message=None, private=False, speaker=None):
     """
     Speak a sentence.
     Arguments:
@@ -453,6 +459,7 @@ def dig_for_message():
             return var['message']
 
 
+# TODO: Are the below methods from elsewhere in core (not skills)? DM
 def wait_while_speaking():
     """Pause as long as Text to Speech is still happening
 
