@@ -100,7 +100,7 @@ def preference_speech(message: Message) -> dict:
 
 def update_skill_settings(new_settings: dict, message: Message):
     from neon_utils import SKILL
-    for pref, val in new_settings:
+    for pref, val in new_settings.items():
         SKILL.settings[pref] = val
 
 
