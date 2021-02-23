@@ -59,6 +59,8 @@ def stub_missing_parameters(skill):
     skill.check_for_signal = check_for_signal
     skill.clear_signals = clear_signals
 
+    skill.converse = converse
+
     skill.preference_brands = preference_brands
     skill.preference_user = preference_user
     skill.preference_location = preference_location
