@@ -98,12 +98,6 @@ def preference_speech(message: Message) -> dict:
             }
 
 
-def converse(utterances, lang=None):
-    from neon_utils import SKILL
-    SKILL.converse(Message("compat_message", {"utterances": utterances,
-                                              "lang": lang}, {}))
-
-
 def preference_skill(message: Message) -> dict:
     from neon_utils import SKILL
     return SKILL.settings
