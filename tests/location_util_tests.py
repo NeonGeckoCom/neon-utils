@@ -19,9 +19,9 @@
 
 import unittest
 import os
-from neon_utils.location_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+from neon_utils.location_utils import *
 
 
 class LocationUtilTests(unittest.TestCase):
