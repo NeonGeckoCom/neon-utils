@@ -18,6 +18,7 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 import socket
+import netifaces
 
 
 def get_ip_address() -> str:
@@ -28,3 +29,21 @@ def get_ip_address() -> str:
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
     return s.getsockname()[0]
+
+
+def get_adapter_info(interface: str = "default") -> dict:
+    """
+    Returns MAC and IP info for the specified gateway
+    :param interface: Name of network interface to check
+    :return: Dict of mac, IPv4 and IPv6 addresses
+    """
+    gateways = netifaces.gateways()
+    if interface not in gateways:
+        raise IndexError("Requested Interface Not Found")
+    if netifaces.AF_INET not in gateways[interface]:
+        raise IndexError("Requested Interface not connected!")
+    device = gateways[interface][netifaces.AF_INET][1]
+    mac = netifaces.ifaddresses(device)[netifaces.AF_LINK][0]['addr']
+    ip4 = netifaces.ifaddresses(device)[netifaces.AF_INET][0]['addr']
+    ip6 = netifaces.ifaddresses(device)[netifaces.AF_INET6][0]['addr']
+    return {"ipv4": ip4, "ipv6": ip6, "mac": mac}

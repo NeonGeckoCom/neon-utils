@@ -22,31 +22,35 @@ import sys
 import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from neon_utils.net_utils import *
+from neon_utils.search_utils import *
+from test_objects import CON_DICT, DOM_DICT, MSG_DICT
 
 
-class NetUtilTests(unittest.TestCase):
-    def test_get_ip_address(self):
-        ip_addr = get_ip_address()
-        self.assertIsInstance(ip_addr, str)
+class SearchUtilTests(unittest.TestCase):
+    def test_search_con(self):
+        results = search_convo_dict(CON_DICT, "cat")
+        self.assertIn("cattalk.com,12345,Cat Talk Convo", results)
 
-    def test_get_adapter_info(self):
-        try:
-            info = get_adapter_info()
-            self.assertIsInstance(info, dict)
-            self.assertIsInstance(info.get("mac"), str)
-            self.assertEqual(len(info["mac"]), 17)
-            self.assertIsInstance(info.get("ipv4"), str)
-            self.assertEqual(len(info["ipv4"].split('.')), 4)
-            self.assertIsInstance(info.get("ipv6"), str)
-            print(info["ipv6"])
-            self.assertGreater(info["ipv6"].count(':'), 3)
-        except IndexError:
-            print("No Connection")
+        results = search_convo_dict(CON_DICT, "convo")
+        self.assertIn("cattalk.com,12345,Cat Talk Convo", results)
+        self.assertIn("dogreport.com,54321,Dog Report Convo", results)
 
-    def test_get_adapter_fail(self):
-        with self.assertRaises(IndexError):
-            get_adapter_info("FAIL")
+    def test_search_dom(self):
+        results = search_convo_dict(DOM_DICT, "cat")
+        self.assertIn("cattalk.com", results)
+        self.assertNotIn("dogreport.com", results)
+
+    def test_search_shout(self):
+        results = search_convo_dict(MSG_DICT, "dog")
+        self.assertIn("dogreport.com,54321,0,username,sid,I love my dog", results)
+
+    # # TODO: Need to document typo handling/search expected results DM
+    # def test_search_typo(self):
+    #     results = search_convo_dict(MSG_DICT, "dig", handle_typos=True)
+    #     self.assertIn("dogreport.com,54321,0,username,sid,I love my dog", results)
+    #
+    #     results = search_convo_dict(MSG_DICT, "dig", handle_typos=False)
+    #     self.assertNotIn("dogreport.com,54321,0,username,sid,I love my dog", results)
 
 
 if __name__ == '__main__':
