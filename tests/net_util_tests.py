@@ -39,7 +39,8 @@ class NetUtilTests(unittest.TestCase):
             self.assertIsInstance(info.get("ipv4"), str)
             self.assertEqual(len(info["ipv4"].split('.')), 4)
             self.assertIsInstance(info.get("ipv6"), str)
-            self.assertEqual(len(info["ipv6"]), 32)
+            print(info["ipv6"])
+            self.assertGreater(info["ipv6"].count(':'), 3)
         except IndexError:
             print("No Connection")
 
