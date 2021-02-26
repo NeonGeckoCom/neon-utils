@@ -2,4 +2,9 @@ mycroft-messagebus-client~=0.8.4
 requests~=2.23.0
 beautifulsoup4~=4.8.2
 lxml~=4.5.2
+pendulum~=2.1.2
+geopy~=2.1.0
+timezonefinder~=5.2.0
+netifaces~=0.10.9
+
 ovos_utils@git+https://github.com/OpenVoiceOS/ovos_utils@dev#egg=ovos_utils

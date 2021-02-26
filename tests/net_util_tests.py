@@ -30,6 +30,23 @@ class NetUtilTests(unittest.TestCase):
         ip_addr = get_ip_address()
         self.assertIsInstance(ip_addr, str)
 
+    def test_get_adapter_info(self):
+        try:
+            info = get_adapter_info()
+            self.assertIsInstance(info, dict)
+            self.assertIsInstance(info.get("mac"), str)
+            self.assertEqual(len(info["mac"]), 17)
+            self.assertIsInstance(info.get("ipv4"), str)
+            self.assertEqual(len(info["ipv4"]), 13)
+            self.assertIsInstance(info.get("ipv6"), str)
+            self.assertEqual(len(info["ipv6"]), 32)
+        except IndexError:
+            print("No Connection")
+
+    def test_get_adapter_fail(self):
+        with self.assertRaises(IndexError):
+            get_adapter_info("FAIL")
+
 
 if __name__ == '__main__':
     unittest.main()
