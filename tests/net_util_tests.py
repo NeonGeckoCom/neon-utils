@@ -37,7 +37,7 @@ class NetUtilTests(unittest.TestCase):
             self.assertIsInstance(info.get("mac"), str)
             self.assertEqual(len(info["mac"]), 17)
             self.assertIsInstance(info.get("ipv4"), str)
-            self.assertEqual(len(info["ipv4"]), 13)
+            self.assertEqual(len(info["ipv4"].split('.')), 4)
             self.assertIsInstance(info.get("ipv6"), str)
             self.assertEqual(len(info["ipv6"]), 32)
         except IndexError:
