@@ -65,6 +65,15 @@ jobs:
           name: net-util-test-results
           path: tests/net-util-test-results.xml
 
+      - name: Test Search Utils
+        run: |
+          pytest tests/search_util_tests.py --doctest-modules --junitxml=tests/search-util-test-results.xml
+      - name: Upload search utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: search-util-test-results
+          path: tests/search-util-test-results.xml
+
       - name: Test Location Utils
         run: |
           pytest tests/location_util_tests.py --doctest-modules --junitxml=tests/location-util-test-results.xml
