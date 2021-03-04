@@ -84,8 +84,8 @@ jobs:
           path: tests/location-util-test-results.xml
 
       - name: Test Configuration Utils
-      run: |
-        pytest tests/configuration_util_tests.py --doctest-modules --junitxml=tests/configuration-util-test-results.xml
+        run: |
+          pytest tests/configuration_util_tests.py --doctest-modules --junitxml=tests/configuration-util-test-results.xml
       - name: Upload configuration utils test results
         uses: actions/upload-artifact@v2
         with:
