@@ -28,6 +28,7 @@ from collections import MutableMapping
 from contextlib import suppress
 from filelock import FileLock
 from ruamel.yaml import YAML
+from neon_utils import LOG
 
 
 def get_config_dir():
@@ -123,7 +124,7 @@ class NGIConfig:
         self.name = name
         self.path = path or get_config_dir()
         self.parser = YAML()
-        self.logfile = "/tmp/neon/config.log"
+        # self.logfile = "/tmp/neon/config.log"
         # self.log("Configuration Init")
         self.lock = FileLock(f"{self.file_path}.lock", timeout=10)
         self.content = self._load_yaml_file()
@@ -157,9 +158,9 @@ class NGIConfig:
         self.content = dict_update_keys(self.content, other)  # to_change, one_with_all_keys
         self._reload_yaml_file()
 
-    def log(self, log_string):
-        with open(self.logfile, 'a+') as log:
-            print(log_string, file=log)
+    # def log(self, log_string):
+    #     with open(self.logfile, 'a+') as log:
+    #         print(log_string, file=log)
 
     @property
     def file_path(self):
@@ -167,7 +168,7 @@ class NGIConfig:
         file_path = join(self.path, self.name + ".yml")
         if not isfile(file_path):
             create_file(file_path)
-            self.log(f"New YAML created: {file_path}")
+            LOG.debug(f"New YAML created: {file_path}")
         return file_path
 
     @file_path.setter
@@ -175,22 +176,22 @@ class NGIConfig:
         if isinstance(name, str):
             self.name = name
         else:
-            self.log("New value has to be a string")
+            LOG.debug("New value has to be a string")
 
     def check_for_updates(self):
         new_content = self._load_yaml_file()
         # self.log(new_content)
         if new_content:
-            self.log(f"{self.name} Checked for Updates")
+            LOG.debug(f"{self.name} Checked for Updates")
             self.content = new_content
         else:
-            self.log("ERROR: new_content is empty!!")
+            LOG.warning("new_content is empty!!")
             new_content = self._load_yaml_file()
             if new_content:
-                self.log("second attempt success")
+                LOG.debug("second attempt success")
                 self.content = new_content
             else:
-                self.log("ERROR: second attempt failed")
+                LOG.error("second attempt failed")
         # self.content = self._load_yaml_file()
         return self.content
 
@@ -215,7 +216,7 @@ class NGIConfig:
         # with self.lock.acquire(30):
         before_change = self.content
         # print(before_change[header][sub_header])
-        self.log(value)
+        LOG.debug(value)
         # print(before_change[header])
         if header and sub_header:
             try:
@@ -227,9 +228,9 @@ class NGIConfig:
             try:
                 before_change[header] = value
             except Exception as x:
-                self.log(x)
+                LOG.error(x)
         else:
-            self.log("No change needed")
+            LOG.debug("No change needed")
             if not final:
                 return
 
@@ -237,7 +238,7 @@ class NGIConfig:
             # self.check_for_updates()
             self._reload_yaml_file()
         else:
-            self.log("More than one change")
+            LOG.debug("More than one change")
         # return True
 
     def _load_yaml_file(self) -> dict:
@@ -256,9 +257,9 @@ class NGIConfig:
         # except Timeout as t:
         #     self.log(f"Configuration load timeout error: {t}")
         except FileNotFoundError as x:
-            self.log(f"Configuration file not found error: {x}")
+            LOG.error(f"Configuration file not found error: {x}")
         except Exception as c:
-            self.log(f"Configuration file error: {c}")
+            LOG.error(f"Configuration file error: {c}")
         return dict()
 
     def _reload_yaml_file(self):
@@ -269,17 +270,17 @@ class NGIConfig:
         try:
             with self.lock.acquire(30):
                 tmp_filename = join(self.path, self.name + ".tmp")
-                self.log(f"tmp_filename={tmp_filename}")
+                LOG.debug(f"tmp_filename={tmp_filename}")
                 shutil.copy2(self.file_path, tmp_filename)
                 with open(self.file_path, 'w+') as f:
                     self.parser.dump(self.content, f)
-                    self.log(f"YAML updated {self.name}")
+                    LOG.debug(f"YAML updated {self.name}")
                     os.remove(tmp_filename)
                     # if not multiple:
                     #     return self.load_yaml_file()
                     # return
         except FileNotFoundError as x:
-            self.log(f"Configuration file not found error: {x}")
+            LOG.error(f"Configuration file not found error: {x}")
 
     def __repr__(self):
         return "NGIConfig('{}') \n {}".format(self.name, self.file_path)
