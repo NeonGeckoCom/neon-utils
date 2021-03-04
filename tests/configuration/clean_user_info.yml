@@ -1,0 +1,16 @@
+user:
+  first_name: ''
+  middle_name: ''
+  last_name: ''
+  preferred_name: ''
+  full_name: ''
+  dob: YYYY/MM/DD
+  age: ''
+  email: ''
+  username: ''
+  password: ''
+  picture: ''
+  about: ''
+  phone: ''
+  phone_verified: false
+  email_verified: false
