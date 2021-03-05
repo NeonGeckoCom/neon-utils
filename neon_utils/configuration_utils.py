@@ -62,7 +62,6 @@ def create_file(filename):
 
 
 def delete_recursive_dictionary_keys(dct_to_change, list_of_keys_to_remove):
-    # print(type(list_of_keys_to_remove))
     if not isinstance(dct_to_change, MutableMapping) or not isinstance(list_of_keys_to_remove, list):
         raise AttributeError("delete_recursive_dictionary_keys expects a dict and a list as args")
 
@@ -75,7 +74,15 @@ def delete_recursive_dictionary_keys(dct_to_change, list_of_keys_to_remove):
     return dct_to_change
 
 
-def dict_merge(dct_to_change, merge_dct):
+def dict_merge(dct_to_change: MutableMapping, merge_dct: MutableMapping) -> MutableMapping:
+    """
+    Recursively merges two configuration dictionaries and returns the combined object. All keys are returned with values
+    from dct_to_change retained where present.
+    Args:
+        dct_to_change: dict to append keys and default values to
+        merge_dct: dict with keys and default values to add to dct_to_change
+    Returns: dict of merged preferences
+    """
     if not isinstance(dct_to_change, MutableMapping) or not isinstance(merge_dct, MutableMapping):
         raise AttributeError("merge_recursive_dicts expects two dict objects as args")
     for key, value in merge_dct.items():
@@ -86,7 +93,16 @@ def dict_merge(dct_to_change, merge_dct):
     return dct_to_change
 
 
-def dict_make_equal_keys(dct_to_change, keys_dct):
+def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping) -> MutableMapping:
+    """
+    Adds and removes keys from dct_to_change such that it has the same keys as keys_dct. Values from dct_to_change are
+    preserved with any added keys using default values from keys_dct.
+    Args:
+        dct_to_change: Dict of user preferences to modify and return
+        keys_dct: Dict containing all keys and default values
+    Returns: dct_to_change with any keys not in keys_dct removed and any new keys added with default values
+
+    """
     if not isinstance(dct_to_change, MutableMapping) or not isinstance(keys_dct, MutableMapping):
         raise AttributeError("merge_recursive_dicts expects two dict objects as args")
     for key in list(dct_to_change.keys()):
@@ -101,18 +117,24 @@ def dict_make_equal_keys(dct_to_change, keys_dct):
     return dct_to_change
 
 
-def dict_update_keys(dct_to_change, keys_dct):
+def dict_update_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping) -> MutableMapping:
+    """
+    Adds keys to dct_to_change such that all keys in keys_dict exist in dict_to_change. Added keys use default values
+    from keys_dict
+    Args:
+        dct_to_change: Dict of user preferences to modify and return
+        keys_dct: Dict containing potentially new keys and default values
+
+    Returns: dct_to_change with any new keys in keys_dict added with default values
+
+    """
     if not isinstance(dct_to_change, MutableMapping) or not isinstance(keys_dct, MutableMapping):
         raise AttributeError("merge_recursive_dicts expects two dict objects as args")
     for key, value in list(keys_dct.items()):
         if isinstance(keys_dct.get(key), dict) and isinstance(value, MutableMapping):
-            # print("3>>>Recurse")
             dct_to_change[key] = dict_update_keys(dct_to_change.get(key, {}), keys_dct[key])
-            # print(f"4>>>{dct_to_change[key]}")
         else:
             if key not in dct_to_change.keys():
-                # print("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~")
-                # print(f"{key} = {repr(value)}")
                 dct_to_change[key] = value
     return dct_to_change
 
@@ -124,8 +146,6 @@ class NGIConfig:
         self.name = name
         self.path = path or get_config_dir()
         self.parser = YAML()
-        # self.logfile = "/tmp/neon/config.log"
-        # self.log("Configuration Init")
         self.lock = FileLock(f"{self.file_path}.lock", timeout=10)
         self.content = self._load_yaml_file()
         if not self.content:
@@ -134,11 +154,9 @@ class NGIConfig:
         NGIConfig.configuration_list.append(self.name)
 
     def populate(self, content, check_existing=False):
-        # with self.lock.acquire(30):
         if not check_existing:
             self.__add__(content)
             return
-        # print(self.content)
         self.content = dict_merge(content, self.content)  # to_change, one_with_all_keys
         self._reload_yaml_file()
 
@@ -146,41 +164,46 @@ class NGIConfig:
         for item in key:
             self.__sub__(item)
 
-    def make_equal_by_keys(self, other):
-        # with self.lock.acquire(30):
+    def make_equal_by_keys(self, other: MutableMapping):
+        """
+        Adds and removes keys from this config such that it has the same keys as 'other'. Configuration values are
+        preserved with any added keys using default values from 'other'.
+        Args:
+            other: dict of keys and default values this configuration should have
+        """
         old_content = deepcopy(self.content)
         self.content = dict_make_equal_keys(self.content, other)
         if self.content != old_content:
             self._reload_yaml_file()
 
     def update_keys(self, other):
-        # with self.lock.acquire(30):
+        """
+        Adds keys to this config such that it has all keys in 'other'. Configuration values are
+        preserved with any added keys using default values from 'other'.
+        Args:
+            other: dict of keys and default values this should be added to this configuration
+        """
         self.content = dict_update_keys(self.content, other)  # to_change, one_with_all_keys
         self._reload_yaml_file()
 
-    # def log(self, log_string):
-    #     with open(self.logfile, 'a+') as log:
-    #         print(log_string, file=log)
-
     @property
     def file_path(self):
-
+        """
+        Returns the path to the yml file associated with this configuration
+        Returns: path to this configuration yml
+        """
         file_path = join(self.path, self.name + ".yml")
         if not isfile(file_path):
             create_file(file_path)
             LOG.debug(f"New YAML created: {file_path}")
         return file_path
 
-    @file_path.setter
-    def file_path(self, name):
-        if isinstance(name, str):
-            self.name = name
-        else:
-            LOG.debug("New value has to be a string")
-
-    def check_for_updates(self):
+    def check_for_updates(self) -> dict:
+        """
+        Reloads updated configuration from disk. Used to reload changes when other instances modify a configuration
+        Returns:Updated configuration.content
+        """
         new_content = self._load_yaml_file()
-        # self.log(new_content)
         if new_content:
             LOG.debug(f"{self.name} Checked for Updates")
             self.content = new_content
@@ -192,13 +215,7 @@ class NGIConfig:
                 self.content = new_content
             else:
                 LOG.error("second attempt failed")
-        # self.content = self._load_yaml_file()
         return self.content
-
-    # def update_yaml_file(self, yaml_type="user", header=None, sub_header=None, value=None,multiple=False,final=False):
-    #     self._update_yaml_file(header=header, sub_header=sub_header, value=value, multiple=multiple, final=final)
-    #     if yaml_type:
-    #         print("Usage of yaml_type {} is depreciated.".format(yaml_type))
 
     def update_yaml_file(self, header=None, sub_header=None, value="", multiple=False, final=False):
         """
@@ -215,9 +232,7 @@ class NGIConfig:
         """
         # with self.lock.acquire(30):
         before_change = self.content
-        # print(before_change[header][sub_header])
         LOG.debug(value)
-        # print(before_change[header])
         if header and sub_header:
             try:
                 before_change[header][sub_header] = value
@@ -235,11 +250,9 @@ class NGIConfig:
                 return
 
         if not multiple:
-            # self.check_for_updates()
             self._reload_yaml_file()
         else:
             LOG.debug("More than one change")
-        # return True
 
     def _load_yaml_file(self) -> dict:
         """
@@ -249,13 +262,8 @@ class NGIConfig:
                  selected YAML.
         """
         try:
-            # self.log("Request load")
-            # with self.lock.acquire(30):
-            #     self.log("Load lock acquired")
             with open(self.file_path, 'r') as f:
                 return self.parser.load(f)
-        # except Timeout as t:
-        #     self.log(f"Configuration load timeout error: {t}")
         except FileNotFoundError as x:
             LOG.error(f"Configuration file not found error: {x}")
         except Exception as c:
@@ -275,10 +283,6 @@ class NGIConfig:
                 with open(self.file_path, 'w+') as f:
                     self.parser.dump(self.content, f)
                     LOG.debug(f"YAML updated {self.name}")
-                    os.remove(tmp_filename)
-                    # if not multiple:
-                    #     return self.load_yaml_file()
-                    # return
         except FileNotFoundError as x:
             LOG.error(f"Configuration file not found error: {x}")
 
@@ -326,52 +330,3 @@ class NGIConfig:
         else:
             raise TypeError("__sub__ expects an argument other than None")
         self._reload_yaml_file()
-
-
-# if __name__ == '__main__':
-#     try:
-#         from sys import argv
-#         local_conf = NGIConfig("ngi_local_conf")
-#
-#         # google_cloud = NGIConfig("ngi_user_info").content['stt']['google_cloud']
-#         # if os.path.isfile(os.path.join(local_conf.content["dirVars"]["docsDir"], "google.json")):
-#         #     with open(os.path.join(local_conf.content["dirVars"]["docsDir"], "google.json")) as creds:
-#         #         json_credential = json.load(creds)
-#         # else:
-#         #     json_credential = None
-#         # if json_credential and google_cloud.get("credential") != json_credential:
-#         #     print(">>>>>>>>Invalid Credential found!<<<<<<<<")
-#         #     google_cloud["credential"] = json_credential
-#         #     print(google_cloud)
-#         #     local_conf.content["stt"]["google_cloud"] = google_cloud
-#         #     # local_conf.update_yaml_file("stt", "google_cloud", google_cloud, final=True)
-#
-#         if len(argv) > 1:
-#             local_conf.update_yaml_file("devVars", "version", argv[1])
-#
-#         local_conf.update_keys(NGIConfig(
-#             "clean_local_conf", join(dirname(dirname(__file__)), 'utilities')).content)
-#         NGIConfig("ngi_auth_vars").update_keys(NGIConfig(
-#             "clean_auth_vars", join(dirname(dirname(__file__)), 'utilities')).content)
-#         NGIConfig("ngi_user_info").update_keys(NGIConfig(
-#             "clean_user_info", join(dirname(dirname(__file__)), 'utilities')).content)
-#
-#         # print(google_cloud)
-#         user_config = NGIConfig("ngi_user_info")
-#         if user_config.content["stt"]["google_cloud"].get("credential") and \
-#                 "  " in user_config.content["stt"]["google_cloud"]["credential"]["private_key"]:
-#             print("Config error! updating!")
-#             google_cloud = user_config.content["stt"]["google_cloud"]
-#             google_cloud["credential"]["private_key"] = google_cloud["credential"]["private_key"].replace("  ", "")
-#             user_config.update_yaml_file("stt", "google_cloud", google_cloud, final=True)
-#
-#         # Handle added params that need to be initialized (No, this is done in functions.sh
-#         # if local_conf.content["remoteVars"].get("guiGit") in ("${guiGit}", "''", None):
-#         #     print("Adding gui git info!!")
-#         #     local_conf.update_yaml_file("remoteVars", "guiGit", "https://github.com/neongeckocom/neon-gui.git", True)
-#         #     local_conf.update_yaml_file("remoteVars", "guiBranch", "master", True, True)
-#         # NGIConfig("ngi_user_info").update_yaml_file("stt", "google_cloud", google_cloud)
-#         # NGIConfig("ngi_local_conf").update_yaml_file('config', 'devVars', 'version', argv[1])
-#     except Exception as e:
-#         print(e)
-#         print("YML ERRORS")
