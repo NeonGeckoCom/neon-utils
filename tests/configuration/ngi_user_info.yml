@@ -1,0 +1,15 @@
+user:
+  first_name: Test
+  middle_name: ''
+  last_name: User
+  preferred_name: Test
+  full_name: Test User
+  dob: YYYY/MM/DD
+  age: ''
+  email: demo@neongecko.com
+  username: ''
+  password: ''
+  picture: ''
+  about: ''
+  phone: ''
+  bad_key: ''
