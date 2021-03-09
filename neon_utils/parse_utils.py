@@ -110,7 +110,7 @@ def get_phonemes(phrase: str) -> str:
         nltk.download('cmudict', download_dir=download_path)
     except Exception as e:
         LOG.error(e)
-        nltk.download('cmudict', download_dir=os.path.dirname(__file__))
+        nltk.download('cmudict')
 
     output = ''
     for word in phrase.split():
