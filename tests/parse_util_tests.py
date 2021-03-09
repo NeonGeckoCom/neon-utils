@@ -60,6 +60,14 @@ class ParseUtilTests(unittest.TestCase):
         cleaned_input = clean_transcription(raw_input)
         self.assertEqual(cleaned_input, "50 percent is acceptable ish  right")
 
+    def test_get_phonemes(self):
+        wake_word = "Hey Neon"
+        phonemes = get_phonemes(wake_word)
+        self.assertEqual(phonemes, "HH EY . N IY AA N .")
+
+        phonemes = get_phonemes("okay")
+        self.assertEqual(phonemes, "OW K EY .")
+
 
 if __name__ == '__main__':
     unittest.main()

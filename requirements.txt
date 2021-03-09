@@ -6,6 +6,7 @@ pendulum~=2.1.2
 geopy~=2.1.0
 timezonefinder~=5.2.0
 netifaces~=0.10.9
-filelock
-ruamel.yaml
+filelock~=3.0.12
+nltk~=3.5
+ruamel.yaml~=0.16.12
 ovos_utils@git+https://github.com/OpenVoiceOS/ovos_utils@dev#egg=ovos_utils
