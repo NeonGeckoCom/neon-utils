@@ -17,6 +17,10 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
+import nltk
+import re
+import os
+
 from neon_utils.logger import LOG
 
 
@@ -91,3 +95,24 @@ def clean_transcription(raw_string: str) -> str:
     parsed = raw_string.lower().replace('%', ' percent').replace('.', ' ').replace('?', '').replace('-', ' ').strip()
     # TODO: Cleanup to alpha string (replace all chars)
     return parsed
+
+
+def get_phonemes(phrase: str) -> str:
+    """
+    Gets phonemes for the requested phrase
+    :param phrase: String phrase for which to get phonemes
+    :return: ARPAbet phonetic representation (https://en.wikipedia.org/wiki/ARPABET)
+    """
+    download_path = os.path.expanduser("~/.local/share/neon")
+    if not os.path.isdir(download_path):
+        os.makedirs(download_path)
+    nltk.download('cmudict', download_dir=download_path)
+    nltk.data.path.append(download_path)
+
+    output = ''
+    for word in phrase.split():
+        phoenemes = nltk.corpus.cmudict.dict()[word.lower()][0]
+        for phoeneme in phoenemes:
+            output += str(re.sub('[0-9]', '', phoeneme) + ' ')
+        output += '. '
+    return output.rstrip()
