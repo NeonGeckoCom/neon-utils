@@ -103,10 +103,15 @@ def get_phonemes(phrase: str) -> str:
     :param phrase: String phrase for which to get phonemes
     :return: ARPAbet phonetic representation (https://en.wikipedia.org/wiki/ARPABET)
     """
-    download_path = os.path.expanduser("~/.local/share/neon")
-    if not os.path.isdir(download_path):
-        os.makedirs(download_path)
-    nltk.download('cmudict', download_dir=download_path)
+    try:
+        download_path = os.path.expanduser("~/.local/share/neon")
+        if not os.path.isdir(download_path):
+            os.makedirs(download_path)
+        nltk.download('cmudict', download_dir=download_path)
+    except Exception as e:
+        LOG.error(e)
+        nltk.download('cmudict', download_dir=os.path.dirname(__file__))
+
     output = ''
     for word in phrase.split():
         phoenemes = nltk.corpus.cmudict.dict()[word.lower()][0]
