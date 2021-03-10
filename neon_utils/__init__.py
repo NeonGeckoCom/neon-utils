@@ -88,3 +88,5 @@ def stub_missing_parameters(skill):
     skill.wait_while_speaking = wait_while_speaking
     skill.is_speaking = is_speaking
     skill.to_system_time = to_system_time
+
+    skill.check_yes_no_response = check_yes_no_response
