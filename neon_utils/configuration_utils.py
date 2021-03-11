@@ -27,6 +27,7 @@ from os.path import *
 from collections import MutableMapping
 from contextlib import suppress
 from filelock import FileLock
+from ovos_utils.json_helper import load_commented_json
 from ruamel.yaml import YAML
 from neon_utils import LOG
 
@@ -54,14 +55,23 @@ def create_file(filename):
             filename: Path to the file to be created
     """
     try:
-        os.makedirs(os.path.dirname(filename))
+        os.makedirs(os.path.dirname(filename), exist_ok=True)
     except OSError:
         pass
     with open(filename, 'w') as f:
         f.write('')
 
 
-def delete_recursive_dictionary_keys(dct_to_change, list_of_keys_to_remove):
+def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys_to_remove: list) -> MutableMapping:
+    """
+    Removes the specified keys from the specified dict.
+    Args:
+        dct_to_change: Dictionary to modify
+        list_of_keys_to_remove: List of keys to remove
+
+    Returns: dct_to_change with any specified keys removed
+
+    """
     if not isinstance(dct_to_change, MutableMapping) or not isinstance(list_of_keys_to_remove, list):
         raise AttributeError("delete_recursive_dictionary_keys expects a dict and a list as args")
 
@@ -77,10 +87,10 @@ def delete_recursive_dictionary_keys(dct_to_change, list_of_keys_to_remove):
 def dict_merge(dct_to_change: MutableMapping, merge_dct: MutableMapping) -> MutableMapping:
     """
     Recursively merges two configuration dictionaries and returns the combined object. All keys are returned with values
-    from dct_to_change retained where present.
+    from merge_dct overwriting those from dct_to_change.
     Args:
-        dct_to_change: dict to append keys and default values to
-        merge_dct: dict with keys and default values to add to dct_to_change
+        dct_to_change: dict to append keys and values to
+        merge_dct: dict with keys and new values to add to dct_to_change
     Returns: dict of merged preferences
     """
     if not isinstance(dct_to_change, MutableMapping) or not isinstance(merge_dct, MutableMapping):
@@ -137,6 +147,19 @@ def dict_update_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping) ->
             if key not in dct_to_change.keys():
                 dct_to_change[key] = value
     return dct_to_change
+
+
+def write_to_json(preference_dict: MutableMapping, output_path: str):
+    """
+    Writes the specified dictionary to a json file
+    Args:
+        preference_dict: Dict to write to JSON
+        output_path: Output file to write
+    """
+    if not os.path.exists(output_path):
+        create_file(output_path)
+    with open(output_path, "w") as out:
+        json.dump(preference_dict, out, indent=4)
 
 
 class NGIConfig:
@@ -253,6 +276,41 @@ class NGIConfig:
             self._reload_yaml_file()
         else:
             LOG.debug("More than one change")
+
+    def export_to_json(self) -> str:
+        """
+        Export this configuration to a json file
+        Returns: path to exported file
+        """
+        json_filename = os.path.join(self.path, f"{self.name}.json")
+        write_to_json(self.content, json_filename)
+        return json_filename
+
+    def from_dict(self, pref_dict: dict):
+        """
+        Constructor to build this configuration object with the passed dict of data
+        Args:
+            pref_dict: dict to populate configuration with
+
+        Returns: this object
+
+        """
+        self.content = pref_dict
+        self._reload_yaml_file()
+        return self
+
+    def from_json(self, json_path: str):
+        """
+        Constructor to build this configuration object with the passed json file
+        Args:
+            json_path: Path to json file to populate configuration with
+
+        Returns: this object
+
+        """
+        self.content = load_commented_json(json_path)
+        self._reload_yaml_file()
+        return self
 
     def _load_yaml_file(self) -> dict:
         """

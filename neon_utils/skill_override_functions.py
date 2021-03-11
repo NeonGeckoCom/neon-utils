@@ -485,3 +485,29 @@ def is_speaking(sec_lifetime=-1):
         bool: True while still speaking
     """
     return check_for_signal("isSpeaking", sec_lifetime)
+
+
+def check_yes_no_response(message):
+    """
+    Used in converse methods to check if a response confirms or declines an action. Differs from ask_yesno in that
+    this does not assume input will be spoken with wake words enabled
+    :param message: incoming message object to evaluate
+    :return: False if declined, numbers if confirmed numerically, True if confirmed with no numbers
+    """
+    from neon_utils import SKILL
+
+    utterance = message.data.get("utterances")[0]
+    if SKILL.voc_match(utterance, "no"):
+        LOG.info("User Declined")
+        return False
+    elif SKILL.voc_match(utterance, "yes"):
+        LOG.info("User Accepted")
+        numbers = [str(s) for s in utterance.split() if s.isdigit()]
+        if numbers and len(numbers) > 0:
+            confirmation = "".join(numbers)
+            LOG.info(f"Got confirmation: {confirmation}")
+            return confirmation
+        return True
+    else:
+        LOG.debug("User response not valid")
+        return -1

@@ -33,10 +33,10 @@ class WebUtilTests(unittest.TestCase):
             self.assertIn("about us", links.keys())
 
             # Relative href
-            self.assertEqual(links["about us"], "https://neon.ai/aboutus")
+            self.assertIn(links["about us"], ("https://neon.ai/aboutus", "http://neon.ai/aboutus"))
 
             # Absolute href
-            self.assertEqual(links["get started"], "https://neon.ai/getstarted")
+            self.assertIn(links["get started"], ("https://neon.ai/getstarted", "http://neon.ai/getstarted"))
         except ConnectTimeout:
             LOG.error("Github testing breaks here")
 
