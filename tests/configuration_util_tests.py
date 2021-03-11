@@ -20,6 +20,7 @@
 import sys
 import os
 import unittest
+from glob import glob
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
@@ -27,8 +28,21 @@ from neon_utils.configuration_utils import *
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(ROOT_DIR, "configuration")
 
+TEST_DICT = {"section 1": {"key1": "val1",
+                           "key2": "val2"},
+             "section 2": {"key_1": "val1",
+                           "key_2": "val2"}}
+
 
 class ConfigurationUtilTests(unittest.TestCase):
+    def doCleanups(self) -> None:
+        for file in glob(os.path.join(CONFIG_PATH, "*.lock")):
+            os.remove(file)
+        for file in glob(os.path.join(CONFIG_PATH, "*.tmp")):
+            os.remove(file)
+        if os.path.exists(os.path.join(CONFIG_PATH, "old_user_info.yml")):
+            os.remove(os.path.join(CONFIG_PATH, "old_user_info.yml"))
+
     def test_load_config(self):
         local_conf = NGIConfig("ngi_local_conf", CONFIG_PATH)
         self.assertIsInstance(local_conf.content, dict)
@@ -84,8 +98,78 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(user_conf.content["user"]["full_name"], 'New Name')
         new_user_conf = NGIConfig("ngi_user_info", CONFIG_PATH)
         self.assertEqual(user_conf.content["user"]["full_name"], new_user_conf.content["user"]["full_name"])
-
         shutil.copy(old_user_info, ngi_user_info)
+
+    def test_export_json(self):
+        user_conf = NGIConfig("ngi_user_info", CONFIG_PATH)
+        json_file = user_conf.export_to_json()
+        with open(json_file, "r") as f:
+            from_disk = json.load(f)
+        self.assertEqual(from_disk, user_conf.content)
+        os.remove(json_file)
+
+    def test_import_dict(self):
+        test_conf = NGIConfig("test_conf", CONFIG_PATH).from_dict(TEST_DICT)
+        self.assertEqual(test_conf.content, TEST_DICT)
+        from_disk = NGIConfig("test_conf", CONFIG_PATH)
+        self.assertEqual(from_disk.content, test_conf.content)
+        os.remove(test_conf.file_path)
+
+    def test_import_json(self):
+        json_path = os.path.join(CONFIG_PATH, "mycroft.conf")
+        test_conf = NGIConfig("mycroft", CONFIG_PATH).from_json(json_path)
+        parsed_json = load_commented_json(json_path)
+        self.assertEqual(parsed_json, test_conf.content)
+        from_disk = NGIConfig("mycroft", CONFIG_PATH)
+        self.assertEqual(from_disk.content, test_conf.content)
+        os.remove(test_conf.file_path)
+
+    def test_delete_recursive_dictionary_keys_simple(self):
+        test_dict = deepcopy(TEST_DICT)
+        test_dict = delete_recursive_dictionary_keys(test_dict, ["key_1", "key1"])
+        self.assertEqual(test_dict, {"section 1": {"key2": "val2"},
+                                     "section 2": {"key_2": "val2"}})
+
+    def test_delete_recursive_dictionary_keys_section(self):
+        test_dict = deepcopy(TEST_DICT)
+        test_dict = delete_recursive_dictionary_keys(test_dict, ["section 1"])
+        self.assertEqual(test_dict, {"section 2": {"key_1": "val1",
+                                                   "key_2": "val2"}})
+
+    def test_dict_merge(self):
+        to_update = deepcopy(TEST_DICT)
+        new_keys = {"section 2": {"key_2": "new2",
+                                  "key_3": "val3"}}
+        updated = dict_merge(to_update, new_keys)
+        self.assertEqual(updated["section 2"], {"key_1": "val1",
+                                                "key_2": "new2",
+                                                "key_3": "val3"})
+
+    def test_dict_make_equal_keys(self):
+        to_update = deepcopy(TEST_DICT)
+        new_keys = {"section 2": {"key_2": "new2",
+                                  "key_3": "val3"}}
+        updated = dict_make_equal_keys(to_update, new_keys)
+        self.assertEqual(updated, {"section 2": {"key_2": "val2",
+                                                 "key_3": "val3"}
+                                   })
+
+    def test_dict_update_keys(self):
+        to_update = deepcopy(TEST_DICT)
+        new_keys = {"section 2": {"key_2": "new2",
+                                  "key_3": "val3"}}
+        updated = dict_update_keys(to_update, new_keys)
+        self.assertEqual(updated["section 2"], {"key_1": "val1",
+                                                "key_2": "val2",
+                                                "key_3": "val3"})
+
+    def test_write_json(self):
+        file_path = os.path.join(CONFIG_PATH, "test.json")
+        write_to_json(TEST_DICT, file_path)
+        with open(file_path, "r") as f:
+            from_disk = json.load(f)
+        self.assertEqual(from_disk, TEST_DICT)
+        os.remove(file_path)
 
 
 if __name__ == '__main__':
