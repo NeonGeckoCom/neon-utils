@@ -98,6 +98,9 @@ def update_csv(info: list, location: str):
         elif os.path.basename(location) == "running_out.csv":
             list_selected_headers = ["Date", "Profile", "Device", "Phrase", "Instance", "Item"]
             _write_line(list_selected_headers, location)
+        elif os.path.basename(location) == "symptom_checker.csv":
+            list_selected_headers = ["Date", "Profile", "Agent", "Device", "Phrase", "Tags", "Location"]
+            _write_line(list_selected_headers, location)
     # Write out  data
     _write_line(info, location)
 
