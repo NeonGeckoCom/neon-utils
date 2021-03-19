@@ -116,3 +116,34 @@ def get_phonemes(phrase: str) -> str:
             output += str(re.sub('[0-9]', '', phoeneme) + ' ')
         output += '. '
     return output.rstrip()
+
+
+def format_speak_tags(sentence: str) -> str:
+    """
+    Cleans up SSML tags for speech synthesis and ensures the phrase is wrapped in 'speak' tags and any excluded text is
+    removed.
+    Args:
+        sentence: Input sentence to be spoken
+    Returns:
+        Cleaned sentence to pass to TTS
+    """
+    # Wrap sentence in speak tag if no tags present
+    if "<speak>" not in sentence and "</speak>" not in sentence:
+        to_speak = f"<speak>{sentence}</speak>"
+    # Assume speak starts at the beginning of the sentence if a closing speak tag is found
+    elif "<speak>" not in sentence:
+        to_speak = f"<speak>{sentence}"
+    # Assume speak ends at the end of the sentence if an opening speak tag is found
+    elif "</speak>" not in sentence:
+        to_speak = f"{sentence}</speak>"
+    else:
+        to_speak = sentence
+
+    # Trim text outside of speak tags
+    if not to_speak.startswith("<speak>"):
+        to_speak = f"<speak>{to_speak.split('<speak>', 1)[1]}"
+
+    if not to_speak.endswith("</speak>"):
+        to_speak = f"{to_speak.split('</speak>', 1)[0]}</speak>"
+
+    return to_speak
