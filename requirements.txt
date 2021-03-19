@@ -1,4 +1,4 @@
-mycroft-messagebus-client~=0.8.4
+mycroft-messagebus-client>=0.9.1
 requests~=2.23.0
 beautifulsoup4~=4.8.2
 lxml~=4.5.2
