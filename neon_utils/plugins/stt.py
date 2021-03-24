@@ -30,4 +30,5 @@ class STT(BaseSTT, ABC):
             module = config.get("module")
             if "google_cloud" in module:
                 module = "google_cloud"
-            self.config = config["stt"][module]
+            self.config = config[module]
+            self.credential = self.config.get("credential")
