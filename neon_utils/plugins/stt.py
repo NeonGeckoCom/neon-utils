@@ -93,11 +93,11 @@ class StreamingSTT(STT, metaclass=ABCMeta):
             self.queue.put(None)
             self.stream.join()
 
-            text = self.stream.text
+            transcripts = self.stream.transcriptions
 
             self.stream = None
             self.queue = None
-            return text
+            return transcripts
         return None
 
     def execute(self, audio, language=None):
