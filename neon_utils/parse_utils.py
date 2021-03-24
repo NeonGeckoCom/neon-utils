@@ -146,4 +146,6 @@ def format_speak_tags(sentence: str) -> str:
     if not to_speak.endswith("</speak>"):
         to_speak = f"{to_speak.split('</speak>', 1)[0]}</speak>"
 
+    if to_speak == "<speak></speak>":
+        return ""
     return to_speak

@@ -68,7 +68,7 @@ class ParseUtilTests(unittest.TestCase):
         phonemes = get_phonemes("okay")
         self.assertEqual(phonemes, "OW K EY .")
 
-    def test_format_speak_tags(self):
+    def test_format_speak_tags_with_speech(self):
         valid_output = "<speak>Speak This.</speak>"
         no_tags = format_speak_tags("Speak This.")
         self.assertEqual(no_tags, valid_output)
@@ -90,6 +90,13 @@ class ParseUtilTests(unittest.TestCase):
 
         tagged_with_exclusion = format_speak_tags("Don't<speak>Speak This.</speak>But Not this.")
         self.assertEqual(tagged_with_exclusion, valid_output)
+
+    def test_format_speak_tags_empty(self):
+        leading_closure = format_speak_tags("</speak>hello.")
+        self.assertFalse(leading_closure)
+
+        trailing_open = format_speak_tags("hello.<speak>")
+        self.assertFalse(trailing_open)
 
 
 if __name__ == '__main__':
