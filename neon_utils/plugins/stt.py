@@ -16,9 +16,12 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
-from abc import ABC
+import json
+from abc import ABC, ABCMeta, abstractmethod
+from queue import Queue
 
 from ovos_utils.plugins.stt import STT as BaseSTT
+from ovos_utils.plugins.stt import StreamThread
 from neon_utils.configuration_utils import NGIConfig
 
 
@@ -32,3 +35,73 @@ class STT(BaseSTT, ABC):
                 module = "google_cloud"
             self.config = config[module]
             self.credential = self.config.get("credential")
+
+
+class TokenSTT(STT, metaclass=ABCMeta):
+    def __init__(self):
+        super(TokenSTT, self).__init__()
+        self.token = self.credential.get("token")
+
+
+class GoogleJsonSTT(STT, metaclass=ABCMeta):
+    def __init__(self):
+        super(GoogleJsonSTT, self).__init__()
+        if not self.credential.get("json") or self.keys.get("google_cloud"):
+            self.credential["json"] = self.keys["google_cloud"]
+        self.json_credentials = json.dumps(self.credential.get("json"))
+
+
+class BasicSTT(STT, metaclass=ABCMeta):
+
+    def __init__(self):
+        super(BasicSTT, self).__init__()
+        self.username = str(self.credential.get("username"))
+        self.password = str(self.credential.get("password"))
+
+
+class KeySTT(STT, metaclass=ABCMeta):
+
+    def __init__(self):
+        super(KeySTT, self).__init__()
+        self.id = str(self.credential.get("client_id"))
+        self.key = str(self.credential.get("client_key"))
+
+
+class StreamingSTT(STT, metaclass=ABCMeta):
+    """
+        ABC class for threaded streaming STT implemenations.
+    """
+
+    def __init__(self):
+        super().__init__()
+        self.stream = None
+        self.can_stream = True
+        self.queue = None
+
+    def stream_start(self, language=None):
+        self.stream_stop()
+        self.queue = Queue()
+        self.stream = self.create_streaming_thread()
+        self.stream.start()
+
+    def stream_data(self, data):
+        self.queue.put(data)
+
+    def stream_stop(self):
+        if self.stream is not None:
+            self.queue.put(None)
+            self.stream.join()
+
+            text = self.stream.text
+
+            self.stream = None
+            self.queue = None
+            return text
+        return None
+
+    def execute(self, audio, language=None):
+        return self.stream_stop()
+
+    @abstractmethod
+    def create_streaming_thread(self):
+        pass
