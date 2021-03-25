@@ -19,22 +19,37 @@
 import json
 from abc import ABC, ABCMeta, abstractmethod
 from queue import Queue
-
-from ovos_utils.plugins.stt import STT as BaseSTT
+from speech_recognition import Recognizer
 from ovos_utils.plugins.stt import StreamThread
 from neon_utils.configuration_utils import NGIConfig
 
 
-class STT(BaseSTT, ABC):
+class STT(metaclass=ABCMeta):
+    """ STT Base class, all  STT backends derives from this one. """
     def __init__(self, config=None):
-        super(STT, self).__init__()
-        config = config or NGIConfig("ngi_user_info").content.get("stt")
-        if config:
-            module = config.get("module")
-            if "google_cloud" in module:
-                module = "google_cloud"
-            self.config = config[module]
-            self.credential = self.config.get("credential")
+        config_core = config or NGIConfig("ngi_user_info").content
+        self.lang = str(self.init_language(config_core))
+        config_stt = config_core.get("stt", {})
+        module = config_stt.get("module", "")
+        if "google_cloud" in module:
+            module = "google_cloud"
+        self.config = config_stt.get(module, {})
+        self.credential = self.config.get("credential", {})
+        self.recognizer = Recognizer()
+        self.can_stream = False
+        self.keys = config_core.get("keys", {})
+
+    @staticmethod
+    def init_language(config_core):
+        lang = config_core.get("lang", "en-US")
+        langs = lang.split("-")
+        if len(langs) == 2:
+            return langs[0].lower() + "-" + langs[1].upper()
+        return lang
+
+    @abstractmethod
+    def execute(self, audio, language=None):
+        pass
 
 
 class TokenSTT(STT, metaclass=ABCMeta):
