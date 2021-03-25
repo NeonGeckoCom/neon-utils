@@ -21,6 +21,7 @@ import unittest
 from neon_utils.file_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+AUDIO_PATH = os.path.join(ROOT_DIR,"tests", "audio_files")
 
 
 class FileUtilTests(unittest.TestCase):
@@ -52,6 +53,22 @@ class FileUtilTests(unittest.TestCase):
 
         newest_dne = get_most_recent_file_in_dir(os.path.join(ROOT_DIR, "*.fake"))
         self.assertIsNone(newest_dne)
+
+    def test_file_stream(self):
+        test_file = os.path.join(AUDIO_PATH, "stop.wav")
+        stream = get_audio_file_stream(test_file)
+        self.assertEqual(stream.sample_rate, 16000)
+
+        stream = get_audio_file_stream(test_file, 44100)
+        self.assertEqual(stream.sample_rate, 44100)
+
+    def test_file_stream_invalid_path(self):
+        with self.assertRaises(FileNotFoundError):
+            get_audio_file_stream(os.path.join(AUDIO_PATH, "nothing"))
+
+    def test_file_stream_invalid_type(self):
+        with self.assertRaises(Exception):
+            get_audio_file_stream(os.path.join(ROOT_DIR, "README.md"))
 
 
 if __name__ == '__main__':
