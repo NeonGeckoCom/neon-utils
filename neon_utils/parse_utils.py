@@ -148,4 +148,5 @@ def format_speak_tags(sentence: str) -> str:
 
     if to_speak == "<speak></speak>":
         return ""
+
     return to_speak
