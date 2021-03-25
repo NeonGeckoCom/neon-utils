@@ -72,8 +72,8 @@ class StreamingSTT(STT, metaclass=ABCMeta):
         ABC class for threaded streaming STT implemenations.
     """
 
-    def __init__(self, results_event):
-        super().__init__()
+    def __init__(self, results_event, config=None):
+        super().__init__(config)
         self.stream = None
         self.can_stream = True
         self.queue = None
