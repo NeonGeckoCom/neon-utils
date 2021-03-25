@@ -30,7 +30,7 @@ class STT(metaclass=ABCMeta):
         config_core = config or NGIConfig("ngi_user_info").content
         self.lang = str(self.init_language(config_core))
         config_stt = config_core.get("stt", {})
-        module = config_stt.get("module", "")
+        module = config_stt.get("module")
         if "google_cloud" in module:
             module = "google_cloud"
         self.config = config_stt.get(module, {})
