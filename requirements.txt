@@ -9,4 +9,5 @@ netifaces~=0.10.9
 filelock~=3.0.12
 nltk~=3.5
 ruamel.yaml~=0.16.12
+pydub~=0.25.1
 ovos_utils@git+https://github.com/OpenVoiceOS/ovos_utils@dev#egg=ovos_utils
