@@ -133,7 +133,7 @@ class StreamingSTT(STT, metaclass=ABCMeta):
             transcribe_time = time() - start_time
             stt_name = repr(self.__class__.__name__)
             print(f"{stt_name} | time={transcribe_time}")
-            self.server_bus.emit(Message("neon.metric", {"name": "tts execute",
+            self.server_bus.emit(Message("neon.metric", {"name": "stt execute",
                                                          "transcripts": transcripts,
                                                          "time": transcribe_time,
                                                          "module": stt_name}))
