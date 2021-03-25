@@ -20,8 +20,11 @@
 import glob
 import os
 import base64
+import wave
+from tempfile import mkstemp
 
 from typing import Optional
+from pydub import AudioSegment
 from ovos_utils.signal import ensure_directory_exists
 
 from neon_utils import LOG
@@ -76,3 +79,57 @@ def get_most_recent_file_in_dir(path: str) -> Optional[str]:
         return latest_file
     else:
         return None
+
+
+def get_audio_file_stream(wav_file: str, sample_rate: int = 16000):
+    """
+    Creates a FileStream object for the specified wav_file with the specified output sample_rate.
+    Args:
+        wav_file: Path to file to read
+        sample_rate: Desired output sample rate (None for wav_file sample rate)
+
+    Returns:
+        FileStream object for the passed audio file
+    """
+    class FileStream:
+        MIN_S_TO_DEBUG = 5.0
+
+        # How long between printing debug info to screen
+        UPDATE_INTERVAL_S = 1.0
+
+        def __init__(self, file_name):
+            self.file = wave.open(file_name, 'rb')
+            self.sample_rate = self.file.getframerate()
+            if sample_rate and self.sample_rate != sample_rate:
+                sound = AudioSegment.from_file(file_name, format='wav', frame_rate=self.sample_rate)
+                sound = sound.set_frame_rate(sample_rate)
+                _, tempfile = mkstemp()
+                sound.export(tempfile, format='wav')
+                self.file = wave.open(tempfile, 'rb')
+                self.sample_rate = self.file.getframerate()
+            self.size = self.file.getnframes()
+            self.sample_width = self.file.getsampwidth()
+            self.last_update_time = 0.0
+
+            self.total_s = self.size / self.sample_rate / self.sample_width
+
+        def calc_progress(self):
+            return float(self.file.tell()) / self.size
+
+        def read(self, chunk_size):
+
+            progress = self.calc_progress()
+            if progress == 1.0:
+                raise EOFError
+
+            return self.file.readframes(chunk_size)
+
+        def close(self):
+            self.file.close()
+
+    if not os.path.isfile(wav_file):
+        raise FileNotFoundError
+    try:
+        return FileStream(wav_file)
+    except Exception as e:
+        raise e
