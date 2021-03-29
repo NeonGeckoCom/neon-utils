@@ -199,7 +199,9 @@ def get_neon_speech_config() -> dict:
     if "sample_rate" not in listener_config:
         listener_config["sample_rate"] = listener_config.get("rate")
     if "wake_word" in listener_config:
-        hotword_config = {listener_config.pop("wake_word"): {"module": listener_config.pop('module'),
+        module = listener_config.pop('module')
+        module = "jarbas_pocketsphinx_ww_plug" if module == "pocketsphinx" else module
+        hotword_config = {listener_config.pop("wake_word"): {"module": module,
                                                              "phonemes": listener_config.pop('phonemes'),
                                                              "threshold": listener_config.pop('threshold'),
                                                              "lang": listener_config.get('language'),
