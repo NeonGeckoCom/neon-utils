@@ -27,6 +27,7 @@ from os.path import *
 from collections import MutableMapping
 from contextlib import suppress
 from filelock import FileLock
+from glob import glob
 from ovos_utils.json_helper import load_commented_json
 from ruamel.yaml import YAML
 from neon_utils import LOG
@@ -160,6 +161,65 @@ def write_to_json(preference_dict: MutableMapping, output_path: str):
         create_file(output_path)
     with open(output_path, "w") as out:
         json.dump(preference_dict, out, indent=4)
+
+
+def get_neon_cli_config() -> dict:
+    """
+    Get a configuration dict for the neon_cli
+    Returns:
+        dict of config params used by the neon_cli
+    """
+    user_config = NGIConfig("ngi_user_info").content
+    local_config = NGIConfig("ngi_local_conf").content
+    wake_words_enabled = user_config.get("listener", {}).get("wake_word_enabled", True)
+    try:
+        neon_core_version = os.path.basename(glob(local_config['dirVars']['ngiDir'] +
+                                                  '/*.release')[0]).split('.release')[0]
+    except Exception as e:
+        LOG.error(e)
+        neon_core_version = "Unknown"
+    log_dir = local_config.get("dirVars", {}).get("logsDir", "/var/log/mycroft")
+    return {"neon_core_version": neon_core_version,
+            "wake_words_enabled": wake_words_enabled,
+            "log_dir": log_dir}
+
+
+def get_neon_speech_config() -> dict:
+    """
+    Get a configuration dict for listener
+    Returns:
+        dict of config params used for listener in neon_speech
+    """
+    local_config = NGIConfig("ngi_local_conf").content
+    user_config = NGIConfig("ngi_user_info").content
+    listener_config = user_config.get("listener", {})
+    lang = "en-us"  # core_lang
+    stt_config = user_config.get("stt", {})
+
+    if "sample_rate" not in listener_config:
+        listener_config["sample_rate"] = listener_config.get("rate")
+    if "wake_word" in listener_config:
+        hotword_config = {listener_config.pop("wake_word"): {"module": listener_config.pop('module'),
+                                                             "phonemes": listener_config.pop('phonemes'),
+                                                             "threshold": listener_config.pop('threshold'),
+                                                             "lang": listener_config.get('language'),
+                                                             "sample_rate": listener_config.get('sample_rate'),
+                                                             "listen": True,
+                                                             "sound": "snd/start_listening.wav",
+                                                             "local_model_file": listener_config.get("precise", {}).get(
+                                                                 "local_model_file")}}
+    else:
+        hotword_config = user_config.get("hotwords", {})
+
+    return {"listener": listener_config,
+            "hotwords": hotword_config,
+            "audio_parsers": {},
+            "lang": lang,
+            "stt": stt_config,
+            "metric_upload": local_config.get("prefFlags", {}).get("metrics", False),
+            "remote_server": local_config.get("remoteVars", {}).get("remoteHost", "64.34.186.120"),
+            "keys": {}
+            }
 
 
 class NGIConfig:

@@ -171,6 +171,19 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(from_disk, TEST_DICT)
         os.remove(file_path)
 
+    def test_get_cli_config(self):
+        config = get_neon_cli_config()
+        self.assertIn("log_dir", config)
+        self.assertIn("neon_core_version", config)
+        self.assertIn("wake_words_enabled", config)
+
+    def test_get_speech_config(self):
+        config = get_neon_speech_config()
+        self.assertIsInstance(config, dict)
+        self.assertIsInstance(config["stt"], dict)
+        self.assertIsInstance(config["listener"], dict)
+        self.assertIsInstance(config["hotwords"], dict)
+
 
 if __name__ == '__main__':
     unittest.main()
