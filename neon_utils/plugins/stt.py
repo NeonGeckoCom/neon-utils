@@ -24,18 +24,17 @@ from mycroft_bus_client import MessageBusClient, Message
 
 from speech_recognition import Recognizer
 from ovos_utils.plugins.stt import StreamThread
-from neon_utils.configuration_utils import NGIConfig
+from neon_utils.configuration_utils import get_neon_speech_config
 
 
 class STT(metaclass=ABCMeta):
     """ STT Base class, all  STT backends derives from this one. """
     def __init__(self, config=None):
-        # TODO: This should be moved to local_conf DM
-        config_core = config or NGIConfig("ngi_user_info").content
-        metric_upload = True  # TODO: Read from config. DM
+        config_core = config or get_neon_speech_config()
+        metric_upload = config.get("metric_upload", False)
         if metric_upload:
-            server_host = "64.34.186.120"  # TODO: Read from config. DM
-            self.server_bus = MessageBusClient(host="64.34.186.120")
+            server_addr = config.get("remote_server", "64.34.186.120")
+            self.server_bus = MessageBusClient(host=server_addr)
             self.server_bus.run_in_thread()
         else:
             self.server_bus = None
