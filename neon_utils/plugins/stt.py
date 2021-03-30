@@ -17,17 +17,27 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 import json
-from abc import ABC, ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod
 from queue import Queue
+from time import time
+from mycroft_bus_client import MessageBusClient, Message
+
 from speech_recognition import Recognizer
 from ovos_utils.plugins.stt import StreamThread
-from neon_utils.configuration_utils import NGIConfig
+from neon_utils.configuration_utils import get_neon_speech_config
 
 
 class STT(metaclass=ABCMeta):
     """ STT Base class, all  STT backends derives from this one. """
     def __init__(self, config=None):
-        config_core = config or NGIConfig("ngi_user_info").content
+        config_core = config or get_neon_speech_config()
+        metric_upload = config.get("metric_upload", False)
+        if metric_upload:
+            server_addr = config.get("remote_server", "64.34.186.120")
+            self.server_bus = MessageBusClient(host=server_addr)
+            self.server_bus.run_in_thread()
+        else:
+            self.server_bus = None
         self.lang = str(self.init_language(config_core))
         config_stt = config_core.get("stt", {})
         module = config_stt.get("module", "")
@@ -116,7 +126,19 @@ class StreamingSTT(STT, metaclass=ABCMeta):
         return None
 
     def execute(self, audio, language=None):
-        return self.stream_stop()
+        if self.server_bus:
+            start_time = time()
+            transcripts = self.stream_stop()
+            transcribe_time = time() - start_time
+            stt_name = repr(self.__class__.__name__)
+            print(f"{stt_name} | time={transcribe_time}")
+            self.server_bus.emit(Message("neon.metric", {"name": "stt execute",
+                                                         "transcripts": transcripts,
+                                                         "time": transcribe_time,
+                                                         "module": stt_name}))
+            return transcripts
+        else:
+            return self.stream_stop()
 
     @abstractmethod
     def create_streaming_thread(self):
