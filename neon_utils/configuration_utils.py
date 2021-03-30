@@ -163,6 +163,22 @@ def write_to_json(preference_dict: MutableMapping, output_path: str):
         json.dump(preference_dict, out, indent=4)
 
 
+def get_lang_config() -> dict:
+    """
+    Get a language config for language utilities
+    Returns:
+        dict of config params used by Language Detector and Translator modules
+    """
+    language_config = NGIConfig("ngi_user_info").content.get("speech", {})
+    language_config["internal"] = language_config.get("internal", "en-us")
+    language_config["user"] = language_config.get("stt_language")
+    language_config["boost"] = False
+    # TODO: Add these keys to config DM
+    # "translation_module"
+    # "detection_modile"
+    return language_config
+
+
 def get_neon_cli_config() -> dict:
     """
     Get a configuration dict for the neon_cli

@@ -34,6 +34,7 @@ from ovos_utils import ensure_mycroft_import
 from neon_utils import create_signal, check_for_signal, wait_while_speaking
 from neon_utils.configuration_utils import NGIConfig
 from neon_utils.location_utils import to_system_time
+from neon_utils.language_utils import get_lang_config, DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
 
@@ -43,7 +44,6 @@ from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
 from mycroft.skills.fallback_skill import FallbackSkill
 from mycroft.skills.common_play_skill import CommonPlaySkill
 from mycroft.skills.common_query_skill import CommonQuerySkill
-from mycroft.language import get_lang_config, DetectorFactory, TranslatorFactory  # TODO: Add to this package? DM
 
 
 class NeonSkill(MycroftSkill):
