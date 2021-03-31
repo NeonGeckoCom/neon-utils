@@ -43,10 +43,10 @@ class MessageUtilTests(unittest.TestCase):
         self.assertIsNone(without_user)
 
     def test_get_message_username_invalid_arg(self):
-        with self.assertRaises(TypeError):
+        with self.assertRaises(ValueError):
             get_message_user()
 
-        with self.assertRaises(TypeError):
+        with self.assertRaises(AttributeError):
             get_message_user("Nobody")
 
 
