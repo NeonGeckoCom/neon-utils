@@ -45,12 +45,15 @@ from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
 
 class NeonSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        super().__init__(name, bus, use_settings)
         self.user_config = NGIConfig("ngi_user_info")
         self.local_config = NGIConfig("ngi_local_conf")
+        # TODO: Patch missing configs DM
         self.configuration_available = self.local_config.content
         self.user_info_available = self.user_config.content
         self.ngi_settings: Optional[NGIConfig] = None
+
+        super(NeonSkill, self).__init__(name, bus, use_settings)
+
         self.cache_loc = self.configuration_available['dirVars']['cacheDir']
 
         # TODO: Depreciate these references, signal use is discouraged DM
