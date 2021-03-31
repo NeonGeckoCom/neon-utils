@@ -24,7 +24,6 @@ import time
 import os
 
 from copy import deepcopy
-from datetime import datetime, timedelta
 from mycroft_bus_client.message import Message, dig_for_message
 from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
@@ -780,6 +779,7 @@ class NeonSkill(MycroftSkill):
     def schedule_event(self, handler, when, data=None, name=None, context=None):
         # TODO: This should be depreciated since it's basically just error handling DM
         if isinstance(when, int) or isinstance(when, float):
+            from datetime import datetime, timedelta
             when = self.to_system_time(datetime.now(self.sys_tz)) + timedelta(seconds=when)
             LOG.error(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
@@ -809,6 +809,7 @@ class NeonSkill(MycroftSkill):
                        handled in skill's converse method
         :param timeout: duration to wait in seconds before removing the action from the list
         """
+        from datetime import datetime, timedelta
         self.reload_skill = False
         if isinstance(actions, str):
             actions = [actions]
@@ -842,6 +843,7 @@ class NeonSkill(MycroftSkill):
         :param timeout_seconds: seconds to wait before clearing gui display
         :return:
         """
+        from datetime import datetime, timedelta
         expiration = datetime.now(self.sys_tz) + timedelta(seconds=timeout_seconds)
         self.schedule_event(self._clear_gui_timeout, self.to_system_time(expiration))
 
