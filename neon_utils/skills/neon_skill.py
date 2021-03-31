@@ -53,7 +53,8 @@ class NeonSkill(MycroftSkill):
 
         super(NeonSkill, self).__init__(name, bus, use_settings)
 
-        self.cache_loc = self.configuration_available['dirVars']['cacheDir']
+        self.cache_loc = self.configuration_available.get('dirVars', {}).get('cacheDir',
+                                                                             os.path.expanduser("~/.neon/cache"))
 
         # TODO: Depreciate these references, signal use is discouraged DM
         self.create_signal = create_signal
