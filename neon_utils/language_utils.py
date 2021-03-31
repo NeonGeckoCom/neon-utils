@@ -20,7 +20,7 @@
 import os
 import boto3
 from neon_utils.logger import LOG
-from neon_utils.configuration_utils import get_lang_config, NGIConfig
+from neon_utils.configuration_utils import get_neon_lang_config, NGIConfig
 
 
 def get_language_dir(base_path, lang="en-us"):
@@ -50,7 +50,7 @@ def get_language_dir(base_path, lang="en-us"):
 
 class LanguageDetector:
     def __init__(self):
-        self.config = get_lang_config()
+        self.config = get_neon_lang_config()
         self.default_language = self.config["user"].split("-")[0]
         # hint_language: str  E.g., 'ITALIAN' or 'it' boosts Italian
         self.hint_language = self.config["user"].split("-")[0]
@@ -66,7 +66,7 @@ class LanguageDetector:
 
 class LanguageTranslator:
     def __init__(self):
-        self.config = get_lang_config()
+        self.config = get_neon_lang_config()
         self.boost = self.config["boost"]
         self.default_language = self.config["user"].split("-")[0]
         self.internal_language = self.config["internal"]
@@ -213,7 +213,7 @@ class TranslatorFactory:
     @staticmethod
     def create(module=None):
         module = module or "amazon"
-        config = get_lang_config()
+        config = get_neon_lang_config()
         module = module or config.get("translation_module", "google")
         if module == "amazon" \
                 and NGIConfig("ngi_user_info").content["tts"]["amazon"].get("aws_access_key_id", "") == "":
@@ -245,7 +245,7 @@ class DetectorFactory:
     @staticmethod
     def create(module=None):
         module = module or "fastlang"
-        config = get_lang_config()
+        config = get_neon_lang_config()
         module = module or config.get("detection_module", "fastlang")
         try:
             clazz = DetectorFactory.CLASSES.get(module)

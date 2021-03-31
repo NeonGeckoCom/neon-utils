@@ -166,7 +166,7 @@ def write_to_json(preference_dict: MutableMapping, output_path: str):
         json.dump(preference_dict, out, indent=4)
 
 
-def get_lang_config() -> dict:
+def get_neon_lang_config() -> dict:
     """
     Get a language config for language utilities
     Returns:

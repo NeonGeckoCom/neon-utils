@@ -33,7 +33,7 @@ from ovos_utils import ensure_mycroft_import
 from neon_utils import create_signal, check_for_signal, wait_while_speaking
 from neon_utils.configuration_utils import NGIConfig
 from neon_utils.location_utils import to_system_time
-from neon_utils.language_utils import get_lang_config, DetectorFactory, TranslatorFactory
+from neon_utils.language_utils import get_neon_lang_config, DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
 
@@ -89,7 +89,7 @@ class NeonSkill(MycroftSkill):
 
         try:
             # Lang support
-            self.language_config = get_lang_config()
+            self.language_config = get_neon_lang_config()
             self.lang_detector = DetectorFactory.create()  # Default fastlang
             self.translator = TranslatorFactory.create()  # Default Amazon
         except Exception as e:

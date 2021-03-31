@@ -190,6 +190,12 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["listener"], dict)
         self.assertIsInstance(config["hotwords"], dict)
 
+    def test_get_lang_config(self):
+        config = get_neon_lang_config()
+        self.assertIsInstance(config, dict)
+        self.assertIn("internal", config)
+        self.assertIn("user", config)
+
 
 if __name__ == '__main__':
     unittest.main()
