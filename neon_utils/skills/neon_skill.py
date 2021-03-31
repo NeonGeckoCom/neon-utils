@@ -136,7 +136,7 @@ class NeonSkill(MycroftSkill):
             LOG.debug(self.ngi_settings.content)
             LOG.debug(default)
             if self.ngi_settings.content and len(self.ngi_settings.content.keys()) > 0 and len(default.keys()) > 0:
-                self.ngi_settings.make_equal_by_keys(default)
+                self.ngi_settings.make_equal_by_keys(default, recursive=False)
             elif len(default.keys()) > 0:
                 LOG.info("No settings to load, use default")
                 self.ngi_settings.populate(default)

@@ -68,6 +68,12 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(user_conf.content, new_user_info.content)
         shutil.copy(old_user_info, ngi_user_info)
 
+    def test_make_equal_keys_no_recurse(self):
+        skill_settings = NGIConfig("skill_populated", CONFIG_PATH)
+        correct_settings = deepcopy(skill_settings.content)
+        skill_settings.make_equal_by_keys(NGIConfig("skill_default", CONFIG_PATH).content, False)
+        self.assertEqual(correct_settings, skill_settings.content)
+
     def test_update_keys(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
         ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
