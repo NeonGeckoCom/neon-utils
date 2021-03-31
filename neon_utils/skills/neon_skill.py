@@ -559,16 +559,6 @@ class NeonSkill(MycroftSkill):
             # self.check_for_signal("CORE_andCase")
             return False
 
-    @staticmethod
-    def newest_file_in_dir(path, ext=None):
-        LOG.warning("This method is depreciated, use file_utils.get_most_recent_file_in_dir() directly")
-        return get_most_recent_file_in_dir(path, ext)
-
-    @staticmethod
-    def request_from_mobile(message):
-        LOG.warning("This method is depreciated, use message_utils.request_from_mobile() directly")
-        return request_from_mobile(message)
-
     def show_settings_gui(self):
         """
         Function to update and
@@ -771,11 +761,6 @@ class NeonSkill(MycroftSkill):
                    expect_response, message=message, private=private,
                    speaker=speaker, wait=wait, meta={'dialog': key, 'data': data})
 
-    @staticmethod
-    def to_system_time(dt):
-        LOG.warning("This method is depreciated, use location_utils.to_system_time() directly")
-        return to_system_time(dt)
-
     def schedule_event(self, handler, when, data=None, name=None, context=None):
         # TODO: This should be depreciated since it's basically just error handling DM
         if isinstance(when, int) or isinstance(when, float):
@@ -896,3 +881,25 @@ class NeonSkill(MycroftSkill):
     def _register_system_event_handlers(self):
         self.add_event('check.yml.updates', self.handle_check_yml)
         super()._register_system_event_handlers()
+
+    def get_utterance_user(self, message):
+        if self.server:
+            default_user = "server"
+        else:
+            default_user = self.preference_user(message).get("username", "local")
+        return get_message_user(message) or default_user
+
+    @staticmethod
+    def newest_file_in_dir(path, ext=None):
+        LOG.warning("This method is depreciated, use file_utils.get_most_recent_file_in_dir() directly")
+        return get_most_recent_file_in_dir(path, ext)
+
+    @staticmethod
+    def request_from_mobile(message):
+        LOG.warning("This method is depreciated, use message_utils.request_from_mobile() directly")
+        return request_from_mobile(message)
+
+    @staticmethod
+    def to_system_time(dt):
+        LOG.warning("This method is depreciated, use location_utils.to_system_time() directly")
+        return to_system_time(dt)
