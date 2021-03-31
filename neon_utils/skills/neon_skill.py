@@ -868,11 +868,21 @@ class NeonSkill(MycroftSkill):
         self.add_event('check.yml.updates', self.handle_check_yml)
         super()._register_system_event_handlers()
 
-    def get_utterance_user(self, message):
+    def get_utterance_user(self, message: Optional[Message]) -> str:
+        """
+        Gets the user associated with the given message. Returns default 'local' or 'server' if no user specified.
+        Args:
+            message: Message associated with request
+
+        Returns:
+            Username associated with the message or a default value of 'local' or 'server'.
+        """
         if self.server:
             default_user = "server"
         else:
             default_user = self.preference_user(message).get("username", "local")
+        if not message:
+            return default_user
         return get_message_user(message) or default_user
 
     @staticmethod
