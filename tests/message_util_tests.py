@@ -35,6 +35,13 @@ class MessageUtilTests(unittest.TestCase):
         not_from_mobile = request_from_mobile(Message("", {}, {}))
         self.assertFalse(not_from_mobile)
 
+    def test_get_message_username(self):
+        with_user = get_message_user(Message("", {}, {"username": "testrunner"}))
+        self.assertEqual(with_user, "testrunner")
+
+        without_user = get_message_user(Message(""))
+        self.assertIsNone(without_user)
+
 
 if __name__ == '__main__':
     unittest.main()
