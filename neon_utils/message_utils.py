@@ -42,4 +42,6 @@ def get_message_user(message: Message) -> Optional[str]:
     Returns:
         Username associated with message
     """
+    if not message or not isinstance(message, Message):
+        raise TypeError
     return message.context.get("username")

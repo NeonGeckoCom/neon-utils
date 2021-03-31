@@ -158,7 +158,7 @@ class NeonSkill(MycroftSkill):
         Equivalent to self.user_info_available["speech"] for non-server use
         """
         try:
-            nick = get_message_user(message)
+            nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
@@ -183,7 +183,7 @@ class NeonSkill(MycroftSkill):
         Equivalent to self.user_info_available["user"] for non-server use
         """
         try:
-            nick = get_message_user(message)
+            nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
@@ -220,7 +220,7 @@ class NeonSkill(MycroftSkill):
         Equivalent to self.user_info_available["location"] for non-server use
         """
         try:
-            nick = get_message_user(message)
+            nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
@@ -249,7 +249,7 @@ class NeonSkill(MycroftSkill):
         Equivalent to self.user_info_available["units"] for non-server use
         """
         try:
-            nick = get_message_user(message)
+            nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
@@ -275,7 +275,7 @@ class NeonSkill(MycroftSkill):
         Equivalent to self.user_info_available["speech"] for non-server use
         """
         try:
-            nick = get_message_user(message)
+            nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
@@ -310,7 +310,7 @@ class NeonSkill(MycroftSkill):
         :param message: Message associated with request
         :return: dict of skill preferences
         """
-        nick = get_message_user(message)
+        nick = get_message_user(message) if message else None
         if self.server and nick:
             try:
                 skill = self.skill_id
@@ -354,7 +354,7 @@ class NeonSkill(MycroftSkill):
         :param message: Message associated with request
         """
         if self.server:
-            nick = get_message_user(message)
+            nick = get_message_user(message) if message else None
             new_skills_prefs = new_preferences.pop("skills")
             old_skills_prefs = message.context["nick_profiles"][nick]["skills"]
             combined_skill_prefs = {**old_skills_prefs, **new_skills_prefs}

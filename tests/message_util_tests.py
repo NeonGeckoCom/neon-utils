@@ -42,6 +42,13 @@ class MessageUtilTests(unittest.TestCase):
         without_user = get_message_user(Message(""))
         self.assertIsNone(without_user)
 
+    def test_get_message_username_invalid_arg(self):
+        with self.assertRaises(TypeError):
+            get_message_user()
+
+        with self.assertRaises(TypeError):
+            get_message_user("Nobody")
+
 
 if __name__ == '__main__':
     unittest.main()
