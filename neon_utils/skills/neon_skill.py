@@ -175,7 +175,6 @@ class NeonSkill(MycroftSkill):
                 return self.user_info_available['brands']
         except Exception as x:
             LOG.error(x)
-            LOG.error(f"context={message.context}")
         return {'ignored_brands': {},
                 'favorite_brands': {},
                 'specially_requested': {}}
@@ -199,7 +198,6 @@ class NeonSkill(MycroftSkill):
                 return self.user_info_available['user']
         except Exception as x:
             LOG.error(x)
-            LOG.error(f"context={message.context}")
         return {'first_name': '',
                 'middle_name': '',
                 'last_name': '',
@@ -236,7 +234,6 @@ class NeonSkill(MycroftSkill):
                 return self.user_info_available['location']
         except Exception as x:
             LOG.error(x)
-            LOG.error(f"context={message.context}")
         return {'lat': 47.4799078,
                 'lng': -122.2034496,
                 'city': 'Renton',
@@ -266,7 +263,6 @@ class NeonSkill(MycroftSkill):
                 return self.user_info_available['units']
         except Exception as x:
             LOG.error(x)
-            LOG.error(f"context={message.context}")
         return {'time': 12,
                 'date': 'MDY',
                 'measure': 'imperial'
@@ -292,7 +288,6 @@ class NeonSkill(MycroftSkill):
                 return self.user_info_available['speech']
         except Exception as x:
             LOG.error(x)
-            LOG.error(f"context={message.context}")
         return {'stt_language': 'en',
                 'stt_region': 'US',
                 'alt_languages': ['en'],
@@ -327,7 +322,6 @@ class NeonSkill(MycroftSkill):
                 return merged_settings
             except Exception as e:
                 LOG.error(e)
-                LOG.error(f"context={message.context}")
         return self.settings
 
     def build_user_dict(self, message=None) -> dict:
