@@ -41,9 +41,6 @@ from neon_utils.message_utils import request_from_mobile, get_message_user
 LOG.name = "neon-skill"
 ensure_mycroft_import()
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
-from mycroft.skills.fallback_skill import FallbackSkill
-from mycroft.skills.common_play_skill import CommonPlaySkill
-from mycroft.skills.common_query_skill import CommonQuerySkill
 
 
 class NeonSkill(MycroftSkill):
