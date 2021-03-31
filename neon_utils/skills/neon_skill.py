@@ -93,8 +93,6 @@ class NeonSkill(MycroftSkill):
             LOG.error(e)
             self.language_config, self.language_detector, self.translator = None, None, None
 
-        self.add_event('check.yml.updates', self.handle_check_yml)
-
     def init_settings(self):
         """
         Initializes yml-based skill config settings, updating from default dict as necessary for added parameters
@@ -889,3 +887,7 @@ class NeonSkill(MycroftSkill):
                 return pickle.load(file)
         else:
             return {}
+
+    def _register_system_event_handlers(self):
+        self.add_event('check.yml.updates', self.handle_check_yml)
+        super()._register_system_event_handlers()
