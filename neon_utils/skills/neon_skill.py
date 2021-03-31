@@ -779,8 +779,8 @@ class NeonSkill(MycroftSkill):
     def schedule_event(self, handler, when, data=None, name=None, context=None):
         # TODO: This should be depreciated since it's basically just error handling DM
         if isinstance(when, int) or isinstance(when, float):
-            from datetime import datetime, timedelta
-            when = self.to_system_time(datetime.now(self.sys_tz)) + timedelta(seconds=when)
+            from datetime import datetime as dt, timedelta
+            when = self.to_system_time(dt.now(self.sys_tz)) + timedelta(seconds=when)
             LOG.error(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
@@ -809,14 +809,14 @@ class NeonSkill(MycroftSkill):
                        handled in skill's converse method
         :param timeout: duration to wait in seconds before removing the action from the list
         """
-        from datetime import datetime, timedelta
+        from datetime import datetime as dt, timedelta
         self.reload_skill = False
         if isinstance(actions, str):
             actions = [actions]
         self.actions_to_confirm[user] = actions
         if not timeout:
             timeout = self.default_intent_timeout
-        expiration = datetime.now(self.sys_tz) + timedelta(seconds=timeout)
+        expiration = dt.now(self.sys_tz) + timedelta(seconds=timeout)
 
         self.cancel_scheduled_event(user)
         time.sleep(1)
@@ -843,8 +843,8 @@ class NeonSkill(MycroftSkill):
         :param timeout_seconds: seconds to wait before clearing gui display
         :return:
         """
-        from datetime import datetime, timedelta
-        expiration = datetime.now(self.sys_tz) + timedelta(seconds=timeout_seconds)
+        from datetime import datetime as dt, timedelta
+        expiration = dt.now(self.sys_tz) + timedelta(seconds=timeout_seconds)
         self.schedule_event(self._clear_gui_timeout, self.to_system_time(expiration))
 
     def _clear_gui_timeout(self):
