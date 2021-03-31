@@ -14,4 +14,4 @@ fastlang==0.0.4
 langdetect~=1.0.8
 translate
 boto3
-ovos_utils@git+https://github.com/OpenVoiceOS/ovos_utils@dev#egg=ovos_utils
+ovos_utils
