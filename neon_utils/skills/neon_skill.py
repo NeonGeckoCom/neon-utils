@@ -505,7 +505,7 @@ class NeonSkill(MycroftSkill):
         @return:
         """
         if self.server:
-            title = message.context["klat_data"]["title"]
+            title = message.context.get("klat_data", {}).get("title", "")
             LOG.debug(message.data.get("utterance"))
             if message.data.get("utterance").startswith("Welcome to your private conversation"):
                 return False
@@ -521,15 +521,9 @@ class NeonSkill(MycroftSkill):
                     elif message.data.get("utterance").lower().startsWith("neon"):
                         # Message starts with "neon", must respond
                         return True
-                    else:
-                        # Private with Other Users
-                        LOG.debug("DM: Private Conversation with Others")
                 else:
                     # Solo Private
-                    # LOG.debug("DM: Private Conversation")
                     return True
-        # self.check_for_signal("CORE_andCase")
-        LOG.debug("DM: Returning False")
         return False
 
     def neon_in_request(self, message):
@@ -538,20 +532,17 @@ class NeonSkill(MycroftSkill):
         and message "Neon" parameter used
         """
         if message.context.get("neon_should_respond", False):
-            # LOG.debug("DM: execute cc_data")
             return True
         elif message.data.get("Neon") or message.data.get("neon"):
             return True
-        elif not self.server and self.user_info_available["listener"]["wake_word_enabled"]:
-            # LOG.debug("DM: not skipping wake words")
+        elif not self.server and self.user_info_available.get("listener", {}).get("wake_word_enabled", True):
             return True
         elif self.voc_match(message.data.get("utterance"), "neon"):
             return True
-        elif self.server and message.context["klat_data"].get("title").startswith("!PRIVATE"):
+        elif self.server and message.context.get("klat_data", {}).get("title").startswith("!PRIVATE"):
             return True
         else:
             LOG.debug("No Neon")
-            # self.check_for_signal("CORE_andCase")
             return False
 
     def show_settings_gui(self):
