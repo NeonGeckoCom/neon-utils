@@ -883,7 +883,13 @@ class NeonSkill(MycroftSkill):
             default_user = self.preference_user(message).get("username", "local")
         if not message:
             return default_user
-        return get_message_user(message) or default_user
+
+        try:
+            return get_message_user(message) or default_user
+        except Exception as e:
+            LOG.error(e)
+            # TODO: Depreciate this and fix underlying error DM
+            return default_user
 
     @staticmethod
     def newest_file_in_dir(path, ext=None):
