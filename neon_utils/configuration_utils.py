@@ -171,7 +171,7 @@ def get_lang_config() -> dict:
     """
     language_config = NGIConfig("ngi_user_info").content.get("speech", {})
     language_config["internal"] = language_config.get("internal", "en-us")
-    language_config["user"] = language_config.get("stt_language")
+    language_config["user"] = language_config.get("stt_language", "en-us")
     language_config["boost"] = False
     # TODO: Add these keys to config DM
     # "translation_module"

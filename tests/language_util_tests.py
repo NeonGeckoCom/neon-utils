@@ -28,7 +28,7 @@ texts = ["My name is neon",
          "O meu nome é jarbas"]
 
 
-class WebUtilTests(unittest.TestCase):
+class LangUtilTests(unittest.TestCase):
     def test_lang_detect(self):
         d = LangDetectDetector()
         self.assertEqual(d.detect(texts[0]), "en")
