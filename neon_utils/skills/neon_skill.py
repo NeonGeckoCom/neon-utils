@@ -109,7 +109,7 @@ class NeonSkill(MycroftSkill):
             skill_meta = None
 
         # Load defaults from settingsmeta
-        default = {}
+        default = {"__mycroft_skill_firstrun": True}
         if skill_meta:
             # LOG.info(skill_meta)
             LOG.info(skill_meta["skillMetadata"]["sections"])
