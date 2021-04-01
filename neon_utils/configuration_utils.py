@@ -191,16 +191,15 @@ def get_neon_speech_config() -> dict:
     Returns:
         dict of config params used for listener in neon_speech
     """
-    local_config = NGIConfig("ngi_local_conf").content
-    user_config = NGIConfig("ngi_user_info").content
-    listener_config = user_config.get("listener", {})
-    listener_config["wake_word_enabled"] = user_config["interface"]["wake_word_enabled"]
+    local_config = get_neon_local_config()
+    listener_config = local_config.get("listener", {})
+    listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
     lang = "en-us"  # core_lang
-    stt_config = user_config.get("stt", {})
+    stt_config = local_config.get("stt", {})
 
     if "sample_rate" not in listener_config:
         listener_config["sample_rate"] = listener_config.get("rate")
-    hotword_config = user_config.get("hotwords")
+    hotword_config = local_config.get("hotwords")
     if not hotword_config:
         module = listener_config.pop('module')
         module = "jarbas_pocketsphinx_ww_plug" if module == "pocketsphinx" else module
@@ -219,13 +218,19 @@ def get_neon_speech_config() -> dict:
             "audio_parsers": {},
             "lang": lang,
             "stt": stt_config,
-            "metric_upload": local_config.get("prefFlags", {}).get("metrics", False),
+            "metric_upload": local_config["prefFlags"].get("metrics", False),
             "remote_server": local_config.get("remoteVars", {}).get("remoteHost", "64.34.186.120"),
             "keys": {}
             }
 
 
 def _move_config_sections(user_config, local_config):
+    """
+    Temporary method to handle one-time migration of user_config params to local_config
+    Args:
+        user_config (NGIConfig): user configuration object
+        local_config (NGIConfig): local configuration object
+    """
     depreciated_user_configs = ("speech", "interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
     if any([d in user_config.content for d in depreciated_user_configs]):
         LOG.warning("Depreciated keys found in user config! Adding them to local config")
