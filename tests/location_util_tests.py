@@ -16,6 +16,7 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+from datetime import datetime
 
 import sys
 import os
@@ -61,6 +62,22 @@ class LocationUtilTests(unittest.TestCase):
         self.assertEqual(timezone, "America/Los_Angeles")
         self.assertIsInstance(offset, float)
         self.assertIn(offset, (-7.0, -8.0))
+
+    def test_to_system_time(self):
+        tz_aware_dt = datetime.now(gettz("America/NewYork"))
+        system_dt = to_system_time(tz_aware_dt)
+        self.assertEqual(system_dt.tzinfo, tzlocal())
+        self.assertEqual(tz_aware_dt.timestamp(), system_dt.timestamp())
+
+        tz_aware_dt = datetime.now(gettz("America/Los_Angeles"))
+        system_dt = to_system_time(tz_aware_dt)
+        self.assertEqual(system_dt.tzinfo, tzlocal())
+        self.assertEqual(tz_aware_dt.timestamp(), system_dt.timestamp())
+
+        tz_naiive_dt = datetime.now()
+        system_dt = to_system_time(tz_naiive_dt)
+        self.assertEqual(system_dt.tzinfo, tzlocal())
+        self.assertEqual(tz_naiive_dt.timestamp(), system_dt.timestamp())
 
 
 if __name__ == '__main__':

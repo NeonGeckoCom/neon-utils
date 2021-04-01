@@ -104,13 +104,15 @@ def dict_merge(dct_to_change: MutableMapping, merge_dct: MutableMapping) -> Muta
     return dct_to_change
 
 
-def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping) -> MutableMapping:
+def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping,
+                         recursive: bool = True) -> MutableMapping:
     """
     Adds and removes keys from dct_to_change such that it has the same keys as keys_dct. Values from dct_to_change are
     preserved with any added keys using default values from keys_dct.
     Args:
         dct_to_change: Dict of user preferences to modify and return
         keys_dct: Dict containing all keys and default values
+        recursive: Bool flag to recurse into dict values
     Returns: dct_to_change with any keys not in keys_dct removed and any new keys added with default values
 
     """
@@ -118,7 +120,8 @@ def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping
         raise AttributeError("merge_recursive_dicts expects two dict objects as args")
     for key in list(dct_to_change.keys()):
         if isinstance(keys_dct.get(key), dict) and isinstance(dct_to_change[key], MutableMapping):
-            dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key])
+            if recursive:
+                dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key])
         elif key not in keys_dct.keys():
             dct_to_change.pop(key)
             # del dct_to_change[key]
@@ -161,6 +164,19 @@ def write_to_json(preference_dict: MutableMapping, output_path: str):
         create_file(output_path)
     with open(output_path, "w") as out:
         json.dump(preference_dict, out, indent=4)
+
+
+def get_neon_lang_config() -> dict:
+    """
+    Get a language config for language utilities
+    Returns:
+        dict of config params used by Language Detector and Translator modules
+    """
+    language_config = NGIConfig("ngi_user_info").content.get("speech", {})
+    language_config["internal"] = language_config.get("internal", "en-us")
+    language_config["user"] = language_config.get("stt_language", "en-us")
+    language_config["boost"] = False
+    return language_config
 
 
 def get_neon_cli_config() -> dict:
@@ -249,15 +265,16 @@ class NGIConfig:
         for item in key:
             self.__sub__(item)
 
-    def make_equal_by_keys(self, other: MutableMapping):
+    def make_equal_by_keys(self, other: MutableMapping, recursive: bool = True):
         """
         Adds and removes keys from this config such that it has the same keys as 'other'. Configuration values are
         preserved with any added keys using default values from 'other'.
         Args:
             other: dict of keys and default values this configuration should have
+            recursive: Bool flag to recurse into dict values
         """
         old_content = deepcopy(self.content)
-        self.content = dict_make_equal_keys(self.content, other)
+        self.content = dict_make_equal_keys(self.content, other, recursive)
         if self.content != old_content:
             self._reload_yaml_file()
 

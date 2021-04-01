@@ -16,5 +16,34 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+from typing import Optional
 
-__version__ = "0.3.1"
+from mycroft_bus_client import Message
+
+
+def request_from_mobile(message: Message) -> bool:
+    """
+    Check if a request is from a mobile device
+    Args:
+        message: Message object associated with request
+
+    Returns:
+        True if message is from a mobile app, else False
+    """
+    return message.context.get("mobile", False)
+
+
+def get_message_user(message: Message) -> Optional[str]:
+    """
+    Get the user associated with a message
+    Args:
+        message: Message object associated with request
+
+    Returns:
+        Username associated with message
+    """
+    if not message:
+        raise ValueError
+    if not hasattr(message, "context"):
+        raise AttributeError(type(message))
+    return message.context.get("username")
