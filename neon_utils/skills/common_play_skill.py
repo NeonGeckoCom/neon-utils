@@ -71,7 +71,7 @@ class CommonPlaySkill(NeonSkill, CPS, ABC):
     is needed.
     """
     def __init__(self, name=None, bus=None):
-        super(NeonSkill).__init__(name, bus)
+        super().__init__(name, bus)
         self.audioservice = None
         self.play_service_string = None
 
