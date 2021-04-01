@@ -190,6 +190,67 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["listener"], dict)
         self.assertIsInstance(config["hotwords"], dict)
 
+    def test_get_user_config_add_keys(self):
+        old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
+        ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
+        shutil.copy(ngi_user_info, old_user_info)
+        config = get_neon_user_config(CONFIG_PATH)
+        user_config_keys = ["user", "brands", "speech", "units", "location"]
+        self.assertTrue(all(k for k in user_config_keys if k in config))
+        shutil.move(old_user_info, ngi_user_info)
+
+    def test_get_user_config_create(self):
+        old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
+        ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
+        shutil.move(ngi_user_info, old_user_info)
+        config = get_neon_user_config(CONFIG_PATH)
+        self.assertTrue(os.path.isfile(ngi_user_info))
+        user_config_keys = ["user", "brands", "speech", "units", "location"]
+        self.assertTrue(all(k for k in user_config_keys if k in config))
+        shutil.move(old_user_info, ngi_user_info)
+
+    def test_get_user_config_migrate_keys(self):
+        bak_user_info = os.path.join(CONFIG_PATH, "bak_user_info.yml")
+        ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
+        old_user_info = os.path.join(CONFIG_PATH, "dep_user_info.yml")
+        bak_local_conf = os.path.join(CONFIG_PATH, "bak_local_conf.yml")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+        shutil.move(ngi_user_info, bak_user_info)
+        shutil.copy(old_user_info, ngi_user_info)
+        shutil.copy(ngi_local_conf, bak_local_conf)
+
+        user_conf = get_neon_user_config(CONFIG_PATH)
+        user_config_keys = ["user", "brands", "speech", "units", "location"]
+        self.assertTrue(all(k for k in user_config_keys if k in user_conf))
+
+        local_config_keys = ["speech", "interface", "listener", "skills", "session", "tts", "stt", "logs", "device"]
+        local_conf = NGIConfig("ngi_local_conf", CONFIG_PATH).content
+        self.assertTrue(all(k for k in local_config_keys if k in local_conf))
+
+        shutil.move(bak_user_info, ngi_user_info)
+        shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_get_local_config_add_keys(self):
+        old_local_conf = os.path.join(CONFIG_PATH, "old_local_conf.yml")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+        shutil.copy(ngi_local_conf, old_local_conf)
+        config = get_neon_local_config(CONFIG_PATH)
+        local_config_keys = ["prefFlags", "interface", "devVars", "gestures", "audioService", "padatious", "websocket",
+                             "gui", "hotwords", "listener", "skills", "session", "tts", "stt", "logs", "device"]
+        self.assertTrue(all(k for k in local_config_keys if k in config))
+        shutil.move(old_local_conf, ngi_local_conf)
+
+    def test_get_local_config_create(self):
+        old_local_conf = os.path.join(CONFIG_PATH, "old_local_conf.yml")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+        shutil.move(ngi_local_conf, old_local_conf)
+        config = get_neon_local_config(CONFIG_PATH)
+        self.assertTrue(os.path.isfile(ngi_local_conf))
+        local_config_keys = ["prefFlags", "interface", "devVars", "gestures", "audioService", "padatious", "websocket",
+                             "gui", "hotwords", "listener", "skills", "session", "tts", "stt", "logs", "device"]
+        self.assertTrue(all(k for k in local_config_keys if k in config))
+        shutil.move(old_local_conf, ngi_local_conf)
+
     def test_get_lang_config(self):
         config = get_neon_lang_config()
         self.assertIsInstance(config, dict)
