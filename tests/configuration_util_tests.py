@@ -20,7 +20,6 @@
 import sys
 import os
 import unittest
-from glob import glob
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
@@ -48,6 +47,24 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(local_conf.content, dict)
         self.assertIsInstance(local_conf.content["devVars"], dict)
         self.assertIsInstance(local_conf.content["prefFlags"]["devMode"], bool)
+
+    def test_config_get(self):
+        local_conf = NGIConfig("ngi_local_conf", CONFIG_PATH)
+        self.assertIsInstance(local_conf, NGIConfig)
+        self.assertIsInstance(local_conf.content, dict)
+        self.assertIsInstance(local_conf["devVars"], dict)
+        self.assertIsInstance(local_conf["prefFlags"]["devMode"], bool)
+
+    def test_config_set(self):
+        local_conf = NGIConfig("ngi_local_conf", CONFIG_PATH)
+        self.assertIsInstance(local_conf.content, dict)
+        self.assertIsInstance(local_conf["prefFlags"]["devMode"], bool)
+
+        local_conf["prefFlags"]["devMode"] = True
+        self.assertTrue(local_conf["prefFlags"]["devMode"])
+
+        local_conf["prefFlags"]["devMode"] = False
+        self.assertFalse(local_conf["prefFlags"]["devMode"])
 
     def test_make_equal_keys(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
@@ -234,7 +251,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertTrue(all(k for k in user_config_keys if k in user_conf))
 
         local_config_keys = ["speech", "interface", "listener", "skills", "session", "tts", "stt", "logs", "device"]
-        local_conf = NGIConfig("ngi_local_conf", CONFIG_PATH).content
+        local_conf = NGIConfig("ngi_local_conf", CONFIG_PATH)
         self.assertTrue(all(k for k in local_config_keys if k in local_conf))
 
         shutil.move(bak_user_info, ngi_user_info)
