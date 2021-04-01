@@ -16,6 +16,7 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+from typing import Optional
 
 import json
 import os
@@ -193,12 +194,14 @@ def get_neon_speech_config() -> dict:
     local_config = NGIConfig("ngi_local_conf").content
     user_config = NGIConfig("ngi_user_info").content
     listener_config = user_config.get("listener", {})
+    listener_config["wake_word_enabled"] = user_config["interface"]["wake_word_enabled"]
     lang = "en-us"  # core_lang
     stt_config = user_config.get("stt", {})
 
     if "sample_rate" not in listener_config:
         listener_config["sample_rate"] = listener_config.get("rate")
-    if "wake_word" in listener_config:
+    hotword_config = user_config.get("hotwords")
+    if not hotword_config:
         module = listener_config.pop('module')
         module = "jarbas_pocketsphinx_ww_plug" if module == "pocketsphinx" else module
         hotword_config = {listener_config.pop("wake_word"): {"module": module,
@@ -210,8 +213,6 @@ def get_neon_speech_config() -> dict:
                                                              "sound": "snd/start_listening.wav",
                                                              "local_model_file": listener_config.get("precise", {}).get(
                                                                  "local_model_file")}}
-    else:
-        hotword_config = user_config.get("hotwords", {})
 
     return {"listener": listener_config,
             "hotwords": hotword_config,
@@ -222,6 +223,66 @@ def get_neon_speech_config() -> dict:
             "remote_server": local_config.get("remoteVars", {}).get("remoteHost", "64.34.186.120"),
             "keys": {}
             }
+
+
+def _move_config_sections(user_config, local_config):
+    depreciated_user_configs = ("speech", "interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
+    if any([d in user_config.content for d in depreciated_user_configs]):
+        LOG.warning("Depreciated keys found in user config! Adding them to local config")
+        config_to_move = {"speech": user_config.content.pop("speech", {}),
+                          "interface": user_config.content.pop("interface", {}),
+                          "listener": user_config.content.pop("listener", {}),
+                          "skills": user_config.content.pop("skills", {}),
+                          "session": user_config.content.pop("session", {}),
+                          "tts": user_config.content.pop("tts", {}),
+                          "stt": user_config.content.pop("stt", {}),
+                          "logs": user_config.content.pop("logs", {}),
+                          "device": user_config.content.pop("device", {})}
+        local_config.update_keys(config_to_move)
+
+
+def get_neon_user_config(path: Optional[str] = None) -> dict:
+    """
+    Returns a dict user configuration and handles any migration of configuration values to local config from user config
+    Args:
+        path: optional path to yml configuration files
+    Returns:
+        dict of user configuration
+    """
+    user_config = NGIConfig("ngi_user_info", path)
+    default_user_config = NGIConfig("default_user_conf",
+                                    os.path.join(os.path.dirname(__file__), "default_configurations"))
+    if len(user_config.content) == 0:
+        LOG.info("Created Empty User Config!")
+        user_config.populate(default_user_config.content)
+        # TODO: Update from Mycroft config DM
+    local_config = NGIConfig("ngi_local_conf", path)
+    _move_config_sections(user_config, local_config)  # TODO: Depreciate DM
+    user_config.update_keys(default_user_config.content)
+    # TODO: make_equal_by_keys after references in Neon Core are cleaned
+    return dict(user_config.content)
+
+
+def get_neon_local_config(path: Optional[str] = None):
+    """
+    Returns a dict local configuration and handles any
+     migration of configuration values to local config from user config
+    Args:
+        path: optional path to yml configuration files
+    Returns:
+        dict of local configuration
+    """
+    local_config = NGIConfig("ngi_local_conf", path)
+    default_local_config = NGIConfig("default_core_conf",
+                                     os.path.join(os.path.dirname(__file__), "default_configurations"))
+    if len(local_config.content) == 0:
+        LOG.info("Created Empty Local Config!")
+        local_config.populate(default_local_config.content)
+        # TODO: Update from Mycroft config DM
+    user_config = NGIConfig("ngi_user_info", path)
+    _move_config_sections(user_config, local_config)  # TODO: Depreciate DM
+    local_config.make_equal_by_keys(default_local_config.content)
+    return dict(local_config.content)
 
 
 class NGIConfig:
