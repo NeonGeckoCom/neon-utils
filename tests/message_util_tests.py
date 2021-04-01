@@ -17,4 +17,38 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-__version__ = "0.3.1"
+import sys
+import os
+import unittest
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from neon_utils.message_utils import *
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
+
+
+class MessageUtilTests(unittest.TestCase):
+    def test_request_from_mobile(self):
+        from_mobile = request_from_mobile(Message("", {}, {"mobile": True}))
+        self.assertTrue(from_mobile)
+
+        not_from_mobile = request_from_mobile(Message("", {}, {}))
+        self.assertFalse(not_from_mobile)
+
+    def test_get_message_username(self):
+        with_user = get_message_user(Message("", {}, {"username": "testrunner"}))
+        self.assertEqual(with_user, "testrunner")
+
+        without_user = get_message_user(Message(""))
+        self.assertIsNone(without_user)
+
+    def test_get_message_username_invalid_arg(self):
+        with self.assertRaises(ValueError):
+            get_message_user(None)
+
+        with self.assertRaises(AttributeError):
+            get_message_user("Nobody")
+
+
+if __name__ == '__main__':
+    unittest.main()

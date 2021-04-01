@@ -54,6 +54,13 @@ class FileUtilTests(unittest.TestCase):
         newest_dne = get_most_recent_file_in_dir(os.path.join(ROOT_DIR, "*.fake"))
         self.assertIsNone(newest_dne)
 
+    def test_get_most_recent_file_in_dir_with_ext(self):
+        newest = get_most_recent_file_in_dir(ROOT_DIR, "py")
+        self.assertTrue(os.path.isfile(newest))
+
+        newest_dne = get_most_recent_file_in_dir(ROOT_DIR, "fake")
+        self.assertIsNone(newest_dne)
+
     def test_file_stream(self):
         test_file = os.path.join(AUDIO_PATH, "stop.wav")
         stream = get_audio_file_stream(test_file)

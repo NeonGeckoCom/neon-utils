@@ -16,8 +16,10 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+from datetime import datetime
 
 import pendulum
+from dateutil.tz import tzlocal, gettz
 
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
@@ -72,3 +74,16 @@ def get_timezone(lat, lng) -> (str, float):
     timezone = TimezoneFinder().timezone_at(lng=float(lng), lat=float(lat))
     offset = pendulum.from_timestamp(0, timezone).offset_hours
     return timezone, offset
+
+
+def to_system_time(dt: datetime) -> datetime:
+    """
+    Converts a timezone aware or timezone naiive datetime object to a datetime object in the system tz
+    :param dt: datetime object to convert
+    :return: timezone aware datetime object that can be scheduled
+    """
+    tz = tzlocal()
+    if dt.tzinfo:
+        return dt.astimezone(tz)
+    else:
+        return dt.replace(tzinfo=tz).astimezone(tz)

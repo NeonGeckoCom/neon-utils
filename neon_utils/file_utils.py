@@ -67,13 +67,20 @@ def decode_base64_string_to_file(encoded_string: str, output_path: str) -> str:
     return output_path
 
 
-def get_most_recent_file_in_dir(path: str) -> Optional[str]:
+def get_most_recent_file_in_dir(path: str, ext: Optional[str] = None) -> Optional[str]:
     """
     Gets the most recently created file in the specified path
-    :param path: File path to check
-    :return: Path to newest file in specified path (None if no files in path)
+    :param path: File path or glob pattern to check
+    :param ext: File extension
+    :return: Path to newest file in specified path with specified extension (None if no files in path)
     """
+    if os.path.isdir(path):
+        path = f"{path}/*"
     list_of_files = glob.glob(path)  # * means all if need specific format then *.csv
+    if ext:
+        if not ext.startswith("."):
+            ext = f".{ext}"
+        list_of_files = [file for file in list_of_files if os.path.splitext(file)[1] == ext]
     if list_of_files:
         latest_file = max(list_of_files, key=os.path.getctime)
         return latest_file

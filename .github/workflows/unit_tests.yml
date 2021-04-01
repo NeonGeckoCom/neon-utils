@@ -94,3 +94,21 @@ jobs:
         with:
           name: configuration-util-test-results
           path: tests/configuration-util-test-results.xml
+
+      - name: Test Message Utils
+        run: |
+          pytest tests/message_util_tests.py --doctest-modules --junitxml=tests/message-util-test-results.xml
+      - name: Upload message utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: message-util-test-results
+          path: tests/message-util-test-results.xml
+
+      - name: Test Language Utils
+        run: |
+          pytest tests/language_util_tests.py --doctest-modules --junitxml=tests/language-util-test-results.xml
+      - name: Upload language utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: language-util-test-results
+          path: tests/language-util-test-results.xml
