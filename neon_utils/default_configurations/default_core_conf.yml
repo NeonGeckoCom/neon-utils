@@ -1,0 +1,200 @@
+prefFlags:
+  codeSource: "git"
+  devMode: False
+  autoStart: False
+  autoUpdate: False
+  notifyRelease: True
+  showDemo: True
+  optDiags: False
+  metrics: False
+
+interface:
+# True, False
+  display_neon_brain: False
+  wake_word_enabled: True
+  clap_commands_enabled: False
+  blink_commands_enabled: False
+  random_dialog_enabled: False
+  confirm_listening: True
+  mute_on_listen: False
+  # True=Muted, False=lowered vol
+  use_hesitation: False
+
+devVars:
+  devName:
+  devType: generic
+  # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU
+  version:
+  touchDev:
+  micDev:
+  camDev: 0
+  soundDev:
+  defaultVolume: 60
+  defaultMicVolume: 100
+
+gestures:
+  clapThreshold: 10.0e10
+
+audioService:
+  defaultBackend: "local"
+
+padatious:
+  intent_cache: ~/.neon/intent_cache
+  train_delay: 4
+  single_thread: false
+
+websocket:
+  host: "0.0.0.0"
+  port: 8181
+  route: "/core"
+  ssl: false
+
+gui:
+  # Host information for the gui server
+  lang: en-us
+  enclosure: generic
+  host: 0.0.0.0
+  port: 18181
+  route: /gui
+  ssl: false
+  resource_root: https://0000.us/klatchat/app/files/neon_qml
+
+hotwords:
+  Hey Neon: { module: jarbas_pocketsphinx_ww_plug,
+              phonemes: HH EY . N IY AA N .,
+              threshold: 1e-20,
+              lang: en-us,
+              sample_rate: 16000,
+              listen: True,
+              sound: snd/start_listening.wav,
+              local_model_file: None
+              }
+
+listener:
+  sample_rate: 16000
+  record_wake_words: False
+  save_utterances: False
+  wake_word_upload: {disable: True,
+                     url: "https://training.mycroft.ai/precise/upload"}
+  mute_during_output: True
+  duck_while_listening: 0.3
+  dev_index:
+  phoneme_duration: 120
+  multiplier: 1.0
+  energy_ratio: 1.5
+  wake_word: hey neon
+  stand_up_word: wake up
+  recording_timeout: 10.0,
+  recording_timeout_with_silence: 3.0
+
+skills:
+  auto_update: False
+  debug: True
+  blacklist: []
+  priority: [
+    "device-control-center.neon"
+  ]
+  update_interval: 1.0
+  msm_ver: False
+  repo_url: "https://github.com/MycroftAI/mycroft-skills"
+  repo_branch: "18.08"
+  data_dir: "~/.neon/msm"
+
+audio_parsers:
+  blacklist: ["gender"]
+
+session:
+  ttl: 180
+tts:
+  module: amazon
+  amazon: {
+    "region": 'us-west-2'
+  }
+  mozilla: { "request_url": "http://0.0.0.0:5002/api/tts?" }
+  mimic: { "voice": "ap" }
+  mimic2: {
+    "lang": "en-us",
+    "url": "https://mimic-api.mycroft.ai/synthesize?text="
+  }
+stt:
+  module: google_cloud_streaming
+  translation_module: google
+  detection_module: google
+
+logs:
+  blacklist: ["enclosure.mouth.viseme", "enclosure.mouth.display"]
+
+device:
+  mac: 00:00:00:00:00:00
+  ip4: 127.0.0.1
+  ip6: ::1
+  ver: ''
+
+# Below are (mostly) depreciated DM
+
+remoteVars:
+  coreGit: ${coreGit}
+  coreBranch: ${coreBranch}
+  skillsGit: ${skillsGit}
+  skillsBranch: ${skillsBranch}
+  guiGit: ${guiGit}
+  guiBranch: ${guiBranch}
+  url: https://api.mycroft.ai
+  ver: v1
+
+gnome:
+  favApps:
+  appFolders: "['accessories', 'office', 'Neongecko']"
+
+dirVars:
+  coreDir:
+  rootDir:
+  skillsDir:
+  ngiDir:
+  guiDir:
+  tempDir:
+  docsDir: ~/Documents/NeonGecko
+  diagsDir:
+  cacheDir:
+  ipcDir: /tmp/neon/ipc
+  # Changes to ipcDir must also be made in NGI/utilities/configHelper
+  musicDir: ~/Music
+  videoDir: ~/Videos/NeonGecko
+  picsDir: ~/Pictures/NeonGecko
+  logsDir: /var/log/mycroft
+  repoDir: ~/.neon/skills-repo
+  padatiousDir: ~/.neon/intent_cache
+
+fileVars:
+  sshKey: ${sshKey}
+  notify: ${coreDir}/mycroft/res/snd/loaded.wav
+  startListening: ${coreDir}/mycroft/res/snd/start_listening.wav
+  endListening: ${coreDir}/mycroft/res/snd/end_listening.wav
+
+ttsOpts: {None: '', 'Chinese, Mandarin': zh-ZH, Danish: da-DK, Dutch: nl-NL, 'English, Australian': en-AU,
+          'English, British': en-GB, 'English, Indian': en-IN, 'English, US': en-US, 'English, Welsh': en-GB-WLS,
+          French: fr-FR, 'French, Canadian': fr-CA, Hindi: hi-IN, German: de-DE, Icelandic: is-IS,
+          Italian: it-IT, Japanese: ja-JP, Korean: ko-KR, Norwegian: nb-NO, Polish: pl-PL,
+          'Portuguese, Brazilian': pt-BR, 'Portuguese, European': pt-PT, Romanian: ro-RO,
+          Russian: ru-RU, 'Spanish, European': es-ES, 'Spanish, Mexican': es-MX, 'Spanish, US': es-US,
+          Swedish: sv-SE, Turkish: tr-TR, Welsh: cy-GB}
+
+sttOpts: {Deutsch (Deutschland): de-DE, English (United States): en-US, Español (España): es-ES,
+          Español (México): es-MX, Français (Canada): fr-CA, Français (France): fr-FR,
+          Italiano (Italia): it-IT, Português (Portugal): pt-PT}
+
+sttSpokenOpts: {Afrikaans: af-ZA, Amharic: am-ET, Armenian: hy-AM, Azerbaijani: az-AZ,
+                Indonesian: id-ID, Malay: ms-MY, Bengali: bn-BD, Catalan: ca-ES, Czech: cs-CZ, Danish: da-DK,
+                German: de-DE, 'English, British': en-GB, 'English, American': en-US, Spanish: es-ES,
+                'Spanish, American': es-US, 'Spanish, Mexican': es-MX, Basque: eu-ES, Filipino: fil-PH,
+                'French, Canadian': fr-CA, French: fr-FR, Galician: gl-ES, Georgian: ka-GE, Gujarati: gu-IN,
+                Croatian: hr-HR, Zulu: zu-ZA, Icelandic: is-IS, Italian: it-IT, Javanese: jv-ID,
+                Kannada: kn-IN, Khmer: km-KH, Lao: lo-LA, Latvian: lv-LV, Lithuanian: lt-LT, Hungarian: hu-HU,
+                Malayalam: ml-IN, Marathi: mr-IN, Dutch: nl-NL, Nepali: ne-NP, Norwegian Bokmål: nb-NO,
+                Polish: pl-PL, 'Portuguese, Brazilian': pt-BR, Portuguese: pt-PT, Romanian: ro-RO,
+                Sinhala: si-LK, Slovak: sk-SK, Slovenian: sl-SI, Sundanese: su-ID, Swahili: sw-TZ,
+                Finnish: fi-FI, Swedish: sv-SE, Tamil: ta-IN, Telugu: te-IN, Vietnamese: vi-VN,
+                Turkish: tr-TR, Urdu: ur-PK, Greek: el-GR, Bulgarian: bg-BG, Russian: ru-RU, Serbian: sr-RS,
+                Ukrainian: uk-UA, Hebrew: he-IL, Arabic: ar-IL, Persian: fa-IR, Hindi: hi-IN, Thai: th-TH,
+                Korean: ko-KR, Taiwanese: zh-TW, 'Chinese, Cantonese': yue-Hant-HK, Japanese: ja-JP,
+                'Chinese, Mandarin': zh}
