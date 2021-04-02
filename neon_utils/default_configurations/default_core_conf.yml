@@ -100,6 +100,9 @@ skills:
   repo_branch: "18.08"
   data_dir: "~/.neon/msm"
 
+audio_parsers:
+  blacklist: ["gender"]
+
 session:
   ttl: 180
 tts:

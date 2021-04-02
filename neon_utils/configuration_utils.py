@@ -46,7 +46,6 @@ class NGIConfig:
         self.content = self._load_yaml_file()
         if not self.content:
             self.content = {}
-        # TODO: Register messagebus listener for config changes
         NGIConfig.configuration_list.append(self.name)
 
     def populate(self, content, check_existing=False):
@@ -454,30 +453,16 @@ def get_neon_speech_config() -> dict:
     lang = "en-us"  # core_lang
     stt_config = local_config.get("stt", {})
 
-    if "sample_rate" not in listener_config:
-        listener_config["sample_rate"] = listener_config.get("rate")
     hotword_config = local_config.get("hotwords")
-    if not hotword_config:  # TODO: Fix this when we get local config DM
-        module = listener_config.pop('module')
-        module = "jarbas_pocketsphinx_ww_plug" if module == "pocketsphinx" else module
-        hotword_config = {listener_config.pop("wake_word"): {"module": module,
-                                                             "phonemes": listener_config.pop('phonemes'),
-                                                             "threshold": listener_config.pop('threshold'),
-                                                             "lang": listener_config.get('language'),
-                                                             "sample_rate": listener_config.get('sample_rate'),
-                                                             "listen": True,
-                                                             "sound": "snd/start_listening.wav",
-                                                             "local_model_file": listener_config.get("precise", {}).get(
-                                                                 "local_model_file")}}
 
     return {"listener": listener_config,
             "hotwords": hotword_config,
-            "audio_parsers": {},
+            "audio_parsers": local_config["audio_parsers"],
             "lang": lang,
             "stt": stt_config,
             "metric_upload": local_config["prefFlags"].get("metrics", False),
             "remote_server": local_config.get("remoteVars", {}).get("remoteHost", "64.34.186.120"),
-            "keys": {}
+            "keys": {}  # TODO: Read from somewhere DM
             }
 
 
@@ -517,11 +502,11 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     if len(user_config.content) == 0:
         LOG.info("Created Empty User Config!")
         user_config.populate(default_user_config.content)
-        # TODO: Update from Mycroft config DM
     local_config = NGIConfig("ngi_local_conf", path)
-    _move_config_sections(user_config, local_config)  # TODO: Depreciate DM
+    _move_config_sections(user_config, local_config)
     user_config.update_keys(default_user_config.content)
     # TODO: make_equal_by_keys after references in Neon Core are cleaned
+    LOG.info(f"Loaded user config from {user_config.file_path}")
     return user_config
 
 
@@ -542,6 +527,7 @@ def get_neon_local_config(path: Optional[str] = None):
         local_config.populate(default_local_config.content)
         # TODO: Update from Mycroft config DM
     user_config = NGIConfig("ngi_user_info", path)
-    _move_config_sections(user_config, local_config)  # TODO: Depreciate DM
+    _move_config_sections(user_config, local_config)
     local_config.make_equal_by_keys(default_local_config.content)
+    LOG.info(f"Loaded local config from {local_config.file_path}")
     return dict(local_config.content)
