@@ -60,15 +60,16 @@ class NGIConfig:
         for item in key:
             self.__sub__(item)
 
-    def make_equal_by_keys(self, other: MutableMapping):
+    def make_equal_by_keys(self, other: MutableMapping, recursive: bool = True):
         """
         Adds and removes keys from this config such that it has the same keys as 'other'. Configuration values are
         preserved with any added keys using default values from 'other'.
         Args:
             other: dict of keys and default values this configuration should have
+            recursive: flag to indicate configuration may be merged recursively
         """
         old_content = deepcopy(self.content)
-        self.content = dict_make_equal_keys(self.content, other)
+        self.content = dict_make_equal_keys(self.content, other, recursive)
         if self.content != old_content:
             self._reload_yaml_file()
 

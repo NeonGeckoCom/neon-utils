@@ -144,24 +144,23 @@ gnome:
   appFolders: "['accessories', 'office', 'Neongecko']"
 
 dirVars:
-  coreDir: ${coreDir}
-  rootDir: ${rootDir}
-  skillsDir: ${skillsDir}
-  ngiDir: ${ngiDir}
-  guiDir: ${guiDir}
-  tempDir: ${tempDir}
-  docsDir: ${docsDir}
-  diagsDir: ${diagsDir}
-  cacheDir: ${cacheDir}
+  coreDir:
+  rootDir:
+  skillsDir:
+  ngiDir:
+  guiDir:
+  tempDir:
+  docsDir: ~/Documents/NeonGecko
+  diagsDir:
+  cacheDir:
   ipcDir: /tmp/neon/ipc
   # Changes to ipcDir must also be made in NGI/utilities/configHelper
-  scriptsDir: ${coreDir}/scripts
-  musicDir: ${ngiDir}/Music/NeonGecko
-  videoDir: ${ngiDir}/Videos/NeonGecko
-  picsDir: ${ngiDir}/Pictures/NeonGecko
-  logsDir: ${diagsDir}/logs
-  repoDir: /home/${installUser}/.neon/skills-repo
-  padatiousDir: /home/${installUser}/.neon/intent_cache
+  musicDir: ~/Music
+  videoDir: ~/Videos/NeonGecko
+  picsDir: ~/Pictures/NeonGecko
+  logsDir: /var/log/mycroft
+  repoDir: ~/.neon/skills-repo
+  padatiousDir: ~/.neon/intent_cache
 
 fileVars:
   sshKey: ${sshKey}
