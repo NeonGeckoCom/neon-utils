@@ -206,6 +206,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["stt"], dict)
         self.assertIsInstance(config["listener"], dict)
         self.assertIsInstance(config["hotwords"], dict)
+        self.assertIsInstance(config["listener"]["wake_word_enabled"], bool)
 
     def test_get_user_config_add_keys(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")

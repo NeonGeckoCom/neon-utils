@@ -286,9 +286,9 @@ def get_config_dir():
     for p in [path for path in sys.path if path != ""]:
         if exists(join(p, "NGI")):
             return join(p, "NGI")
-    if exists(expanduser("~/.neon")):
-        return expanduser("~/.neon")
-    return expanduser("~/")
+    # TODO: Standard core location? DM
+    default_path = expanduser("~/.local/share/neon")
+    return default_path
 
 
 def create_file(filename):

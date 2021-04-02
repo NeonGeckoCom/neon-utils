@@ -10,8 +10,8 @@ prefFlags:
 
 interface:
 # True, False
-  display_neon_brain: True
-  wake_word_enabled: False
+  display_neon_brain: False
+  wake_word_enabled: True
   clap_commands_enabled: False
   blink_commands_enabled: False
   random_dialog_enabled: False
