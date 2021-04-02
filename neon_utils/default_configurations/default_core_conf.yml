@@ -79,11 +79,11 @@ listener:
   mute_during_output: True
   duck_while_listening: 0.3
   dev_index:
-  phoneme_duration: 120,
-  multiplier: 1.0,
-  energy_ratio: 1.5,
-  wake_word: hey neon,
-  stand_up_word: wake up,
+  phoneme_duration: 120
+  multiplier: 1.0
+  energy_ratio: 1.5
+  wake_word: hey neon
+  stand_up_word: wake up
   recording_timeout: 10.0,
   recording_timeout_with_silence: 3.0
 
