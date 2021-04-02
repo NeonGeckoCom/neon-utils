@@ -43,6 +43,8 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/neongeckocom/neon-skill-utils",
     packages=setuptools.find_packages(),
+    package_data={'configs': ['*.yml']},
+    include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent"
