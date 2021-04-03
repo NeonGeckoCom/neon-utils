@@ -1,5 +1,5 @@
 mycroft-messagebus-client>=0.9.1
-requests~=2.23.0
+requests
 beautifulsoup4~=4.9.3
 lxml~=4.5.2
 pendulum~=2.1.2

@@ -31,9 +31,9 @@ class STT(metaclass=ABCMeta):
     """ STT Base class, all  STT backends derives from this one. """
     def __init__(self, config=None):
         config_core = config or get_neon_speech_config()
-        metric_upload = config.get("metric_upload", False)
+        metric_upload = config_core.get("metric_upload", False)
         if metric_upload:
-            server_addr = config.get("remote_server", "64.34.186.120")
+            server_addr = config_core.get("remote_server", "64.34.186.120")
             self.server_bus = MessageBusClient(host=server_addr)
             self.server_bus.run_in_thread()
         else:
