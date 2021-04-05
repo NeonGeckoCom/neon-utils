@@ -466,6 +466,31 @@ def get_neon_speech_config() -> dict:
             }
 
 
+def get_neon_bus_config() -> dict:
+    """
+    Get a configuration dict for the messagebus
+    Returns:
+        dict of config params used for a messagebus client
+    """
+    return get_neon_local_config().get("websocket")
+
+
+def get_neon_audio_config() -> dict:
+    """
+        Get a configuration dict for the messagebus
+        Returns:
+            dict of config params used for a messagebus client
+        """
+    return get_neon_local_config().get("audioService")
+
+
+def get_neon_api_config() -> dict:
+    core_config = get_neon_local_config()
+    api_config = core_config.get("api")
+    api_config["metrics"] = core_config["prefFlags"].get("metrics", False)
+    return api_config
+
+
 def _move_config_sections(user_config, local_config):
     """
     Temporary method to handle one-time migration of user_config params to local_config
@@ -531,3 +556,26 @@ def get_neon_local_config(path: Optional[str] = None):
     local_config.make_equal_by_keys(default_local_config.content)
     LOG.info(f"Loaded local config from {local_config.file_path}")
     return dict(local_config.content)
+
+
+def get_neon_device_type() -> str:
+    """
+    Returns device type (server, pi, other)
+    Returns:
+        str device type
+    """
+    import platform
+    import importlib.util
+    local_config = get_neon_local_config()
+
+    if "pi" in local_config["devVars"].get("devType", ""):
+        return "pi"
+    if local_config["devVars"].get("devType") == "server":
+        return "server"
+    if "arm" in platform.machine():
+        return "pi"
+    if importlib.util.find_spec("neon-core-client"):
+        return "desktop"
+    if importlib.util.find_spec("neon-core-server"):
+        return "server"
+    return "desktop"
