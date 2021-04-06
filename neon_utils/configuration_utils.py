@@ -215,7 +215,7 @@ class NGIConfig:
         try:
             self._loaded = os.path.getmtime(self.file_path)
             with open(self.file_path, 'r') as f:
-                return self.parser.load(f)
+                return self.parser.load(f) or dict()
         except FileNotFoundError as x:
             LOG.error(f"Configuration file not found error: {x}")
         except Exception as c:

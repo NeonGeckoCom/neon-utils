@@ -351,6 +351,11 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         shutil.move(bak_local_conf, ngi_local_conf)
 
+    def test_new_ngi_config(self):
+        config = NGIConfig("temp_conf", CONFIG_PATH)
+        self.assertIsInstance(config.content, dict)
+        os.remove(os.path.join(CONFIG_PATH, "temp_conf.yml"))
+
 
 if __name__ == '__main__':
     unittest.main()
