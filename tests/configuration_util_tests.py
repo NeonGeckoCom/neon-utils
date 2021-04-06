@@ -194,6 +194,10 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(from_disk, TEST_DICT)
         os.remove(file_path)
 
+    def test_safe_mycroft_config(self):
+        config = safe_mycroft_config()
+        self.assertIsInstance(config, dict)
+
     def test_get_cli_config(self):
         config = get_neon_cli_config()
         self.assertIn("log_dir", config)

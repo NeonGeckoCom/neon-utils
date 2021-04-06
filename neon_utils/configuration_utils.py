@@ -467,29 +467,61 @@ def get_neon_speech_config() -> dict:
             }
 
 
+def safe_mycroft_config() -> dict:
+    """
+    Safe reference to mycroft config that always returns a dict
+    Returns:
+        dict mycroft configuration
+    """
+    try:
+        mycroft = read_mycroft_config()
+    except FileNotFoundError:
+        mycroft = {}
+    return mycroft
+
+
 def get_neon_bus_config() -> dict:
     """
     Get a configuration dict for the messagebus
     Returns:
         dict of config params used for a messagebus client
     """
-    return {**read_mycroft_config().get("websocket", {}), **get_neon_local_config().get("websocket", {})}
+    mycroft = safe_mycroft_config().get("websocket", {})
+    neon = get_neon_local_config().get("websocket", {})
+    merged = {**mycroft, **neon}
+    if merged.keys() != neon.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
+    return merged
 
 
 def get_neon_audio_config() -> dict:
     """
-        Get a configuration dict for the messagebus
-        Returns:
-            dict of config params used for a messagebus client
-        """
-    return {**read_mycroft_config().get("Audio", {}), **get_neon_local_config().get("audioService")}
+    Get a configuration dict for the audio module
+    Returns:
+        dict of config params used for the Audio module
+    """
+    mycroft = safe_mycroft_config().get("Audio", {})
+    neon = get_neon_local_config().get("audioService", {})
+    merged = {**mycroft, **neon}
+    if merged.keys() != neon.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
+    return merged
 
 
 def get_neon_api_config() -> dict:
+    """
+    Get a configuration dict for the api module
+    Returns:
+        dict of config params used for the Mycroft API module
+    """
     core_config = get_neon_local_config()
     api_config = core_config.get("api")
     api_config["metrics"] = core_config["prefFlags"].get("metrics", False)
-    return {**read_mycroft_config().get("server", {}), **api_config}
+    mycroft = safe_mycroft_config().get("server", {})
+    merged = {**mycroft, **api_config}
+    if merged.keys() != api_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
+    return merged
 
 
 def _move_config_sections(user_config, local_config):
