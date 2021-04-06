@@ -29,6 +29,7 @@ from contextlib import suppress
 from filelock import FileLock
 from glob import glob
 from ovos_utils.json_helper import load_commented_json
+from ovos_utils.configuration import read_mycroft_config
 from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
@@ -472,7 +473,7 @@ def get_neon_bus_config() -> dict:
     Returns:
         dict of config params used for a messagebus client
     """
-    return get_neon_local_config().get("websocket")
+    return {**read_mycroft_config().get("websocket", {}), **get_neon_local_config().get("websocket", {})}
 
 
 def get_neon_audio_config() -> dict:
@@ -481,14 +482,14 @@ def get_neon_audio_config() -> dict:
         Returns:
             dict of config params used for a messagebus client
         """
-    return get_neon_local_config().get("audioService")
+    return {**read_mycroft_config().get("Audio", {}), **get_neon_local_config().get("audioService")}
 
 
 def get_neon_api_config() -> dict:
     core_config = get_neon_local_config()
     api_config = core_config.get("api")
     api_config["metrics"] = core_config["prefFlags"].get("metrics", False)
-    return api_config
+    return {**read_mycroft_config().get("server", {}), **api_config}
 
 
 def _move_config_sections(user_config, local_config):
