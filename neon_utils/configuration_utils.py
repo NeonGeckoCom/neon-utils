@@ -660,11 +660,13 @@ def get_neon_device_type() -> str:
     import platform
     import importlib.util
     local_config = get_neon_local_config()
-
-    if "pi" in local_config["devVars"].get("devType", ""):
+    config_dev = local_config["devVars"].get("devType", "")
+    if "pi" in config_dev:
         return "pi"
-    if local_config["devVars"].get("devType") == "server":
+    if config_dev == "server":
         return "server"
+    if config_dev != "generic":
+        return config_dev
     if "arm" in platform.machine():
         return "pi"
     if importlib.util.find_spec("neon-core-client"):
@@ -674,9 +676,27 @@ def get_neon_device_type() -> str:
     return "desktop"
 
 
-def get_mycroft_compatible_config():
+def is_neon_core() -> bool:
+    """
+    Checks for neon-specific packages to determine if this is a Neon Core or a Mycroft Core
+    Returns:
+        True if core is Neon, else False
+    """
+    import importlib.util
+    if importlib.util.find_spec("neon-speech"):
+        return True
+    if importlib.util.find_spec("neon-core-client"):
+        return True
+    if importlib.util.find_spec("neon-core-server"):
+        return True
+    return False
+
+
+def get_mycroft_compatible_config(mycroft_only=False):
     # TODO: This is kinda slow, should probably be depreciated DM
     default_config = _safe_mycroft_config()
+    if mycroft_only or not is_neon_core():
+        return default_config
     speech = get_neon_speech_config()
     user = get_neon_user_config()
     local = get_neon_local_config()

@@ -46,9 +46,11 @@ class NeonSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         self.user_config = NGIConfig("ngi_user_info")
         self.local_config = NGIConfig("ngi_local_conf")
-        # TODO: Patch missing configs DM
+
+        # TODO: Patch missing configs, depreciate these extraneous references DM
         self.configuration_available = self.local_config.content
         self.user_info_available = self.user_config.content
+
         self.ngi_settings: Optional[NGIConfig] = None
 
         super(NeonSkill, self).__init__(name, bus, use_settings)

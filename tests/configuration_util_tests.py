@@ -356,6 +356,9 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config.content, dict)
         os.remove(os.path.join(CONFIG_PATH, "temp_conf.yml"))
 
+    def test_is_neon_core(self):
+        self.assertIsInstance(is_neon_core(), bool)
+
 
 if __name__ == '__main__':
     unittest.main()
