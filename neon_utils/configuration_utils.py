@@ -29,6 +29,7 @@ from contextlib import suppress
 from filelock import FileLock
 from glob import glob
 from ovos_utils.json_helper import load_commented_json
+from ovos_utils.configuration import read_mycroft_config
 from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
@@ -443,27 +444,90 @@ def get_neon_cli_config() -> dict:
 
 def get_neon_speech_config() -> dict:
     """
-    Get a configuration dict for listener
+    Get a configuration dict for listener. Merge any values from Mycroft config if missing from Neon.
     Returns:
         dict of config params used for listener in neon_speech
     """
+    mycroft = _safe_mycroft_config()
     local_config = get_neon_local_config()
-    listener_config = local_config.get("listener", {})
-    listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
-    lang = "en-us"  # core_lang
-    stt_config = local_config.get("stt", {})
 
-    hotword_config = local_config.get("hotwords")
+    neon_listener_config = local_config.get("listener", {})
+    neon_listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
+    neon_listener_config["save_utterances"] = local_config["interface"].get("saveAudio", False)
+    neon_listener_config["record_wake_words"] = local_config["interface"].get("saveAudio", False)
+    merged_listener = {**mycroft.get("listener", {}), **neon_listener_config}
+    if merged_listener.keys() != neon_listener_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged_listener.keys()}")
 
-    return {"listener": listener_config,
+    lang = mycroft.get("language", {}).get("internal", "en-us")  # core_lang
+
+    neon_stt_config = local_config.get("stt", {})
+    merged_stt_config = {**mycroft.get("stt", {}), **neon_stt_config}
+    if merged_stt_config.keys() != neon_stt_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged_stt_config.keys()}")
+
+    hotword_config = local_config.get("hotwords") or mycroft.get("hotwords")
+    if hotword_config != local_config.get("hotwords"):
+        LOG.warning(f"Neon hotword config missing! {hotword_config}")
+
+    neon_audio_parser_config = local_config.get("audio_parsers", {})
+    merged_audio_parser_config = {**mycroft.get("audio_parsers", {}), **neon_audio_parser_config}
+    if merged_audio_parser_config.keys() != neon_audio_parser_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged_audio_parser_config.keys()}")
+
+    return {"listener": merged_listener,
             "hotwords": hotword_config,
-            "audio_parsers": local_config["audio_parsers"],
+            "audio_parsers": merged_audio_parser_config,
             "lang": lang,
-            "stt": stt_config,
+            "stt": merged_stt_config,
             "metric_upload": local_config["prefFlags"].get("metrics", False),
             "remote_server": local_config.get("remoteVars", {}).get("remoteHost", "64.34.186.120"),
             "keys": {}  # TODO: Read from somewhere DM
             }
+
+
+def get_neon_bus_config() -> dict:
+    """
+    Get a configuration dict for the messagebus. Merge any values from Mycroft config if missing from Neon.
+    Returns:
+        dict of config params used for a messagebus client
+    """
+    mycroft = _safe_mycroft_config().get("websocket", {})
+    neon = get_neon_local_config().get("websocket", {})
+    merged = {**mycroft, **neon}
+    if merged.keys() != neon.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
+    return merged
+
+
+def get_neon_audio_config() -> dict:
+    """
+    Get a configuration dict for the audio module. Merge any values from Mycroft config if missing from Neon.
+    Returns:
+        dict of config params used for the Audio module
+    """
+    mycroft = _safe_mycroft_config().get("Audio", {})
+    neon = get_neon_local_config().get("audioService", {})
+    merged = {**mycroft, **neon}
+    if merged.keys() != neon.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
+    return merged
+
+
+def get_neon_api_config() -> dict:
+    """
+    Get a configuration dict for the api module. Merge any values from Mycroft config if missing from Neon.
+    Returns:
+        dict of config params used for the Mycroft API module
+    """
+    core_config = get_neon_local_config()
+    api_config = core_config.get("api")
+    api_config["metrics"] = core_config["prefFlags"].get("metrics", False)
+    mycroft = _safe_mycroft_config().get("server", {})
+    merged = {**mycroft, **api_config}
+    if merged.keys() != api_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
+    return merged
 
 
 def _move_config_sections(user_config, local_config):
@@ -486,6 +550,19 @@ def _move_config_sections(user_config, local_config):
                           "logs": user_config.content.pop("logs", {}),
                           "device": user_config.content.pop("device", {})}
         local_config.update_keys(config_to_move)
+
+
+def _safe_mycroft_config() -> dict:
+    """
+    Safe reference to mycroft config that always returns a dict
+    Returns:
+        dict mycroft configuration
+    """
+    try:
+        mycroft = read_mycroft_config()
+    except FileNotFoundError:
+        mycroft = {}
+    return mycroft
 
 
 def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
@@ -531,3 +608,26 @@ def get_neon_local_config(path: Optional[str] = None):
     local_config.make_equal_by_keys(default_local_config.content)
     LOG.info(f"Loaded local config from {local_config.file_path}")
     return dict(local_config.content)
+
+
+def get_neon_device_type() -> str:
+    """
+    Returns device type (server, pi, other)
+    Returns:
+        str device type
+    """
+    import platform
+    import importlib.util
+    local_config = get_neon_local_config()
+
+    if "pi" in local_config["devVars"].get("devType", ""):
+        return "pi"
+    if local_config["devVars"].get("devType") == "server":
+        return "server"
+    if "arm" in platform.machine():
+        return "pi"
+    if importlib.util.find_spec("neon-core-client"):
+        return "desktop"
+    if importlib.util.find_spec("neon-core-server"):
+        return "server"
+    return "desktop"

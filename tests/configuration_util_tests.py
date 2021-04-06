@@ -194,11 +194,40 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(from_disk, TEST_DICT)
         os.remove(file_path)
 
+    def test_safe_mycroft_config(self):
+        from neon_utils.configuration_utils import _safe_mycroft_config
+        config = _safe_mycroft_config()
+        self.assertIsInstance(config, dict)
+
     def test_get_cli_config(self):
         config = get_neon_cli_config()
         self.assertIn("log_dir", config)
         self.assertIn("neon_core_version", config)
         self.assertIn("wake_words_enabled", config)
+
+    def test_get_bus_config(self):
+        config = get_neon_bus_config()
+        self.assertIn("host", config)
+        self.assertIn("port", config)
+        self.assertIn("route", config)
+        self.assertIn("ssl", config)
+
+        self.assertIsInstance(config["host"], str)
+        self.assertIsInstance(config["port"], int)
+        self.assertIsInstance(config["route"], str)
+        self.assertTrue(config["route"].startswith('/'))
+        self.assertIsInstance(config["ssl"], bool)
+
+    def test_get_api_config(self):
+        config = get_neon_api_config()
+        self.assertIsInstance(config["url"], str)
+        self.assertIsInstance(config["version"], str)
+        self.assertIsInstance(config["update"], bool)
+        self.assertIsInstance(config["metrics"], bool)
+        self.assertIsInstance(config["disabled"], bool)
+
+    def test_get_device_type(self):
+        self.assertEqual(get_neon_device_type(), "desktop")
 
     def test_get_speech_config(self):
         config = get_neon_speech_config()
