@@ -195,6 +195,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         os.remove(file_path)
 
     def test_safe_mycroft_config(self):
+        from neon_utils.configuration_utils import _safe_mycroft_config
         config = _safe_mycroft_config()
         self.assertIsInstance(config, dict)
 
