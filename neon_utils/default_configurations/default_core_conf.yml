@@ -7,6 +7,8 @@ prefFlags:
   showDemo: True
   optDiags: False
   metrics: False
+  saveAudio: False
+  saveText: True
 
 interface:
 # True, False

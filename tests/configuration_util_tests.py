@@ -195,7 +195,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         os.remove(file_path)
 
     def test_safe_mycroft_config(self):
-        config = safe_mycroft_config()
+        config = _safe_mycroft_config()
         self.assertIsInstance(config, dict)
 
     def test_get_cli_config(self):
