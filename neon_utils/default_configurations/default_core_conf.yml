@@ -95,15 +95,18 @@ listener:
 
 skills:
   auto_update: False
+  install_essential: True
+  install_default: True
   debug: True
   blacklist: []
   priority: [
     "device-control-center.neon"
   ]
-  update_interval: 1.0
-  msm_ver: False
-  repo_url: "https://github.com/MycroftAI/mycroft-skills"
-  repo_branch: "18.08"
+  essential_skills: []
+  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
+  disable_osm: False
+  appstore_sync_interval: 6
+  auto_update_interval: 1.0
   data_dir: "~/.neon/msm"
 
 audio_parsers:
@@ -160,14 +163,14 @@ gnome:
 
 dirVars:
   coreDir:
-  rootDir:
-  skillsDir:
+  rootDir: ~/.local/share/neon
+  skillsDir: ~/.local/share/neon/skills
   ngiDir:
   guiDir:
-  tempDir:
+  tempDir: /tmp/neon
   docsDir: ~/Documents/NeonGecko
   diagsDir:
-  cacheDir:
+  cacheDir: ~/.local/share/neon/cache
   ipcDir: /tmp/neon/ipc
   # Changes to ipcDir must also be made in NGI/utilities/configHelper
   musicDir: ~/Music

@@ -70,7 +70,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
         ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
         shutil.copy(ngi_user_info, old_user_info)
-        user_conf = NGIConfig("ngi_user_info", CONFIG_PATH)
+        user_conf = NGIConfig("ngi_user_info", CONFIG_PATH, True)
         self.assertEqual(user_conf.content["user"]["full_name"], 'Test User')
         self.assertNotIn("phone_verified", user_conf.content["user"])
         self.assertIn('bad_key', user_conf.content["user"])
@@ -95,7 +95,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
         ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
         shutil.copy(ngi_user_info, old_user_info)
-        user_conf = NGIConfig("ngi_user_info", CONFIG_PATH)
+        user_conf = NGIConfig("ngi_user_info", CONFIG_PATH, True)
         self.assertEqual(user_conf.content["user"]["full_name"], 'Test User')
         self.assertNotIn("phone_verified", user_conf.content["user"])
         self.assertIn('bad_key', user_conf.content["user"])
@@ -314,6 +314,42 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config, dict)
         self.assertIn("internal", config)
         self.assertIn("user", config)
+        self.assertIn("detection_module", config)
+        self.assertIn("translation_module", config)
+        self.assertIn("boost", config)
+
+    def test_get_mycroft_compat_config(self):
+        mycroft_config = get_mycroft_compatible_config()
+        self.assertIsInstance(mycroft_config, dict)
+        self.assertIsInstance(mycroft_config["language"], dict)
+        self.assertIsInstance(mycroft_config["listener"], dict)
+        self.assertIsInstance(mycroft_config["stt"], dict)
+        self.assertIsInstance(mycroft_config["tts"], dict)
+
+    def test_config_cache(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+
+        shutil.copy(ngi_local_conf, bak_local_conf)
+        config_1 = NGIConfig("ngi_local_conf", CONFIG_PATH)
+        self.assertFalse(config_1.requires_reload)
+        config_2 = NGIConfig("ngi_local_conf", CONFIG_PATH)
+        self.assertFalse(config_2.requires_reload)
+        self.assertEqual(config_1.content, config_2.content)
+
+        config_1.update_yaml_file("prefFlags", "autoStart", False)
+        self.assertEqual(config_1.content, config_2.content)
+        self.assertEqual(config_2["prefFlags"]["autoStart"], False)
+        self.assertFalse(config_2._pending_write)
+
+        self.assertTrue(config_2.requires_reload)
+        config_2.update_yaml_file("prefFlags", "devMode", False, multiple=True)
+        self.assertEqual(config_2["prefFlags"]["devMode"], False)
+        self.assertTrue(config_2._pending_write)
+        config_2.write_changes()
+        self.assertFalse(config_2._pending_write)
+
+        shutil.move(bak_local_conf, ngi_local_conf)
 
 
 if __name__ == '__main__':

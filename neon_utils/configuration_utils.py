@@ -36,25 +36,42 @@ from neon_utils import LOG
 
 
 class NGIConfig:
-    configuration_list = []
+    configuration_list = dict()
 
-    def __init__(self, name, path=None):
+    def __init__(self, name, path=None, force_reload: bool = False):
         self.name = name
         self.path = path or get_config_dir()
         self.parser = YAML()
         self.lock = FileLock(f"{self.file_path}.lock", timeout=10)
-        self._requires_reload = True
-        self.content = self._load_yaml_file()
-        if not self.content:
-            self.content = {}
-        NGIConfig.configuration_list.append(self.name)
+        self._pending_write = False
+        self.content = dict()
+        self._loaded = os.path.getmtime(self.file_path)
+        if not force_reload and self.__repr__() in NGIConfig.configuration_list:
+            cache = NGIConfig.configuration_list[self.__repr__()]
+            cache.check_reload()
+            self.content = cache.content
+        else:
+            self.content = self._load_yaml_file()
+            NGIConfig.configuration_list[self.__repr__()] = self
+
+    @property
+    def requires_reload(self):
+        return self._loaded != os.path.getmtime(self.file_path)
+
+    def check_reload(self):
+        if self._loaded != os.path.getmtime(self.file_path):
+            self._load_yaml_file()
+
+    def write_changes(self):
+        if self._pending_write:
+            self._write_yaml_file()
 
     def populate(self, content, check_existing=False):
         if not check_existing:
             self.__add__(content)
             return
         self.content = dict_merge(content, self.content)  # to_change, one_with_all_keys
-        self._reload_yaml_file()
+        self._write_yaml_file()
 
     def remove_key(self, *key):
         for item in key:
@@ -71,7 +88,7 @@ class NGIConfig:
         old_content = deepcopy(self.content)
         self.content = dict_make_equal_keys(self.content, other, recursive)
         if self.content != old_content:
-            self._reload_yaml_file()
+            self._write_yaml_file()
 
     def update_keys(self, other):
         """
@@ -81,7 +98,7 @@ class NGIConfig:
             other: dict of keys and default values this should be added to this configuration
         """
         self.content = dict_update_keys(self.content, other)  # to_change, one_with_all_keys
-        self._reload_yaml_file()
+        self._write_yaml_file()
 
     @property
     def file_path(self):
@@ -128,6 +145,7 @@ class NGIConfig:
         :return: pre-existing parameter if nothing to update or error if invalid yaml_type.
         """
         # with self.lock.acquire(30):
+        self.check_reload()
         before_change = self.content
         LOG.debug(value)
         if header and sub_header:
@@ -147,9 +165,10 @@ class NGIConfig:
                 return
 
         if not multiple:
-            self._reload_yaml_file()
+            self._write_yaml_file()
         else:
             LOG.debug("More than one change")
+            self._pending_write = True
 
     def export_to_json(self) -> str:
         """
@@ -170,7 +189,7 @@ class NGIConfig:
 
         """
         self.content = pref_dict
-        self._reload_yaml_file()
+        self._write_yaml_file()
         return self
 
     def from_json(self, json_path: str):
@@ -183,7 +202,7 @@ class NGIConfig:
 
         """
         self.content = load_commented_json(json_path)
-        self._reload_yaml_file()
+        self._write_yaml_file()
         return self
 
     def _load_yaml_file(self) -> dict:
@@ -194,17 +213,16 @@ class NGIConfig:
                  selected YAML.
         """
         try:
-            self._requires_reload = False
+            self._loaded = os.path.getmtime(self.file_path)
             with open(self.file_path, 'r') as f:
                 return self.parser.load(f)
         except FileNotFoundError as x:
             LOG.error(f"Configuration file not found error: {x}")
         except Exception as c:
             LOG.error(f"Configuration file error: {c}")
-        self._requires_reload = True
         return dict()
 
-    def _reload_yaml_file(self):
+    def _write_yaml_file(self):
         """
         Overwrites and/or updates the YML at the specified file_path.
         """
@@ -216,6 +234,8 @@ class NGIConfig:
                 with open(self.file_path, 'w+') as f:
                     self.parser.dump(self.content, f)
                     LOG.debug(f"YAML updated {self.name}")
+                self._loaded = os.path.getmtime(self.file_path)
+                self._pending_write = False
         except FileNotFoundError as x:
             LOG.error(f"Configuration file not found error: {x}")
 
@@ -227,6 +247,7 @@ class NGIConfig:
 
     def __setitem__(self, key, value):
         LOG.info(f"Config changes pending write to disk!")
+        self._pending_write = True
         self.content[key] = value
 
     def __repr__(self):
@@ -249,7 +270,7 @@ class NGIConfig:
                 self.content = to_update
         else:
             raise TypeError("__add__ expects an argument other than None")
-        self._reload_yaml_file()
+        self._write_yaml_file()
 
     def __sub__(self, *other):
         # with self.lock.acquire(30):
@@ -272,7 +293,7 @@ class NGIConfig:
                     raise TypeError("{} config is empty".format(self.name))
         else:
             raise TypeError("__sub__ expects an argument other than None")
-        self._reload_yaml_file()
+        self._write_yaml_file()
 
 
 def get_config_dir():
@@ -414,11 +435,19 @@ def get_neon_lang_config() -> dict:
     Returns:
         dict of config params used by Language Detector and Translator modules
     """
-    language_config = NGIConfig("ngi_user_info").content.get("speech", {})
+    core_config = get_neon_local_config()
+    language_config = get_neon_user_config().content.get("speech", {})
     language_config["internal"] = language_config.get("internal", "en-us")
     language_config["user"] = language_config.get("stt_language", "en-us")
     language_config["boost"] = False
-    return language_config
+    language_config["detection_module"] = core_config.get("stt", {}).get("detection_module")
+    language_config["translation_module"] = core_config.get("stt", {}).get("translation_module")
+
+    merged_language = {**_safe_mycroft_config().get("language", {}), **language_config}
+    if merged_language.keys() != language_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged_language.keys()}")
+
+    return merged_language
 
 
 def get_neon_cli_config() -> dict:
@@ -530,6 +559,18 @@ def get_neon_api_config() -> dict:
     return merged
 
 
+def get_neon_skills_config() -> dict:
+    """
+    Get a configuration dict for the skills module. Merge any values from Mycroft config if missing from Neon.
+    Returns:
+        dict of config params used for the Mycroft Skills module
+    """
+    core_config = get_neon_local_config()
+    neon_skills = core_config.get("skills", {})
+    neon_skills["directory"] = core_config["dirVars"].get("skillsDir")
+    # neon_skills["neon_token"]  # TODO: GetPrivateKeys
+
+
 def _move_config_sections(user_config, local_config):
     """
     Temporary method to handle one-time migration of user_config params to local_config
@@ -631,3 +672,40 @@ def get_neon_device_type() -> str:
     if importlib.util.find_spec("neon-core-server"):
         return "server"
     return "desktop"
+
+
+def get_mycroft_compatible_config():
+    # TODO: This is kinda slow, should probably be depreciated DM
+    default_config = _safe_mycroft_config()
+    speech = get_neon_speech_config()
+    user = get_neon_user_config()
+    local = get_neon_local_config()
+
+    default_config["lang"] = "en-us"
+    default_config["language"] = get_neon_lang_config()
+    default_config["keys"] = {}  # TODO: Get keys DM
+    # default_config["text_parsers"]  TODO
+    default_config["audio_parsers"] = speech["audio_parsers"]
+    default_config["system_unit"] = user["units"]["measure"]
+    default_config["time_format"] = "half" if user["units"]["time"] == 12 else "full"
+    default_config["date_format"] = user["units"]["date"]
+    default_config["opt_in"] = local["prefFlags"]["metrics"]
+    default_config["confirm_listening"] = local["interface"]["confirm_listening"]
+    # TODO: Sounds in NGI Config
+    # TODO: Default location? DM
+    default_config["data_dir"] = local["dirVars"]["rootDir"]
+    default_config["skills"] = get_neon_skills_config()
+    default_config["server"] = get_neon_api_config()
+    default_config["websocket"] = get_neon_bus_config()
+    default_config["gui_websocket"] = {**default_config.get("gui_websocket", {}), **local["gui"]}
+    default_config["listener"] = speech["listener"]
+    # default_config["precise"]
+    default_config["hotwords"] = speech["hotwords"]
+    # default_config["ignore_logs"]
+    default_config["session"] = local["session"]
+    default_config["stt"] = speech["stt"]
+    default_config["tts"] = local["tts"]
+    default_config["Audio"] = get_neon_audio_config()
+    # default_config["Display"]
+
+    return default_config
