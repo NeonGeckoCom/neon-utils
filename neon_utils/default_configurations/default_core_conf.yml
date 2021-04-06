@@ -7,6 +7,8 @@ prefFlags:
   showDemo: True
   optDiags: False
   metrics: False
+  saveAudio: False
+  saveText: True
 
 interface:
 # True, False
@@ -36,7 +38,11 @@ gestures:
   clapThreshold: 10.0e10
 
 audioService:
-  defaultBackend: "local"
+  backends:
+    local: {type: simple, active: true}
+    vlc: {type: vlc, active: true, duck: true}
+  defaultBackend: vlc
+  debug: True
 
 padatious:
   intent_cache: ~/.neon/intent_cache
@@ -129,6 +135,12 @@ device:
   ip4: 127.0.0.1
   ip6: ::1
   ver: ''
+
+api:
+  url: https://api.mycroft.ai
+  version: v1
+  update: true
+  disabled: true
 
 # Below are (mostly) depreciated DM
 
