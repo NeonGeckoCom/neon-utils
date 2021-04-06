@@ -462,7 +462,7 @@ def get_neon_speech_config() -> dict:
     lang = mycroft.get("language", {}).get("internal", "en-us")  # core_lang
 
     neon_stt_config = local_config.get("stt", {})
-    merged_stt_config = {**mycroft.get("stt"), **neon_stt_config}
+    merged_stt_config = {**mycroft.get("stt", {}), **neon_stt_config}
     if merged_stt_config.keys() != neon_stt_config.keys():
         LOG.warning(f"Keys missing from Neon config! {merged_stt_config.keys()}")
 
@@ -471,7 +471,7 @@ def get_neon_speech_config() -> dict:
         LOG.warning(f"Neon hotword config missing! {hotword_config}")
 
     neon_audio_parser_config = local_config.get("audio_parsers", {})
-    merged_audio_parser_config = {**mycroft.get("audio_parsers"), **neon_audio_parser_config}
+    merged_audio_parser_config = {**mycroft.get("audio_parsers", {}), **neon_audio_parser_config}
     if merged_audio_parser_config.keys() != neon_audio_parser_config.keys():
         LOG.warning(f"Keys missing from Neon config! {merged_audio_parser_config.keys()}")
 
