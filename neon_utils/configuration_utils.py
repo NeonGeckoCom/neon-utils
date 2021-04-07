@@ -648,8 +648,7 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
         user_config.populate(default_user_config.content)
     local_config = NGIConfig("ngi_local_conf", path)
     _move_config_sections(user_config, local_config)
-    user_config.update_keys(default_user_config.content)
-    # TODO: make_equal_by_keys after references in Neon Core are cleaned
+    user_config.make_equal_by_keys(default_user_config.content)
     LOG.info(f"Loaded user config from {user_config.file_path}")
     return user_config
 
