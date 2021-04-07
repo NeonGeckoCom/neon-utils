@@ -9,6 +9,9 @@ prefFlags:
   metrics: False
   saveAudio: False
   saveText: True
+  # TODO: Depreciate GUI
+  localGui: True
+  guiEvents: True
 
 interface:
 # True, False
