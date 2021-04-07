@@ -483,6 +483,15 @@ def get_neon_cli_config() -> dict:
             "log_dir": log_dir}
 
 
+def get_neon_tts_config() -> dict:
+    """
+    Get a configuration dict for TTS
+    Returns:
+    dict of TTS-related configuration
+    """
+    return get_neon_local_config()["tts"]
+
+
 def get_neon_speech_config() -> dict:
     """
     Get a configuration dict for listener. Merge any values from Mycroft config if missing from Neon.
@@ -602,13 +611,12 @@ def _move_config_sections(user_config, local_config):
         user_config (NGIConfig): user configuration object
         local_config (NGIConfig): local configuration object
     """
-    depreciated_user_configs = ("speech", "interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
+    depreciated_user_configs = ("interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
     if any([d in user_config.content for d in depreciated_user_configs]):
         LOG.warning("Depreciated keys found in user config! Adding them to local config")
-        if "wake_words_enabled" in user_config["interface"]:
+        if "wake_words_enabled" in user_config.content.get("interface", dict()):
             user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
-        config_to_move = {"speech": user_config.content.pop("speech", {}),
-                          "interface": user_config.content.pop("interface", {}),
+        config_to_move = {"interface": user_config.content.pop("interface", {}),
                           "listener": user_config.content.pop("listener", {}),
                           "skills": user_config.content.pop("skills", {}),
                           "session": user_config.content.pop("session", {}),

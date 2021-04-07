@@ -327,6 +327,11 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIn("skillsGit", config["remoteVars"])
         self.assertIsInstance(config["server_addr"], str)
 
+    def test_get_tts_config(self):
+        config = get_neon_tts_config()
+        self.assertIsInstance(config["module"], str)
+        self.assertIsInstance(config[config["module"]], dict)
+
     def test_get_mycroft_compat_config(self):
         mycroft_config = get_mycroft_compatible_config()
         self.assertIsInstance(mycroft_config, dict)
