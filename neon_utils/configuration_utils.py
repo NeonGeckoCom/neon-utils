@@ -42,7 +42,8 @@ class NGIConfig:
         self.name = name
         self.path = path or get_config_dir()
         self.parser = YAML()
-        self.lock = FileLock(f".{self.file_path}.lock", timeout=10)
+        lock_filename = join(self.path, f".{self.name}.lock")
+        self.lock = FileLock(lock_filename, timeout=10)
         self._pending_write = False
         self.content = dict()
         self._loaded = os.path.getmtime(self.file_path)
