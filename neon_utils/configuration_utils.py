@@ -70,7 +70,12 @@ class NGIConfig:
         if not check_existing:
             self.__add__(content)
             return
+        old_content = deepcopy(self.content)
         self.content = dict_merge(content, self.content)  # to_change, one_with_all_keys
+        if old_content == self.content:
+            LOG.warning(f"Update called with no change: {self.file_path}")
+            return
+
         self._write_yaml_file()
 
     def remove_key(self, *key):
@@ -87,8 +92,10 @@ class NGIConfig:
         """
         old_content = deepcopy(self.content)
         self.content = dict_make_equal_keys(self.content, other, recursive)
-        if self.content != old_content:
-            self._write_yaml_file()
+        if old_content == self.content:
+            LOG.warning(f"Update called with no change: {self.file_path}")
+            return
+        self._write_yaml_file()
 
     def update_keys(self, other):
         """
@@ -99,8 +106,10 @@ class NGIConfig:
         """
         old_content = deepcopy(self.content)
         self.content = dict_update_keys(self.content, other)  # to_change, one_with_all_keys
-        if old_content != self.content:
-            self._write_yaml_file()
+        if old_content == self.content:
+            LOG.warning(f"Update called with no change: {self.file_path}")
+            return
+        self._write_yaml_file()
 
     @property
     def file_path(self):
