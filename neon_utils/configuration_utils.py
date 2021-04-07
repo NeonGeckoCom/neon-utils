@@ -605,6 +605,8 @@ def _move_config_sections(user_config, local_config):
     depreciated_user_configs = ("speech", "interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
     if any([d in user_config.content for d in depreciated_user_configs]):
         LOG.warning("Depreciated keys found in user config! Adding them to local config")
+        if "wake_words_enabled" in user_config["interface"]:
+            user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
         config_to_move = {"speech": user_config.content.pop("speech", {}),
                           "interface": user_config.content.pop("interface", {}),
                           "listener": user_config.content.pop("listener", {}),
