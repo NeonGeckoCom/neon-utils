@@ -332,6 +332,25 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["module"], str)
         self.assertIsInstance(config[config["module"]], dict)
 
+    def test_get_skills_config(self):
+        config = get_neon_skills_config()
+        self.assertIsInstance(config["debug"], bool)
+        self.assertIsInstance(config["blacklist"], list)
+        self.assertIsInstance(config["priority"], list)
+        self.assertIsInstance(config["update_interval"], float)
+        self.assertIsInstance(config["data_dir"], str)
+
+        if config.get("msm"):
+            self.assertIsInstance(config["msm"], dict)
+            self.assertIsInstance(config["msm"]["directory"], str)
+            self.assertIsInstance(config["msm"]["versioned"], bool)
+            self.assertIsInstance(config["msm"]["repo"], dict)
+            self.assertIsInstance(config["enclosure"], dict)
+
+            self.assertIsInstance(config["msm"]["repo"]["branch"], str)
+            self.assertIsInstance(config["msm"]["repo"]["cache"], str)
+            self.assertIsInstance(config["msm"]["repo"]["url"], str)
+
     def test_get_mycroft_compat_config(self):
         mycroft_config = get_mycroft_compatible_config()
         self.assertIsInstance(mycroft_config, dict)

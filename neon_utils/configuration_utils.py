@@ -587,10 +587,12 @@ def get_neon_skills_config() -> dict:
         dict of config params used for the Mycroft Skills module
     """
     core_config = get_neon_local_config()
+    mycroft_config = _safe_mycroft_config()
     neon_skills = core_config.get("skills", {})
     neon_skills["directory"] = core_config["dirVars"].get("skillsDir")
+    skills_config = {**neon_skills, **mycroft_config.get("skills", {})}
     # neon_skills["neon_token"]  # TODO: GetPrivateKeys
-    return neon_skills
+    return skills_config
 
 
 def get_neon_client_config() -> dict:
