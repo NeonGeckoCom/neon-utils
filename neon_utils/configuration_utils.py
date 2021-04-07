@@ -42,7 +42,7 @@ class NGIConfig:
         self.name = name
         self.path = path or get_config_dir()
         self.parser = YAML()
-        self.lock = FileLock(f"{self.file_path}.lock", timeout=10)
+        self.lock = FileLock(f".{self.file_path}.lock", timeout=10)
         self._pending_write = False
         self.content = dict()
         self._loaded = os.path.getmtime(self.file_path)
@@ -225,12 +225,13 @@ class NGIConfig:
         """
         try:
             self._loaded = os.path.getmtime(self.file_path)
-            with open(self.file_path, 'r') as f:
-                return self.parser.load(f) or dict()
+            with self.lock:
+                with open(self.file_path, 'r') as f:
+                    return self.parser.load(f) or dict()
         except FileNotFoundError as x:
             LOG.error(f"Configuration file not found error: {x}")
         except Exception as c:
-            LOG.error(f"Configuration file error: {c}")
+            LOG.error(f"{self.file_path} Configuration file error: {c}")
         return dict()
 
     def _write_yaml_file(self):
