@@ -33,6 +33,8 @@ devVars:
   soundDev:
   defaultVolume: 60
   defaultMicVolume: 100
+  installUser:
+  # TODO: Depreciate installUser
 
 gestures:
   clapThreshold: 10.0e10
