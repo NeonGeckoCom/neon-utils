@@ -20,7 +20,7 @@
 import os
 import boto3
 from neon_utils.logger import LOG
-from neon_utils.configuration_utils import get_neon_lang_config, NGIConfig
+from neon_utils.configuration_utils import get_neon_lang_config, NGIConfig, get_neon_tts_config
 
 
 def get_language_dir(base_path, lang="en-us"):
@@ -216,7 +216,7 @@ class TranslatorFactory:
         config = get_neon_lang_config()
         module = module or config.get("translation_module", "google")
         if module == "amazon" \
-                and NGIConfig("ngi_user_info").content["tts"]["amazon"].get("aws_access_key_id", "") == "":
+                and get_neon_tts_config()["amazon"].get("aws_access_key_id", "") == "":
             LOG.warning("Amazon credentials not available")
             module = "google"
         try:
