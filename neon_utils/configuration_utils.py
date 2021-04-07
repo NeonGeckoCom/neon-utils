@@ -398,6 +398,7 @@ def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping
                 dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key])
         elif key not in keys_dct.keys():
             dct_to_change.pop(key)
+            LOG.warning(f"Removing '{key}' from dict!")
             # del dct_to_change[key]
     for key, value in keys_dct.items():
         if key not in dct_to_change.keys():
