@@ -119,7 +119,9 @@ session:
 tts:
   module: amazon
   amazon: {
-    "region": 'us-west-2'
+    region: 'us-west-2'
+    aws_access_key_id: ''
+    aws_secret_access_key: ''
   }
   mozilla: { "request_url": "http://0.0.0.0:5002/api/tts?" }
   mimic: { "voice": "ap" }
