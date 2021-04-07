@@ -25,7 +25,7 @@ interface:
 devVars:
   devName:
   devType: generic
-  # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU
+  # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU, mycroft_mark_2
   version:
   touchDev:
   micDev:

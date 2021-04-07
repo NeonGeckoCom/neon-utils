@@ -29,7 +29,7 @@ from contextlib import suppress
 from filelock import FileLock
 from glob import glob
 from ovos_utils.json_helper import load_commented_json
-from ovos_utils.configuration import read_mycroft_config
+from ovos_utils.configuration import read_mycroft_config, LocalConf
 from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
@@ -602,7 +602,7 @@ def _safe_mycroft_config() -> dict:
     try:
         mycroft = read_mycroft_config()
     except FileNotFoundError:
-        mycroft = {}
+        mycroft = LocalConf(os.path.join(os.path.dirname(__file__), "default_configurations", "mycroft.conf"))
     return mycroft
 
 
