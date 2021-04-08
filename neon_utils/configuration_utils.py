@@ -45,14 +45,14 @@ class NGIConfig:
         lock_filename = join(self.path, f".{self.name}.lock")
         self.lock = FileLock(lock_filename, timeout=10)
         self._pending_write = False
-        self.content = dict()
+        self._content = dict()
         self._loaded = os.path.getmtime(self.file_path)
         if not force_reload and self.__repr__() in NGIConfig.configuration_list:
             cache = NGIConfig.configuration_list[self.__repr__()]
             cache.check_reload()
-            self.content = cache.content
+            self._content = cache.content
         else:
-            self.content = self._load_yaml_file()
+            self._content = self._load_yaml_file()
             NGIConfig.configuration_list[self.__repr__()] = self
 
     @property
@@ -61,7 +61,7 @@ class NGIConfig:
 
     def check_reload(self):
         if self._loaded != os.path.getmtime(self.file_path):
-            self._load_yaml_file()
+            self.check_for_updates()
 
     def write_changes(self):
         if self._pending_write:
@@ -71,9 +71,9 @@ class NGIConfig:
         if not check_existing:
             self.__add__(content)
             return
-        old_content = deepcopy(self.content)
-        self.content = dict_merge(content, self.content)  # to_change, one_with_all_keys
-        if old_content == self.content:
+        old_content = deepcopy(self._content)
+        self._content = dict_merge(content, self._content)  # to_change, one_with_all_keys
+        if old_content == self._content:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
 
@@ -91,9 +91,9 @@ class NGIConfig:
             other: dict of keys and default values this configuration should have
             recursive: flag to indicate configuration may be merged recursively
         """
-        old_content = deepcopy(self.content)
-        self.content = dict_make_equal_keys(self.content, other, recursive)
-        if old_content == self.content:
+        old_content = deepcopy(self._content)
+        self._content = dict_make_equal_keys(self._content, other, recursive)
+        if old_content == self._content:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
         self._write_yaml_file()
@@ -105,9 +105,9 @@ class NGIConfig:
         Args:
             other: dict of keys and default values this should be added to this configuration
         """
-        old_content = deepcopy(self.content)
-        self.content = dict_update_keys(self.content, other)  # to_change, one_with_all_keys
-        if old_content == self.content:
+        old_content = deepcopy(self._content)
+        self._content = dict_update_keys(self._content, other)  # to_change, one_with_all_keys
+        if old_content == self._content:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
         self._write_yaml_file()
@@ -132,16 +132,16 @@ class NGIConfig:
         new_content = self._load_yaml_file()
         if new_content:
             LOG.debug(f"{self.name} Checked for Updates")
-            self.content = new_content
+            self._content = new_content
         else:
-            LOG.warning("new_content is empty!!")
+            LOG.error("new_content is empty!!")
             new_content = self._load_yaml_file()
             if new_content:
                 LOG.debug("second attempt success")
-                self.content = new_content
+                self._content = new_content
             else:
                 LOG.error("second attempt failed")
-        return self.content
+        return self._content
 
     def update_yaml_file(self, header=None, sub_header=None, value="", multiple=False, final=False):
         """
@@ -158,7 +158,7 @@ class NGIConfig:
         """
         # with self.lock.acquire(30):
         self.check_reload()
-        before_change = self.content
+        before_change = self._content
         LOG.debug(value)
         if header and sub_header:
             try:
@@ -188,7 +188,7 @@ class NGIConfig:
         Returns: path to exported file
         """
         json_filename = os.path.join(self.path, f"{self.name}.json")
-        write_to_json(self.content, json_filename)
+        write_to_json(self._content, json_filename)
         return json_filename
 
     def from_dict(self, pref_dict: dict):
@@ -200,7 +200,7 @@ class NGIConfig:
         Returns: this object
 
         """
-        self.content = pref_dict
+        self._content = pref_dict
         self._write_yaml_file()
         return self
 
@@ -213,7 +213,7 @@ class NGIConfig:
         Returns: this object
 
         """
-        self.content = load_commented_json(json_path)
+        self._content = load_commented_json(json_path)
         self._write_yaml_file()
         return self
 
@@ -244,29 +244,35 @@ class NGIConfig:
                 LOG.debug(f"tmp_filename={tmp_filename}")
                 shutil.copy2(self.file_path, tmp_filename)
                 with open(self.file_path, 'w+') as f:
-                    self.parser.dump(self.content, f)
+                    self.parser.dump(self._content, f)
                     LOG.debug(f"YAML updated {self.name}")
                 self._loaded = os.path.getmtime(self.file_path)
                 self._pending_write = False
         except FileNotFoundError as x:
             LOG.error(f"Configuration file not found error: {x}")
 
+    @property
+    def content(self):
+        self.check_reload()
+        return self._content
+
     def __getitem__(self, item):
-        return self.content.get(item)
+        self.check_reload()
+        return self._content.get(item)
 
     def __contains__(self, item):
-        return item in self.content
+        return item in self._content
 
     def __setitem__(self, key, value):
         LOG.info(f"Config changes pending write to disk!")
         self._pending_write = True
-        self.content[key] = value
+        self._content[key] = value
 
     def __repr__(self):
         return "NGIConfig('{}') \n {}".format(self.name, self.file_path)
 
     def __str__(self):
-        return "{}: {}".format(self.file_path, json.dumps(self.content, indent=4))
+        return "{}: {}".format(self.file_path, json.dumps(self._content, indent=4))
 
     def __add__(self, other):
         # with self.lock.acquire(30):
@@ -275,11 +281,11 @@ class NGIConfig:
                 raise AttributeError("__add__ expects dict or config object as argument")
             to_update = other
             if isinstance(other, NGIConfig):
-                to_update = other.content
-            if self.content:
-                self.content.update(to_update)
+                to_update = other._content
+            if self._content:
+                self._content.update(to_update)
             else:
-                self.content = to_update
+                self._content = to_update
         else:
             raise TypeError("__add__ expects an argument other than None")
         self._write_yaml_file()
@@ -289,7 +295,7 @@ class NGIConfig:
         if other:
             for element in other:
                 if isinstance(element, NGIConfig):
-                    to_remove = list(element.content.keys())
+                    to_remove = list(element._content.keys())
                 elif isinstance(element, MutableMapping):
                     to_remove = list(element.keys())
                 elif isinstance(element, list):
@@ -299,8 +305,8 @@ class NGIConfig:
                 else:
                     raise AttributeError("__add__ expects dict, list, str, or config object as the argument")
 
-                if self.content:
-                    self.content = delete_recursive_dictionary_keys(self.content, to_remove)
+                if self._content:
+                    self._content = delete_recursive_dictionary_keys(self._content, to_remove)
                 else:
                     raise TypeError("{} config is empty".format(self.name))
         else:
@@ -449,7 +455,7 @@ def get_neon_lang_config() -> dict:
         dict of config params used by Language Detector and Translator modules
     """
     core_config = get_neon_local_config()
-    language_config = get_neon_user_config().content.get("speech", {})
+    language_config = get_neon_user_config()._content.get("speech", {})
     language_config["internal"] = language_config.get("internal", "en-us")
     language_config["user"] = language_config.get("stt_language", "en-us")
     language_config["boost"] = False
@@ -469,8 +475,8 @@ def get_neon_cli_config() -> dict:
     Returns:
         dict of config params used by the neon_cli
     """
-    user_config = NGIConfig("ngi_user_info").content
-    local_config = NGIConfig("ngi_local_conf").content
+    user_config = NGIConfig("ngi_user_info")._content
+    local_config = NGIConfig("ngi_local_conf")._content
     wake_words_enabled = user_config.get("listener", {}).get("wake_word_enabled", True)
     try:
         neon_core_version = os.path.basename(glob(local_config['dirVars']['ngiDir'] +
@@ -615,18 +621,18 @@ def _move_config_sections(user_config, local_config):
         local_config (NGIConfig): local configuration object
     """
     depreciated_user_configs = ("interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
-    if any([d in user_config.content for d in depreciated_user_configs]):
+    if any([d in user_config._content for d in depreciated_user_configs]):
         LOG.warning("Depreciated keys found in user config! Adding them to local config")
-        if "wake_words_enabled" in user_config.content.get("interface", dict()):
+        if "wake_words_enabled" in user_config._content.get("interface", dict()):
             user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
-        config_to_move = {"interface": user_config.content.pop("interface", {}),
-                          "listener": user_config.content.pop("listener", {}),
-                          "skills": user_config.content.pop("skills", {}),
-                          "session": user_config.content.pop("session", {}),
-                          "tts": user_config.content.pop("tts", {}),
-                          "stt": user_config.content.pop("stt", {}),
-                          "logs": user_config.content.pop("logs", {}),
-                          "device": user_config.content.pop("device", {})}
+        config_to_move = {"interface": user_config._content.pop("interface", {}),
+                          "listener": user_config._content.pop("listener", {}),
+                          "skills": user_config._content.pop("skills", {}),
+                          "session": user_config._content.pop("session", {}),
+                          "tts": user_config._content.pop("tts", {}),
+                          "stt": user_config._content.pop("stt", {}),
+                          "logs": user_config._content.pop("logs", {}),
+                          "device": user_config._content.pop("device", {})}
         local_config.update_keys(config_to_move)
 
 
@@ -654,12 +660,12 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     user_config = NGIConfig("ngi_user_info", path)
     default_user_config = NGIConfig("default_user_conf",
                                     os.path.join(os.path.dirname(__file__), "default_configurations"))
-    if len(user_config.content) == 0:
+    if len(user_config._content) == 0:
         LOG.info("Created Empty User Config!")
-        user_config.populate(default_user_config.content)
+        user_config.populate(default_user_config._content)
     local_config = NGIConfig("ngi_local_conf", path)
     _move_config_sections(user_config, local_config)
-    user_config.make_equal_by_keys(default_user_config.content)
+    user_config.make_equal_by_keys(default_user_config._content)
     LOG.info(f"Loaded user config from {user_config.file_path}")
     return user_config
 
@@ -676,15 +682,15 @@ def get_neon_local_config(path: Optional[str] = None):
     local_config = NGIConfig("ngi_local_conf", path)
     default_local_config = NGIConfig("default_core_conf",
                                      os.path.join(os.path.dirname(__file__), "default_configurations"))
-    if len(local_config.content) == 0:
+    if len(local_config._content) == 0:
         LOG.info("Created Empty Local Config!")
-        local_config.populate(default_local_config.content)
+        local_config.populate(default_local_config._content)
         # TODO: Update from Mycroft config DM
     user_config = NGIConfig("ngi_user_info", path)
     _move_config_sections(user_config, local_config)
-    local_config.make_equal_by_keys(default_local_config.content)
+    local_config.make_equal_by_keys(default_local_config._content)
     LOG.info(f"Loaded local config from {local_config.file_path}")
-    return dict(local_config.content)
+    return dict(local_config._content)
 
 
 def get_neon_device_type() -> str:

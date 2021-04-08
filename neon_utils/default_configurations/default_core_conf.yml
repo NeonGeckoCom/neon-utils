@@ -61,6 +61,7 @@ websocket:
   ssl: false
 
 gui:
+  # TODO: This should be built so lang, enclosure are read from other places
   # Host information for the gui server
   lang: en-us
   enclosure: generic

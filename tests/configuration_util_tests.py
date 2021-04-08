@@ -19,6 +19,7 @@
 
 import sys
 import os
+import time
 import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -360,27 +361,41 @@ class ConfigurationUtilTests(unittest.TestCase):
         # self.assertIsInstance(mycroft_config["tts"], dict)
 
     def test_config_cache(self):
+        from neon_utils.configuration_utils import NGIConfig as NGIConf2
         bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
         ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
 
         shutil.copy(ngi_local_conf, bak_local_conf)
         config_1 = NGIConfig("ngi_local_conf", CONFIG_PATH)
         self.assertFalse(config_1.requires_reload)
-        config_2 = NGIConfig("ngi_local_conf", CONFIG_PATH)
+        config_2 = NGIConf2("ngi_local_conf", CONFIG_PATH, True)
         self.assertFalse(config_2.requires_reload)
-        self.assertEqual(config_1.content, config_2.content)
+        self.assertEqual(config_1._content, config_2._content)
+        self.assertNotEqual(config_1, config_2)
 
         config_1.update_yaml_file("prefFlags", "autoStart", False)
-        self.assertEqual(config_1.content, config_2.content)
-        self.assertEqual(config_2["prefFlags"]["autoStart"], False)
+        self.assertFalse(config_1._pending_write)
+        self.assertEqual(config_2._content["prefFlags"]["autoStart"], True)
         self.assertFalse(config_2._pending_write)
 
+        self.assertNotEqual(config_1._loaded, config_2._loaded)
+        self.assertGreater(config_1._loaded, config_2._loaded)
         self.assertTrue(config_2.requires_reload)
+        self.assertEqual(config_1.content, config_2.content)
+        self.assertEqual(config_1._loaded, config_2._loaded)
+
         config_2.update_yaml_file("prefFlags", "devMode", False, multiple=True)
-        self.assertEqual(config_2["prefFlags"]["devMode"], False)
+        self.assertFalse(config_2["prefFlags"]["devMode"])
         self.assertTrue(config_2._pending_write)
         config_2.write_changes()
         self.assertFalse(config_2._pending_write)
+        self.assertTrue(config_1.requires_reload)
+        self.assertEqual(config_1.content["prefFlags"]["devMode"], False)
+
+        config_2.update_yaml_file("prefFlags", "devMode", True, multiple=True)
+        self.assertTrue(config_2._pending_write)
+        self.assertTrue(config_2["prefFlags"]["devMode"])
+        self.assertFalse(config_1["prefFlags"]["devMode"])
 
         shutil.move(bak_local_conf, ngi_local_conf)
 
