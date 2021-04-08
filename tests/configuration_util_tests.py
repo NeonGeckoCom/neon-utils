@@ -19,6 +19,7 @@
 
 import sys
 import os
+import time
 import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -54,6 +55,9 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(local_conf.content, dict)
         self.assertIsInstance(local_conf["devVars"], dict)
         self.assertIsInstance(local_conf["prefFlags"]["devMode"], bool)
+        self.assertEqual(local_conf["prefFlags"], local_conf.get("prefFlags"))
+        self.assertIsNone(local_conf.get("fake_key"))
+        self.assertTrue(local_conf.get("fake_key", True))
 
     def test_config_set(self):
         local_conf = NGIConfig("ngi_local_conf", CONFIG_PATH)
@@ -318,6 +322,39 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIn("translation_module", config)
         self.assertIn("boost", config)
 
+    def test_get_client_config(self):
+        config = get_neon_client_config()
+        self.assertIn("devName", config["devVars"])
+        self.assertIn("devType", config["devVars"])
+        self.assertIn("version", config["devVars"])
+        self.assertIn("coreGit", config["remoteVars"])
+        self.assertIn("skillsGit", config["remoteVars"])
+        self.assertIsInstance(config["server_addr"], str)
+
+    def test_get_tts_config(self):
+        config = get_neon_tts_config()
+        self.assertIsInstance(config["module"], str)
+        self.assertIsInstance(config[config["module"]], dict)
+
+    def test_get_skills_config(self):
+        config = get_neon_skills_config()
+        self.assertIsInstance(config["debug"], bool)
+        self.assertIsInstance(config["blacklist"], list)
+        self.assertIsInstance(config["priority"], list)
+        self.assertIsInstance(config["update_interval"], float)
+        self.assertIsInstance(config["data_dir"], str)
+
+        if config.get("msm"):
+            self.assertIsInstance(config["msm"], dict)
+            self.assertIsInstance(config["msm"]["directory"], str)
+            self.assertIsInstance(config["msm"]["versioned"], bool)
+            self.assertIsInstance(config["msm"]["repo"], dict)
+            self.assertIsInstance(config["enclosure"], dict)
+
+            self.assertIsInstance(config["msm"]["repo"]["branch"], str)
+            self.assertIsInstance(config["msm"]["repo"]["cache"], str)
+            self.assertIsInstance(config["msm"]["repo"]["url"], str)
+
     def test_get_mycroft_compat_config(self):
         mycroft_config = get_mycroft_compatible_config()
         self.assertIsInstance(mycroft_config, dict)
@@ -327,27 +364,66 @@ class ConfigurationUtilTests(unittest.TestCase):
         # self.assertIsInstance(mycroft_config["tts"], dict)
 
     def test_config_cache(self):
+        from neon_utils.configuration_utils import NGIConfig as NGIConf2
         bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
         ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
 
         shutil.copy(ngi_local_conf, bak_local_conf)
         config_1 = NGIConfig("ngi_local_conf", CONFIG_PATH)
         self.assertFalse(config_1.requires_reload)
-        config_2 = NGIConfig("ngi_local_conf", CONFIG_PATH)
+        config_2 = NGIConf2("ngi_local_conf", CONFIG_PATH, True)
         self.assertFalse(config_2.requires_reload)
-        self.assertEqual(config_1.content, config_2.content)
+        self.assertEqual(config_1._content, config_2._content)
+        self.assertNotEqual(config_1, config_2)
 
         config_1.update_yaml_file("prefFlags", "autoStart", False)
-        self.assertEqual(config_1.content, config_2.content)
-        self.assertEqual(config_2["prefFlags"]["autoStart"], False)
+        self.assertFalse(config_1._pending_write)
+        self.assertEqual(config_2._content["prefFlags"]["autoStart"], True)
         self.assertFalse(config_2._pending_write)
 
+        self.assertNotEqual(config_1._loaded, config_2._loaded)
+        self.assertGreater(config_1._loaded, config_2._loaded)
         self.assertTrue(config_2.requires_reload)
+        self.assertEqual(config_1.content, config_2.content)
+        self.assertEqual(config_1._loaded, config_2._loaded)
+
         config_2.update_yaml_file("prefFlags", "devMode", False, multiple=True)
-        self.assertEqual(config_2["prefFlags"]["devMode"], False)
+        self.assertFalse(config_2["prefFlags"]["devMode"])
         self.assertTrue(config_2._pending_write)
         config_2.write_changes()
         self.assertFalse(config_2._pending_write)
+        self.assertTrue(config_1.requires_reload)
+        self.assertEqual(config_1.content["prefFlags"]["devMode"], False)
+
+        config_2.update_yaml_file("prefFlags", "devMode", True, multiple=True)
+        self.assertTrue(config_2._pending_write)
+        self.assertTrue(config_2["prefFlags"]["devMode"])
+        self.assertFalse(config_1["prefFlags"]["devMode"])
+
+        shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_multi_config(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+
+        shutil.copy(ngi_local_conf, bak_local_conf)
+
+        i = 0
+        config_objects = []
+        while i < 100:
+            config_objects.append(NGIConfig("ngi_local_conf", CONFIG_PATH, True))
+            i += 1
+
+        first_config = config_objects[0]
+        last_config = config_objects[-1]
+        self.assertIsInstance(first_config, NGIConfig)
+        self.assertIsInstance(last_config, NGIConfig)
+
+        self.assertEqual(first_config.content, last_config.content)
+        first_config.update_yaml_file("prefFlags", "devMode", False)
+
+        self.assertFalse(last_config["prefFlags"]["devMode"])
+        self.assertEqual(first_config.content, last_config.content)
 
         shutil.move(bak_local_conf, ngi_local_conf)
 

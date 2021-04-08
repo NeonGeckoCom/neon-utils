@@ -9,6 +9,9 @@ prefFlags:
   metrics: False
   saveAudio: False
   saveText: True
+  # TODO: Depreciate GUI
+  localGui: True
+  guiEvents: True
 
 interface:
 # True, False
@@ -33,6 +36,8 @@ devVars:
   soundDev:
   defaultVolume: 60
   defaultMicVolume: 100
+  installUser:
+  # TODO: Depreciate installUser
 
 gestures:
   clapThreshold: 10.0e10
@@ -56,6 +61,7 @@ websocket:
   ssl: false
 
 gui:
+  # TODO: This should be built so lang, enclosure are read from other places
   # Host information for the gui server
   lang: en-us
   enclosure: generic
@@ -106,7 +112,10 @@ skills:
   default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
   disable_osm: False
   appstore_sync_interval: 6
-  auto_update_interval: 1.0
+  update_interval: 1.0
+  msm_ver: False
+  repo_url: "https://github.com/MycroftAI/mycroft-skills"
+  repo_branch: "18.08"
   data_dir: "~/.neon/msm"
 
 audio_parsers:
@@ -117,7 +126,9 @@ session:
 tts:
   module: amazon
   amazon: {
-    "region": 'us-west-2'
+    region: 'us-west-2',
+    aws_access_key_id: '',
+    aws_secret_access_key: ''
   }
   mozilla: { "request_url": "http://0.0.0.0:5002/api/tts?" }
   mimic: { "voice": "ap" }
@@ -156,6 +167,7 @@ remoteVars:
   guiBranch: ${guiBranch}
   url: https://api.mycroft.ai
   ver: v1
+  remoteHost: 167.172.112.7
 
 gnome:
   favApps:
