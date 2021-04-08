@@ -76,7 +76,6 @@ class NGIConfig:
         if old_content == self._content:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
-
         self._write_yaml_file()
 
     def remove_key(self, *key):
@@ -110,6 +109,7 @@ class NGIConfig:
         if old_content == self._content:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
+
         self._write_yaml_file()
 
     @property
@@ -159,6 +159,7 @@ class NGIConfig:
         # with self.lock.acquire(30):
         self.check_reload()
         before_change = self._content
+
         LOG.debug(value)
         if header and sub_header:
             try:
@@ -201,6 +202,7 @@ class NGIConfig:
 
         """
         self._content = pref_dict
+
         self._write_yaml_file()
         return self
 
@@ -214,6 +216,7 @@ class NGIConfig:
 
         """
         self._content = load_commented_json(json_path)
+
         self._write_yaml_file()
         return self
 
@@ -627,6 +630,7 @@ def get_neon_client_config() -> dict:
     return {"server_addr": server_addr,
             "devVars": core_config["devVars"],
             "remoteVars": core_config["remoteVars"]}
+
 
 
 def _move_config_sections(user_config, local_config):
