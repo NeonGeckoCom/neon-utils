@@ -55,6 +55,9 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(local_conf.content, dict)
         self.assertIsInstance(local_conf["devVars"], dict)
         self.assertIsInstance(local_conf["prefFlags"]["devMode"], bool)
+        self.assertEqual(local_conf["prefFlags"], local_conf.get("prefFlags"))
+        self.assertIsNone(local_conf.get("fake_key"))
+        self.assertTrue(local_conf.get("fake_key", True))
 
     def test_config_set(self):
         local_conf = NGIConfig("ngi_local_conf", CONFIG_PATH)

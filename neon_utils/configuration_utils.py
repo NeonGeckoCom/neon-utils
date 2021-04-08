@@ -256,6 +256,9 @@ class NGIConfig:
         self.check_reload()
         return self._content
 
+    def get(self, *args):
+        return self.content.get(*args)
+
     def __getitem__(self, item):
         return self.content.get(item)
 
