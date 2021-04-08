@@ -112,7 +112,10 @@ skills:
   default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
   disable_osm: False
   appstore_sync_interval: 6
-  auto_update_interval: 1.0
+  update_interval: 1.0
+  msm_ver: False
+  repo_url: "https://github.com/MycroftAI/mycroft-skills"
+  repo_branch: "18.08"
   data_dir: "~/.neon/msm"
 
 audio_parsers:
