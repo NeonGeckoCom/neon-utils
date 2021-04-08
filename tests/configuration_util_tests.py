@@ -402,6 +402,31 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         shutil.move(bak_local_conf, ngi_local_conf)
 
+    def test_multi_config(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+
+        shutil.copy(ngi_local_conf, bak_local_conf)
+
+        i = 0
+        config_objects = []
+        while i < 100:
+            config_objects.append(NGIConfig("ngi_local_conf", CONFIG_PATH, True))
+            i += 1
+
+        first_config = config_objects[0]
+        last_config = config_objects[-1]
+        self.assertIsInstance(first_config, NGIConfig)
+        self.assertIsInstance(last_config, NGIConfig)
+
+        self.assertEqual(first_config.content, last_config.content)
+        first_config.update_yaml_file("prefFlags", "devMode", False)
+
+        self.assertFalse(last_config["prefFlags"]["devMode"])
+        self.assertEqual(first_config.content, last_config.content)
+
+        shutil.move(bak_local_conf, ngi_local_conf)
+
     def test_new_ngi_config(self):
         config = NGIConfig("temp_conf", CONFIG_PATH)
         self.assertIsInstance(config.content, dict)

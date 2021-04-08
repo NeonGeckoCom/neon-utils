@@ -226,8 +226,9 @@ class NGIConfig:
         """
         try:
             self._loaded = os.path.getmtime(self.file_path)
-            with open(self.file_path, 'r') as f:
-                return self.parser.load(f) or dict()
+            with self.lock:
+                with open(self.file_path, 'r') as f:
+                    return self.parser.load(f) or dict()
         except FileNotFoundError as x:
             LOG.error(f"Configuration file not found error: {x}")
         except Exception as c:
@@ -253,10 +254,23 @@ class NGIConfig:
 
     @property
     def content(self) -> dict:
+        """
+        Loads any changes from disk and returns an updated configuration dict
+        Returns:
+        dict content of this configuration object
+        """
         self.check_reload()
         return self._content
 
-    def get(self, *args):
+    def get(self, *args) -> any:
+        """
+        Wraps content.get() to provide standard access to an updated configuration like a Python dictionary.
+        Args:
+            *args: args passed to self.content.get() (key and default value)
+
+        Returns:
+        self.content.get(*args)
+        """
         return self.content.get(*args)
 
     def __getitem__(self, item):
@@ -457,7 +471,7 @@ def get_neon_lang_config() -> dict:
         dict of config params used by Language Detector and Translator modules
     """
     core_config = get_neon_local_config()
-    language_config = get_neon_user_config()._content.get("speech", {})
+    language_config = get_neon_user_config().content.get("speech", {})
     language_config["internal"] = language_config.get("internal", "en-us")
     language_config["user"] = language_config.get("stt_language", "en-us")
     language_config["boost"] = False
@@ -477,8 +491,8 @@ def get_neon_cli_config() -> dict:
     Returns:
         dict of config params used by the neon_cli
     """
-    user_config = NGIConfig("ngi_user_info")._content
-    local_config = NGIConfig("ngi_local_conf")._content
+    user_config = NGIConfig("ngi_user_info").content
+    local_config = NGIConfig("ngi_local_conf").content
     wake_words_enabled = user_config.get("listener", {}).get("wake_word_enabled", True)
     try:
         neon_core_version = os.path.basename(glob(local_config['dirVars']['ngiDir'] +
@@ -623,18 +637,18 @@ def _move_config_sections(user_config, local_config):
         local_config (NGIConfig): local configuration object
     """
     depreciated_user_configs = ("interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
-    if any([d in user_config._content for d in depreciated_user_configs]):
+    if any([d in user_config.content for d in depreciated_user_configs]):
         LOG.warning("Depreciated keys found in user config! Adding them to local config")
-        if "wake_words_enabled" in user_config._content.get("interface", dict()):
+        if "wake_words_enabled" in user_config.content.get("interface", dict()):
             user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
-        config_to_move = {"interface": user_config._content.pop("interface", {}),
-                          "listener": user_config._content.pop("listener", {}),
-                          "skills": user_config._content.pop("skills", {}),
-                          "session": user_config._content.pop("session", {}),
-                          "tts": user_config._content.pop("tts", {}),
-                          "stt": user_config._content.pop("stt", {}),
-                          "logs": user_config._content.pop("logs", {}),
-                          "device": user_config._content.pop("device", {})}
+        config_to_move = {"interface": user_config.content.pop("interface", {}),
+                          "listener": user_config.content.pop("listener", {}),
+                          "skills": user_config.content.pop("skills", {}),
+                          "session": user_config.content.pop("session", {}),
+                          "tts": user_config.content.pop("tts", {}),
+                          "stt": user_config.content.pop("stt", {}),
+                          "logs": user_config.content.pop("logs", {}),
+                          "device": user_config.content.pop("device", {})}
         local_config.update_keys(config_to_move)
 
 
@@ -662,12 +676,12 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     user_config = NGIConfig("ngi_user_info", path)
     default_user_config = NGIConfig("default_user_conf",
                                     os.path.join(os.path.dirname(__file__), "default_configurations"))
-    if len(user_config._content) == 0:
+    if len(user_config.content) == 0:
         LOG.info("Created Empty User Config!")
-        user_config.populate(default_user_config._content)
+        user_config.populate(default_user_config.content)
     local_config = NGIConfig("ngi_local_conf", path)
     _move_config_sections(user_config, local_config)
-    user_config.make_equal_by_keys(default_user_config._content)
+    user_config.make_equal_by_keys(default_user_config.content)
     LOG.info(f"Loaded user config from {user_config.file_path}")
     return user_config
 
@@ -684,15 +698,15 @@ def get_neon_local_config(path: Optional[str] = None):
     local_config = NGIConfig("ngi_local_conf", path)
     default_local_config = NGIConfig("default_core_conf",
                                      os.path.join(os.path.dirname(__file__), "default_configurations"))
-    if len(local_config._content) == 0:
+    if len(local_config.content) == 0:
         LOG.info("Created Empty Local Config!")
-        local_config.populate(default_local_config._content)
+        local_config.populate(default_local_config.content)
         # TODO: Update from Mycroft config DM
     user_config = NGIConfig("ngi_user_info", path)
     _move_config_sections(user_config, local_config)
-    local_config.make_equal_by_keys(default_local_config._content)
+    local_config.make_equal_by_keys(default_local_config.content)
     LOG.info(f"Loaded local config from {local_config.file_path}")
-    return dict(local_config._content)
+    return dict(local_config.content)
 
 
 def get_neon_device_type() -> str:

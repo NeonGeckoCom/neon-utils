@@ -748,11 +748,11 @@ class NeonSkill(MycroftSkill):
                    speaker=speaker, wait=wait, meta={'dialog': key, 'data': data})
 
     def schedule_event(self, handler, when, data=None, name=None, context=None):
-        # TODO: This should be depreciated since it's basically just error handling DM
+        # TODO: should 'when' already be a datetime? DM
         if isinstance(when, int) or isinstance(when, float):
             from datetime import datetime as dt, timedelta
             when = self.to_system_time(dt.now(self.sys_tz)) + timedelta(seconds=when)
-            LOG.error(f"Made a datetime: {when}")
+            LOG.info(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
     def request_check_timeout(self, time_wait, intent_to_check):
