@@ -252,13 +252,12 @@ class NGIConfig:
             LOG.error(f"Configuration file not found error: {x}")
 
     @property
-    def content(self):
+    def content(self) -> dict:
         self.check_reload()
         return self._content
 
     def __getitem__(self, item):
-        self.check_reload()
-        return self._content.get(item)
+        return self.content.get(item)
 
     def __contains__(self, item):
         return item in self._content
