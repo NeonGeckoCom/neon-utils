@@ -84,8 +84,7 @@ hotwords:
 
 listener:
   sample_rate: 16000
-  record_wake_words: False
-  save_utterances: False
+  channels: 1
   wake_word_upload: {disable: True,
                      url: "https://training.mycroft.ai/precise/upload"}
   mute_during_output: True

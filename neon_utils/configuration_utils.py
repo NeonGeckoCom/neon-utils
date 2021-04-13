@@ -82,16 +82,19 @@ class NGIConfig:
         for item in key:
             self.__sub__(item)
 
-    def make_equal_by_keys(self, other: MutableMapping, recursive: bool = True):
+    def make_equal_by_keys(self, other: MutableMapping, recursive: bool = True, depth: int = 1):
         """
         Adds and removes keys from this config such that it has the same keys as 'other'. Configuration values are
         preserved with any added keys using default values from 'other'.
         Args:
             other: dict of keys and default values this configuration should have
             recursive: flag to indicate configuration may be merged recursively
+            depth: int depth to recurse (0 includes top-level keys only)
         """
         old_content = deepcopy(self._content)
-        self._content = dict_make_equal_keys(self._content, other, recursive)
+        if not recursive:
+            depth = 0
+        self._content = dict_make_equal_keys(self._content, other, depth)
         if old_content == self._content:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
@@ -405,14 +408,15 @@ def dict_merge(dct_to_change: MutableMapping, merge_dct: MutableMapping) -> Muta
 
 
 def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping,
-                         recursive: bool = True) -> MutableMapping:
+                         max_depth: int = 1, cur_depth: int = 0) -> MutableMapping:
     """
     Adds and removes keys from dct_to_change such that it has the same keys as keys_dct. Values from dct_to_change are
     preserved with any added keys using default values from keys_dct.
     Args:
         dct_to_change: Dict of user preferences to modify and return
         keys_dct: Dict containing all keys and default values
-        recursive: Bool flag to recurse into dict values
+        max_depth: Int depth to recurse (0-indexed)
+        cur_depth: Current depth relative to top-level config (0-indexed)
     Returns: dct_to_change with any keys not in keys_dct removed and any new keys added with default values
 
     """
@@ -420,8 +424,8 @@ def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping
         raise AttributeError("merge_recursive_dicts expects two dict objects as args")
     for key in list(dct_to_change.keys()):
         if isinstance(keys_dct.get(key), dict) and isinstance(dct_to_change[key], MutableMapping):
-            if recursive:
-                dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key])
+            if max_depth > cur_depth:
+                dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key], max_depth, cur_depth + 1)
         elif key not in keys_dct.keys():
             dct_to_change.pop(key)
             LOG.warning(f"Removing '{key}' from dict!")
@@ -530,6 +534,7 @@ def get_neon_speech_config() -> dict:
     neon_listener_config = local_config.get("listener", {})
     neon_listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
     neon_listener_config["save_utterances"] = local_config["interface"].get("saveAudio", False)
+    neon_listener_config["record_utterances"] = neon_listener_config["save_utterances"]
     neon_listener_config["record_wake_words"] = local_config["interface"].get("saveAudio", False)
     merged_listener = {**mycroft.get("listener", {}), **neon_listener_config}
     if merged_listener.keys() != neon_listener_config.keys():

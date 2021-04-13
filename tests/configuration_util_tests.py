@@ -112,7 +112,7 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         new_user_info = NGIConfig("ngi_user_info", CONFIG_PATH)
         self.assertEqual(user_conf.content, new_user_info.content)
-        shutil.copy(old_user_info, ngi_user_info)
+        shutil.move(old_user_info, ngi_user_info)
 
     def test_update_key(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
@@ -178,6 +178,25 @@ class ConfigurationUtilTests(unittest.TestCase):
                                   "key_3": "val3"}}
         updated = dict_make_equal_keys(to_update, new_keys)
         self.assertEqual(updated, {"section 2": {"key_2": "val2",
+                                                 "key_3": "val3"}
+                                   })
+
+    def test_dict_make_equal_keys_no_depth(self):
+        to_update = deepcopy(TEST_DICT)
+        new_keys = {"section 2": {"key_2": "new2",
+                                  "key_3": "val3"}}
+        updated = dict_make_equal_keys(to_update, new_keys, 0)
+        self.assertEqual(updated, {"section 2": {"key_1": "val1",
+                                                 "key_2": "val2"}
+                                   })
+
+    def test_dict_make_equal_keys_limited_depth(self):
+        to_update = deepcopy(TEST_DICT)
+        to_update["section 2"]["key_2"] = {"2_data": "value"}
+        new_keys = {"section 2": {"key_2": {},
+                                  "key_3": "val3"}}
+        updated = dict_make_equal_keys(to_update, new_keys, 1)
+        self.assertEqual(updated, {"section 2": {"key_2": {"2_data": "value"},
                                                  "key_3": "val3"}
                                    })
 
@@ -312,6 +331,21 @@ class ConfigurationUtilTests(unittest.TestCase):
                              "gui", "hotwords", "listener", "skills", "session", "tts", "stt", "logs", "device"]
         self.assertTrue(all(k for k in local_config_keys if k in config))
         shutil.move(old_local_conf, ngi_local_conf)
+
+    def test_user_config_keep_keys(self):
+        bak_user_info = os.path.join(CONFIG_PATH, "bak_user_info.yml")
+        ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
+        shutil.move(ngi_user_info, bak_user_info)
+
+        user_conf = get_neon_user_config(CONFIG_PATH)
+        user_conf.update_yaml_file("brands", "favorite_brands", {'neon': 1})
+        self.assertEqual(user_conf["brands"]["favorite_brands"]['neon'], 1)
+
+        new_user_conf = get_neon_user_config(CONFIG_PATH)
+        self.assertEqual(user_conf.content, new_user_conf.content)
+        self.assertEqual(user_conf["brands"]["favorite_brands"]['neon'], 1)
+
+        shutil.move(bak_user_info, ngi_user_info)
 
     def test_get_lang_config(self):
         config = get_neon_lang_config()
