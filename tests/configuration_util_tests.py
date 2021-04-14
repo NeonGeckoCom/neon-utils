@@ -392,6 +392,9 @@ class ConfigurationUtilTests(unittest.TestCase):
     def test_get_mycroft_compat_config(self):
         mycroft_config = get_mycroft_compatible_config()
         self.assertIsInstance(mycroft_config, dict)
+        self.assertIsInstance(mycroft_config["gui_websocket"], dict)
+        self.assertIsInstance(mycroft_config["gui_websocket"]["host"], str)
+        self.assertIsInstance(mycroft_config["gui_websocket"]["base_port"], int)
         # self.assertIsInstance(mycroft_config["language"], dict)
         # self.assertIsInstance(mycroft_config["listener"], dict)
         # self.assertIsInstance(mycroft_config["stt"], dict)
@@ -468,6 +471,11 @@ class ConfigurationUtilTests(unittest.TestCase):
 
     def test_is_neon_core(self):
         self.assertIsInstance(is_neon_core(), bool)
+
+    def test_get_speech_config_local_changes(self):
+        local_config = NGIConfig("ngi_local_conf")
+        speech_config = get_neon_speech_config()
+        self.assertNotEqual(speech_config.get("listener"), local_config["listener"])
 
 
 if __name__ == '__main__':

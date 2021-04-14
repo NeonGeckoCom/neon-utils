@@ -478,7 +478,7 @@ def get_neon_lang_config() -> dict:
         dict of config params used by Language Detector and Translator modules
     """
     core_config = get_neon_local_config()
-    language_config = get_neon_user_config().content.get("speech", {})
+    language_config = deepcopy(get_neon_user_config().content.get("speech", {}))
     language_config["internal"] = language_config.get("internal", "en-us")
     language_config["user"] = language_config.get("stt_language", "en-us")
     language_config["boost"] = False
@@ -531,7 +531,7 @@ def get_neon_speech_config() -> dict:
     mycroft = _safe_mycroft_config()
     local_config = get_neon_local_config()
 
-    neon_listener_config = local_config.get("listener", {})
+    neon_listener_config = deepcopy(local_config.get("listener", {}))
     neon_listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
     neon_listener_config["save_utterances"] = local_config["interface"].get("saveAudio", False)
     neon_listener_config["record_utterances"] = neon_listener_config["save_utterances"]
@@ -563,6 +563,7 @@ def get_neon_speech_config() -> dict:
             "stt": merged_stt_config,
             "metric_upload": local_config["prefFlags"].get("metrics", False),
             "remote_server": local_config.get("remoteVars", {}).get("remoteHost", "64.34.186.120"),
+            "data_dir": os.path.expanduser(local_config.get("dirVars", {}).get("rootDir") or "~/.local/share/neon"),
             "keys": {}  # TODO: Read from somewhere DM
             }
 
@@ -602,7 +603,7 @@ def get_neon_api_config() -> dict:
         dict of config params used for the Mycroft API module
     """
     core_config = get_neon_local_config()
-    api_config = core_config.get("api")
+    api_config = deepcopy(core_config.get("api"))
     api_config["metrics"] = core_config["prefFlags"].get("metrics", False)
     mycroft = _safe_mycroft_config().get("server", {})
     merged = {**mycroft, **api_config}
@@ -619,7 +620,7 @@ def get_neon_skills_config() -> dict:
     """
     core_config = get_neon_local_config()
     mycroft_config = _safe_mycroft_config()
-    neon_skills = core_config.get("skills", {})
+    neon_skills = deepcopy(core_config.get("skills", {}))
     neon_skills["directory"] = core_config["dirVars"].get("skillsDir")
     skills_config = {**neon_skills, **mycroft_config.get("skills", {})}
     # neon_skills["neon_token"]  # TODO: GetPrivateKeys
@@ -635,7 +636,6 @@ def get_neon_client_config() -> dict:
     return {"server_addr": server_addr,
             "devVars": core_config["devVars"],
             "remoteVars": core_config["remoteVars"]}
-
 
 
 def _move_config_sections(user_config, local_config):
