@@ -9,6 +9,9 @@ prefFlags:
   metrics: False
   saveAudio: False
   saveText: True
+  # TODO: Depreciate GUI
+  localGui: True
+  guiEvents: True
 
 interface:
 # True, False
@@ -25,7 +28,7 @@ interface:
 devVars:
   devName:
   devType: generic
-  # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU
+  # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU, mycroft_mark_2
   version:
   touchDev:
   micDev:
@@ -33,6 +36,8 @@ devVars:
   soundDev:
   defaultVolume: 60
   defaultMicVolume: 100
+  installUser:
+  # TODO: Depreciate installUser
 
 gestures:
   clapThreshold: 10.0e10
@@ -56,6 +61,7 @@ websocket:
   ssl: false
 
 gui:
+  # TODO: This should be built so lang, enclosure are read from other places
   # Host information for the gui server
   lang: en-us
   enclosure: generic
@@ -78,8 +84,7 @@ hotwords:
 
 listener:
   sample_rate: 16000
-  record_wake_words: False
-  save_utterances: False
+  channels: 1
   wake_word_upload: {disable: True,
                      url: "https://training.mycroft.ai/precise/upload"}
   mute_during_output: True
@@ -95,11 +100,17 @@ listener:
 
 skills:
   auto_update: False
+  install_essential: True
+  install_default: True
   debug: True
   blacklist: []
   priority: [
     "device-control-center.neon"
   ]
+  essential_skills: []
+  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
+  disable_osm: False
+  appstore_sync_interval: 6
   update_interval: 1.0
   msm_ver: False
   repo_url: "https://github.com/MycroftAI/mycroft-skills"
@@ -114,7 +125,9 @@ session:
 tts:
   module: amazon
   amazon: {
-    "region": 'us-west-2'
+    region: 'us-west-2',
+    aws_access_key_id: '',
+    aws_secret_access_key: ''
   }
   mozilla: { "request_url": "http://0.0.0.0:5002/api/tts?" }
   mimic: { "voice": "ap" }
@@ -153,6 +166,7 @@ remoteVars:
   guiBranch: ${guiBranch}
   url: https://api.mycroft.ai
   ver: v1
+  remoteHost: 167.172.112.7
 
 gnome:
   favApps:
@@ -160,14 +174,14 @@ gnome:
 
 dirVars:
   coreDir:
-  rootDir:
-  skillsDir:
+  rootDir: ~/.local/share/neon
+  skillsDir: ~/.local/share/neon/skills
   ngiDir:
   guiDir:
-  tempDir:
+  tempDir: /tmp/neon
   docsDir: ~/Documents/NeonGecko
   diagsDir:
-  cacheDir:
+  cacheDir: ~/.local/share/neon/cache
   ipcDir: /tmp/neon/ipc
   # Changes to ipcDir must also be made in NGI/utilities/configHelper
   musicDir: ~/Music

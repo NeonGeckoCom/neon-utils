@@ -62,6 +62,9 @@ class LangUtilTests(unittest.TestCase):
     #     t = MyMemoryTranslator()
     #     self.assertEqual(t.translate("hola"), "hello")
 
+    def test_google_create(self):
+        TranslatorFactory().create("google")
+
 
 if __name__ == '__main__':
     unittest.main()

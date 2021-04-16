@@ -19,6 +19,7 @@
 
 import sys
 import os
+import time
 import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -54,6 +55,9 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(local_conf.content, dict)
         self.assertIsInstance(local_conf["devVars"], dict)
         self.assertIsInstance(local_conf["prefFlags"]["devMode"], bool)
+        self.assertEqual(local_conf["prefFlags"], local_conf.get("prefFlags"))
+        self.assertIsNone(local_conf.get("fake_key"))
+        self.assertTrue(local_conf.get("fake_key", True))
 
     def test_config_set(self):
         local_conf = NGIConfig("ngi_local_conf", CONFIG_PATH)
@@ -70,7 +74,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
         ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
         shutil.copy(ngi_user_info, old_user_info)
-        user_conf = NGIConfig("ngi_user_info", CONFIG_PATH)
+        user_conf = NGIConfig("ngi_user_info", CONFIG_PATH, True)
         self.assertEqual(user_conf.content["user"]["full_name"], 'Test User')
         self.assertNotIn("phone_verified", user_conf.content["user"])
         self.assertIn('bad_key', user_conf.content["user"])
@@ -95,7 +99,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
         ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
         shutil.copy(ngi_user_info, old_user_info)
-        user_conf = NGIConfig("ngi_user_info", CONFIG_PATH)
+        user_conf = NGIConfig("ngi_user_info", CONFIG_PATH, True)
         self.assertEqual(user_conf.content["user"]["full_name"], 'Test User')
         self.assertNotIn("phone_verified", user_conf.content["user"])
         self.assertIn('bad_key', user_conf.content["user"])
@@ -108,7 +112,7 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         new_user_info = NGIConfig("ngi_user_info", CONFIG_PATH)
         self.assertEqual(user_conf.content, new_user_info.content)
-        shutil.copy(old_user_info, ngi_user_info)
+        shutil.move(old_user_info, ngi_user_info)
 
     def test_update_key(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
@@ -174,6 +178,25 @@ class ConfigurationUtilTests(unittest.TestCase):
                                   "key_3": "val3"}}
         updated = dict_make_equal_keys(to_update, new_keys)
         self.assertEqual(updated, {"section 2": {"key_2": "val2",
+                                                 "key_3": "val3"}
+                                   })
+
+    def test_dict_make_equal_keys_no_depth(self):
+        to_update = deepcopy(TEST_DICT)
+        new_keys = {"section 2": {"key_2": "new2",
+                                  "key_3": "val3"}}
+        updated = dict_make_equal_keys(to_update, new_keys, 0)
+        self.assertEqual(updated, {"section 2": {"key_1": "val1",
+                                                 "key_2": "val2"}
+                                   })
+
+    def test_dict_make_equal_keys_limited_depth(self):
+        to_update = deepcopy(TEST_DICT)
+        to_update["section 2"]["key_2"] = {"2_data": "value"}
+        new_keys = {"section 2": {"key_2": {},
+                                  "key_3": "val3"}}
+        updated = dict_make_equal_keys(to_update, new_keys, 1)
+        self.assertEqual(updated, {"section 2": {"key_2": {"2_data": "value"},
                                                  "key_3": "val3"}
                                    })
 
@@ -309,11 +332,150 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertTrue(all(k for k in local_config_keys if k in config))
         shutil.move(old_local_conf, ngi_local_conf)
 
+    def test_user_config_keep_keys(self):
+        bak_user_info = os.path.join(CONFIG_PATH, "bak_user_info.yml")
+        ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
+        shutil.move(ngi_user_info, bak_user_info)
+
+        user_conf = get_neon_user_config(CONFIG_PATH)
+        user_conf.update_yaml_file("brands", "favorite_brands", {'neon': 1})
+        self.assertEqual(user_conf["brands"]["favorite_brands"]['neon'], 1)
+
+        new_user_conf = get_neon_user_config(CONFIG_PATH)
+        self.assertEqual(user_conf.content, new_user_conf.content)
+        self.assertEqual(user_conf["brands"]["favorite_brands"]['neon'], 1)
+
+        shutil.move(bak_user_info, ngi_user_info)
+
     def test_get_lang_config(self):
         config = get_neon_lang_config()
         self.assertIsInstance(config, dict)
         self.assertIn("internal", config)
         self.assertIn("user", config)
+        self.assertIn("detection_module", config)
+        self.assertIn("translation_module", config)
+        self.assertIn("boost", config)
+
+    def test_get_client_config(self):
+        config = get_neon_client_config()
+        self.assertIn("devName", config["devVars"])
+        self.assertIn("devType", config["devVars"])
+        self.assertIn("version", config["devVars"])
+        self.assertIn("coreGit", config["remoteVars"])
+        self.assertIn("skillsGit", config["remoteVars"])
+        self.assertIsInstance(config["server_addr"], str)
+
+    def test_get_tts_config(self):
+        config = get_neon_tts_config()
+        self.assertIsInstance(config["module"], str)
+        self.assertIsInstance(config[config["module"]], dict)
+
+    def test_get_skills_config(self):
+        config = get_neon_skills_config()
+        self.assertIsInstance(config["debug"], bool)
+        self.assertIsInstance(config["blacklist"], list)
+        self.assertIsInstance(config["priority"], list)
+        self.assertIsInstance(config["update_interval"], float)
+        self.assertIsInstance(config["data_dir"], str)
+
+        if config.get("msm"):
+            self.assertIsInstance(config["msm"], dict)
+            self.assertIsInstance(config["msm"]["directory"], str)
+            self.assertIsInstance(config["msm"]["versioned"], bool)
+            self.assertIsInstance(config["msm"]["repo"], dict)
+            self.assertIsInstance(config["enclosure"], dict)
+
+            self.assertIsInstance(config["msm"]["repo"]["branch"], str)
+            self.assertIsInstance(config["msm"]["repo"]["cache"], str)
+            self.assertIsInstance(config["msm"]["repo"]["url"], str)
+
+    def test_get_mycroft_compat_config(self):
+        mycroft_config = get_mycroft_compatible_config()
+        self.assertIsInstance(mycroft_config, dict)
+        self.assertIsInstance(mycroft_config["gui_websocket"], dict)
+        self.assertIsInstance(mycroft_config["gui_websocket"]["host"], str)
+        self.assertIsInstance(mycroft_config["gui_websocket"]["base_port"], int)
+        # self.assertIsInstance(mycroft_config["language"], dict)
+        # self.assertIsInstance(mycroft_config["listener"], dict)
+        # self.assertIsInstance(mycroft_config["stt"], dict)
+        # self.assertIsInstance(mycroft_config["tts"], dict)
+
+    def test_config_cache(self):
+        from neon_utils.configuration_utils import NGIConfig as NGIConf2
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+
+        shutil.copy(ngi_local_conf, bak_local_conf)
+        config_1 = NGIConfig("ngi_local_conf", CONFIG_PATH)
+        self.assertFalse(config_1.requires_reload)
+        config_2 = NGIConf2("ngi_local_conf", CONFIG_PATH, True)
+        self.assertFalse(config_2.requires_reload)
+        self.assertEqual(config_1._content, config_2._content)
+        self.assertNotEqual(config_1, config_2)
+
+        config_1.update_yaml_file("prefFlags", "autoStart", False)
+        self.assertFalse(config_1._pending_write)
+        self.assertEqual(config_2._content["prefFlags"]["autoStart"], True)
+        self.assertFalse(config_2._pending_write)
+
+        self.assertNotEqual(config_1._loaded, config_2._loaded)
+        self.assertGreater(config_1._loaded, config_2._loaded)
+        self.assertTrue(config_2.requires_reload)
+        self.assertEqual(config_1.content, config_2.content)
+        self.assertEqual(config_1._loaded, config_2._loaded)
+
+        config_2.update_yaml_file("prefFlags", "devMode", False, multiple=True)
+        self.assertFalse(config_2["prefFlags"]["devMode"])
+        self.assertTrue(config_2._pending_write)
+        config_2.write_changes()
+        self.assertFalse(config_2._pending_write)
+        self.assertTrue(config_1.requires_reload)
+        self.assertEqual(config_1.content["prefFlags"]["devMode"], False)
+
+        config_2.update_yaml_file("prefFlags", "devMode", True, multiple=True)
+        self.assertTrue(config_2._pending_write)
+        self.assertTrue(config_2["prefFlags"]["devMode"])
+        self.assertFalse(config_1["prefFlags"]["devMode"])
+
+        shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_multi_config(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+
+        shutil.copy(ngi_local_conf, bak_local_conf)
+
+        i = 0
+        config_objects = []
+        while i < 100:
+            config_objects.append(NGIConfig("ngi_local_conf", CONFIG_PATH, True))
+            i += 1
+
+        first_config = config_objects[0]
+        last_config = config_objects[-1]
+        self.assertIsInstance(first_config, NGIConfig)
+        self.assertIsInstance(last_config, NGIConfig)
+
+        self.assertEqual(first_config.content, last_config.content)
+        first_config.update_yaml_file("prefFlags", "devMode", False)
+
+        self.assertFalse(last_config["prefFlags"]["devMode"])
+        self.assertEqual(first_config.content, last_config.content)
+
+        shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_new_ngi_config(self):
+        config = NGIConfig("temp_conf", CONFIG_PATH)
+        self.assertIsInstance(config.content, dict)
+        os.remove(os.path.join(CONFIG_PATH, "temp_conf.yml"))
+
+    def test_is_neon_core(self):
+        self.assertIsInstance(is_neon_core(), bool)
+
+    def test_get_speech_config_local_changes(self):
+        local_config = NGIConfig("ngi_local_conf")
+        speech_config = get_neon_speech_config()
+        self.assertNotEqual(speech_config.get("listener"), local_config["listener"])
 
 
 if __name__ == '__main__':

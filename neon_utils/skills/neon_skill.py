@@ -47,9 +47,11 @@ class NeonSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         self.user_config = NGIConfig("ngi_user_info")
         self.local_config = NGIConfig("ngi_local_conf")
-        # TODO: Patch missing configs DM
+
+        # TODO: Patch missing configs, depreciate these extraneous references DM
         self.configuration_available = self.local_config.content
         self.user_info_available = self.user_config.content
+
         self.ngi_settings: Optional[NGIConfig] = None
 
         super(NeonSkill, self).__init__(name, bus, use_settings)
@@ -749,11 +751,11 @@ class NeonSkill(MycroftSkill):
                    speaker=speaker, wait=wait, meta={'dialog': key, 'data': data})
 
     def schedule_event(self, handler, when, data=None, name=None, context=None):
-        # TODO: This should be depreciated since it's basically just error handling DM
+        # TODO: should 'when' already be a datetime? DM
         if isinstance(when, int) or isinstance(when, float):
             from datetime import datetime as dt, timedelta
             when = self.to_system_time(dt.now(self.sys_tz)) + timedelta(seconds=when)
-            LOG.error(f"Made a datetime: {when}")
+            LOG.info(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
     def request_check_timeout(self, time_wait, intent_to_check):
