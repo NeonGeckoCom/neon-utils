@@ -477,6 +477,10 @@ class ConfigurationUtilTests(unittest.TestCase):
         speech_config = get_neon_speech_config()
         self.assertNotEqual(speech_config.get("listener"), local_config["listener"])
 
+    def test_get_config_dir(self):
+        config_dir = get_config_dir()
+        self.assertTrue(os.path.exists(config_dir))
+
 
 if __name__ == '__main__':
     unittest.main()

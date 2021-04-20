@@ -1,0 +1,231 @@
+prefFlags:
+  codeSource: git
+  devMode: true
+  autoStart: false
+  autoUpdate: false
+  notifyRelease: true
+  showDemo: false
+  optDiags: false
+  metrics: false
+  saveAudio: false
+  saveText: true
+remoteVars:
+  coreGit: https://github.com/NeonGeckoCom/mycroft-release.git
+  coreBranch: dev
+  skillsGit: https://github.com/NeonGeckoCom/current-skills.git
+  skillsBranch: dev
+  url: https://api.mycroft.ai
+  ver: v1
+
+  guiGit: "''"
+  guiBranch: "''"
+devVars:
+  devName: Server
+  devType: server
+  # generic, server, neonX, neonPi, neonAlpha, neonU
+  version: 2021-04-15-185241
+  touchDev:
+  micDev:
+  soundDev:
+  defaultVolume: 60
+  defaultMicVolume: 100
+
+  camDev: '0'
+gnome:
+  favApps:
+  appFolders: "['accessories', 'office', 'NeonGecko']"
+
+dirVars:
+  coreDir: /home/guydaniels1953/NeonAI
+  rootDir: /home/guydaniels1953/NeonAI/data
+  skillsDir: /home/guydaniels1953/NeonAI/data/skills
+  ngiDir: /home/guydaniels1953/NeonAI/NGI
+  tempDir: /home/guydaniels1953/NeonAI/NGI/temp
+  docsDir: /home/guydaniels1953/NeonAI/NGI/Documents/NeonGecko
+  diagsDir: /home/guydaniels1953/NeonAI/Diagnostics
+  cacheDir: /home/guydaniels1953/tts/cache
+  ipcDir: /tmp/neon/ipc
+  # Changes to ipcDir must also be made in NGI/utilities/configHelper
+  musicDir: /home/guydaniels1953/NeonAI/NGI/Music/NeonGecko
+  videoDir: /home/guydaniels1953/NeonAI/NGI/Video/NeonGecko
+  picsDir: /home/guydaniels1953/NeonAI/NGI/Pictures/NeonGecko
+  logsDir: /home/guydaniels1953/logs
+  repoDir: /home/guydaniels1953/.neon/skills-repo
+  padatiousDir: /home/guydaniels1953/.neon/intent_cache
+
+  guiDir: "''"
+fileVars:
+  sshKey: /home/guydaniels1953/.ssh/id_rsa
+  notify: /home/guydaniels1953/NeonAI/mycroft/res/snd/loaded.wav
+  startListening: /home/guydaniels1953/NeonAI/mycroft/res/snd/start_listening.wav
+  endListening: /home/guydaniels1953/NeonAI/mycroft/res/snd/end_listening.wav
+
+audioService:
+  defaultBackend: local
+
+  backends:
+    local: {type: simple, active: true}
+    vlc: {type: vlc, active: true, duck: true}
+  debug: true
+padatious:
+  intent_cache: /home/guydaniels1953/.neon/intent_cache
+  train_delay: 4
+
+  single_thread: 'False'
+websocket:
+  host: 0.0.0.0
+  port: 8181
+  route: /core
+  ssl: false
+
+ttsOpts: {None: '', 'Chinese, Mandarin': cmn-CN, Danish: da-DK, Dutch: nl-NL, 'English, Australian': en-AU,
+  'English, British': en-GB, 'English, Indian': en-IN, 'English, US': en-US, 'English, Welsh': en-GB-WLS,
+  French: fr-FR, 'French, Canadian': fr-CA, Hindi: hi-IN, German: de-DE, Icelandic: is-IS,
+  Italian: it-IT, Japanese: ja-JP, Korean: ko-KR, Norwegian: nb-NO, Polish: pl-PL,
+  'Portuguese, Brazilian': pt-BR, 'Portuguese, European': pt-PT, Romanian: ro-RO,
+  Russian: ru-RU, 'Spanish, European': es-ES, 'Spanish, Mexican': es-MX, 'Spanish, US': es-US,
+  Swedish: sv-SE, Turkish: tr-TR, Welsh: cy-GB}
+
+sttOpts: {Deutsch (Deutschland): de-DE, English (United States): en-US, Español (España): es-ES,
+  Español (México): es-MX, Français (Canada): fr-CA, Français (France): fr-FR,
+  Italiano (Italia): it-IT, Português (Portugal): pt-PT}
+
+sttSpokenOpts: {Afrikaans: af-ZA, Amharic: am-ET, Armenian: hy-AM, Azerbaijani: az-AZ,
+  Indonesian: id-ID, Malay: ms-MY, Bengali: bn-BD, Catalan: ca-ES, Czech: cs-CZ, Danish: da-DK,
+  German: de-DE, 'English, British': en-GB, 'English, American': en-US, Spanish: es-ES,
+  'Spanish, American': es-US, 'Spanish, Mexican': es-MX, Basque: eu-ES, Filipino: fil-PH,
+  'French, Canadian': fr-CA, French: fr-FR, Galician: gl-ES, Georgian: ka-GE, Gujarati: gu-IN,
+  Croatian: hr-HR, Zulu: zu-ZA, Icelandic: is-IS, Italian: it-IT, Javanese: jv-ID,
+  Kannada: kn-IN, Khmer: km-KH, Lao: lo-LA, Latvian: lv-LV, Lithuanian: lt-LT, Hungarian: hu-HU,
+  Malayalam: ml-IN, Marathi: mr-IN, Dutch: nl-NL, Nepali: ne-NP, Norwegian Bokmål: nb-NO,
+  Polish: pl-PL, 'Portuguese, Brazilian': pt-BR, Portuguese: pt-PT, Romanian: ro-RO,
+  Sinhala: si-LK, Slovak: sk-SK, Slovenian: sl-SI, Sundanese: su-ID, Swahili: sw-TZ,
+  Finnish: fi-FI, Swedish: sv-SE, Tamil: ta-IN, Telugu: te-IN, Vietnamese: vi-VN,
+  Turkish: tr-TR, Urdu: ur-PK, Greek: el-GR, Bulgarian: bg-BG, Russian: ru-RU, Serbian: sr-RS,
+  Ukrainian: uk-UA, Hebrew: he-IL, Arabic: ar-IL, Persian: fa-IR, Hindi: hi-IN, Thai: th-TH,
+  Korean: ko-KR, Taiwanese: zh-TW, 'Chinese, Cantonese': yue-Hant-HK, Japanese: ja-JP,
+  'Chinese, Mandarin': zh}
+gui:
+  lang: en-us
+  enclosure: generic
+  host: 0.0.0.0
+  port: 18181
+  route: /gui
+  ssl: false
+  resource_root: https://0000.us/klatchat/app/files/neon_qml
+interface:
+  display_neon_brain: true
+  clap_commands_enabled: false
+  random_dialog_enabled: false
+  confirm_listening: false
+  mute_on_listen: false
+  blink_commands_enabled: false
+  use_hesitation: false
+  wake_word_enabled: true
+  camera_preview: 'False'
+  blink_scalar: '0.6'
+  blink_frames: '2'
+  gui_remote: "''"
+listener:
+  wake_word: Neon gecko
+  multiplier: 1
+  phoneme_duration: 120
+  dev_index:
+  sample_rate: 16000
+  record_wake_words: false
+  save_utterances: false
+  wake_word_upload: {disable: true, url: https://training.mycroft.ai/precise/upload}
+  mute_during_output: true
+  duck_while_listening: 0.3
+  energy_ratio: 1.5
+  stand_up_word: wake up
+  recording_timeout: 10.0,
+  recording_timeout_with_silence: 3.0
+  wake_word_enabled: 'False'
+  phonemes: "'HH EY . N IY AA N .'"
+  standup_word: "'wake up'"
+  grammar: "'lm'"
+  rate: '16000'
+  channels: '1'
+  threshold: '1e-20'
+  der: '1.25'
+  module: "'pocketsphinx'"
+  language: "'en-us'"
+  precise:
+    dist_url: "'https://github.com/MycroftAI/precise-data/raw/dist/{arch}/latest'"
+    local_model_file: "'$ngiDir/config/hey-neon.pb'"
+    model_url: "''"
+skills:
+  auto_update: false
+  debug: true
+  blacklist: [openhab.neon, user-settings-control.neon, klat.neon]
+  priority: []
+  update_interval: 1.0
+  msm_ver: false
+  repo_url: https://github.com/MycroftAI/mycroft-skills
+  repo_branch: '18.08'
+  data_dir: "'~/.neon/msm'"
+session:
+  ttl: 180
+tts:
+  module: amazon
+  amazon:
+    region: us-west-2
+    aws_access_key_id: "'$awsID'"
+    aws_secret_access_key: "'$awsSecret'"
+  mimic:
+    voice: ap
+  mimic2:
+    lang: en-us
+    url: https://mimic-api.mycroft.ai/synthesize?text=
+  mozilla:
+    request_url: "'http://0.0.0.0:5002/api/tts?'"
+  espeak:
+    lang: "'english-us'"
+    voice: "'m1'"
+  bing: {}
+  watson: {}
+stt:
+  module: google_cloud_beta
+  translation_module: google
+  detection_module: google
+  google_cloud:
+    lang: "'en-us'"
+    credential: "'$google_config'"
+  deepspeech_server:
+    uri: "'http://localhost:8080/stt'"
+  kaldi:
+    uri: "'http://localhost:8080/client/dynamic/recognize'"
+  deepspeech_local:
+    model_path: "'$deepspeech_model'"
+    scorer_path: "'$deepspeech_scorer'"
+  deepspeech_stream_local:
+    model_path: "'$deepspeech_model'"
+    scorer_path: "'$deepspeech_scorer'"
+  govivace:
+    uri: "'https://services.govivace.com:49149/telephony'"
+    credential:
+      token: "'xxxxx'"
+logs:
+  blacklist: [enclosure.mouth.viseme, enclosure.mouth.display]
+device:
+  mac: 00:00:00:00:00:00
+  ip4: 127.0.0.1
+  ip6: ::1
+  ver: ''
+gestures:
+  clapThreshold: 10.0e10
+
+hotwords:
+  Hey Neon: {module: jarbas_pocketsphinx_ww_plug, phonemes: HH EY . N IY AA N ., threshold: 1e-20,
+    lang: en-us, sample_rate: 16000, listen: true, sound: snd/start_listening.wav,
+    local_model_file: None}
+audio_parsers:
+  blacklist: [gender]
+api:
+  url: https://api.mycroft.ai
+  version: v1
+  update: true
+  disabled: true
+
+# Below are (mostly) depreciated DM

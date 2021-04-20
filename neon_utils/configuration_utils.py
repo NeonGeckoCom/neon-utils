@@ -344,11 +344,17 @@ def get_config_dir():
     site = sysconfig.get_paths()['platlib']
     if exists(join(site, 'NGI')):
         return join(site, "NGI")
-    for p in [path for path in sys.path if path != ""]:
+    for p in [path for path in sys.path if path != "" and not path.startswith("/usr/lib/python")]:
         if exists(join(p, "NGI")):
             return join(p, "NGI")
-    # TODO: Standard core location? DM
+        if "/.venv" in p:  # TODO: better parsing here to determine virtualenv DM
+            clean_path = p.split("/.venv", 1)[0]
+            if exists(join(clean_path, "NGI")):
+                return join(clean_path, "NGI")
+            else:
+                return clean_path
     default_path = expanduser("~/.local/share/neon")
+    LOG.warning(f"No Neon Core Found! Using default configuration at ~/.local/share/neon")
     return default_path
 
 
@@ -708,7 +714,7 @@ def get_neon_local_config(path: Optional[str] = None):
     default_local_config = NGIConfig("default_core_conf",
                                      os.path.join(os.path.dirname(__file__), "default_configurations"))
     if len(local_config.content) == 0:
-        LOG.info("Created Empty Local Config!")
+        LOG.info(f"Created Empty Local Config at {local_config.path}")
         local_config.populate(default_local_config.content)
         # TODO: Update from Mycroft config DM
     user_config = NGIConfig("ngi_user_info", path)
