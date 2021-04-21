@@ -15,3 +15,4 @@ langdetect~=1.0.8
 translate
 boto3
 ovos_utils>=0.0.6
+ovos_plugin_manager

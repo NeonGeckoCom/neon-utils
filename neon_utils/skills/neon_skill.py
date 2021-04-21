@@ -638,31 +638,6 @@ class NeonSkill(MycroftSkill):
         """
         self._register_decorated()
 
-    def handle_check_yml(self, message):
-        """
-        Handles check.yml.updates messages that notify skills of updated configurations.
-        :param message: incoming message requesting skill checks for updates
-        """
-        LOG.debug(f'{message.context.get("origin")} requests update of {message.data.get("modified")}')
-        updated_conf = False
-        try:
-            to_update = message.data.get("modified", ["ngi_local_conf", "ngi_user_info"])
-            if "ngi_local_conf" in to_update:
-                self.configuration_available = self.local_config.check_for_updates()
-                updated_conf = True
-            if "ngi_user_info" in to_update:
-                self.user_info_available = self.user_config.check_for_updates()
-                updated_conf = True
-            if "ngi_skill_conf" in to_update and message.context.get("origin") == self.name and self.ngi_settings:
-                LOG.debug("Nothing to check, skill already has settings")
-                # self.settings = self.ngi_settings.check_for_updates()
-                # updated_conf = True
-        except Exception as e:
-            LOG.error(e)
-        finally:
-            if updated_conf:
-                LOG.debug(f"{self.name} Checked for YAML updates")
-
     def speak(self, utterance, expect_response=False, wait=False, meta=None, message=None, private=False, speaker=None):
         """
         Speak a sentence.
@@ -867,9 +842,9 @@ class NeonSkill(MycroftSkill):
         else:
             return {}
 
-    def _register_system_event_handlers(self):
-        self.add_event('check.yml.updates', self.handle_check_yml)
-        super()._register_system_event_handlers()
+    # def _register_system_event_handlers(self):
+    #     self.add_event('check.yml.updates', self.handle_check_yml)
+    #     super()._register_system_event_handlers()
 
     def get_utterance_user(self, message: Optional[Message]) -> str:
         """
