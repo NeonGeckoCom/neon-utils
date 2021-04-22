@@ -37,6 +37,7 @@ def get_likes_from_csv(file: str, user: Optional[str],
     :param date_limit: maximum time history to process
     :return: dict of likes data
     """
+    file = os.path.expanduser(file)
     if not os.path.isfile(file):
         raise FileNotFoundError
     with open(file, "r") as csv:
@@ -85,6 +86,8 @@ def update_csv(info: list, location: str):
         except IOError as e:
             LOG.error(e)
 
+    location = os.path.expanduser(location)
+
     # Check if file exists with first row
     csv_dir = os.path.dirname(location)
     if not os.path.isfile(location):
@@ -116,6 +119,8 @@ def write_transcript_file(utterance: str, path: str, transcript_name: str, usern
     :return: formatted line written to the transcript
     """
     import datetime
+
+    path = os.path.expanduser(path)
     ensure_directory_exists(path, transcript_name)
 
     f_time = str(datetime.datetime.fromtimestamp(timestamp))
@@ -142,6 +147,7 @@ def get_transcript_file(path: str, transcript_name: str, username: Optional[str]
     :param f_date: String formatted date requested (YYYY-MM-DD)
     :return: Path to requested transcript (None if not exists)
     """
+    path = os.path.expanduser(path)
     if username:
         transcript_file = os.path.join(path, transcript_name, f"{username}-{f_date}.txt")
     else:
