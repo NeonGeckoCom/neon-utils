@@ -16,6 +16,7 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+import re
 
 import json
 import os
@@ -346,8 +347,14 @@ def get_config_dir():
     for p in [path for path in sys.path if path != ""]:
         if exists(join(p, "NGI")):
             return join(p, "NGI")
-    # TODO: Standard core location? DM
+        if re.match(".*/lib/python.*/site-packages", p):
+            clean_path = "/".join(p.split("/")[0:-4])
+            if exists(join(clean_path, "NGI")):
+                return join(clean_path, "NGI")
+            elif exists(join(clean_path, "mycroft")):
+                return clean_path
     default_path = expanduser("~/.local/share/neon")
+    LOG.warning(f"No Neon Core Found! Using default configuration at ~/.local/share/neon")
     return default_path
 
 
@@ -707,7 +714,7 @@ def get_neon_local_config(path: Optional[str] = None):
     default_local_config = NGIConfig("default_core_conf",
                                      os.path.join(os.path.dirname(__file__), "default_configurations"))
     if len(local_config.content) == 0:
-        LOG.info("Created Empty Local Config!")
+        LOG.info(f"Created Empty Local Config at {local_config.path}")
         local_config.populate(default_local_config.content)
         # TODO: Update from Mycroft config DM
     user_config = NGIConfig("ngi_user_info", path)
