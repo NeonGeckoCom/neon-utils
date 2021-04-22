@@ -497,9 +497,8 @@ def get_neon_cli_config() -> dict:
     Returns:
         dict of config params used by the neon_cli
     """
-    user_config = NGIConfig("ngi_user_info").content
     local_config = NGIConfig("ngi_local_conf").content
-    wake_words_enabled = user_config.get("listener", {}).get("wake_word_enabled", True)
+    wake_words_enabled = local_config.get("interface", {}).get("wake_word_enabled", True)
     try:
         neon_core_version = os.path.basename(glob(local_config['dirVars']['ngiDir'] +
                                                   '/*.release')[0]).split('.release')[0]
