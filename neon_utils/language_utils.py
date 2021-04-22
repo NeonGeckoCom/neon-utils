@@ -215,6 +215,7 @@ class TranslatorFactory:
         module = module or "amazon"
         config = get_neon_lang_config()
         module = module or config.get("translation_module", "google")
+        # TODO: Check file locations DM
         if module == "amazon" \
                 and get_neon_tts_config()["amazon"].get("aws_access_key_id", "") == "":
             LOG.warning("Amazon credentials not available")
