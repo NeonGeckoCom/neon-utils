@@ -96,7 +96,6 @@ class NGIConfig:
             depth = 0
         self._content = dict_make_equal_keys(self._content, other, depth)
         if old_content == self._content:
-            LOG.warning(f"Update called with no change: {self.file_path}")
             return
         self._write_yaml_file()
 
@@ -533,9 +532,10 @@ def get_neon_speech_config() -> dict:
 
     neon_listener_config = deepcopy(local_config.get("listener", {}))
     neon_listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
-    neon_listener_config["save_utterances"] = local_config["interface"].get("saveAudio", False)
+    neon_listener_config["save_utterances"] = local_config["prefFlags"].get("saveAudio", False)
+    neon_listener_config["confirm_listening"] = local_config["interface"].get("confirm_listening", True)
     neon_listener_config["record_utterances"] = neon_listener_config["save_utterances"]
-    neon_listener_config["record_wake_words"] = local_config["interface"].get("saveAudio", False)
+    neon_listener_config["record_wake_words"] = neon_listener_config["save_utterances"]
     merged_listener = {**mycroft.get("listener", {}), **neon_listener_config}
     if merged_listener.keys() != neon_listener_config.keys():
         LOG.warning(f"Keys missing from Neon config! {merged_listener.keys()}")
