@@ -16,6 +16,7 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+import re
 
 import json
 import os
@@ -347,11 +348,11 @@ def get_config_dir():
     for p in [path for path in sys.path if path != "" and not path.startswith("/usr/lib/python")]:
         if exists(join(p, "NGI")):
             return join(p, "NGI")
-        if "/.venv" in p:  # TODO: better parsing here to determine virtualenv DM
-            clean_path = p.split("/.venv", 1)[0]
+        if re.match(".*/lib/python.*/site-packages", p):
+            clean_path = "/".join(p.split("/")[0:-4])
             if exists(join(clean_path, "NGI")):
                 return join(clean_path, "NGI")
-            else:
+            elif exists(join(clean_path, "mycroft")):
                 return clean_path
     default_path = expanduser("~/.local/share/neon")
     LOG.warning(f"No Neon Core Found! Using default configuration at ~/.local/share/neon")
