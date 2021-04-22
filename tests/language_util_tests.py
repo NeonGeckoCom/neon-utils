@@ -40,10 +40,10 @@ class LangUtilTests(unittest.TestCase):
         self.assertEqual(d.detect(texts[0]), "en")
         self.assertEqual(d.detect(texts[1]), "pt")
 
-    def test_google_detect(self):
-        d = GoogleDetector()
-        self.assertEqual(d.detect(texts[0]), "en")
-        self.assertEqual(d.detect(texts[1]), "pt")
+    # def test_google_detect(self):
+    #     d = GoogleDetector()
+    #     self.assertEqual(d.detect(texts[0]), "en")
+    #     self.assertEqual(d.detect(texts[1]), "pt")
 
     # def test_amazon_detect(self):
     #     d = AmazonDetector()
@@ -54,9 +54,9 @@ class LangUtilTests(unittest.TestCase):
     #     t = AmazonTranslator()
     #     self.assertEqual(t.translate(texts[1]), "My name is jarbas")
 
-    def test_google_translate(self):
-        t = GoogleTranslator()
-        self.assertEqual(t.translate(texts[1]), "My name is jarbas")
+    # def test_google_translate(self):
+    #     t = GoogleTranslator()
+    #     self.assertEqual(t.translate(texts[1]), "My name is jarbas")
 
     # def test_mymemory_translate(self):
     #     t = MyMemoryTranslator()
