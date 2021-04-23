@@ -538,7 +538,7 @@ class NeonSkill(MycroftSkill):
             return True
         elif message.data.get("Neon") or message.data.get("neon"):
             return True
-        elif not self.server and self.user_info_available.get("listener", {}).get("wake_word_enabled", True):
+        elif not self.server and self.local_config.get("interface", {}).get("wake_word_enabled", True):
             return True
         elif self.voc_match(message.data.get("utterance"), "neon"):
             return True
