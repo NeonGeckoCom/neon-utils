@@ -24,7 +24,7 @@ import time
 import os
 
 from copy import deepcopy
-from mycroft_bus_client.message import Message, dig_for_message
+# from mycroft_bus_client.message import Message, dig_for_message
 from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
@@ -39,6 +39,7 @@ from neon_utils.message_utils import request_from_mobile, get_message_user
 
 LOG.name = "neon-skill"
 ensure_mycroft_import()
+from mycroft.messagebus.message import Message, dig_for_message
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
 
 
@@ -543,7 +544,7 @@ class NeonSkill(MycroftSkill):
             return True
         elif message.data.get("Neon") or message.data.get("neon"):
             return True
-        elif not self.server and self.user_config.get("listener", {}).get("wake_word_enabled", True):
+        elif not self.server and self.local_config.get("interface", {}).get("wake_word_enabled", True):
             return True
         elif self.voc_match(message.data.get("utterance"), "neon"):
             return True
@@ -642,31 +643,6 @@ class NeonSkill(MycroftSkill):
         Accessor method
         """
         self._register_decorated()
-
-    def handle_check_yml(self, message):
-        """
-        Handles check.yml.updates messages that notify skills of updated configurations.
-        :param message: incoming message requesting skill checks for updates
-        """
-        LOG.debug(f'{message.context.get("origin")} requests update of {message.data.get("modified")}')
-        updated_conf = False
-        try:
-            to_update = message.data.get("modified", ["ngi_local_conf", "ngi_user_info"])
-            if "ngi_local_conf" in to_update:
-                self.configuration_available = self.local_config.check_for_updates()
-                updated_conf = True
-            if "ngi_user_info" in to_update:
-                self.user_info_available = self.user_config.check_for_updates()
-                updated_conf = True
-            if "ngi_skill_conf" in to_update and message.context.get("origin") == self.name and self.ngi_settings:
-                LOG.debug("Nothing to check, skill already has settings")
-                # self.settings = self.ngi_settings.check_for_updates()
-                # updated_conf = True
-        except Exception as e:
-            LOG.error(e)
-        finally:
-            if updated_conf:
-                LOG.debug(f"{self.name} Checked for YAML updates")
 
     def speak(self, utterance, expect_response=False, wait=False, meta=None, message=None, private=False, speaker=None):
         """
@@ -871,10 +847,6 @@ class NeonSkill(MycroftSkill):
                 return pickle.load(file)
         else:
             return {}
-
-    def _register_system_event_handlers(self):
-        self.add_event('check.yml.updates', self.handle_check_yml)
-        super()._register_system_event_handlers()
 
     def get_utterance_user(self, message: Optional[Message]) -> str:
         """
