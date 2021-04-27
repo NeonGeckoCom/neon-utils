@@ -24,7 +24,7 @@ import time
 import os
 
 from copy import deepcopy
-# from mycroft_bus_client.message import Message, dig_for_message
+from mycroft_bus_client.message import Message, dig_for_message
 from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
@@ -39,7 +39,6 @@ from neon_utils.message_utils import request_from_mobile, get_message_user
 
 LOG.name = "neon-skill"
 ensure_mycroft_import()
-from mycroft.messagebus.message import Message, dig_for_message
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
 
 
@@ -47,10 +46,6 @@ class NeonSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         self.user_config = NGIConfig("ngi_user_info")
         self.local_config = NGIConfig("ngi_local_conf")
-
-        # TODO: Patch missing configs, depreciate these extraneous references DM
-        self.configuration_available = self.local_config.content
-        self.user_info_available = self.user_config.content
 
         self.ngi_settings: Optional[NGIConfig] = None
 
@@ -98,6 +93,16 @@ class NeonSkill(MycroftSkill):
         except Exception as e:
             LOG.error(e)
             self.language_config, self.language_detector, self.translator = None, None, None
+
+    @property
+    def user_info_available(self):
+        LOG.warning("This reference is deprecated, use self.preference_x methods for user preferences")
+        return self.user_config.content
+
+    @property
+    def configuration_available(self):
+        LOG.warning("This reference is deprecated, use self.local_config directly")
+        return self.local_config.content
 
     def init_settings(self):
         """
@@ -161,21 +166,21 @@ class NeonSkill(MycroftSkill):
     def preference_brands(self, message=None) -> dict:
         """
         Returns a brands dictionary for the user
-        Equivalent to self.user_info_available["speech"] for non-server use
+        Equivalent to self.user_config["speech"] for non-server use
         """
         try:
             nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
-                    return self.user_info_available['brands']
+                    return self.user_config['brands']
 
                 if message.context.get("nick_profiles"):
                     return message.context["nick_profiles"][nick]["brands"]
                 else:
                     LOG.error(f"Unable to get user settings! message={message.data}")
             else:
-                return self.user_info_available['brands']
+                return self.user_config['brands']
         except Exception as x:
             LOG.error(x)
         return {'ignored_brands': {},
@@ -185,20 +190,20 @@ class NeonSkill(MycroftSkill):
     def preference_user(self, message=None) -> dict:
         """
         Returns the user dictionary with name, email
-        Equivalent to self.user_info_available["user"] for non-server use
+        Equivalent to self.user_config["user"] for non-server use
         """
         try:
             nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
-                    return self.user_info_available['user']
+                    return self.user_config['user']
                 if message.context.get("nick_profiles"):
                     return message.context["nick_profiles"][nick]["user"]
                 else:
                     LOG.error(f"Unable to get user settings! message={message.data}")
             else:
-                return self.user_info_available['user']
+                return self.user_config['user']
         except Exception as x:
             LOG.error(x)
         return {'first_name': '',
@@ -221,20 +226,20 @@ class NeonSkill(MycroftSkill):
     def preference_location(self, message=None) -> dict:
         """
         Get the JSON data structure holding location information.
-        Equivalent to self.user_info_available["location"] for non-server use
+        Equivalent to self.user_config["location"] for non-server use
         """
         try:
             nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
-                    return self.user_info_available['location']
+                    return self.user_config['location']
                 if message.context.get("nick_profiles"):
                     return message.context["nick_profiles"][nick]["location"]
                 else:
                     LOG.error(f"Unable to get user settings! message={message.data}")
             else:
-                return self.user_info_available['location']
+                return self.user_config['location']
         except Exception as x:
             LOG.error(x)
         return {'lat': 47.4799078,
@@ -249,21 +254,21 @@ class NeonSkill(MycroftSkill):
     def preference_unit(self, message=None) -> dict:
         """
         Returns the units dictionary that contains time, date, measure formatting preferences
-        Equivalent to self.user_info_available["units"] for non-server use
+        Equivalent to self.user_config["units"] for non-server use
         """
         try:
             nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
-                    return self.user_info_available['units']
+                    return self.user_config['units']
 
                 if message.context.get("nick_profiles"):
                     return message.context["nick_profiles"][nick]["units"]
                 else:
                     LOG.error(f"Unable to get user settings! message={message.data}")
             else:
-                return self.user_info_available['units']
+                return self.user_config['units']
         except Exception as x:
             LOG.error(x)
         return {'time': 12,
@@ -274,21 +279,21 @@ class NeonSkill(MycroftSkill):
     def preference_speech(self, message=None) -> dict:
         """
         Returns the speech dictionary that contains language and spoken response preferences
-        Equivalent to self.user_info_available["speech"] for non-server use
+        Equivalent to self.user_config["speech"] for non-server use
         """
         try:
             nick = get_message_user(message) if message else None
             if self.server:
                 if not message or not nick:
                     LOG.warning("No message given!")
-                    return self.user_info_available['speech']
+                    return self.user_config['speech']
 
                 if message.context.get("nick_profiles"):
                     return message.context["nick_profiles"][nick]["speech"]
                 else:
                     LOG.error(f"Unable to get user settings! message={message.data}")
             else:
-                return self.user_info_available['speech']
+                return self.user_config['speech']
         except Exception as x:
             LOG.error(x)
         return {'stt_language': 'en',
@@ -538,7 +543,7 @@ class NeonSkill(MycroftSkill):
             return True
         elif message.data.get("Neon") or message.data.get("neon"):
             return True
-        elif not self.server and self.user_info_available.get("listener", {}).get("wake_word_enabled", True):
+        elif not self.server and self.user_config.get("listener", {}).get("wake_word_enabled", True):
             return True
         elif self.voc_match(message.data.get("utterance"), "neon"):
             return True
