@@ -9,7 +9,7 @@ prefFlags:
   metrics: False
   saveAudio: False
   saveText: True
-  # TODO: Depreciate GUI
+  # TODO: These should go somewhere in HAL/Enclosure
   localGui: True
   guiEvents: True
 
@@ -28,7 +28,7 @@ interface:
 devVars:
   devName:
   devType: generic
-  # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU, mycroft_mark_2
+  # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU, mycroft_mark_2, ubuntu, linux
   version:
   touchDev:
   micDev:
@@ -158,12 +158,12 @@ api:
 # Below are (mostly) depreciated DM
 
 remoteVars:
-  coreGit: ${coreGit}
-  coreBranch: ${coreBranch}
-  skillsGit: ${skillsGit}
-  skillsBranch: ${skillsBranch}
-  guiGit: ${guiGit}
-  guiBranch: ${guiBranch}
+  coreGit:
+  coreBranch:
+  skillsGit:
+  skillsBranch:
+  guiGit:
+  guiBranch:
   url: https://api.mycroft.ai
   ver: v1
   remoteHost: 167.172.112.7
@@ -173,14 +173,14 @@ gnome:
   appFolders: "['accessories', 'office', 'Neongecko']"
 
 dirVars:
-  coreDir:
+  coreDir: /opt/neon
   rootDir: ~/.local/share/neon
   skillsDir: ~/.local/share/neon/skills
-  ngiDir:
+  ngiDir: /opt/neon/NGI
   guiDir:
   tempDir: /tmp/neon
   docsDir: ~/Documents/NeonGecko
-  diagsDir:
+  diagsDir: ~/Documents/NeonGecko/Diagnostics
   cacheDir: ~/.local/share/neon/cache
   ipcDir: /tmp/neon/ipc
   # Changes to ipcDir must also be made in NGI/utilities/configHelper
@@ -191,11 +191,15 @@ dirVars:
   repoDir: ~/.neon/skills-repo
   padatiousDir: ~/.neon/intent_cache
 
+# File paths should be absolute (or ~/ relative) or relative to /res/ (see resolve_resource_file)
 fileVars:
-  sshKey: ${sshKey}
-  notify: ${coreDir}/mycroft/res/snd/loaded.wav
-  startListening: ${coreDir}/mycroft/res/snd/start_listening.wav
-  endListening: ${coreDir}/mycroft/res/snd/end_listening.wav
+  sshKey: ~/.ssh/id_rsa
+  notify: snd/loaded.wav
+
+sounds:
+  startListening: snd/start_listening.wav
+  endListening: snd/end_listening.wav
+  acknowledge: snd/acknowledge.mp3
 
 ttsOpts: {None: '', 'Chinese, Mandarin': zh-ZH, Danish: da-DK, Dutch: nl-NL, 'English, Australian': en-AU,
           'English, British': en-GB, 'English, Indian': en-IN, 'English, US': en-US, 'English, Welsh': en-GB-WLS,

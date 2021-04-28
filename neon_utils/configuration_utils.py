@@ -784,8 +784,7 @@ def get_mycroft_compatible_config(mycroft_only=False):
     default_config["date_format"] = user["units"]["date"]
     default_config["opt_in"] = local["prefFlags"]["metrics"]
     default_config["confirm_listening"] = local["interface"]["confirm_listening"]
-    # TODO: Sounds in NGI Config
-    # TODO: Default location? DM
+    default_config["sounds"] = {**default_config.get("sounds", {}), **local.get("sounds", {})}
     default_config["data_dir"] = local["dirVars"]["rootDir"]
     default_config["skills"] = get_neon_skills_config()
     default_config["server"] = get_neon_api_config()
