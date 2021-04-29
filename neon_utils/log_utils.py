@@ -79,27 +79,3 @@ def get_logger(log_name: str, log_dir: str = LOG_DIR, std_out: bool = False) -> 
     LOG.name = log_name
     log = LOG.create_logger(log_name, std_out)
     return log
-
-
-def get_skills_log(log_dir=LOG_DIR, std_out: bool = False) -> logging.Logger:
-    return get_logger("skills", log_dir, std_out)
-
-
-def get_audio_log(log_dir=LOG_DIR, std_out: bool = False) -> logging.Logger:
-    return get_logger("audio", log_dir, std_out)
-
-
-def get_speech_log(log_dir=LOG_DIR, std_out: bool = False) -> logging.Logger:
-    return get_logger("voice", log_dir, std_out)
-
-
-def get_bus_log(log_dir=LOG_DIR, std_out: bool = False) -> logging.Logger:
-    return get_logger("bus", log_dir, std_out)
-
-
-def get_server_log(log_dir=LOG_DIR, std_out: bool = False) -> logging.Logger:
-    return get_logger("server", log_dir, std_out)
-
-
-def get_client_log(log_dir=LOG_DIR, std_out: bool = False) -> logging.Logger:
-    return get_logger("client", log_dir, std_out)
