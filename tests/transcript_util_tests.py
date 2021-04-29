@@ -16,7 +16,9 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+from datetime import date
 
+import time
 import sys
 import os
 import unittest
@@ -70,6 +72,19 @@ class TranscriptUtilTests(unittest.TestCase):
                       lines)
         self.assertEqual("Date,Time,Profile,Device,Input,Location,Wav_Length\n", lines[0])
         os.remove(csv_path)
+
+    def test_write_transcript_file(self):
+        line = write_transcript_file("test utterance", TRANSCRIPTS_DIR, "test_transcripts", "TestRunner", time.time())
+        self.assertIsInstance(line, str)
+        self.assertTrue(os.path.isfile(os.path.join(TRANSCRIPTS_DIR, "test_transcripts",
+                                                    str(date.fromtimestamp(time.time())) + ".txt")))
+
+    def test_write_transcript_file_relative_path(self):
+        line = write_transcript_file("test utterance", "~/.local/share/neon", "test_transcripts", "TestRunner",
+                                     time.time())
+        self.assertIsInstance(line, str)
+        self.assertTrue(os.path.isfile(os.path.expanduser(
+            os.path.join("~/.local/share/neon", "test_transcripts", str(date.fromtimestamp(time.time())) + ".txt"))))
 
 
 if __name__ == '__main__':
