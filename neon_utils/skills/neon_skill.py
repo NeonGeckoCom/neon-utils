@@ -24,7 +24,7 @@ import time
 import os
 
 from copy import deepcopy
-# from mycroft_bus_client.message import Message, dig_for_message
+from mycroft_bus_client.message import Message, dig_for_message
 from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
@@ -37,9 +37,8 @@ from neon_utils.language_utils import get_neon_lang_config, DetectorFactory, Tra
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
 
-LOG.name = "neon-skill"
+LOG.name = "neon_skill"
 ensure_mycroft_import()
-from mycroft.messagebus.message import Message, dig_for_message
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
 
 

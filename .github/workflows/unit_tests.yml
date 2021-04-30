@@ -112,3 +112,12 @@ jobs:
         with:
           name: language-util-test-results
           path: tests/language-util-test-results.xml
+
+      - name: Test Log Utils
+        run: |
+          pytest tests/log_util_tests.py --doctest-modules --junitxml=tests/log-util-test-results.xml
+      - name: Upload log utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: log-util-test-results
+          path: tests/log-util-test-results.xml
