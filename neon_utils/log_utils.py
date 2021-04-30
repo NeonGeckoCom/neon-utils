@@ -21,7 +21,7 @@ import os
 import logging
 
 from datetime import datetime, timedelta
-from typing import Optional
+from typing import Optional, Union
 
 from neon_utils.logger import LOG
 from neon_utils.configuration_utils import get_neon_local_config
@@ -79,3 +79,35 @@ def get_logger(log_name: str, log_dir: str = LOG_DIR, std_out: bool = False) -> 
     LOG.name = log_name
     log = LOG.create_logger(log_name, std_out)
     return log
+
+
+def get_log_file_for_module(module_name: Union[str, list]) -> str:
+    """
+    Gets the default log basename for the requested module
+    Args:
+        module_name: Runnable argument passed to Popen
+            (i.e. neon_speech_client, [python3, -m, mycroft.skills])
+
+    Returns:
+        Path to logfile
+    """
+    if module_name in ("neon_speech_client", "neon_speech"):
+        log_name = "speech.log"
+    elif module_name in ("neon_audio_client", "neon_audio"):
+        log_name = "voice.log"
+    elif module_name in ("neon_enclosure_client", "neon_enclosure"):
+        log_name = "enclosure.log"
+    elif module_name == "neon_core_client":
+        log_name = "client.log"
+    elif module_name == "neon_core_server":
+        log_name = "server.log"
+    elif module_name == "mycroft-gui-app":
+        log_name = "gui.log"
+    elif "mycroft.messagebus.service" in module_name:
+        log_name = "bus.log"
+    elif "mycroft.skills" in module_name:
+        log_name = "skills.log"
+    else:
+        log_name = "extras.log"
+
+    return os.path.join(LOG_DIR, log_name)

@@ -96,7 +96,7 @@ class LogUtilTests(unittest.TestCase):
         path = os.path.join(LOG_PATH, "backup")
         self.assertTrue(os.path.isfile(os.path.join(LOG_PATH, path, "to_backup.log")))
 
-    def test_clean_logs(self):
+    def test_remove_old_logs(self):
         os.makedirs(LOG_PATH, exist_ok=True)
         test_log = os.path.join(LOG_PATH, "to_be_removed.log")
         with open(test_log, "w+") as f:
@@ -116,6 +116,15 @@ class LogUtilTests(unittest.TestCase):
             if os.path.isdir(os.path.join(LOG_PATH, path)):
                 self.assertTrue(os.path.isfile(os.path.join(LOG_PATH, path, "to_be_retained.log")))
                 return
+
+    def test_get_log_file_for_module(self):
+        self.assertEqual("speech.log", os.path.basename(get_log_file_for_module("neon_speech_client")))
+        self.assertEqual("speech.log", os.path.basename(get_log_file_for_module("neon_speech")))
+        self.assertEqual("bus.log", os.path.basename(get_log_file_for_module(["python3", "-m",
+                                                                              "mycroft.messagebus.service"])))
+        self.assertEqual("skills.log", os.path.basename(get_log_file_for_module("mycroft.skills")))
+        self.assertEqual("extras.log", os.path.basename(get_log_file_for_module("NGI.gui")))
+        self.assertEqual("extras.log", os.path.basename(get_log_file_for_module("nothing")))
 
 
 if __name__ == '__main__':
