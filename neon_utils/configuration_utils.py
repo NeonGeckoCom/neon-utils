@@ -247,7 +247,7 @@ class NGIConfig:
         """
         try:
             with self.lock.acquire(30):
-                tmp_filename = join(self.path, self.name + ".tmp")
+                tmp_filename = join(self.path, f".{self.name}.tmp")
                 LOG.debug(f"tmp_filename={tmp_filename}")
                 shutil.copy2(self.file_path, tmp_filename)
                 with open(self.file_path, 'w+') as f:
