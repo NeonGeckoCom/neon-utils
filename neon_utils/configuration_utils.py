@@ -353,8 +353,11 @@ def get_config_dir():
                 return join(clean_path, "NGI")
             elif exists(join(clean_path, "mycroft")):
                 return clean_path
+            elif exists(join(clean_path, ".venv")):
+                LOG.info(f"Saving config to .venv path: {clean_path}")
+                return clean_path
     default_path = expanduser("~/.local/share/neon")
-    LOG.warning(f"No Neon Core Found! Using default configuration at ~/.local/share/neon")
+    LOG.info(f"System packaged core found! Using default configuration at {default_path}")
     return default_path
 
 
