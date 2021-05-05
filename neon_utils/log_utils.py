@@ -26,7 +26,7 @@ from typing import Optional, Union
 from neon_utils.logger import LOG
 from neon_utils.configuration_utils import get_neon_local_config
 
-LOG_DIR = get_neon_local_config()["dirVars"]["logsDir"]
+LOG_DIR = os.path.expanduser(get_neon_local_config()["dirVars"]["logsDir"])
 
 
 def remove_old_logs(log_dir: str = LOG_DIR, history_to_retain: timedelta = timedelta(weeks=6)):
