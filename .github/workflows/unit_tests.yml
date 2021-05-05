@@ -130,3 +130,12 @@ jobs:
         with:
           name: packaging-util-test-results
           path: tests/packaging-util-test-results.xml
+
+      - name: Test Auth Utils
+        run: |
+          pytest tests/auth_util_tests.py --doctest-modules --junitxml=tests/auth-util-test-results.xml
+      - name: Upload auth utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: auth-util-test-results
+          path: tests/auth-util-test-results.xml
