@@ -174,9 +174,11 @@ gnome:
 
 dirVars:
   coreDir: /opt/neon
+  # coreDir is depreciated for packaged Neon Installations
   rootDir: ~/.local/share/neon
   skillsDir: ~/.local/share/neon/skills
   ngiDir: /opt/neon/NGI
+  # ngiDir is depreciated for packaged Neon Installations
   guiDir:
   tempDir: /tmp/neon
   docsDir: ~/Documents/NeonGecko

@@ -25,7 +25,7 @@ import shutil
 import sysconfig
 from copy import deepcopy
 from os.path import *
-from collections import MutableMapping
+from collections.abc import MutableMapping
 from contextlib import suppress
 from filelock import FileLock
 from glob import glob
