@@ -54,14 +54,15 @@ def archive_logs(log_dir: str = LOG_DIR, archive_dir: Optional[str] = None):
         archive_dir: Directory to archive logs to (defaults to formatted time)
     """
     from glob import glob
-    from os.path import join
+    from os.path import join, basename
     from os import makedirs
     from shutil import move
     default_dirname = "logs--" + datetime.now().strftime("%Y-%m-%d--%H:%M:%S")
     archive_dir = join(log_dir, archive_dir or default_dirname)
     makedirs(archive_dir, exist_ok=True)
     for file in glob(join(log_dir, "*.log")):
-        move(file,  archive_dir)
+        if baasename(file) != "start.log":
+            move(file, archive_dir)
 
 
 def get_logger(log_name: str, log_dir: str = LOG_DIR, std_out: bool = False) -> logging.Logger:
@@ -91,6 +92,8 @@ def get_log_file_for_module(module_name: Union[str, list]) -> str:
     Returns:
         Path to logfile
     """
+    if isinstance(module_name, list):
+        module_name = module_name[-1]
     if module_name in ("neon_speech_client", "neon_speech"):
         log_name = "speech.log"
     elif module_name in ("neon_audio_client", "neon_audio"):
@@ -103,9 +106,9 @@ def get_log_file_for_module(module_name: Union[str, list]) -> str:
         log_name = "server.log"
     elif module_name == "mycroft-gui-app":
         log_name = "gui.log"
-    elif "mycroft.messagebus.service" in module_name:
+    elif ".messagebus.service" in module_name:
         log_name = "bus.log"
-    elif "mycroft.skills" in module_name:
+    elif ".skills" in module_name:
         log_name = "skills.log"
     else:
         log_name = "extras.log"
