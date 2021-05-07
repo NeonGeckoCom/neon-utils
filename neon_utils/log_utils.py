@@ -61,7 +61,7 @@ def archive_logs(log_dir: str = LOG_DIR, archive_dir: Optional[str] = None):
     archive_dir = join(log_dir, archive_dir or default_dirname)
     makedirs(archive_dir, exist_ok=True)
     for file in glob(join(log_dir, "*.log")):
-        if baasename(file) != "start.log":
+        if basename(file) != "start.log":
             move(file, archive_dir)
 
 
