@@ -19,6 +19,7 @@
 
 import json
 import os.path
+from typing import Optional
 
 from neon_utils.logger import LOG
 
@@ -119,3 +120,25 @@ def find_neon_google_keys(base_path: str = "~/") -> dict:
                 LOG.error(f"Invalid google credential found at: {path}")
                 raise e
     raise FileNotFoundError(f"No google credentials found in default locations or path: {path_to_check}")
+
+
+def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = None):
+    """
+    Populates configuration with the specified Amazon keys to be referenced by tts/translation modules.
+    Args:
+        aws_keys: Dict of aws credentials to use (returned by `find_neon_aws_keys()`)
+        config_path: Override path to ngi_local_conf
+    """
+    from neon_utils.configuration_utils import NGIConfig
+
+    assert "aws_access_key_id" in aws_keys
+    assert "aws_secret_access_key" in aws_keys
+
+    if not aws_keys.get("aws_access_key_id") or not aws_keys.get("aws_secret_access_key"):
+        raise ValueError
+
+    local_conf = NGIConfig("ngi_local_conf", config_path)
+    aws_config = local_conf["tts"]["amazon"]
+    aws_config = {**aws_config, **aws_keys}
+    local_conf["tts"]["amazon"] = aws_config
+    # TODO: This should move to auth config when available DM

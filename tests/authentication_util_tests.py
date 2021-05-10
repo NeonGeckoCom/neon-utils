@@ -67,6 +67,39 @@ class AuthUtilTests(unittest.TestCase):
         self.assertEqual(creds["private_key"],
                          "-----BEGIN PRIVATE KEY-----\nREDACTED\nREDACTED\nREDACTED\n-----END PRIVATE KEY-----\n")
 
+    def test_write_aws_credentials(self):
+        import shutil
+        from neon_utils.configuration_utils import get_neon_local_config
+        config_path = os.path.join(ROOT_DIR, "configuration")
+        old_local_conf = os.path.join(config_path, "old_local_conf.yml")
+        ngi_local_conf = os.path.join(config_path, "ngi_local_conf.yml")
+        shutil.copy(ngi_local_conf, old_local_conf)
+
+        local_config = get_neon_local_config(config_path)
+        self.assertEqual(local_config["tts"]["amazon"], {"region": "us-west-2",
+                                                         "aws_access_key_id": "",
+                                                         "aws_secret_access_key": ""})
+        populate_amazon_keys_config({"aws_access_key_id": "KEY_ID",
+                                     "aws_secret_access_key": "KEY_SECRET"}, config_path)
+        self.assertEqual(local_config["tts"]["amazon"], {"region": "us-west-2",
+                                                         "aws_access_key_id": "KEY_ID",
+                                                         "aws_secret_access_key": "KEY_SECRET"})
+        shutil.move(old_local_conf, ngi_local_conf)
+
+    def test_aws_credentials_missing_keys(self):
+        with self.assertRaises(AssertionError):
+            populate_amazon_keys_config({})
+
+        with self.assertRaises(AssertionError):
+            populate_amazon_keys_config({"aws_access_key_id": ""})
+        with self.assertRaises(AssertionError):
+            populate_amazon_keys_config({"aws_secret_access_key": ""})
+
+    def test_aws_credentials_invalid_keys(self):
+        with self.assertRaises(ValueError):
+            populate_amazon_keys_config({"aws_access_key_id": "",
+                                         "aws_secret_access_key": ""})
+
 
 if __name__ == '__main__':
     unittest.main()
