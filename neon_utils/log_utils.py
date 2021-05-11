@@ -95,9 +95,9 @@ def get_log_file_for_module(module_name: Union[str, list]) -> str:
     if isinstance(module_name, list):
         module_name = module_name[-1]
     if module_name in ("neon_speech_client", "neon_speech"):
-        log_name = "speech.log"
-    elif module_name in ("neon_audio_client", "neon_audio"):
         log_name = "voice.log"
+    elif module_name in ("neon_audio_client", "neon_audio"):
+        log_name = "audio.log"
     elif module_name in ("neon_enclosure_client", "neon_enclosure"):
         log_name = "enclosure.log"
     elif module_name == "neon_core_client":
