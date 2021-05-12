@@ -734,7 +734,7 @@ class NeonSkill(MycroftSkill):
         # TODO: should 'when' already be a datetime? DM
         if isinstance(when, int) or isinstance(when, float):
             from datetime import datetime as dt, timedelta
-            when = self.to_system_time(dt.now(self.sys_tz)) + timedelta(seconds=when)
+            when = to_system_time(dt.now(self.sys_tz)) + timedelta(seconds=when)
             LOG.info(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
@@ -774,8 +774,8 @@ class NeonSkill(MycroftSkill):
 
         self.cancel_scheduled_event(user)
         time.sleep(1)
-        self.schedule_event(self._confirmation_timeout, self.to_system_time(expiration), data={"user": user,
-                                                                                               "action": actions},
+        self.schedule_event(self._confirmation_timeout, to_system_time(expiration), data={"user": user,
+                                                                                          "action": actions},
                             name=user)
         LOG.debug(f"Scheduled {user}")
 
@@ -799,7 +799,7 @@ class NeonSkill(MycroftSkill):
         """
         from datetime import datetime as dt, timedelta
         expiration = dt.now(self.sys_tz) + timedelta(seconds=timeout_seconds)
-        self.schedule_event(self._clear_gui_timeout, self.to_system_time(expiration))
+        self.schedule_event(self._clear_gui_timeout, to_system_time(expiration))
 
     def _clear_gui_timeout(self):
         """
