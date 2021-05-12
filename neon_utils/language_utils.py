@@ -218,8 +218,16 @@ class TranslatorFactory:
         # TODO: Check file locations DM
         if module == "amazon" \
                 and get_neon_tts_config()["amazon"].get("aws_access_key_id", "") == "":
-            LOG.warning("Amazon credentials not available")
-            module = "google"
+            from neon_utils.authentication_utils import find_neon_aws_keys, populate_amazon_keys_config
+            try:
+                config_keys = find_neon_aws_keys()
+                populate_amazon_keys_config(config_keys)
+            except FileNotFoundError:
+                LOG.debug("Amazon credentials not available")
+                module = "google"
+            except Exception as e:
+                LOG.error(e)
+                module = "google"
         try:
             clazz = TranslatorFactory.CLASSES.get(module)
             return clazz()

@@ -121,3 +121,21 @@ jobs:
         with:
           name: log-util-test-results
           path: tests/log-util-test-results.xml
+
+      - name: Test Packaging Utils
+        run: |
+          pytest tests/packaging_util_tests.py --doctest-modules --junitxml=tests/packaging-util-test-results.xml
+      - name: Upload packaging utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: packaging-util-test-results
+          path: tests/packaging-util-test-results.xml
+
+      - name: Test Authentication Utils
+        run: |
+          pytest tests/authentication_util_tests.py --doctest-modules --junitxml=tests/authentication-util-test-results.xml
+      - name: Upload authentication utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: authentication-util-test-results
+          path: tests/authentication-util-test-results.xml

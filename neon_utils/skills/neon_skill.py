@@ -51,8 +51,8 @@ class NeonSkill(MycroftSkill):
 
         super(NeonSkill, self).__init__(name, bus, use_settings)
 
-        self.cache_loc = self.configuration_available.get('dirVars', {}).get('cacheDir',
-                                                                             os.path.expanduser("~/.neon/cache"))
+        self.cache_loc = os.path.expanduser(self.local_config.get('dirVars', {}).get('cacheDir') or
+                                            "~/.local/share/neon/cache")
 
         # TODO: Depreciate these references, signal use is discouraged DM
         self.create_signal = create_signal
@@ -545,11 +545,17 @@ class NeonSkill(MycroftSkill):
             return True
         elif not self.server and self.local_config.get("interface", {}).get("wake_word_enabled", True):
             return True
-        elif self.voc_match(message.data.get("utterance"), "neon"):
-            return True
         elif self.server and message.context.get("klat_data", {}).get("title").startswith("!PRIVATE"):
             return True
         else:
+            try:
+                voc_match = self.voc_match(message.data.get("utterance"), "neon")
+                if voc_match:
+                    return True
+            except FileNotFoundError:
+                LOG.error(f"No neon vocab found!")
+                if "neon" in message.data.get("utterance").lower():
+                    return True
             LOG.debug("No Neon")
             return False
 
@@ -734,7 +740,7 @@ class NeonSkill(MycroftSkill):
         # TODO: should 'when' already be a datetime? DM
         if isinstance(when, int) or isinstance(when, float):
             from datetime import datetime as dt, timedelta
-            when = self.to_system_time(dt.now(self.sys_tz)) + timedelta(seconds=when)
+            when = to_system_time(dt.now(self.sys_tz)) + timedelta(seconds=when)
             LOG.info(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
@@ -774,8 +780,8 @@ class NeonSkill(MycroftSkill):
 
         self.cancel_scheduled_event(user)
         time.sleep(1)
-        self.schedule_event(self._confirmation_timeout, self.to_system_time(expiration), data={"user": user,
-                                                                                               "action": actions},
+        self.schedule_event(self._confirmation_timeout, to_system_time(expiration), data={"user": user,
+                                                                                          "action": actions},
                             name=user)
         LOG.debug(f"Scheduled {user}")
 
@@ -799,7 +805,7 @@ class NeonSkill(MycroftSkill):
         """
         from datetime import datetime as dt, timedelta
         expiration = dt.now(self.sys_tz) + timedelta(seconds=timeout_seconds)
-        self.schedule_event(self._clear_gui_timeout, self.to_system_time(expiration))
+        self.schedule_event(self._clear_gui_timeout, to_system_time(expiration))
 
     def _clear_gui_timeout(self):
         """

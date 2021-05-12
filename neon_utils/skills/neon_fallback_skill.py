@@ -17,4 +17,12 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-__version__ = "0.5.0"
+from neon_utils.skills.neon_skill import NeonSkill
+from mycroft.skills.fallback_skill import FallbackSkill
+
+
+class NeonFallbackSkill(FallbackSkill, NeonSkill):
+    """
+    Class that extends the NeonSkill and FallbackSkill classes to provide NeonSkill functionality to any
+    Fallback skill subclassing this class.
+    """

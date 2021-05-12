@@ -118,8 +118,8 @@ class LogUtilTests(unittest.TestCase):
                 return
 
     def test_get_log_file_for_module(self):
-        self.assertEqual("speech.log", os.path.basename(get_log_file_for_module("neon_speech_client")))
-        self.assertEqual("speech.log", os.path.basename(get_log_file_for_module("neon_speech")))
+        self.assertEqual("voice.log", os.path.basename(get_log_file_for_module("neon_speech_client")))
+        self.assertEqual("voice.log", os.path.basename(get_log_file_for_module("neon_speech")))
         self.assertEqual("bus.log", os.path.basename(get_log_file_for_module(["python3", "-m",
                                                                               "mycroft.messagebus.service"])))
         self.assertEqual("skills.log", os.path.basename(get_log_file_for_module("mycroft.skills")))
