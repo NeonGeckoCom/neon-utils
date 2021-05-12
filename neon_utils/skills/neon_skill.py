@@ -545,11 +545,17 @@ class NeonSkill(MycroftSkill):
             return True
         elif not self.server and self.local_config.get("interface", {}).get("wake_word_enabled", True):
             return True
-        elif self.voc_match(message.data.get("utterance"), "neon"):
-            return True
         elif self.server and message.context.get("klat_data", {}).get("title").startswith("!PRIVATE"):
             return True
         else:
+            try:
+                voc_match = self.voc_match(message.data.get("utterance"), "neon")
+                if voc_match:
+                    return True
+            except FileNotFoundError:
+                LOG.error(f"No neon vocab found!")
+                if "neon" in message.data.get("utterance").lower():
+                    return True
             LOG.debug("No Neon")
             return False
 
