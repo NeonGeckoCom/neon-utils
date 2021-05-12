@@ -18,10 +18,11 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 from mycroft.skills.fallback_skill import FallbackSkill as BaseFallbackSkill
-from neon_utils.skills.neon_skill import NeonSkill
+from neon_utils import stub_missing_parameters
 
 
-class FallbackSkill(BaseFallbackSkill, NeonSkill):
+class FallbackSkill(BaseFallbackSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        super(NeonSkill).__init__(name, bus, use_settings)
+        super(FallbackSkill).__init__(name, bus, use_settings)
         self.instance_fallback_handlers = []
+        stub_missing_parameters(self)

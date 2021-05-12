@@ -70,8 +70,8 @@ def stub_missing_parameters(skill):
     skill.get_utterance_user = get_utterance_user
     skill.update_skill_settings = update_skill_settings
 
-    skill.neon_core = False
-    skill.configuration_available = configuration_available
+    # skill.neon_core = False
+    # skill.configuration_available = configuration_available
 
     try:
         # TODO: This should really be global to match Neon.. Maybe /opt/mycroft? DM
