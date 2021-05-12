@@ -33,12 +33,15 @@ def skill_needs_patching(skill):
     :param skill: MycroftSkill object to test
     :return: True if skill needs to be patched
     """
+    LOG.warning(f"This method is depreciated. Please update your skill to extend NeonSkill instead.")
     return not hasattr(skill, "neon_core")
 
 
 def stub_missing_parameters(skill):
     global SKILL
     global TYPE
+
+    LOG.warning(f"This method is depreciated. Please update your skill to extend NeonSkill instead.")
 
     SKILL = skill
     TYPE = type(skill)
@@ -70,8 +73,8 @@ def stub_missing_parameters(skill):
     skill.get_utterance_user = get_utterance_user
     skill.update_skill_settings = update_skill_settings
 
-    # skill.neon_core = False
-    # skill.configuration_available = configuration_available
+    skill.neon_core = False
+    skill.configuration_available = configuration_available
 
     try:
         # TODO: This should really be global to match Neon.. Maybe /opt/mycroft? DM
