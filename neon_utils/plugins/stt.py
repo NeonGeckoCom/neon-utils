@@ -23,8 +23,11 @@ from time import time
 from mycroft_bus_client import MessageBusClient, Message
 
 from speech_recognition import Recognizer
-from ovos_utils.plugins.stt import StreamThread
 from neon_utils.configuration_utils import get_neon_speech_config
+try:
+    from mycroft.stt import StreamThread
+except ImportError:
+    pass
 
 
 class STT(metaclass=ABCMeta):
