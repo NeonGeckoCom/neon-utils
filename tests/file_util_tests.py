@@ -18,6 +18,8 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 import unittest
+from pydub.exceptions import CouldntDecodeError
+
 from neon_utils.file_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -140,6 +142,14 @@ class FileUtilTests(unittest.TestCase):
     def test_file_stream_invalid_type(self):
         with self.assertRaises(Exception):
             get_audio_file_stream(os.path.join(ROOT_DIR, "README.md"))
+
+    def test_invalid_path_as_wav(self):
+        with self.assertRaises(FileNotFoundError):
+            get_file_as_wav(os.path.join(AUDIO_PATH, "nothing"), 44100)
+
+    def test_invalid_file_as_wav(self):
+        with self.assertRaises(CouldntDecodeError):
+            get_file_as_wav(os.path.join(ROOT_DIR, "README.md"), 44100)
 
 
 if __name__ == '__main__':

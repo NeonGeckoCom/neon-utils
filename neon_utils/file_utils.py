@@ -98,6 +98,9 @@ def get_file_as_wav(audio_file: str, desired_sample_rate: int) -> wave.Wave_read
         Wave_read object encoded at the desired_sample_rate
     """
 
+    audio_file = os.path.expanduser(audio_file)
+    if not os.path.isfile(audio_file):
+        raise FileNotFoundError
     try:
         file = wave.open(audio_file, 'rb')
         sample_rate = file.getframerate()
@@ -105,6 +108,8 @@ def get_file_as_wav(audio_file: str, desired_sample_rate: int) -> wave.Wave_read
             return file
     except wave.Error:
         pass
+    except Exception as e:
+        raise e
     audio = AudioSegment.from_file(audio_file)
     audio = audio.set_frame_rate(desired_sample_rate)
     _, tempfile = mkstemp()
