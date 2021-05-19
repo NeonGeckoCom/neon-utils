@@ -61,8 +61,72 @@ class FileUtilTests(unittest.TestCase):
         newest_dne = get_most_recent_file_in_dir(ROOT_DIR, "fake")
         self.assertIsNone(newest_dne)
 
-    def test_file_stream(self):
+    def test_get_wav_as_wav(self):
+        test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.wav")
+        wav_data = get_file_as_wav(test_file, 16000)
+        self.assertIsInstance(wav_data, wave.Wave_read)
+        self.assertEqual(wav_data.getframerate(), 16000)
+
+        wav_data = get_file_as_wav(test_file, 44100)
+        self.assertIsInstance(wav_data, wave.Wave_read)
+        self.assertEqual(wav_data.getframerate(), 44100)
+
+    def test_file_stream_wav(self):
         test_file = os.path.join(AUDIO_PATH, "stop.wav")
+        stream = get_audio_file_stream(test_file)
+        self.assertEqual(stream.sample_rate, 16000)
+
+        stream = get_audio_file_stream(test_file, 44100)
+        self.assertEqual(stream.sample_rate, 44100)
+
+    def test_get_mp3_as_wav(self):
+        test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.mp3")
+        wav_data = get_file_as_wav(test_file, 16000)
+        self.assertIsInstance(wav_data, wave.Wave_read)
+        self.assertEqual(wav_data.getframerate(), 16000)
+
+        wav_data = get_file_as_wav(test_file, 44100)
+        self.assertIsInstance(wav_data, wave.Wave_read)
+        self.assertEqual(wav_data.getframerate(), 44100)
+
+    def test_file_stream_mp3(self):
+        test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.mp3")
+        stream = get_audio_file_stream(test_file)
+        self.assertEqual(stream.sample_rate, 16000)
+
+        stream = get_audio_file_stream(test_file, 44100)
+        self.assertEqual(stream.sample_rate, 44100)
+
+    def test_get_flac_as_wav(self):
+        test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.flac")
+        wav_data = get_file_as_wav(test_file, 16000)
+        self.assertIsInstance(wav_data, wave.Wave_read)
+        self.assertEqual(wav_data.getframerate(), 16000)
+
+        wav_data = get_file_as_wav(test_file, 44100)
+        self.assertIsInstance(wav_data, wave.Wave_read)
+        self.assertEqual(wav_data.getframerate(), 44100)
+
+    def test_file_stream_flac(self):
+        test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.flac")
+        stream = get_audio_file_stream(test_file)
+        self.assertEqual(stream.sample_rate, 16000)
+
+        stream = get_audio_file_stream(test_file, 44100)
+        self.assertEqual(stream.sample_rate, 44100)
+
+    def test_get_ogg_as_wav(self):
+        test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.ogg")
+        wav_data = get_file_as_wav(test_file, 16000)
+        self.assertIsInstance(wav_data, wave.Wave_read)
+        self.assertEqual(wav_data.getframerate(), 16000)
+
+        wav_data = get_file_as_wav(test_file, 44100)
+        self.assertIsInstance(wav_data, wave.Wave_read)
+        self.assertEqual(wav_data.getframerate(), 44100)
+
+    def test_file_stream_ogg(self):
+        test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.ogg")
         stream = get_audio_file_stream(test_file)
         self.assertEqual(stream.sample_rate, 16000)
 

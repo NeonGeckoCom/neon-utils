@@ -88,6 +88,30 @@ def get_most_recent_file_in_dir(path: str, ext: Optional[str] = None) -> Optiona
         return None
 
 
+def get_file_as_wav(audio_file: str, desired_sample_rate: int) -> wave.Wave_read:
+    """
+    Gets a wav file for the passed audio file.
+    Args:
+        audio_file: Path to audio file in arbitrary format
+        desired_sample_rate: sample rate at which returned wav data should be encoded
+    Returns:
+        Wave_read object encoded at the desired_sample_rate
+    """
+
+    try:
+        file = wave.open(audio_file, 'rb')
+        sample_rate = file.getframerate()
+        if sample_rate == desired_sample_rate:
+            return file
+    except wave.Error:
+        pass
+    audio = AudioSegment.from_file(audio_file)
+    audio = audio.set_frame_rate(desired_sample_rate)
+    _, tempfile = mkstemp()
+    audio.export(tempfile, format='wav').close()
+    return wave.open(tempfile, 'rb')
+
+
 def get_audio_file_stream(wav_file: str, sample_rate: int = 16000):
     """
     Creates a FileStream object for the specified wav_file with the specified output sample_rate.
@@ -105,15 +129,15 @@ def get_audio_file_stream(wav_file: str, sample_rate: int = 16000):
         UPDATE_INTERVAL_S = 1.0
 
         def __init__(self, file_name):
-            self.file = wave.open(file_name, 'rb')
+            self.file = get_file_as_wav(file_name, sample_rate)
             self.sample_rate = self.file.getframerate()
-            if sample_rate and self.sample_rate != sample_rate:
-                sound = AudioSegment.from_file(file_name, format='wav', frame_rate=self.sample_rate)
-                sound = sound.set_frame_rate(sample_rate)
-                _, tempfile = mkstemp()
-                sound.export(tempfile, format='wav')
-                self.file = wave.open(tempfile, 'rb')
-                self.sample_rate = self.file.getframerate()
+            # if sample_rate and self.sample_rate != sample_rate:
+            #     sound = AudioSegment.from_file(file_name, format='wav', frame_rate=self.sample_rate)
+            #     sound = sound.set_frame_rate(sample_rate)
+            #     _, tempfile = mkstemp()
+            #     sound.export(tempfile, format='wav')
+            #     self.file = wave.open(tempfile, 'rb')
+            #     self.sample_rate = self.file.getframerate()
             self.size = self.file.getnframes()
             self.sample_width = self.file.getsampwidth()
             self.last_update_time = 0.0
