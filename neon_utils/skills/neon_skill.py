@@ -22,8 +22,9 @@ import pickle
 import json
 import time
 import os
-
 from copy import deepcopy
+from functools import wraps
+
 from mycroft_bus_client.message import Message, dig_for_message
 from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
@@ -36,6 +37,7 @@ from neon_utils.location_utils import to_system_time
 from neon_utils.language_utils import get_neon_lang_config, DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
+from neon_utils.cache_utils improt LRUCache
 
 LOG.name = "neon_skill"
 ensure_mycroft_import()
@@ -53,6 +55,7 @@ class NeonSkill(MycroftSkill):
 
         self.cache_loc = os.path.expanduser(self.local_config.get('dirVars', {}).get('cacheDir') or
                                             "~/.local/share/neon/cache")
+        self.lru_cache = LRUCache()
 
         # TODO: Depreciate these references, signal use is discouraged DM
         self.create_signal = create_signal
@@ -890,3 +893,22 @@ class NeonSkill(MycroftSkill):
     def to_system_time(dt):
         LOG.warning("This method is depreciated, use location_utils.to_system_time() directly")
         return to_system_time(dt)
+
+    def decorate_api_call_use_lru(self, func):
+        """
+        Decorate the API-call function to use LRUcache.
+        NOTE: the fist parameter in the API call should always be the query
+        Args:
+            func: the function to be decorated
+        Returns:
+        """
+        @wraps(func)
+        def wrapper(query: str = '', *args, **kwargs):
+            # TODO how to extract actual key from incoming *args or **kwargs?
+            # TODO might use an abstract method for cached API call to define a signature
+            result = self.lru_cache.get(query)
+            if not result:
+                result = func(*args, **kwargs)
+                self.lru_cache.put(key=query, value=result)
+            return result
+        return wrapper
