@@ -903,24 +903,32 @@ class NeonSkill(MycroftSkill):
     def decorate_api_call_use_lru(self, func):
         """
         Decorate the API-call function to use LRUcache.
-        NOTE: the fist parameter in the API call should always be the query
+        NOTE: the wrapper adds an additional argument, so decorated functions MUST be called with it!
+
+        def foo(bar):
+            return bar
+
+        api_call = decorate_api_call_use_lru(foo)
+        api_call(lru_query='foo', bar='vaz')
+
         Args:
             func: the function to be decorated
         Returns: decorated function
         """
         @wraps(func)
-        def wrapper(query: str = '', *args, **kwargs):
+        def wrapper(lru_query: str, *args, **kwargs):
             # TODO might use an abstract method for cached API call to define a signature
-            result = self.lru_cache.get(query)
+            result = self.lru_cache.get(lru_query)
             if not result:
                 result = func(*args, **kwargs)
-                self.lru_cache.put(key=query, value=result)
+                self.lru_cache.put(key=lru_query, value=result)
             return result
         return wrapper
 
     def _reset_cache(self):
         """
-        Save the cache on disk, reset the cache and reschedule the event
+        Save the cache on disk, reset the cache and reschedule the event.
+        This handler is enabled by scheduling an event in NeonSkill.initialize().
         Returns:
         """
         filename = f"lru_{self.skill_id}"
