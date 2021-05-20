@@ -37,11 +37,13 @@ from neon_utils.location_utils import to_system_time
 from neon_utils.language_utils import get_neon_lang_config, DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
-from neon_utils.cache_utils improt LRUCache
+from neon_utils.cache_utils import LRUCache
 
 LOG.name = "neon_skill"
 ensure_mycroft_import()
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
+
+CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 
 class NeonSkill(MycroftSkill):
@@ -96,6 +98,10 @@ class NeonSkill(MycroftSkill):
         except Exception as e:
             LOG.error(e)
             self.language_config, self.language_detector, self.translator = None, None, None
+
+    def initialize(self):
+        # schedule an event to load the cache on disk every 24 hours
+        self.schedule_event(self._reset_cache, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
 
     @property
     def user_info_available(self):
@@ -802,7 +808,7 @@ class NeonSkill(MycroftSkill):
 
     def clear_gui_timeout(self, timeout_seconds=60):
         """
-        Calledby a skill to clear its gui display after the specified timeout
+        Called by a skill to clear its gui display after the specified timeout
         :param timeout_seconds: seconds to wait before clearing gui display
         :return:
         """
@@ -900,11 +906,10 @@ class NeonSkill(MycroftSkill):
         NOTE: the fist parameter in the API call should always be the query
         Args:
             func: the function to be decorated
-        Returns:
+        Returns: decorated function
         """
         @wraps(func)
         def wrapper(query: str = '', *args, **kwargs):
-            # TODO how to extract actual key from incoming *args or **kwargs?
             # TODO might use an abstract method for cached API call to define a signature
             result = self.lru_cache.get(query)
             if not result:
@@ -912,3 +917,15 @@ class NeonSkill(MycroftSkill):
                 self.lru_cache.put(key=query, value=result)
             return result
         return wrapper
+
+    def _reset_cache(self):
+        """
+        Save the cache on disk, reset the cache and reschedule the event
+        Returns:
+        """
+        filename = f"lru_{self.skill_id}"
+        data_load = self.lru_cache.jsonify()
+        self.update_cached_data(filename=filename, new_element=data_load)
+        self.lru_cache.clear()
+        self.schedule_event(self._reset_cache, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
+        return
