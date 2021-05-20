@@ -139,3 +139,12 @@ jobs:
         with:
           name: authentication-util-test-results
           path: tests/authentication-util-test-results.xml
+
+      - name: Test Metric Utils
+        run: |
+          pytest tests/metric_util_tests.py --doctest-modules --junitxml=tests/metric-util-test-results.xml
+      - name: Upload metric utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: metric-util-test-results
+          path: tests/metric-util-test-results.xml
