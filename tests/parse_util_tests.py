@@ -98,6 +98,29 @@ class ParseUtilTests(unittest.TestCase):
         trailing_open = format_speak_tags("hello.<speak>")
         self.assertFalse(trailing_open)
 
+    def test_format_speak_tags_with_speech_no_tags(self):
+        valid_output = "Speak This."
+        no_tags = format_speak_tags("Speak This.", False)
+        self.assertEqual(no_tags, valid_output)
+
+        leading_only = format_speak_tags("<speak>Speak This.", False)
+        self.assertEqual(leading_only, valid_output)
+
+        leading_with_exclusion = format_speak_tags("Nope.<speak>Speak This.", False)
+        self.assertEqual(leading_with_exclusion, valid_output)
+
+        trailing_only = format_speak_tags("Speak This.</speak>", False)
+        self.assertEqual(trailing_only, valid_output)
+
+        trailing_with_exclusion = format_speak_tags("Speak This.</speak> But not this.", False)
+        self.assertEqual(trailing_with_exclusion, valid_output)
+
+        tagged = format_speak_tags("<speak>Speak This.</speak>", False)
+        self.assertEqual(tagged, valid_output)
+
+        tagged_with_exclusion = format_speak_tags("Don't<speak>Speak This.</speak>But Not this.", False)
+        self.assertEqual(tagged_with_exclusion, valid_output)
+
 
 if __name__ == '__main__':
     unittest.main()
