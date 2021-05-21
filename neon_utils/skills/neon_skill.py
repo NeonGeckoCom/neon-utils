@@ -100,8 +100,8 @@ class NeonSkill(MycroftSkill):
             self.language_config, self.language_detector, self.translator = None, None, None
 
     def initialize(self):
-        # schedule an event to load the cache on disk every 24 hours
-        self.schedule_event(self._reset_cache, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
+        # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
+        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
 
     @property
     def user_info_available(self):
@@ -905,11 +905,9 @@ class NeonSkill(MycroftSkill):
         Decorate the API-call function to use LRUcache.
         NOTE: the wrapper adds an additional argument, so decorated functions MUST be called with it!
 
-        def foo(bar):
-            return bar
-
-        api_call = decorate_api_call_use_lru(foo)
-        api_call(lru_query='foo', bar='vaz')
+        from wikipedia_for_humans import summary
+        summary = decorate_api_call_use_lru(summary)
+        result = summary(lru_query='neon', query='neon', lang='en')
 
         Args:
             func: the function to be decorated
@@ -925,9 +923,9 @@ class NeonSkill(MycroftSkill):
             return result
         return wrapper
 
-    def _reset_cache(self):
+    def _write_cache_on_disk(self):
         """
-        Save the cache on disk, reset the cache and reschedule the event.
+        Write the cache on disk, reset the cache and reschedule the event.
         This handler is enabled by scheduling an event in NeonSkill.initialize().
         Returns:
         """
@@ -935,5 +933,5 @@ class NeonSkill(MycroftSkill):
         data_load = self.lru_cache.jsonify()
         self.update_cached_data(filename=filename, new_element=data_load)
         self.lru_cache.clear()
-        self.schedule_event(self._reset_cache, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
+        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
         return
