@@ -118,12 +118,13 @@ def get_phonemes(phrase: str) -> str:
     return output.rstrip()
 
 
-def format_speak_tags(sentence: str) -> str:
+def format_speak_tags(sentence: str, include_tags: bool = True) -> str:
     """
     Cleans up SSML tags for speech synthesis and ensures the phrase is wrapped in 'speak' tags and any excluded text is
     removed.
     Args:
         sentence: Input sentence to be spoken
+        include_tags: Flag to include <speak> tags in returned string
     Returns:
         Cleaned sentence to pass to TTS
     """
@@ -149,4 +150,7 @@ def format_speak_tags(sentence: str) -> str:
     if to_speak == "<speak></speak>":
         return ""
 
-    return to_speak
+    if include_tags:
+        return to_speak
+    else:
+        return to_speak.lstrip("<speak>").rstrip("</speak>")
