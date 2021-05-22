@@ -88,12 +88,13 @@ def get_most_recent_file_in_dir(path: str, ext: Optional[str] = None) -> Optiona
         return None
 
 
-def get_file_as_wav(audio_file: str, desired_sample_rate: int) -> wave.Wave_read:
+def get_file_as_wav(audio_file: str, desired_sample_rate: int, desired_sample_width: int = 2) -> wave.Wave_read:
     """
     Gets a wav file for the passed audio file.
     Args:
         audio_file: Path to audio file in arbitrary format
         desired_sample_rate: sample rate at which returned wav data should be encoded
+        desired_sample_width: sample width at which returned wav data should be encoded
     Returns:
         Wave_read object encoded at the desired_sample_rate
     """
@@ -104,14 +105,15 @@ def get_file_as_wav(audio_file: str, desired_sample_rate: int) -> wave.Wave_read
     try:
         file = wave.open(audio_file, 'rb')
         sample_rate = file.getframerate()
-        if sample_rate == desired_sample_rate:
+        sample_width = file.getsampwidth()
+        if sample_rate == desired_sample_rate and sample_width == desired_sample_width:
             return file
     except wave.Error:
         pass
     except Exception as e:
         raise e
     audio = AudioSegment.from_file(audio_file)
-    audio = audio.set_frame_rate(desired_sample_rate)
+    audio = audio.set_frame_rate(desired_sample_rate).set_sample_width(desired_sample_width)
     _, tempfile = mkstemp()
     audio.export(tempfile, format='wav').close()
     return wave.open(tempfile, 'rb')
