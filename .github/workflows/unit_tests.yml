@@ -148,3 +148,12 @@ jobs:
         with:
           name: metric-util-test-results
           path: tests/metric-util-test-results.xml
+
+      - name: Test Cache Utils
+        run: |
+          pytest tests/cache_util_tests.py --doctest-modules --junitxml=tests/cache-util-test-results.xml
+      - name: Upload cache utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: cache-util-test-results
+          path: tests/cache-util-test-results.xml
