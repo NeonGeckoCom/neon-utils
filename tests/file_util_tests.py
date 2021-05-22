@@ -16,6 +16,7 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+import os
 
 import unittest
 from pydub.exceptions import CouldntDecodeError
@@ -150,6 +151,16 @@ class FileUtilTests(unittest.TestCase):
     def test_invalid_file_as_wav(self):
         with self.assertRaises(CouldntDecodeError):
             get_file_as_wav(os.path.join(ROOT_DIR, "README.md"), 44100)
+
+    def test_get_file_as_wav_no_ext(self):
+        wav_data = get_file_as_wav(os.path.join(AUDIO_PATH, "testing 1 2 3"), 44100)
+        self.assertEqual(wav_data.getframerate(), 44100)
+        self.assertEqual(wav_data.getsampwidth(), 2)
+
+    def test_get_file_as_wav_change_width(self):
+        wav_data = get_file_as_wav(os.path.join(AUDIO_PATH, "testing 1 2 3 (sr4).wav"), 44100)
+        self.assertEqual(wav_data.getframerate(), 44100)
+        self.assertEqual(wav_data.getsampwidth(), 2)
 
 
 if __name__ == '__main__':
