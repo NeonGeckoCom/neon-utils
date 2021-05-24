@@ -43,7 +43,16 @@ LOG.name = "neon_skill"
 ensure_mycroft_import()
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
 
+
+# TODO if accepted, make changes to QASkill and WikipediaSkill
+# Available_modes are 1) quick; 2) thoughtful.
+SPEED_MODE_EXTENSION_TIME = {
+    "quick": 1,
+    "thoughtful": 10
+}
+DEFAULT_SPEED_MODE = "thoughtful"
 CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
+
 
 
 class NeonSkill(MycroftSkill):
@@ -89,6 +98,9 @@ class NeonSkill(MycroftSkill):
 
         self.neon_core = True
         self.actions_to_confirm = dict()
+
+        self.skill_mode = self.user_config.content.get('response_mode').get('speed_mode') or DEFAULT_SPEED_MODE
+        self.extension_time = SPEED_MODE_EXTENSION_TIME.get(self.skill_mode)
 
         try:
             # Lang support

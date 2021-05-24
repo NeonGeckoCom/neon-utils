@@ -48,3 +48,7 @@ location:
   country: United States
   tz: America/Los_Angeles
   utc: '-8.0'
+
+response_mode:
+  speed_mode: quick
+
