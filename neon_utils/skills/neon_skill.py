@@ -93,7 +93,7 @@ class NeonSkill(MycroftSkill):
         self.neon_core = True
         self.actions_to_confirm = dict()
 
-        self.skill_mode = self.user_config.content.get('util_params').get('mode') or DEFAULT_SPEED_MODE
+        self.skill_mode = self.user_config.content.get('response_mode').get('speed_mode') or DEFAULT_SPEED_MODE
         self.extension_time = SPEED_MODE_EXTENSION_TIME.get(self.skill_mode)
 
         try:
