@@ -22,8 +22,9 @@ import pickle
 import json
 import time
 import os
-
 from copy import deepcopy
+from functools import wraps
+
 from mycroft_bus_client.message import Message, dig_for_message
 from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
@@ -36,10 +37,12 @@ from neon_utils.location_utils import to_system_time
 from neon_utils.language_utils import get_neon_lang_config, DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
+from neon_utils.cache_utils import LRUCache
 
 LOG.name = "neon_skill"
 ensure_mycroft_import()
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
+
 
 # TODO if accepted, make changes to QASkill and WikipediaSkill
 # Available_modes are 1) quick; 2) thoughtful.
@@ -48,6 +51,8 @@ SPEED_MODE_EXTENSION_TIME = {
     "thoughtful": 10
 }
 DEFAULT_SPEED_MODE = "thoughtful"
+CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
+
 
 
 class NeonSkill(MycroftSkill):
@@ -61,6 +66,7 @@ class NeonSkill(MycroftSkill):
 
         self.cache_loc = os.path.expanduser(self.local_config.get('dirVars', {}).get('cacheDir') or
                                             "~/.local/share/neon/cache")
+        self.lru_cache = LRUCache()
 
         # TODO: Depreciate these references, signal use is discouraged DM
         self.create_signal = create_signal
@@ -104,6 +110,10 @@ class NeonSkill(MycroftSkill):
         except Exception as e:
             LOG.error(e)
             self.language_config, self.language_detector, self.translator = None, None, None
+
+    def initialize(self):
+        # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
+        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
 
     @property
     def user_info_available(self):
@@ -810,7 +820,7 @@ class NeonSkill(MycroftSkill):
 
     def clear_gui_timeout(self, timeout_seconds=60):
         """
-        Calledby a skill to clear its gui display after the specified timeout
+        Called by a skill to clear its gui display after the specified timeout
         :param timeout_seconds: seconds to wait before clearing gui display
         :return:
         """
@@ -901,3 +911,39 @@ class NeonSkill(MycroftSkill):
     def to_system_time(dt):
         LOG.warning("This method is depreciated, use location_utils.to_system_time() directly")
         return to_system_time(dt)
+
+    def decorate_api_call_use_lru(self, func):
+        """
+        Decorate the API-call function to use LRUcache.
+        NOTE: the wrapper adds an additional argument, so decorated functions MUST be called with it!
+
+        from wikipedia_for_humans import summary
+        summary = decorate_api_call_use_lru(summary)
+        result = summary(lru_query='neon', query='neon', lang='en')
+
+        Args:
+            func: the function to be decorated
+        Returns: decorated function
+        """
+        @wraps(func)
+        def wrapper(lru_query: str, *args, **kwargs):
+            # TODO might use an abstract method for cached API call to define a signature
+            result = self.lru_cache.get(lru_query)
+            if not result:
+                result = func(*args, **kwargs)
+                self.lru_cache.put(key=lru_query, value=result)
+            return result
+        return wrapper
+
+    def _write_cache_on_disk(self):
+        """
+        Write the cache on disk, reset the cache and reschedule the event.
+        This handler is enabled by scheduling an event in NeonSkill.initialize().
+        Returns:
+        """
+        filename = f"lru_{self.skill_id}"
+        data_load = self.lru_cache.jsonify()
+        self.update_cached_data(filename=filename, new_element=data_load)
+        self.lru_cache.clear()
+        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
+        return
