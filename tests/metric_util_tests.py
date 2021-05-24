@@ -16,5 +16,48 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+from time import sleep
 
-__version__ = "0.5.1"
+import sys
+import os
+import unittest
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from neon_utils.metrics_utils import *
+
+
+class MetricUtilTests(unittest.TestCase):
+    def test_stopwatch_simple(self):
+        sleep_time = 1.00
+        stopwatch = Stopwatch()
+        with stopwatch:
+            sleep(sleep_time)
+        self.assertEqual(round(stopwatch.time, 2), sleep_time)
+
+    def test_stopwatch_reuse(self):
+        sleep_time = 0.5
+        stopwatch = Stopwatch()
+        with stopwatch:
+            sleep(sleep_time)
+        self.assertEqual(round(stopwatch.time, 2), sleep_time)
+
+        with stopwatch:
+            sleep(sleep_time)
+        self.assertEqual(round(stopwatch.time, 2), sleep_time)
+
+        with stopwatch:
+            sleep(sleep_time)
+        self.assertEqual(round(stopwatch.time, 2), sleep_time)
+
+    def test_stopwatch_init_params(self):
+        stopwatch = Stopwatch("Test", True)
+        self.assertEqual(stopwatch._metric, "Test")
+        self.assertTrue(stopwatch._report)
+
+        stopwatch = Stopwatch()
+        self.assertIsNone(stopwatch._metric)
+        self.assertFalse(stopwatch._report)
+
+
+if __name__ == '__main__':
+    unittest.main()
