@@ -49,7 +49,6 @@ location:
   tz: America/Los_Angeles
   utc: '-8.0'
 
-speed_mode:
-  mode: quick
-  available_modes: [quick, thoughtful]
-  mode_extension_time: {quick: 1, thoughtful: 10}
+util_params:
+  speed_mode: quick
+
