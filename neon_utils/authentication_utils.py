@@ -155,7 +155,7 @@ def repo_is_neon(repo_url: str) -> bool:
     url = urlparse(repo_url)
     if not url.scheme or not url.netloc:
         raise ValueError(f"{repo_url} is not a valid url")
-    if "github.com" in url.netloc:
+    if any([x for x in ("github.com", "githubusercontent.com") if x in url.netloc]):
         try:
             author = url.path.split('/')[1]
         except IndexError:

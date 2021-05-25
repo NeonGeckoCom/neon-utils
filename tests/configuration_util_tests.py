@@ -376,10 +376,14 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["debug"], bool)
         self.assertIsInstance(config["blacklist"], list)
         self.assertIsInstance(config["priority"], list)
-        self.assertIsInstance(config["auto_update_interval"], float)
-        self.assertIsInstance(config["appstore_sync_interval"], float)
+        self.assertIsInstance(config["update_interval"], float)
         self.assertIsInstance(config["data_dir"], str)
         self.assertIsInstance(config["appstore"], str)
+
+        self.assertIsInstance(config["install_default"], bool)
+        self.assertIsInstance(config["install_essential"], bool)
+        self.assertIn("default_skills", config)
+        self.assertIn("essential_skills", config)
 
         self.assertEqual(config["update_interval"], config["auto_update_interval"])  # Backwards Compat.
         self.assertIsInstance(config["directory"], str)
