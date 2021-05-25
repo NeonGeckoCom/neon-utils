@@ -113,7 +113,7 @@ skills:
   # recommended osm, optional msm
   appstore_sync_interval: 6
   # time between server syncs in hours
-  auto_update_interval: 1.0
+  auto_update_interval: 24.0
   # time between automatic skill updates in hours
   msm_ver: False
   repo_url: "https://github.com/MycroftAI/mycroft-skills"
