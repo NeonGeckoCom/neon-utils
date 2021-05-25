@@ -21,6 +21,7 @@ import sys
 import os
 import time
 import unittest
+from ruamel.yaml.scalarfloat import ScalarFloat
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
@@ -377,13 +378,22 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["priority"], list)
         self.assertIsInstance(config["update_interval"], float)
         self.assertIsInstance(config["data_dir"], str)
+        self.assertIsInstance(config["appstore"], str)
+
+        self.assertIsInstance(config["install_default"], bool)
+        self.assertIsInstance(config["install_essential"], bool)
+        self.assertIn("default_skills", config)
+        self.assertIn("essential_skills", config)
+
+        self.assertEqual(config["update_interval"], config["auto_update_interval"])  # Backwards Compat.
+        self.assertIsInstance(config["directory"], str)
+        self.assertIsInstance(config["disable_osm"], bool)
 
         if config.get("msm"):
             self.assertIsInstance(config["msm"], dict)
             self.assertIsInstance(config["msm"]["directory"], str)
             self.assertIsInstance(config["msm"]["versioned"], bool)
             self.assertIsInstance(config["msm"]["repo"], dict)
-            self.assertIsInstance(config["enclosure"], dict)
 
             self.assertIsInstance(config["msm"]["repo"]["branch"], str)
             self.assertIsInstance(config["msm"]["repo"]["cache"], str)
