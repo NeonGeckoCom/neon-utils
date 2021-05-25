@@ -100,6 +100,24 @@ class AuthUtilTests(unittest.TestCase):
             populate_amazon_keys_config({"aws_access_key_id": "",
                                          "aws_secret_access_key": ""})
 
+    def test_repo_is_neon_valid(self):
+        self.assertTrue(repo_is_neon("http://github.com/NeonGeckoCom/alerts.neon"))
+        self.assertTrue(repo_is_neon("https://github.com/NeonGeckoCom/caffeinewiz.neon"))
+        self.assertTrue(repo_is_neon("ssh://github.com/NeonGeckoCom/launcher.neon"))
+
+        self.assertTrue(repo_is_neon("https://github.com/neondaniel/speedtest.neon"))
+
+        self.assertFalse(repo_is_neon("https://github.com/mycroftai/skill-alarm"))
+        self.assertFalse(repo_is_neon("http://gitlab.com/neongecko/some-skill"))
+
+    def test_repo_is_neon_invalid(self):
+        with self.assertRaises(ValueError):
+            repo_is_neon("https://github.com")
+        with self.assertRaises(ValueError):
+            repo_is_neon("not a url")
+        with self.assertRaises(ValueError):
+            repo_is_neon("")
+
 
 if __name__ == '__main__':
     unittest.main()

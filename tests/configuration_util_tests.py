@@ -377,13 +377,16 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["priority"], list)
         self.assertIsInstance(config["update_interval"], float)
         self.assertIsInstance(config["data_dir"], str)
+        self.assertIsInstance(config["appstore"], str)
+
+        self.assertIsInstance(config["directory"], str)
+        self.assertIsInstance(config["disable_osm"], bool)
 
         if config.get("msm"):
             self.assertIsInstance(config["msm"], dict)
             self.assertIsInstance(config["msm"]["directory"], str)
             self.assertIsInstance(config["msm"]["versioned"], bool)
             self.assertIsInstance(config["msm"]["repo"], dict)
-            self.assertIsInstance(config["enclosure"], dict)
 
             self.assertIsInstance(config["msm"]["repo"]["branch"], str)
             self.assertIsInstance(config["msm"]["repo"]["cache"], str)

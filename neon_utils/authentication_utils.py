@@ -20,7 +20,7 @@
 import json
 import os.path
 from typing import Optional
-
+from urllib.parse import urlparse
 from neon_utils.logger import LOG
 
 
@@ -142,3 +142,27 @@ def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = Non
     aws_config = {**aws_config, **aws_keys}
     local_conf["tts"]["amazon"] = aws_config
     # TODO: This should move to auth config when available DM
+
+
+def repo_is_neon(repo_url: str) -> bool:
+    """
+    Determines if the specified repository url is part of the NeonGeckoCom org on github
+    Args:
+        repo_url: string url to check
+    Returns:
+        True if the repository URL is known to be accessible using a neon auth key
+    """
+    url = urlparse(repo_url)
+    if not url.scheme or not url.netloc:
+        raise ValueError(f"{repo_url} is not a valid url")
+    if "github.com" in url.netloc:
+        try:
+            author = url.path.split('/')[1]
+        except IndexError:
+            raise ValueError(f"{repo_url} is not a valid github url")
+        if author.lower() == "neongeckocom":
+            return True
+        elif author.lower().startswith("neon"):  # TODO: Get token and scrape org? DM
+            LOG.info(f"Assuming repository uses Neon auth: {repo_url}")
+            return True
+    return False

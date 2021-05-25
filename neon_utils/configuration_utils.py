@@ -630,9 +630,10 @@ def get_neon_skills_config() -> dict:
     core_config = get_neon_local_config()
     mycroft_config = _safe_mycroft_config()
     neon_skills = deepcopy(core_config.get("skills", {}))
-    neon_skills["directory"] = core_config["dirVars"].get("skillsDir")
-    skills_config = {**neon_skills, **mycroft_config.get("skills", {})}
+    neon_skills["directory"] = os.path.expanduser(core_config["dirVars"].get("skillsDir"))
+    neon_skills["disable_osm"] = neon_skills["appstore"] != "osm"
     # neon_skills["neon_token"]  # TODO: GetPrivateKeys
+    skills_config = {**neon_skills, **mycroft_config.get("skills", {})}
     return skills_config
 
 
