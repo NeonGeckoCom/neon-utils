@@ -21,6 +21,7 @@ import sys
 import os
 import time
 import unittest
+from ruamel.yaml.scalarfloat import ScalarFloat
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
@@ -376,7 +377,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["blacklist"], list)
         self.assertIsInstance(config["priority"], list)
         self.assertIsInstance(config["auto_update_interval"], float)
-        self.assertIsInstance(config["appstore_syng_interval"], float)
+        self.assertIsInstance(config["appstore_sync_interval"], float)
         self.assertIsInstance(config["data_dir"], str)
         self.assertIsInstance(config["appstore"], str)
 

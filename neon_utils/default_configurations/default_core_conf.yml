@@ -111,7 +111,7 @@ skills:
   default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
   appstore: "osm"
   # recommended osm, optional msm
-  appstore_sync_interval: 6
+  appstore_sync_interval: 6.0
   # time between server syncs in hours
   auto_update_interval: 24.0
   # time between automatic skill updates in hours

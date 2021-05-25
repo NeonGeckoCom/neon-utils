@@ -638,9 +638,15 @@ def get_neon_skills_config() -> dict:
         except Exception as e:
             LOG.error(e)
             neon_skills["auto_update_interval"] = 24.0
+    if not isinstance(neon_skills["appstore_sync_interval"], float):
+        try:
+            neon_skills["appstore_sync_interval"] = float(neon_skills["appstore_sync_interval"])
+        except Exception as e:
+            LOG.error(e)
+            neon_skills["appstore_sync_interval"] = 6.0
     neon_skills["update_interval"] = neon_skills["auto_update_interval"]  # Backwards Compat.
     # neon_skills["neon_token"]  # TODO: GetPrivateKeys
-    skills_config = {**neon_skills, **mycroft_config.get("skills", {})}
+    skills_config = {**mycroft_config.get("skills", {}), **neon_skills}
     return skills_config
 
 
