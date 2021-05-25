@@ -375,10 +375,12 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["debug"], bool)
         self.assertIsInstance(config["blacklist"], list)
         self.assertIsInstance(config["priority"], list)
-        self.assertIsInstance(config["update_interval"], float)
+        self.assertIsInstance(config["auto_update_interval"], float)
+        self.assertIsInstance(config["appstore_syng_interval"], float)
         self.assertIsInstance(config["data_dir"], str)
         self.assertIsInstance(config["appstore"], str)
 
+        self.assertEqual(config["update_interval"], config["auto_update_interval"])  # Backwards Compat.
         self.assertIsInstance(config["directory"], str)
         self.assertIsInstance(config["disable_osm"], bool)
 
