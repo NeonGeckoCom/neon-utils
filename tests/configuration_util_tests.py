@@ -378,7 +378,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["priority"], list)
         self.assertIsInstance(config["update_interval"], float)
         self.assertIsInstance(config["data_dir"], str)
-        self.assertIsInstance(config["appstore"], str)
+        self.assertIsInstance(config["skill_manager"], str)
 
         self.assertIsInstance(config["install_default"], bool)
         self.assertIsInstance(config["install_essential"], bool)
