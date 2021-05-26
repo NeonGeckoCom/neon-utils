@@ -109,7 +109,7 @@ skills:
   ]
   essential_skills: []
   default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
-  appstore: "osm"
+  skill_manager: "osm"
   # recommended osm, optional msm
   appstore_sync_interval: 6.0
   # time between server syncs in hours

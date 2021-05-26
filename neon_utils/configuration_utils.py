@@ -631,7 +631,7 @@ def get_neon_skills_config() -> dict:
     mycroft_config = _safe_mycroft_config()
     neon_skills = deepcopy(core_config.get("skills", {}))
     neon_skills["directory"] = os.path.expanduser(core_config["dirVars"].get("skillsDir"))
-    neon_skills["disable_osm"] = neon_skills["appstore"] != "osm"
+    neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
     if not isinstance(neon_skills["auto_update_interval"], float):
         try:
             neon_skills["auto_update_interval"] = float(neon_skills["auto_update_interval"])
