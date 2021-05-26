@@ -647,6 +647,15 @@ def get_neon_client_config() -> dict:
             "remoteVars": core_config["remoteVars"]}
 
 
+def get_neon_transcribe_config() -> dict:
+    local_config = get_neon_local_config()
+    user_config = get_neon_user_config()
+    neon_transcribe_config = dict()
+    neon_transcribe_config["transcript_dir"] = local_config["dirVars"].get("docsDir", "")
+    neon_transcribe_config["audio_permission"] = user_config["privacy"].get("save_audio", False)
+    return neon_transcribe_config
+
+
 def _move_config_sections(user_config, local_config):
     """
     Temporary method to handle one-time migration of user_config params to local_config
