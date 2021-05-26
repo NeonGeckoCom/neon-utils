@@ -366,6 +366,12 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIn("skillsGit", config["remoteVars"])
         self.assertIsInstance(config["server_addr"], str)
 
+    def test_get_transcribe_config(self):
+        config = get_neon_transcribe_config()
+        self.assertIsInstance(config, dict)
+        self.assertIsInstance(config["audio_permission"], bool)
+        self.assertIsInstance(config["transcript_dir"], str)
+
     def test_get_tts_config(self):
         config = get_neon_tts_config()
         self.assertIsInstance(config["module"], str)
