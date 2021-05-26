@@ -630,9 +630,23 @@ def get_neon_skills_config() -> dict:
     core_config = get_neon_local_config()
     mycroft_config = _safe_mycroft_config()
     neon_skills = deepcopy(core_config.get("skills", {}))
-    neon_skills["directory"] = core_config["dirVars"].get("skillsDir")
-    skills_config = {**neon_skills, **mycroft_config.get("skills", {})}
+    neon_skills["directory"] = os.path.expanduser(core_config["dirVars"].get("skillsDir"))
+    neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
+    if not isinstance(neon_skills["auto_update_interval"], float):
+        try:
+            neon_skills["auto_update_interval"] = float(neon_skills["auto_update_interval"])
+        except Exception as e:
+            LOG.error(e)
+            neon_skills["auto_update_interval"] = 24.0
+    if not isinstance(neon_skills["appstore_sync_interval"], float):
+        try:
+            neon_skills["appstore_sync_interval"] = float(neon_skills["appstore_sync_interval"])
+        except Exception as e:
+            LOG.error(e)
+            neon_skills["appstore_sync_interval"] = 6.0
+    neon_skills["update_interval"] = neon_skills["auto_update_interval"]  # Backwards Compat.
     # neon_skills["neon_token"]  # TODO: GetPrivateKeys
+    skills_config = {**mycroft_config.get("skills", {}), **neon_skills}
     return skills_config
 
 

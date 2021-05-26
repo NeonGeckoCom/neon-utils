@@ -109,9 +109,12 @@ skills:
   ]
   essential_skills: []
   default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
-  disable_osm: False
-  appstore_sync_interval: 6
-  update_interval: 1.0
+  skill_manager: "osm"
+  # recommended osm, optional msm
+  appstore_sync_interval: 6.0
+  # time between server syncs in hours
+  auto_update_interval: 24.0
+  # time between automatic skill updates in hours
   msm_ver: False
   repo_url: "https://github.com/MycroftAI/mycroft-skills"
   repo_branch: "18.08"
