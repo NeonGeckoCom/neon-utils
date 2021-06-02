@@ -20,6 +20,7 @@
 import pathlib
 import pickle
 import json
+import shutil
 import time
 import os
 from copy import deepcopy
@@ -52,7 +53,6 @@ SPEED_MODE_EXTENSION_TIME = {
 }
 DEFAULT_SPEED_MODE = "thoughtful"
 CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
-
 
 
 class NeonSkill(MycroftSkill):
@@ -158,7 +158,10 @@ class NeonSkill(MycroftSkill):
                         default[pref["name"]] = value
 
         # Load or init configuration
-        self.ngi_settings = NGIConfig(self.name, self.root_dir)
+        if os.path.isfile(os.path.join(self.root_dir, f"{self.name}.yml")):
+            LOG.warning(f"Config found in skill directory for {self.name}! Relocating to: {self.file_system}")
+            shutil.move(os.path.join(self.root_dir, f"{self.name}.yml"), self.file_system)
+        self.ngi_settings = NGIConfig(self.name, self.file_system)
 
         # Load any new or updated keys
         try:
