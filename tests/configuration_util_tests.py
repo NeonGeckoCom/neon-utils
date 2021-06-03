@@ -262,6 +262,13 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["listener"]["wake_word_enabled"], bool)
         self.assertIsInstance(config["listener"]["phoneme_duration"], int)
 
+    def test_get_audio_config(self):
+        config = get_neon_audio_config()
+        self.assertIsInstance(config, dict)
+        self.assertIsInstance(config["Audio"], dict)
+        self.assertIsInstance(config["tts"], dict)
+        self.assertIsInstance(config["language"], dict)
+
     def test_get_user_config_add_keys(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
         ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")

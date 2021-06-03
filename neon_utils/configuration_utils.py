@@ -488,7 +488,7 @@ def get_neon_lang_config() -> dict:
     """
     core_config = get_neon_local_config()
     language_config = deepcopy(get_neon_user_config().content.get("speech", {}))
-    language_config["internal"] = language_config.get("internal", "en-us")
+    language_config["internal"] = language_config.get("internal", "en-us")  # TODO: This is core, not user DM
     language_config["user"] = language_config.get("stt_language", "en-us")
     language_config["boost"] = False
     language_config["detection_module"] = core_config.get("stt", {}).get("detection_module")
@@ -597,12 +597,16 @@ def get_neon_audio_config() -> dict:
     Returns:
         dict of config params used for the Audio module
     """
-    mycroft = _safe_mycroft_config().get("Audio", {})
-    neon = get_neon_local_config().get("audioService", {})
-    merged = {**mycroft, **neon}
-    if merged.keys() != neon.keys():
-        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
-    return merged
+    mycroft = _safe_mycroft_config()
+    local_config = get_neon_local_config()
+    neon_audio = local_config.get("audioService", {})
+    merged_audio = {**mycroft.get("Audio", {}), **neon_audio}
+    if merged_audio.keys() != neon_audio.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged_audio.keys()}")
+
+    return {"Audio": merged_audio,
+            "tts": get_neon_tts_config(),
+            "language": get_neon_lang_config()}
 
 
 def get_neon_api_config() -> dict:
