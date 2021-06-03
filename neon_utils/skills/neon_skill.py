@@ -558,6 +558,34 @@ class NeonSkill(MycroftSkill):
                     return True
         return False
 
+    def voc_match(self, utt, voc_filename, lang=None, exact=False):
+        try:
+            return super().voc_match(utt, voc_filename, lang, exact)
+        except FileNotFoundError:
+            LOG.warning(f"{voc_filename} not found, checking in neon_core")
+            from mycroft.skills.skill_data import read_vocab_file
+            from itertools import chain
+            import re
+        lang = lang or self.lang
+        voc = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "neon_core",
+                           "res", "text", lang, voc_filename)
+        if not os.path.exists(voc):
+            raise FileNotFoundError
+        vocab = read_vocab_file(voc)
+        cache_key = lang + voc_filename
+        self.voc_match_cache[cache_key] = list(chain(*vocab))
+        if utt:
+            if exact:
+                # Check for exact match
+                return any(i.strip() == utt
+                           for i in self.voc_match_cache[cache_key])
+            else:
+                # Check for matches against complete words
+                return any([re.match(r'.*\b' + i + r'\b.*', utt)
+                            for i in self.voc_match_cache[cache_key]])
+        else:
+            return False
+
     def neon_in_request(self, message):
         """
         Checks if the utterance is intended for Neon. Server utilizes current conversation, otherwise wake-word status
