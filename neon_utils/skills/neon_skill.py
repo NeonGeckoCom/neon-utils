@@ -159,9 +159,9 @@ class NeonSkill(MycroftSkill):
 
         # Load or init configuration
         if os.path.isfile(os.path.join(self.root_dir, f"{self.name}.yml")):
-            LOG.warning(f"Config found in skill directory for {self.name}! Relocating to: {self.file_system}")
-            shutil.move(os.path.join(self.root_dir, f"{self.name}.yml"), self.file_system)
-        self.ngi_settings = NGIConfig(self.name, self.file_system)
+            LOG.warning(f"Config found in skill directory for {self.name}! Relocating to: {self.file_system.path}")
+            shutil.move(os.path.join(self.root_dir, f"{self.name}.yml"), self.file_system.path)
+        self.ngi_settings = NGIConfig(self.name, self.file_system.path)
 
         # Load any new or updated keys
         try:
