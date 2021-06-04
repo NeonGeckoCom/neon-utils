@@ -137,10 +137,11 @@ def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = Non
     if not aws_keys.get("aws_access_key_id") or not aws_keys.get("aws_secret_access_key"):
         raise ValueError
 
-    local_conf = NGIConfig("ngi_local_conf", config_path)
+    local_conf = NGIConfig("ngi_local_conf", config_path, True)
     aws_config = local_conf["tts"]["amazon"]
     aws_config = {**aws_config, **aws_keys}
     local_conf["tts"]["amazon"] = aws_config
+    local_conf.write_changes()
     # TODO: This should move to auth config when available DM
 
 
@@ -152,8 +153,12 @@ def populate_github_token_config(token: str, config_path: Optional[str] = None):
         config_path: Override path to ngi_local_conf
     """
     from neon_utils.configuration_utils import NGIConfig
-    local_conf = NGIConfig("ngi_local_conf", config_path)
+
+    assert token
+
+    local_conf = NGIConfig("ngi_local_conf", config_path, True)
     local_conf["skills"]["neon_token"] = token
+    local_conf.write_changes()
     # TODO: This should move to auth config when available DM
 
 

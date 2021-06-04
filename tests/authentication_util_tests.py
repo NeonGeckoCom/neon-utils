@@ -20,15 +20,26 @@
 import os
 import sys
 import unittest
+import shutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.authentication_utils import *
+from neon_utils.configuration_utils import get_neon_local_config
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 CRED_PATH = os.path.join(ROOT_DIR, "credentials")
 
 
 class AuthUtilTests(unittest.TestCase):
+    def setUp(self) -> None:
+        config_path = os.path.join(ROOT_DIR, "configuration")
+        self.old_local_conf = os.path.join(config_path, "old_local_conf.yml")
+        self.ngi_local_conf = os.path.join(config_path, "ngi_local_conf.yml")
+        shutil.copy(self.ngi_local_conf, self.old_local_conf)
+
+    def tearDown(self) -> None:
+        shutil.move(self.old_local_conf, self.ngi_local_conf)
+
     def test_get_git_token(self):
         try:
             token = find_neon_git_token("/tmp")
@@ -67,14 +78,16 @@ class AuthUtilTests(unittest.TestCase):
         self.assertEqual(creds["private_key"],
                          "-----BEGIN PRIVATE KEY-----\nREDACTED\nREDACTED\nREDACTED\n-----END PRIVATE KEY-----\n")
 
-    def test_write_aws_credentials(self):
-        import shutil
-        from neon_utils.configuration_utils import get_neon_local_config
+    def test_write_github_token(self):
         config_path = os.path.join(ROOT_DIR, "configuration")
-        old_local_conf = os.path.join(config_path, "old_local_conf.yml")
-        ngi_local_conf = os.path.join(config_path, "ngi_local_conf.yml")
-        shutil.copy(ngi_local_conf, old_local_conf)
+        token = "TOKEN"
+        local_config = get_neon_local_config(config_path)
+        self.assertIsNone(local_config["skills"]["neon_token"])
+        populate_github_token_config(token, config_path)
+        self.assertEqual(local_config["skills"]["neon_token"], token)
 
+    def test_write_aws_credentials(self):
+        config_path = os.path.join(ROOT_DIR, "configuration")
         local_config = get_neon_local_config(config_path)
         self.assertEqual(local_config["tts"]["amazon"], {"region": "us-west-2",
                                                          "aws_access_key_id": "",
@@ -84,7 +97,6 @@ class AuthUtilTests(unittest.TestCase):
         self.assertEqual(local_config["tts"]["amazon"], {"region": "us-west-2",
                                                          "aws_access_key_id": "KEY_ID",
                                                          "aws_secret_access_key": "KEY_SECRET"})
-        shutil.move(old_local_conf, ngi_local_conf)
 
     def test_aws_credentials_missing_keys(self):
         with self.assertRaises(AssertionError):
@@ -100,46 +112,12 @@ class AuthUtilTests(unittest.TestCase):
             populate_amazon_keys_config({"aws_access_key_id": "",
                                          "aws_secret_access_key": ""})
 
-    def test_write_github_token(self):
-        import shutil
-        from neon_utils.configuration_utils import get_neon_local_config
-        config_path = os.path.join(ROOT_DIR, "configuration")
-        old_local_conf = os.path.join(config_path, "old_local_conf.yml")
-        ngi_local_conf = os.path.join(config_path, "ngi_local_conf.yml")
-        shutil.copy(ngi_local_conf, old_local_conf)
-        token = "TOKEN"
-        local_config = get_neon_local_config(config_path)
-        self.assertIsNone(local_config["skills"]["neon_token"])
-        populate_github_token_config(token, config_path)
-        self.assertEqual(local_config["skills"]["neon_token"], token)
-        shutil.move(old_local_conf, ngi_local_conf)
-
     def test_repo_is_neon_valid(self):
         self.assertTrue(repo_is_neon("http://github.com/NeonGeckoCom/alerts.neon"))
         self.assertTrue(repo_is_neon("https://github.com/NeonGeckoCom/caffeinewiz.neon"))
         self.assertTrue(repo_is_neon("ssh://github.com/NeonGeckoCom/launcher.neon"))
 
         self.assertTrue(repo_is_neon("https://github.com/neondaniel/speedtest.neon"))
-
-        self.assertFalse(repo_is_neon("https://github.com/mycroftai/skill-alarm"))
-        self.assertFalse(repo_is_neon("http://gitlab.com/neongecko/some-skill"))
-
-    def test_repo_is_neon_invalid(self):
-        with self.assertRaises(ValueError):
-            repo_is_neon("https://github.com")
-        with self.assertRaises(ValueError):
-            repo_is_neon("not a url")
-        with self.assertRaises(ValueError):
-            repo_is_neon("")
-
-    def test_repo_is_neon_valid(self):
-        self.assertTrue(repo_is_neon("http://github.com/NeonGeckoCom/alerts.neon"))
-        self.assertTrue(repo_is_neon("https://github.com/NeonGeckoCom/caffeinewiz.neon"))
-        self.assertTrue(repo_is_neon("ssh://github.com/NeonGeckoCom/launcher.neon"))
-
-        self.assertTrue(repo_is_neon("https://github.com/neondaniel/speedtest.neon"))
-        self.assertTrue(repo_is_neon("https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/"
-                                     "master/DEFAULT-SKILLS"))
 
         self.assertFalse(repo_is_neon("https://github.com/mycroftai/skill-alarm"))
         self.assertFalse(repo_is_neon("http://gitlab.com/neongecko/some-skill"))
