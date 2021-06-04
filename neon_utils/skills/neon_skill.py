@@ -569,8 +569,9 @@ class NeonSkill(MycroftSkill):
             from mycroft.skills.skill_data import read_vocab_file
             from itertools import chain
             import re
+        lang = lang or self.lang
         voc = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "neon_core",
-                           "res", "text", "en-us", f"{voc_filename}.voc")
+                           "res", "text", lang, f"{voc_filename}.voc")
         if not os.path.exists(voc):
             raise FileNotFoundError(voc)
         vocab = read_vocab_file(voc)
