@@ -144,6 +144,19 @@ def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = Non
     # TODO: This should move to auth config when available DM
 
 
+def populate_github_token_config(token: str, config_path: Optional[str] = None):
+    """
+    Populates configuration with the specified github token for later reference.
+    Args:
+        token: String Github token
+        config_path: Override path to ngi_local_conf
+    """
+    from neon_utils.configuration_utils import NGIConfig
+    local_conf = NGIConfig("ngi_local_conf", config_path)
+    local_conf["skills"]["neon_token"] = token
+    # TODO: This should move to auth config when available DM
+
+
 def repo_is_neon(repo_url: str) -> bool:
     """
     Determines if the specified repository url is part of the NeonGeckoCom org on github

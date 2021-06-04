@@ -100,6 +100,20 @@ class AuthUtilTests(unittest.TestCase):
             populate_amazon_keys_config({"aws_access_key_id": "",
                                          "aws_secret_access_key": ""})
 
+    def test_write_github_token(self):
+        import shutil
+        from neon_utils.configuration_utils import get_neon_local_config
+        config_path = os.path.join(ROOT_DIR, "configuration")
+        old_local_conf = os.path.join(config_path, "old_local_conf.yml")
+        ngi_local_conf = os.path.join(config_path, "ngi_local_conf.yml")
+        shutil.copy(ngi_local_conf, old_local_conf)
+        token = "TOKEN"
+        local_config = get_neon_local_config(config_path)
+        self.assertIsNone(local_config["skills"]["neon_token"])
+        populate_github_token_config(token, config_path)
+        self.assertEqual(local_config["skills"]["neon_token"], token)
+        shutil.move(old_local_conf, ngi_local_conf)
+
     def test_repo_is_neon_valid(self):
         self.assertTrue(repo_is_neon("http://github.com/NeonGeckoCom/alerts.neon"))
         self.assertTrue(repo_is_neon("https://github.com/NeonGeckoCom/caffeinewiz.neon"))

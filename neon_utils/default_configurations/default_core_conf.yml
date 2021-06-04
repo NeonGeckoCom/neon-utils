@@ -119,6 +119,7 @@ skills:
   repo_url: "https://github.com/MycroftAI/mycroft-skills"
   repo_branch: "18.08"
   data_dir: "~/.neon/msm"
+  neon_token:
 
 audio_parsers:
   blacklist: ["gender"]

@@ -397,6 +397,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["install_essential"], bool)
         self.assertIn("default_skills", config)
         self.assertIn("essential_skills", config)
+        self.assertIn("neon_token", config)
 
         self.assertEqual(config["update_interval"], config["auto_update_interval"])  # Backwards Compat.
         self.assertIsInstance(config["directory"], str)

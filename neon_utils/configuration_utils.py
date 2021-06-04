@@ -34,6 +34,7 @@ from ovos_utils.configuration import read_mycroft_config, LocalConf
 from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
+from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config
 
 
 class NGIConfig:
@@ -649,7 +650,12 @@ def get_neon_skills_config() -> dict:
             LOG.error(e)
             neon_skills["appstore_sync_interval"] = 6.0
     neon_skills["update_interval"] = neon_skills["auto_update_interval"]  # Backwards Compat.
-    # neon_skills["neon_token"]  # TODO: GetPrivateKeys
+    if not neon_skills["neon_token"]:
+        try:
+            neon_skills["neon_token"] = find_neon_git_token()  # TODO: GetPrivateKeys
+            populate_github_token_config(neon_skills["neon_token"])
+        except FileNotFoundError:
+            LOG.warning(f"No Github token found; skills may fail to install!")
     skills_config = {**mycroft_config.get("skills", {}), **neon_skills}
     return skills_config
 
