@@ -34,6 +34,7 @@ from ovos_utils.configuration import read_mycroft_config, LocalConf
 from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
+from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config
 
 
 class NGIConfig:
@@ -55,6 +56,7 @@ class NGIConfig:
         else:
             self._content = self._load_yaml_file()
             NGIConfig.configuration_list[self.__repr__()] = self
+        self._disk_content_hash = hash(repr(self._content))
 
     @property
     def requires_reload(self):
@@ -65,7 +67,7 @@ class NGIConfig:
             self.check_for_updates()
 
     def write_changes(self):
-        if self._pending_write:
+        if self._pending_write or self._disk_content_hash != hash(repr(self._content)):
             self._write_yaml_file()
 
     def populate(self, content, check_existing=False):
@@ -255,6 +257,7 @@ class NGIConfig:
                     LOG.debug(f"YAML updated {self.name}")
                 self._loaded = os.path.getmtime(self.file_path)
                 self._pending_write = False
+                self._disk_content_hash = hash(repr(self._content))
         except FileNotFoundError as x:
             LOG.error(f"Configuration file not found error: {x}")
 
@@ -649,7 +652,12 @@ def get_neon_skills_config() -> dict:
             LOG.error(e)
             neon_skills["appstore_sync_interval"] = 6.0
     neon_skills["update_interval"] = neon_skills["auto_update_interval"]  # Backwards Compat.
-    # neon_skills["neon_token"]  # TODO: GetPrivateKeys
+    if not neon_skills["neon_token"]:
+        try:
+            neon_skills["neon_token"] = find_neon_git_token()  # TODO: GetPrivateKeys
+            populate_github_token_config(neon_skills["neon_token"])
+        except FileNotFoundError:
+            LOG.warning(f"No Github token found; skills may fail to install!")
     skills_config = {**mycroft_config.get("skills", {}), **neon_skills}
     return skills_config
 
@@ -716,7 +724,7 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     Args:
         path: optional path to yml configuration files
     Returns:
-        NGIConfig
+        NGIConfig object with user config
     """
     user_config = NGIConfig("ngi_user_info", path)
     default_user_config = NGIConfig("default_user_conf",
@@ -731,14 +739,14 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     return user_config
 
 
-def get_neon_local_config(path: Optional[str] = None):
+def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     """
     Returns a dict local configuration and handles any
      migration of configuration values to local config from user config
     Args:
         path: optional path to yml configuration files
     Returns:
-        dict of local configuration
+        NGIConfig object with local config
     """
     local_config = NGIConfig("ngi_local_conf", path)
     default_local_config = NGIConfig("default_core_conf",
@@ -751,7 +759,7 @@ def get_neon_local_config(path: Optional[str] = None):
     _move_config_sections(user_config, local_config)
     local_config.make_equal_by_keys(default_local_config.content)
     LOG.info(f"Loaded local config from {local_config.file_path}")
-    return dict(local_config.content)
+    return local_config
 
 
 def get_neon_device_type() -> str:
