@@ -511,22 +511,28 @@ class ConfigurationUtilTests(unittest.TestCase):
         os.environ["ttsModule"] = "tts_module"
         os.environ["installerDir"] = test_dir
         os.environ["GITHUB_TOKEN"] = "git_token"
-        create_config_from_setup_params(test_dir)
+        local_config = create_config_from_setup_params(test_dir)
 
-        local_conf = get_neon_local_config(test_dir)
-        self.assertTrue(local_conf["prefFlags"]["devMode"])
-        self.assertTrue(local_conf["prefFlags"]["autoStart"])
-        self.assertTrue(local_conf["prefFlags"]["autoUpdate"])
-        self.assertEqual(local_conf["devVars"]["devName"], "Test-Device")
-        self.assertEqual(local_conf["devVars"]["devType"], "linux")
-        self.assertEqual(local_conf["stt"]["module"], "stt_module")
-        self.assertEqual(local_conf["tts"]["module"], "tts_module")
+        self.assertTrue(local_config["prefFlags"]["devMode"])
+        self.assertTrue(local_config["prefFlags"]["autoStart"])
+        self.assertTrue(local_config["prefFlags"]["autoUpdate"])
+        self.assertEqual(local_config["devVars"]["devName"], "Test-Device")
+        self.assertEqual(local_config["devVars"]["devType"], "linux")
+        self.assertEqual(local_config["stt"]["module"], "stt_module")
+        self.assertEqual(local_config["tts"]["module"], "tts_module")
 
-        self.assertEqual(local_conf["dirVars"]["skillsDir"], os.path.join(test_dir, "skills"))
-        self.assertEqual(local_conf["dirVars"]["diagsDir"], os.path.join(test_dir, "Diagnostics"))
-        self.assertEqual(local_conf["dirVars"]["logsDir"], os.path.join(test_dir, "logs"))
+        self.assertEqual(local_config["dirVars"]["skillsDir"], os.path.join(test_dir, "skills"))
+        self.assertEqual(local_config["dirVars"]["diagsDir"], os.path.join(test_dir, "Diagnostics"))
+        self.assertEqual(local_config["dirVars"]["logsDir"], os.path.join(test_dir, "logs"))
 
         shutil.rmtree(test_dir)
+
+    def test_unequal_cache_configs(self):
+        def_config = get_neon_local_config(f"{ROOT_DIR}/test")
+        oth_config = get_neon_local_config(CONFIG_PATH)
+        self.assertNotEqual(def_config, oth_config)
+        self.assertNotEqual(def_config.content, oth_config.content)
+        shutil.rmtree(f"{ROOT_DIR}/test")
 
 
 if __name__ == '__main__':

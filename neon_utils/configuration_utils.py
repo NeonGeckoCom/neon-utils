@@ -842,11 +842,13 @@ def get_mycroft_compatible_config(mycroft_only=False):
     return default_config
 
 
-def create_config_from_setup_params(path=None):
+def create_config_from_setup_params(path=None) -> NGIConfig:
     """
     Populate a (probably) new local config with parameters gathered during setup
     Args:
         path: Optional config path
+    Returns:
+        NGIConfig object generated from environment vars
     """
     local_conf = get_neon_local_config(path)
     pref_flags = local_conf["prefFlags"]
@@ -870,3 +872,5 @@ def create_config_from_setup_params(path=None):
         local_conf["dirVars"]["skillsDir"] = os.path.join(root_path, "skills")
         local_conf["dirVars"]["diagsDir"] = os.path.join(root_path, "Diagnostics")
         local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
+
+    return local_conf
