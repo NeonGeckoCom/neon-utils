@@ -295,10 +295,10 @@ class NGIConfig:
         self._content[key] = value
 
     def __repr__(self):
-        return "NGIConfig('{}') \n {}".format(self.name, self.file_path)
+        return f"NGIConfig('{self.name}')@{self.file_path}"
 
     def __str__(self):
-        return "{}: {}".format(self.file_path, json.dumps(self._content, indent=4))
+        return f"{self.file_path}: {json.dumps(self._content, indent=4)}"
 
     def __add__(self, other):
         # with self.lock.acquire(30):
