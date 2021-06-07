@@ -501,6 +501,33 @@ class ConfigurationUtilTests(unittest.TestCase):
         speech_config = get_neon_speech_config()
         self.assertNotEqual(speech_config.get("listener"), local_config["listener"])
 
+    def test_create_config_from_setup_params(self):
+        test_dir = f"{ROOT_DIR}/test_setup_config"
+        os.environ["devMode"] = "true"
+        os.environ["autoStart"] = "true"
+        os.environ["autoUpdate"] = "true"
+        os.environ["devName"] = "Test-Device"
+        os.environ["sttModule"] = "stt_module"
+        os.environ["ttsModule"] = "tts_module"
+        os.environ["installerDir"] = test_dir
+        os.environ["GITHUB_TOKEN"] = "git_token"
+        create_config_from_setup_params(test_dir)
+
+        local_conf = get_neon_local_config(test_dir)
+        self.assertTrue(local_conf["prefFlags"]["devMode"])
+        self.assertTrue(local_conf["prefFlags"]["autoStart"])
+        self.assertTrue(local_conf["prefFlags"]["autoUpdate"])
+        self.assertEqual(local_conf["devVars"]["devName"], "Test-Device")
+        self.assertEqual(local_conf["devVars"]["devType"], "linux")
+        self.assertEqual(local_conf["stt"]["module"], "stt_module")
+        self.assertEqual(local_conf["tts"]["module"], "tts_module")
+
+        self.assertEqual(local_conf["dirVars"]["skillsDir"], os.path.join(test_dir, "skills"))
+        self.assertEqual(local_conf["dirVars"]["diagsDir"], os.path.join(test_dir, "Diagnostics"))
+        self.assertEqual(local_conf["dirVars"]["logsDir"], os.path.join(test_dir, "logs"))
+
+        shutil.rmtree(test_dir)
+
 
 if __name__ == '__main__':
     unittest.main()

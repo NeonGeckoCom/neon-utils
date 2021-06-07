@@ -16,13 +16,14 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
-import re
 
+import re
 import json
 import os
 import sys
 import shutil
 import sysconfig
+
 from copy import deepcopy
 from os.path import *
 from collections.abc import MutableMapping
@@ -839,3 +840,33 @@ def get_mycroft_compatible_config(mycroft_only=False):
     # default_config["Display"]
 
     return default_config
+
+
+def create_config_from_setup_params(path=None):
+    """
+    Populate a (probably) new local config with parameters gathered during setup
+    Args:
+        path: Optional config path
+    """
+    local_conf = get_neon_local_config(path)
+    pref_flags = local_conf["prefFlags"]
+    local_conf["prefFlags"]["devMode"] = os.environ.get("devMode", str(pref_flags["devMode"])).lower() == "true"
+    local_conf["prefFlags"]["autoStart"] = os.environ.get("autoStart", str(pref_flags["autoStart"])).lower() == "true"
+    local_conf["prefFlags"]["autoUpdate"] = os.environ.get("autoUpdate",
+                                                           str(pref_flags["autoUpdate"])).lower() == "true"
+    local_conf["skills"]["neon_token"] = os.environ.get("GITHUB_TOKEN")
+    local_conf["tts"]["module"] = os.environ.get("ttsModule", local_conf["tts"]["module"])
+    local_conf["stt"]["module"] = os.environ.get("sttModule", local_conf["stt"]["module"])
+    if os.environ.get("installServer"):
+        local_conf["devVars"]["devType"] = "server"
+    else:
+        import platform
+        local_conf["devVars"]["devType"] = platform.system().lower()
+
+    local_conf["devVars"]["devName"] = os.environ.get("devName")
+
+    if local_conf["prefFlags"]["devMode"]:
+        root_path = os.environ.get("installerDir", local_conf.path)
+        local_conf["dirVars"]["skillsDir"] = os.path.join(root_path, "skills")
+        local_conf["dirVars"]["diagsDir"] = os.path.join(root_path, "Diagnostics")
+        local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
