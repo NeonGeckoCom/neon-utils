@@ -53,7 +53,7 @@ setuptools.setup(
     install_requires=requirements,
     entry_points={
         'console_scripts': [
-            "neon-config-import:neon_utils.configuration_utils:create_config_from_setup_params"
+            "neon-config-import=neon_utils.configuration_utils:create_config_from_setup_params"
         ]
     }
 )
