@@ -872,5 +872,5 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
         local_conf["dirVars"]["skillsDir"] = os.path.join(root_path, "skills")
         local_conf["dirVars"]["diagsDir"] = os.path.join(root_path, "Diagnostics")
         local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
-
+    local_conf.write_changes()
     return local_conf
