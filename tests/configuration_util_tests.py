@@ -526,6 +526,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(local_config["dirVars"]["logsDir"], os.path.join(test_dir, "logs"))
 
         shutil.rmtree(test_dir)
+        NGIConfig.configuration_list = dict()
 
     def test_unequal_cache_configs(self):
         def_config = get_neon_local_config(f"{ROOT_DIR}/test")
