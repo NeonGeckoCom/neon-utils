@@ -509,6 +509,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         os.environ["devName"] = "Test-Device"
         os.environ["sttModule"] = "stt_module"
         os.environ["ttsModule"] = "tts_module"
+        os.environ["installServer"] = "false"
         os.environ["installerDir"] = test_dir
         os.environ["GITHUB_TOKEN"] = "git_token"
         local_config = create_config_from_setup_params(test_dir)
