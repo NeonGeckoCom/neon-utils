@@ -17,6 +17,7 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
+import logging
 import re
 import json
 import os
@@ -36,6 +37,8 @@ from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config
+
+logging.getLogger("filelock").setLevel(logging.WARNING)
 
 
 class NGIConfig:
