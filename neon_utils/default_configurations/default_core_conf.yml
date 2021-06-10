@@ -99,7 +99,7 @@ listener:
   recording_timeout_with_silence: 3.0
 
 skills:
-  auto_update: False
+  auto_update: True
   install_essential: True
   install_default: True
   debug: True

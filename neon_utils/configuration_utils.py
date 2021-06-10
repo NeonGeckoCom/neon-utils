@@ -298,10 +298,10 @@ class NGIConfig:
         self._content[key] = value
 
     def __repr__(self):
-        return "NGIConfig('{}') \n {}".format(self.name, self.file_path)
+        return f"NGIConfig('{self.name}')@{self.file_path}"
 
     def __str__(self):
-        return "{}: {}".format(self.file_path, json.dumps(self._content, indent=4))
+        return f"{self.file_path}: {json.dumps(self._content, indent=4)}"
 
     def __add__(self, other):
         # with self.lock.acquire(30):
@@ -843,3 +843,39 @@ def get_mycroft_compatible_config(mycroft_only=False):
     # default_config["Display"]
 
     return default_config
+
+
+def create_config_from_setup_params(path=None) -> NGIConfig:
+    """
+    Populate a (probably) new local config with parameters gathered during setup
+    Args:
+        path: Optional config path
+    Returns:
+        NGIConfig object generated from environment vars
+    """
+    local_conf = get_neon_local_config(path)
+    pref_flags = local_conf["prefFlags"]
+    local_conf["prefFlags"]["devMode"] = os.environ.get("devMode", str(pref_flags["devMode"])).lower() == "true"
+    local_conf["prefFlags"]["autoStart"] = os.environ.get("autoStart", str(pref_flags["autoStart"])).lower() == "true"
+    local_conf["prefFlags"]["autoUpdate"] = os.environ.get("autoUpdate",
+                                                           str(pref_flags["autoUpdate"])).lower() == "true"
+    local_conf["skills"]["neon_token"] = os.environ.get("GITHUB_TOKEN")
+    local_conf["tts"]["module"] = os.environ.get("ttsModule", local_conf["tts"]["module"])
+    local_conf["stt"]["module"] = os.environ.get("sttModule", local_conf["stt"]["module"])
+    if os.environ.get("installServer", "false") == "true":
+        local_conf["devVars"]["devType"] = "server"
+    else:
+        import platform
+        local_conf["devVars"]["devType"] = platform.system().lower()
+
+    local_conf["devVars"]["devName"] = os.environ.get("devName")
+
+    if local_conf["prefFlags"]["devMode"]:
+        root_path = os.environ.get("installerDir", local_conf.path)
+        local_conf["dirVars"]["skillsDir"] = os.path.join(root_path, "skills")
+        local_conf["dirVars"]["diagsDir"] = os.path.join(root_path, "Diagnostics")
+        local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
+        local_conf["skills"]["default_skills"] =\
+            "https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/dev/.utilities/DEFAULT-SKILLS-DEV"
+    local_conf.write_changes()
+    return local_conf

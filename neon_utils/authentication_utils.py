@@ -26,7 +26,7 @@ from neon_utils.logger import LOG
 
 def find_neon_git_token(base_path: str = "~/") -> str:
     """
-    Searches standard locations for a text file with a Github token.
+    Searches environment variables and standard locations for a text file with a Github token.
     Args:
         base_path: Base directory to check in addition to XDG directories (default ~/)
     Returns:
@@ -43,6 +43,8 @@ def find_neon_git_token(base_path: str = "~/") -> str:
             cred_file = path
             break
     if not cred_file:
+        if os.environ.get("GITHUB_TOKEN"):
+            return os.environ.get("GITHUB_TOKEN")
         raise FileNotFoundError("Could not locate github credentials")
 
     with open(cred_file) as f:
