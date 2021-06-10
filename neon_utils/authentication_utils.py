@@ -26,7 +26,7 @@ from neon_utils.logger import LOG
 
 def find_neon_git_token(base_path: str = "~/") -> str:
     """
-    Searches standard locations for a text file with a Github token.
+    Searches environment variables and standard locations for a text file with a Github token.
     Args:
         base_path: Base directory to check in addition to XDG directories (default ~/)
     Returns:
@@ -43,6 +43,8 @@ def find_neon_git_token(base_path: str = "~/") -> str:
             cred_file = path
             break
     if not cred_file:
+        if os.environ.get("GITHUB_TOKEN"):
+            return os.environ.get("GITHUB_TOKEN")
         raise FileNotFoundError("Could not locate github credentials")
 
     with open(cred_file) as f:
@@ -137,10 +139,28 @@ def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = Non
     if not aws_keys.get("aws_access_key_id") or not aws_keys.get("aws_secret_access_key"):
         raise ValueError
 
-    local_conf = NGIConfig("ngi_local_conf", config_path)
+    local_conf = NGIConfig("ngi_local_conf", config_path, True)
     aws_config = local_conf["tts"]["amazon"]
     aws_config = {**aws_config, **aws_keys}
     local_conf["tts"]["amazon"] = aws_config
+    local_conf.write_changes()
+    # TODO: This should move to auth config when available DM
+
+
+def populate_github_token_config(token: str, config_path: Optional[str] = None):
+    """
+    Populates configuration with the specified github token for later reference.
+    Args:
+        token: String Github token
+        config_path: Override path to ngi_local_conf
+    """
+    from neon_utils.configuration_utils import NGIConfig
+
+    assert token
+
+    local_conf = NGIConfig("ngi_local_conf", config_path, True)
+    local_conf["skills"]["neon_token"] = token
+    local_conf.write_changes()
     # TODO: This should move to auth config when available DM
 
 

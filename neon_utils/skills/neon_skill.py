@@ -23,15 +23,16 @@ import json
 import shutil
 import time
 import os
+import re
+
 from copy import deepcopy
 from functools import wraps
-
+from itertools import chain
 from mycroft_bus_client.message import Message, dig_for_message
 from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
-from ovos_utils import ensure_mycroft_import
 from neon_utils import create_signal, check_for_signal, wait_while_speaking
 from neon_utils.configuration_utils import NGIConfig
 from neon_utils.location_utils import to_system_time
@@ -40,9 +41,10 @@ from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
 from neon_utils.cache_utils import LRUCache
 
-LOG.name = "neon_skill"
-ensure_mycroft_import()
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
+from mycroft.skills.skill_data import read_vocab_file
+
+LOG.name = "neon_skill"
 
 
 # TODO if accepted, make changes to QASkill and WikipediaSkill
@@ -557,6 +559,35 @@ class NeonSkill(MycroftSkill):
                     # Solo Private
                     return True
         return False
+
+    def voc_match(self, utt, voc_filename, lang=None, exact=False):
+        # TODO: Handles bug to be addressed in: https://github.com/OpenVoiceOS/ovos_utils/issues/73
+        try:
+            return super().voc_match(utt, voc_filename, lang, exact)
+        except FileNotFoundError:
+            LOG.warning(f"`{voc_filename}` not found, checking in neon_core")
+            from mycroft.skills.skill_data import read_vocab_file
+            from itertools import chain
+            import re
+        lang = lang or self.lang
+        voc = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "neon_core",
+                           "res", "text", lang, f"{voc_filename}.voc")
+        if not os.path.exists(voc):
+            raise FileNotFoundError(voc)
+        vocab = read_vocab_file(voc)
+        cache_key = lang + voc_filename
+        self.voc_match_cache[cache_key] = list(chain(*vocab))
+        if utt:
+            if exact:
+                # Check for exact match
+                return any(i.strip() == utt
+                           for i in self.voc_match_cache[cache_key])
+            else:
+                # Check for matches against complete words
+                return any([re.match(r'.*\b' + i + r'\b.*', utt)
+                            for i in self.voc_match_cache[cache_key]])
+        else:
+            return False
 
     def neon_in_request(self, message):
         """

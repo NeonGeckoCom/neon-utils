@@ -397,6 +397,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["install_essential"], bool)
         self.assertIn("default_skills", config)
         self.assertIn("essential_skills", config)
+        self.assertIn("neon_token", config)
 
         self.assertEqual(config["update_interval"], config["auto_update_interval"])  # Backwards Compat.
         self.assertIsInstance(config["directory"], str)
@@ -499,6 +500,41 @@ class ConfigurationUtilTests(unittest.TestCase):
         local_config = NGIConfig("ngi_local_conf")
         speech_config = get_neon_speech_config()
         self.assertNotEqual(speech_config.get("listener"), local_config["listener"])
+
+    def test_create_config_from_setup_params(self):
+        test_dir = f"{ROOT_DIR}/test_setup_config"
+        os.environ["devMode"] = "true"
+        os.environ["autoStart"] = "true"
+        os.environ["autoUpdate"] = "true"
+        os.environ["devName"] = "Test-Device"
+        os.environ["sttModule"] = "stt_module"
+        os.environ["ttsModule"] = "tts_module"
+        os.environ["installServer"] = "false"
+        os.environ["installerDir"] = test_dir
+        os.environ["GITHUB_TOKEN"] = "git_token"
+        local_config = create_config_from_setup_params(test_dir)
+
+        self.assertTrue(local_config["prefFlags"]["devMode"])
+        self.assertTrue(local_config["prefFlags"]["autoStart"])
+        self.assertTrue(local_config["prefFlags"]["autoUpdate"])
+        self.assertEqual(local_config["devVars"]["devName"], "Test-Device")
+        self.assertEqual(local_config["devVars"]["devType"], "linux")
+        self.assertEqual(local_config["stt"]["module"], "stt_module")
+        self.assertEqual(local_config["tts"]["module"], "tts_module")
+
+        self.assertEqual(local_config["dirVars"]["skillsDir"], os.path.join(test_dir, "skills"))
+        self.assertEqual(local_config["dirVars"]["diagsDir"], os.path.join(test_dir, "Diagnostics"))
+        self.assertEqual(local_config["dirVars"]["logsDir"], os.path.join(test_dir, "logs"))
+
+        shutil.rmtree(test_dir)
+        NGIConfig.configuration_list = dict()
+
+    def test_unequal_cache_configs(self):
+        def_config = get_neon_local_config(f"{ROOT_DIR}/test")
+        oth_config = get_neon_local_config(CONFIG_PATH)
+        self.assertNotEqual(def_config, oth_config)
+        self.assertNotEqual(def_config.content, oth_config.content)
+        shutil.rmtree(f"{ROOT_DIR}/test")
 
 
 if __name__ == '__main__':
