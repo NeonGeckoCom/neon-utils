@@ -501,7 +501,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         speech_config = get_neon_speech_config()
         self.assertNotEqual(speech_config.get("listener"), local_config["listener"])
 
-    def test_create_config_from_setup_params(self):
+    def test_create_config_from_setup_params_dev_mode(self):
         test_dir = f"{ROOT_DIR}/test_setup_config"
         os.environ["devMode"] = "true"
         os.environ["autoStart"] = "true"
@@ -525,6 +525,34 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(local_config["dirVars"]["skillsDir"], os.path.join(test_dir, "skills"))
         self.assertEqual(local_config["dirVars"]["diagsDir"], os.path.join(test_dir, "Diagnostics"))
         self.assertEqual(local_config["dirVars"]["logsDir"], os.path.join(test_dir, "logs"))
+
+        shutil.rmtree(test_dir)
+        NGIConfig.configuration_list = dict()
+
+    def test_create_config_from_setup_params_non_dev_mode(self):
+        test_dir = f"{ROOT_DIR}/test_setup_config"
+        os.environ["devMode"] = "false"
+        os.environ["autoStart"] = "true"
+        os.environ["autoUpdate"] = "true"
+        os.environ["devName"] = "Test-Device"
+        os.environ["sttModule"] = "stt_module"
+        os.environ["ttsModule"] = "tts_module"
+        os.environ["installServer"] = "false"
+        os.environ["installerDir"] = test_dir
+        os.environ["GITHUB_TOKEN"] = "git_token"
+        local_config = create_config_from_setup_params(test_dir)
+
+        self.assertFalse(local_config["prefFlags"]["devMode"])
+        self.assertTrue(local_config["prefFlags"]["autoStart"])
+        self.assertTrue(local_config["prefFlags"]["autoUpdate"])
+        self.assertEqual(local_config["devVars"]["devName"], "Test-Device")
+        self.assertEqual(local_config["devVars"]["devType"], "linux")
+        self.assertEqual(local_config["stt"]["module"], "stt_module")
+        self.assertEqual(local_config["tts"]["module"], "tts_module")
+
+        self.assertEqual(local_config["dirVars"]["skillsDir"], "~/.local/share/neon/skills")
+        self.assertEqual(local_config["dirVars"]["diagsDir"], "~/Documents/NeonGecko/Diagnostics")
+        self.assertEqual(local_config["dirVars"]["logsDir"], "~/.local/share/neon/logs")
 
         shutil.rmtree(test_dir)
         NGIConfig.configuration_list = dict()
