@@ -24,7 +24,7 @@ import shutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.authentication_utils import *
-from neon_utils.configuration_utils import get_neon_local_config
+from neon_utils.configuration_utils import get_neon_local_config, NGIConfig
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 CRED_PATH = os.path.join(ROOT_DIR, "credentials")
@@ -36,6 +36,7 @@ class AuthUtilTests(unittest.TestCase):
         self.old_local_conf = os.path.join(config_path, "old_local_conf.yml")
         self.ngi_local_conf = os.path.join(config_path, "ngi_local_conf.yml")
         shutil.copy(self.ngi_local_conf, self.old_local_conf)
+        NGIConfig(self.ngi_local_conf, force_reload=True)
 
     def tearDown(self) -> None:
         shutil.move(self.old_local_conf, self.ngi_local_conf)

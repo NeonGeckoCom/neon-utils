@@ -19,9 +19,7 @@
 
 import sys
 import os
-import time
 import unittest
-from ruamel.yaml.scalarfloat import ScalarFloat
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
@@ -251,7 +249,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["disabled"], bool)
 
     def test_get_device_type(self):
-        self.assertEqual(get_neon_device_type(), "desktop")
+        self.assertIn(get_neon_device_type(), ("desktop", "pi", "linux"))
 
     def test_get_speech_config(self):
         config = get_neon_speech_config()
