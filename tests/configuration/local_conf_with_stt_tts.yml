@@ -1,0 +1,12 @@
+tts:
+  module: tts_module
+  amazon: {region: us-west-2, aws_access_key_id: '', aws_secret_access_key: ''}
+  mozilla: {request_url: http://0.0.0.0:5002/api/tts?}
+  mimic: {voice: ap}
+  mimic2: {lang: en-us, url: https://mimic-api.mycroft.ai/synthesize?text=}
+  mozilla_remote: {url: http://something.somewhere}
+stt:
+  module: stt_module
+  translation_module: google
+  detection_module: google
+  some_module: {key: value}
