@@ -562,6 +562,19 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertNotEqual(def_config.content, oth_config.content)
         shutil.rmtree(f"{ROOT_DIR}/test")
 
+    def test_added_module_config(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+        ngi_test_conf = os.path.join(CONFIG_PATH, "local_conf_with_stt_tts.yml")
+
+        shutil.move(ngi_local_conf, bak_local_conf)
+        shutil.copy(ngi_test_conf, ngi_local_conf)
+        local_config = get_neon_local_config(CONFIG_PATH)
+        self.assertEqual(local_config["tts"]["mozilla_remote"], {"url": "http://something.somewhere"})
+        self.assertEqual(local_config["stt"]["some_module"], {"key": "value"})
+        self.assertIn("dirVars", local_config.content.keys())
+        shutil.move(bak_local_conf, ngi_local_conf)
+
 
 if __name__ == '__main__':
     unittest.main()
