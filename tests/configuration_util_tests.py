@@ -19,9 +19,7 @@
 
 import sys
 import os
-import time
 import unittest
-from ruamel.yaml.scalarfloat import ScalarFloat
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
@@ -251,7 +249,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["disabled"], bool)
 
     def test_get_device_type(self):
-        self.assertEqual(get_neon_device_type(), "desktop")
+        self.assertIn(get_neon_device_type(), ("desktop", "pi", "linux"))
 
     def test_get_speech_config(self):
         config = get_neon_speech_config()
@@ -501,7 +499,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         speech_config = get_neon_speech_config()
         self.assertNotEqual(speech_config.get("listener"), local_config["listener"])
 
-    def test_create_config_from_setup_params(self):
+    def test_create_config_from_setup_params_dev_mode(self):
         test_dir = f"{ROOT_DIR}/test_setup_config"
         os.environ["devMode"] = "true"
         os.environ["autoStart"] = "true"
@@ -529,12 +527,53 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.rmtree(test_dir)
         NGIConfig.configuration_list = dict()
 
+    def test_create_config_from_setup_params_non_dev_mode(self):
+        test_dir = f"{ROOT_DIR}/test_setup_config"
+        os.environ["devMode"] = "false"
+        os.environ["autoStart"] = "true"
+        os.environ["autoUpdate"] = "true"
+        os.environ["devName"] = "Test-Device"
+        os.environ["sttModule"] = "stt_module"
+        os.environ["ttsModule"] = "tts_module"
+        os.environ["installServer"] = "false"
+        os.environ["installerDir"] = test_dir
+        os.environ["GITHUB_TOKEN"] = "git_token"
+        local_config = create_config_from_setup_params(test_dir)
+
+        self.assertFalse(local_config["prefFlags"]["devMode"])
+        self.assertTrue(local_config["prefFlags"]["autoStart"])
+        self.assertTrue(local_config["prefFlags"]["autoUpdate"])
+        self.assertEqual(local_config["devVars"]["devName"], "Test-Device")
+        self.assertEqual(local_config["devVars"]["devType"], "linux")
+        self.assertEqual(local_config["stt"]["module"], "stt_module")
+        self.assertEqual(local_config["tts"]["module"], "tts_module")
+
+        self.assertEqual(local_config["dirVars"]["skillsDir"], "~/.local/share/neon/skills")
+        self.assertEqual(local_config["dirVars"]["diagsDir"], "~/Documents/NeonGecko/Diagnostics")
+        self.assertEqual(local_config["dirVars"]["logsDir"], "~/.local/share/neon/logs")
+
+        shutil.rmtree(test_dir)
+        NGIConfig.configuration_list = dict()
+
     def test_unequal_cache_configs(self):
         def_config = get_neon_local_config(f"{ROOT_DIR}/test")
         oth_config = get_neon_local_config(CONFIG_PATH)
         self.assertNotEqual(def_config, oth_config)
         self.assertNotEqual(def_config.content, oth_config.content)
         shutil.rmtree(f"{ROOT_DIR}/test")
+
+    def test_added_module_config(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+        ngi_test_conf = os.path.join(CONFIG_PATH, "local_conf_with_stt_tts.yml")
+
+        shutil.move(ngi_local_conf, bak_local_conf)
+        shutil.copy(ngi_test_conf, ngi_local_conf)
+        local_config = get_neon_local_config(CONFIG_PATH)
+        self.assertEqual(local_config["tts"]["mozilla_remote"], {"url": "http://something.somewhere"})
+        self.assertEqual(local_config["stt"]["some_module"], {"key": "value"})
+        self.assertIn("dirVars", local_config.content.keys())
+        shutil.move(bak_local_conf, ngi_local_conf)
 
 
 if __name__ == '__main__':
