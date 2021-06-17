@@ -877,5 +877,8 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
         local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
         local_conf["skills"]["default_skills"] =\
             "https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/dev/.utilities/DEFAULT-SKILLS-DEV"
+    else:
+        local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
+
     local_conf.write_changes()
     return local_conf
