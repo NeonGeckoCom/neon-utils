@@ -30,6 +30,10 @@ def clean_quotes(raw_utt: str) -> str:
     :param raw_utt: Input string to be cleaned
     :return: string with all paired quote characters removed
     """
+    if not raw_utt:
+        raise ValueError("Expected a string and got None")
+    if not isinstance(raw_utt, str):
+        raise TypeError(f"{raw_utt} is not a string!")
     chars_to_remove = ['“', '"', '«', u'\u201d', u'\u00bb', u'\u201e', '「', '」', u'u\xa0', u'\u00a0']
     raw_utt = raw_utt.strip()
     utt = raw_utt
@@ -154,3 +158,20 @@ def format_speak_tags(sentence: str, include_tags: bool = True) -> str:
         return to_speak
     else:
         return to_speak.lstrip("<speak>").rstrip("</speak>")
+
+
+def normalize_string_to_speak(to_speak: str) -> str:
+    """
+    Normalizes spoken strings for TTS engines to handle
+    :param to_speak: String to speak
+    :return: string with any invalid characters removed and punctuation added
+    """
+    if not to_speak:
+        raise ValueError("Expected a string and got None")
+    if not isinstance(to_speak, str):
+        raise TypeError(f"{to_speak} is not a string!")
+
+    valid_punctuation = ['.', '?', '!']
+    if any(to_speak.endswith(x) for x in valid_punctuation):
+        return to_speak
+    return f"{to_speak}."

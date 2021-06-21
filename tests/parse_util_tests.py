@@ -26,7 +26,7 @@ from neon_utils.parse_utils import *
 
 
 class ParseUtilTests(unittest.TestCase):
-    def test_quote_cleaning_simple(self):
+    def test_clean_quotes_simple(self):
         raw_str = '"this is a double-quoted-string"'
         output = clean_quotes(raw_str)
         self.assertEqual(output, "this is a double-quoted-string")
@@ -39,7 +39,7 @@ class ParseUtilTests(unittest.TestCase):
         output = clean_quotes(raw_str)
         self.assertEqual(raw_str, output)
 
-    def test_special_quote(self):
+    def test_clean_quotes_foreign(self):
         raw_str = '「this has Japanese quotes」'
         output = clean_quotes(raw_str)
         self.assertEqual(output, "this has Japanese quotes")
@@ -47,6 +47,40 @@ class ParseUtilTests(unittest.TestCase):
         raw_str = "«this has French quotes»"
         output = clean_quotes(raw_str)
         self.assertEqual(output, "this has French quotes")
+
+    def test_clean_quotes_error_null(self):
+        with self.assertRaises(ValueError):
+            clean_quotes(None)
+
+    def test_clean_quotes_error_type(self):
+        with self.assertRaises(TypeError):
+            clean_quotes(["list"])
+        with self.assertRaises(TypeError):
+            clean_quotes(123)
+
+    def test_normalize_spoken_string_valid(self):
+        valid_string = "hello."
+        self.assertEqual(normalize_string_to_speak(valid_string), valid_string)
+        valid_string = "hello?"
+        self.assertEqual(normalize_string_to_speak(valid_string), valid_string)
+        valid_string = "hello!"
+        self.assertEqual(normalize_string_to_speak(valid_string), valid_string)
+        valid_string = "hello..."
+        self.assertEqual(normalize_string_to_speak(valid_string), valid_string)
+
+    def test_normalize_spoken_string_add_punctuation(self):
+        invalid_string = "hello"
+        self. assertEqual(normalize_string_to_speak(invalid_string), f"{invalid_string}.")
+
+    def test_normalize_spoken_string_error_null(self):
+        with self.assertRaises(ValueError):
+            normalize_string_to_speak(None)
+
+    def test_normalize_spoken_string_error_type(self):
+        with self.assertRaises(TypeError):
+            normalize_string_to_speak(["list"])
+        with self.assertRaises(TypeError):
+            normalize_string_to_speak(123)
 
     def test_clean_filename(self):
         raw_filename = "'My*Weird~Filename I want to use?__'"
