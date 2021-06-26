@@ -20,17 +20,19 @@
 import pathlib
 import pickle
 import json
-import shutil
+# import shutil
 import time
 import os
-import re
+# import re
 
 from copy import deepcopy
 from functools import wraps
-from itertools import chain
+# from itertools import chain
+
+from mycroft.skills.settings import save_settings
 from mycroft_bus_client.message import Message, dig_for_message
 from neon_utils.file_utils import get_most_recent_file_in_dir
-from ruamel.yaml.comments import CommentedMap
+# from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
 from neon_utils import create_signal, check_for_signal, wait_while_speaking
@@ -42,7 +44,7 @@ from neon_utils.message_utils import request_from_mobile, get_message_user
 from neon_utils.cache_utils import LRUCache
 
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
-from mycroft.skills.skill_data import read_vocab_file
+# from mycroft.skills.skill_data import read_vocab_file
 
 LOG.name = "neon_skill"
 
@@ -65,7 +67,6 @@ class NeonSkill(MycroftSkill):
         self.ngi_settings: Optional[NGIConfig] = None
 
         super(NeonSkill, self).__init__(name, bus, use_settings)
-
         self.cache_loc = os.path.expanduser(self.local_config.get('dirVars', {}).get('cacheDir') or
                                             "~/.local/share/neon/cache")
         self.lru_cache = LRUCache()
@@ -77,13 +78,13 @@ class NeonSkill(MycroftSkill):
         self.sys_tz = gettz()
         self.gui_enabled = self.local_config.get("prefFlags", {}).get("guiEvents", False)
 
-        if use_settings:
-            self.settings = {}
-            self._initial_settings = None
-            self.init_settings()
-        else:
-            LOG.error(f"{name} Skill requested no settings!")
-            self.settings = None
+        # if use_settings:
+        #     self.settings = {}
+        #     self._initial_settings = None
+        #     self.init_settings()
+        # else:
+        #     LOG.error(f"{name} Skill requested no settings!")
+        #     self.settings = None
 
         self.scheduled_repeats = []
 
@@ -98,7 +99,7 @@ class NeonSkill(MycroftSkill):
             self.server = False
             self.default_intent_timeout = 60
 
-        self.neon_core = True
+        self.neon_core = True  # TODO: This should be depreciated DM
         self.actions_to_confirm = dict()
 
         self.skill_mode = self.user_config.content.get('response_mode').get('speed_mode') or DEFAULT_SPEED_MODE
@@ -127,61 +128,61 @@ class NeonSkill(MycroftSkill):
         LOG.warning("This reference is deprecated, use self.local_config directly")
         return self.local_config.content
 
-    def init_settings(self):
-        """
-        Initializes yml-based skill config settings, updating from default dict as necessary for added parameters
-        """
-        if os.path.isfile(os.path.join(self.root_dir, "settingsmeta.yml")):
-            skill_meta = NGIConfig("settingsmeta", self.root_dir).content
-        elif os.path.isfile(os.path.join(self.root_dir, "settingsmeta.json")):
-            with open(os.path.join(self.root_dir, "settingsmeta.json")) as f:
-                skill_meta = json.load(f)
-        else:
-            skill_meta = None
-
-        # Load defaults from settingsmeta
-        default = {"__mycroft_skill_firstrun": True}
-        if skill_meta:
-            # LOG.info(skill_meta)
-            LOG.info(skill_meta["skillMetadata"]["sections"])
-            for section in skill_meta["skillMetadata"]["sections"]:
-                for pref in section.get("fields", []):
-                    if not pref.get("name"):
-                        LOG.debug(f"non-data skill meta: {pref}")
-                    else:
-                        if pref.get("value") == "true":
-                            value = True
-                        elif pref.get("value") == "false":
-                            value = False
-                        elif isinstance(pref.get("value"), CommentedMap):
-                            value = dict(pref.get("value"))
-                        else:
-                            value = pref.get("value")
-                        default[pref["name"]] = value
-
-        # Load or init configuration
-        if os.path.isfile(os.path.join(self.root_dir, f"{self.name}.yml")):
-            LOG.warning(f"Config found in skill directory for {self.name}! Relocating to: {self.file_system.path}")
-            shutil.move(os.path.join(self.root_dir, f"{self.name}.yml"), self.file_system.path)
-        self.ngi_settings = NGIConfig(self.name, self.file_system.path)
-
-        # Load any new or updated keys
-        try:
-            LOG.debug(self.ngi_settings.content)
-            LOG.debug(default)
-            if self.ngi_settings.content and len(self.ngi_settings.content.keys()) > 0 and len(default.keys()) > 0:
-                self.ngi_settings.make_equal_by_keys(default, recursive=False)
-            elif len(default.keys()) > 0:
-                LOG.info("No settings to load, use default")
-                self.ngi_settings.populate(default)
-        except Exception as e:
-            LOG.error(e)
-            self.ngi_settings.populate(default)
-
-        # Make sure settings is initialized as a dictionary
-        if self.ngi_settings.content:
-            self.settings = self.ngi_settings.content  # Uses the default self.settings object for skills compat
-        LOG.debug(f"loaded settings={self.settings}")
+    # def init_settings(self):
+    #     """
+    #     Initializes yml-based skill config settings, updating from default dict as necessary for added parameters
+    #     """
+    #     if os.path.isfile(os.path.join(self.root_dir, "settingsmeta.yml")):
+    #         skill_meta = NGIConfig("settingsmeta", self.root_dir).content
+    #     elif os.path.isfile(os.path.join(self.root_dir, "settingsmeta.json")):
+    #         with open(os.path.join(self.root_dir, "settingsmeta.json")) as f:
+    #             skill_meta = json.load(f)
+    #     else:
+    #         skill_meta = None
+    #
+    #     # Load defaults from settingsmeta
+    #     # default = {"__mycroft_skill_firstrun": False}
+    #     if skill_meta:
+    #         # LOG.info(skill_meta)
+    #         LOG.info(skill_meta["skillMetadata"]["sections"])
+    #         for section in skill_meta["skillMetadata"]["sections"]:
+    #             for pref in section.get("fields", []):
+    #                 if not pref.get("name"):
+    #                     LOG.debug(f"non-data skill meta: {pref}")
+    #                 else:
+    #                     if pref.get("value") == "true":
+    #                         value = True
+    #                     elif pref.get("value") == "false":
+    #                         value = False
+    #                     elif isinstance(pref.get("value"), CommentedMap):
+    #                         value = dict(pref.get("value"))
+    #                     else:
+    #                         value = pref.get("value")
+    #                     default[pref["name"]] = value
+    #
+    #     # Load or init configuration
+    #     if os.path.isfile(os.path.join(self.root_dir, f"{self.name}.yml")):
+    #         LOG.warning(f"Config found in skill directory for {self.name}! Relocating to: {self.file_system.path}")
+    #         shutil.move(os.path.join(self.root_dir, f"{self.name}.yml"), self.file_system.path)
+    #     self.ngi_settings = NGIConfig(self.name, self.file_system.path)
+    #
+    #     # Load any new or updated keys
+    #     try:
+    #         LOG.debug(self.ngi_settings.content)
+    #         LOG.debug(default)
+    #         if self.ngi_settings.content and len(self.ngi_settings.content.keys()) > 0 and len(default.keys()) > 0:
+    #             self.ngi_settings.make_equal_by_keys(default, recursive=False)
+    #         elif len(default.keys()) > 0:
+    #             LOG.info("No settings to load, use default")
+    #             self.ngi_settings.populate(default)
+    #     except Exception as e:
+    #         LOG.error(e)
+    #         self.ngi_settings.populate(default)
+    #
+    #     # Make sure settings is initialized as a dictionary
+    #     if self.ngi_settings.content:
+    #         self.settings = self.ngi_settings  # Uses the default self.settings object for skills compat
+    #     LOG.debug(f"loaded settings={self.settings}")
 
     @property
     def location_timezone(self):
@@ -373,6 +374,8 @@ class NeonSkill(MycroftSkill):
         return merged_dict
 
     def build_combined_skill_object(self, message=None) -> list:
+        # TODO: Depreciated? DM
+        LOG.error(f"This method is depreciated!")
         user = self.get_utterance_user(message)
         skill_dict = message.context["nick_profiles"][user]["skills"]
         skill_list = list(skill_dict.values())
@@ -404,13 +407,8 @@ class NeonSkill(MycroftSkill):
             for section, settings in new_preferences:
                 # section in user, brands, units, etc.
                 for key, val in settings:
-                    self.user_config.update_yaml_file(section, key, val, True)
-
-            self.user_config.update_yaml_file(final=True)
-            modified = ["ngi_user_info"]
-            self.bus.emit(Message('check.yml.updates',
-                                  {"modified": modified},
-                                  {"origin": self.skill_id}))
+                    self.user_config[section][key] = val
+            self.user_config.write_changes()
 
     def update_skill_settings(self, new_preferences: dict, message: Message = None, skill_global=False):
         """
@@ -426,8 +424,9 @@ class NeonSkill(MycroftSkill):
         else:
             for key, val in new_preferences.items():
                 self.settings[key] = val
-                self.ngi_settings.update_yaml_file(key, value=val, multiple=True)
-            self.ngi_settings.update_yaml_file(final=True)
+                self.ngi_settings[key] = val
+            save_settings(self.settings_write_path, self.settings)
+            self.ngi_settings.write_changes()
 
     def build_message(self, kind, utt, message, speaker=None):
         """
