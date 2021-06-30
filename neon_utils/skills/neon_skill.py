@@ -179,10 +179,10 @@ class NeonSkill(MycroftSkill):
             LOG.error(e)
             self.ngi_settings.populate(default)
 
-        # # Make sure settings is initialized as a dictionary
-        # if self.ngi_settings.content:
-        #     self.settings = self.ngi_settings  # Uses the default self.settings object for skills compat
-        # LOG.debug(f"loaded settings={self.settings}")
+        # Make sure settings is initialized as a dictionary
+        if self.ngi_settings.content:
+            self.settings = self.ngi_settings  # Uses the default self.settings object for skills compat
+        LOG.debug(f"loaded settings={self.settings}")
 
     @property
     def location_timezone(self) -> str:
