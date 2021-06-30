@@ -36,9 +36,9 @@ from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
 from neon_utils import create_signal, check_for_signal, wait_while_speaking
-from neon_utils.configuration_utils import NGIConfig
+from neon_utils.configuration_utils import NGIConfig, get_neon_lang_config, get_neon_user_config, get_neon_local_config
 from neon_utils.location_utils import to_system_time
-from neon_utils.language_utils import get_neon_lang_config, DetectorFactory, TranslatorFactory
+from neon_utils.language_utils import DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
 from neon_utils.cache_utils import LRUCache
@@ -61,8 +61,8 @@ CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 class NeonSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        self.user_config = NGIConfig("ngi_user_info")
-        self.local_config = NGIConfig("ngi_local_conf")
+        self.user_config = get_neon_user_config()
+        self.local_config = get_neon_local_config()
 
         self.ngi_settings: Optional[NGIConfig] = None
 
@@ -102,7 +102,7 @@ class NeonSkill(MycroftSkill):
         self.neon_core = True  # TODO: This should be depreciated DM
         self.actions_to_confirm = dict()
 
-        self.skill_mode = self.user_config.content.get('response_mode').get('speed_mode') or DEFAULT_SPEED_MODE
+        self.skill_mode = self.user_config.content.get('response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
         self.extension_time = SPEED_MODE_EXTENSION_TIME.get(self.skill_mode)
 
         try:
