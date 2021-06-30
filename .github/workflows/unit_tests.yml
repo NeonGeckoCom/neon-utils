@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  service_api_tests:
+  skill_object_tests:
     strategy:
       matrix:
         python-version: [ 3.6, 3.7, 3.8, 3.9 ]
@@ -22,24 +22,15 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-timeout pytest-cov
-      - name: Export credentials
+
+      - name: Test Skills Objects
         run: |
-          mkdir -p ~/.local/share/neon
-          echo ${WOLFRAM_ID} > ~/.local/share/neon/wolfram.txt
-          echo ${AV_API_KEY} > ~/.local/share/neon/alpha_vantage.txt
-          echo ${OWM_KEY} > ~/.local/share/neon/owm.txt
-        env:
-          WOLFRAM_ID: ${{secrets.wolfram_id}}
-          AV_API_KEY: ${{secrets.alpha_vantage_key}}
-          OWM_KEY: ${{secrets.open_weather_map_key}}
-      - name: Test Service APIs
-        run: |
-          pytest tests/service_api_tests.py --doctest-modules --junitxml=tests/service-api-test-results.xml
-      - name: Upload service API test results
+          pytest tests/neon_skill_tests.py --doctest-modules --junitxml=tests/skill-object-test-results.xml
+      - name: Upload skill test results
         uses: actions/upload-artifact@v2
         with:
-          name: service-api-test-results
-          path: tests/service-api-test-results.xml
+          name: skill-test-results
+          path: tests/skill-test-results.xml
   unit_tests:
     strategy:
       matrix:
@@ -191,12 +182,3 @@ jobs:
         with:
           name: cache-util-test-results
           path: tests/cache-util-test-results.xml
-
-      - name: Test Socket Utils
-        run: |
-          pytest tests/socket_utils_tests.py --doctest-modules --junitxml=tests/socket-utils-test-results.xml
-      - name: Upload socket utils test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: socket-utils-test-results
-          path: tests/socket-utils-test-results.xml

@@ -908,7 +908,7 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
         local_conf["devVars"]["devType"] = "server"
     else:
         import platform
-        local_conf["devVars"]["devType"] = platform.system().lower()
+        local_conf["devVars"]["devType"] = platform.system().lower()  # linux
 
     local_conf["devVars"]["devName"] = os.environ.get("devName")
 

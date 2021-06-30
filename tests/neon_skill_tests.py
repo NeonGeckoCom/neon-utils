@@ -30,9 +30,6 @@ from neon_utils.cache_utils import LRUCache
 
 from neon_utils.configuration_utils import NGIConfig
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from neon_utils.skills import *
-
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from skills import *
 
@@ -95,6 +92,17 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.translator, LanguageTranslator)
 
         self.assertIsInstance(skill.settings, dict)
+
+        self.assertIsInstance(skill.location_timezone, str)
+
+        self.assertIsInstance(skill.preference_brands(), dict)
+        self.assertIsInstance(skill.preference_user(), dict)
+        self.assertIsInstance(skill.preference_location(), dict)
+        self.assertIsInstance(skill.preference_unit(), dict)
+        self.assertIsInstance(skill.preference_speech(), dict)
+        self.assertIsInstance(skill.preference_skill(), dict)
+
+        self.assertIsInstance(skill.build_user_dict(), dict)
 
 
 if __name__ == '__main__':
