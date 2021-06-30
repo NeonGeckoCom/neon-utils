@@ -31,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: skill-test-results
-          path: tests/skill-test-results.xml
+          path: tests/skill-object-test-results.xml
   unit_tests:
     strategy:
       matrix:
