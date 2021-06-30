@@ -78,13 +78,13 @@ class NeonSkill(MycroftSkill):
         self.sys_tz = gettz()
         self.gui_enabled = self.configuration_available.get("prefFlags", {}).get("guiEvents", False)
 
-        if use_settings:
-            # self.settings = {}
-            # self._initial_settings = None
-            self.init_settings()
-        else:
-            LOG.error(f"{name} Skill requested no settings!")
-            self.settings = None
+        # if use_settings:
+        #     # self.settings = {}
+        #     # self._initial_settings = None
+        #     self.init_settings()
+        # else:
+        #     LOG.error(f"{name} Skill requested no settings!")
+        #     self.settings = None
 
         self.scheduled_repeats = []
 
@@ -128,10 +128,12 @@ class NeonSkill(MycroftSkill):
         LOG.warning("This reference is deprecated, use self.local_config directly")
         return self.local_config.content
 
-    def init_settings(self):
+    def _init_settings(self):
         """
         Initializes yml-based skill config settings, updating from default dict as necessary for added parameters
         """
+        # TODO: This should just use the underlying Mycroft methods DM
+        super()._init_settings()
         if os.path.isfile(os.path.join(self.root_dir, "settingsmeta.yml")):
             skill_meta = NGIConfig("settingsmeta", self.root_dir).content
         elif os.path.isfile(os.path.join(self.root_dir, "settingsmeta.json")):
@@ -164,7 +166,7 @@ class NeonSkill(MycroftSkill):
         # if os.path.isfile(os.path.join(self.root_dir, f"{self.name}.yml")):
         #     LOG.warning(f"Config found in skill directory for {self.name}! Relocating to: {self.file_system.path}")
         #     shutil.move(os.path.join(self.root_dir, f"{self.name}.yml"), self.file_system.path)
-        self.ngi_settings = NGIConfig(self.name, self.file_system.path)
+        self.ngi_settings = NGIConfig(self.name, self.settings_write_path)
 
         # Load any new or updated keys
         try:
@@ -181,7 +183,9 @@ class NeonSkill(MycroftSkill):
 
         # Make sure settings is initialized as a dictionary
         if self.ngi_settings.content:
-            self.settings = self.ngi_settings  # Uses the default self.settings object for skills compat
+            self.settings = self.ngi_settings.content  # Uses the default self.settings object for skills compat
+        else:
+            self.settings = dict()
         LOG.debug(f"loaded settings={self.settings}")
 
     @property
