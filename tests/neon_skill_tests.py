@@ -20,18 +20,18 @@ import datetime
 import os
 import sys
 import unittest
-import shutil
 
 from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
 from mycroft.skills.fallback_skill import FallbackSkill
-from neon_utils.language_utils import LanguageDetector, LanguageTranslator
-
-from neon_utils.cache_utils import LRUCache
-
-from neon_utils.configuration_utils import NGIConfig
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from skills import *
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from neon_utils.language_utils import LanguageDetector, LanguageTranslator
+from neon_utils.cache_utils import LRUCache
+from neon_utils.configuration_utils import NGIConfig
+
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 SKILL_PATH = os.path.join(ROOT_DIR, "skills")
