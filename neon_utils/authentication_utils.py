@@ -124,6 +124,30 @@ def find_neon_google_keys(base_path: str = "~/") -> dict:
     raise FileNotFoundError(f"No google credentials found in default locations or path: {path_to_check}")
 
 
+def find_neon_wolfram_key(base_path: str = "~/") -> str:
+    """
+    Locates Wolfram|Alpha API key
+    Args:
+        base_path: Base directory to check in addition to XDG directories (default ~/)
+    Returns:
+        str Wolfram|Alpha API key
+    """
+    path_to_check = os.path.expanduser(base_path)
+    paths_to_check = (path_to_check,
+                      os.path.join(path_to_check, "wolfram.txt"),
+                      os.path.expanduser("~/.local/share/neon/wolfram.txt"))
+    for path in paths_to_check:
+        if os.path.isfile(path):
+            try:
+                with open(path, "r") as f:
+                    credential = f.read().strip()
+                return credential
+            except Exception as e:
+                LOG.error(f"Invalid google credential found at: {path}")
+                raise e
+    raise FileNotFoundError(f"No Wolfram|Alpha credentials found in default locations or path: {path_to_check}")
+
+
 def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = None):
     """
     Populates configuration with the specified Amazon keys to be referenced by tts/translation modules.
