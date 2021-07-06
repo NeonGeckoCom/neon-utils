@@ -36,7 +36,7 @@ from ovos_utils.configuration import read_mycroft_config, LocalConf
 from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
-from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config
+from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 
 logging.getLogger("filelock").setLevel(logging.WARNING)
 
@@ -61,6 +61,18 @@ class NGIConfig:
             self._content = self._load_yaml_file()
             NGIConfig.configuration_list[self.__repr__()] = self
         self._disk_content_hash = hash(repr(self._content))
+
+    @property
+    def file_path(self):
+        """
+        Returns the path to the yml file associated with this configuration
+        Returns: path to this configuration yml
+        """
+        file_path = join(self.path, self.name + ".yml")
+        if not isfile(file_path):
+            create_file(file_path)
+            LOG.debug(f"New YAML created: {file_path}")
+        return file_path
 
     @property
     def requires_reload(self):
@@ -120,18 +132,6 @@ class NGIConfig:
             return
 
         self._write_yaml_file()
-
-    @property
-    def file_path(self):
-        """
-        Returns the path to the yml file associated with this configuration
-        Returns: path to this configuration yml
-        """
-        file_path = join(self.path, self.name + ".yml")
-        if not isfile(file_path):
-            create_file(file_path)
-            LOG.debug(f"New YAML created: {file_path}")
-        return file_path
 
     def check_for_updates(self) -> dict:
         """
@@ -764,6 +764,23 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     local_config.make_equal_by_keys(default_local_config.content)
     LOG.info(f"Loaded local config from {local_config.file_path}")
     return local_config
+
+
+def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
+    """
+    Returns a dict authentication configuration and handles populating values from key files
+    Args:
+        path: optional path to yml configuration files
+    Returns:
+        NGIConfig object with authentication config
+    """
+    auth_config = NGIConfig("ngi_auth_vars", path)
+    if not auth_config.content:
+        LOG.info("Populating empty auth configuration")
+        auth_config._content = build_new_auth_config(path)
+
+    LOG.info(f"Loaded auth config from {auth_config.file_path}")
+    return auth_config
 
 
 def get_neon_device_type() -> str:
