@@ -23,6 +23,7 @@ import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
+from neon_utils.authentication_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(ROOT_DIR, "configuration")
@@ -35,9 +36,13 @@ TEST_DICT = {"section 1": {"key1": "val1",
 
 class ConfigurationUtilTests(unittest.TestCase):
     def doCleanups(self) -> None:
-        for file in glob(os.path.join(CONFIG_PATH, "*.lock")):
+        for file in glob(os.path.join(CONFIG_PATH, ".*.lock")):
             os.remove(file)
-        for file in glob(os.path.join(CONFIG_PATH, "*.tmp")):
+        for file in glob(os.path.join(CONFIG_PATH, ".*.tmp")):
+            os.remove(file)
+        for file in glob(os.path.join(ROOT_DIR, "credentials", ".*.lock")):
+            os.remove(file)
+        for file in glob(os.path.join(ROOT_DIR, "credentials", ".*.tmp")):
             os.remove(file)
         if os.path.exists(os.path.join(CONFIG_PATH, "old_user_info.yml")):
             os.remove(os.path.join(CONFIG_PATH, "old_user_info.yml"))
@@ -556,11 +561,17 @@ class ConfigurationUtilTests(unittest.TestCase):
         NGIConfig.configuration_list = dict()
 
     def test_unequal_cache_configs(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+        shutil.copy(ngi_local_conf, bak_local_conf)
+
         def_config = get_neon_local_config(f"{ROOT_DIR}/test")
         oth_config = get_neon_local_config(CONFIG_PATH)
         self.assertNotEqual(def_config, oth_config)
         self.assertNotEqual(def_config.content, oth_config.content)
+
         shutil.rmtree(f"{ROOT_DIR}/test")
+        shutil.move(bak_local_conf, ngi_local_conf)
 
     def test_added_module_config(self):
         bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
@@ -574,6 +585,17 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(local_config["stt"]["some_module"], {"key": "value"})
         self.assertIn("dirVars", local_config.content.keys())
         shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_get_neon_auth_config(self):
+        auth_path = os.path.join(ROOT_DIR, "credentials")
+        ngi_auth_vars = get_neon_auth_config(auth_path)
+        self.assertEqual(ngi_auth_vars["amazon"], find_neon_aws_keys(auth_path))
+        self.assertEqual(ngi_auth_vars["google"], find_neon_google_keys(auth_path))
+        self.assertEqual(ngi_auth_vars["github"], {"token": find_neon_git_token(auth_path)})
+        self.assertEqual(ngi_auth_vars["wolfram"], {"app_id": find_neon_wolfram_key(auth_path)})
+        self.assertEqual(ngi_auth_vars["alpha_vantage"], {"api_key": find_neon_alpha_vantage_key(auth_path)})
+        self.assertEqual(ngi_auth_vars["owm"], {"api_key": find_neon_owm_key(auth_path)})
+        os.remove(ngi_auth_vars.file_path)
 
 
 if __name__ == '__main__':

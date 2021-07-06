@@ -202,7 +202,7 @@ def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = Non
     aws_config = {**aws_config, **aws_keys}
     local_conf["tts"]["amazon"] = aws_config
     local_conf.write_changes()
-    # TODO: This should move to auth config when available DM
+    # TODO: This should be depreciated and references moved to neon_auth_config DM
 
 
 def populate_github_token_config(token: str, config_path: Optional[str] = None):
@@ -219,7 +219,7 @@ def populate_github_token_config(token: str, config_path: Optional[str] = None):
     local_conf = NGIConfig("ngi_local_conf", config_path, True)
     local_conf["skills"]["neon_token"] = token
     local_conf.write_changes()
-    # TODO: This should move to auth config when available DM
+    # TODO: This should be depreciated and references moved to neon_auth_config DM
 
 
 def repo_is_neon(repo_url: str) -> bool:
@@ -247,6 +247,11 @@ def repo_is_neon(repo_url: str) -> bool:
 
 
 def build_new_auth_config(key_path: str = "~/") -> dict:
+    """
+    Constructs a dict of authentication key data by locating credential files in the specified path
+    :param key_path: path to locate key files (default locations checked in addition)
+    :return: dict of located authentication keys
+    """
     auth_config = dict()
     try:
         auth_config["github"] = {"token": find_neon_git_token(key_path)}
