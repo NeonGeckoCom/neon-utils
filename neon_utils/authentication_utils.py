@@ -124,6 +124,31 @@ def find_neon_google_keys(base_path: str = "~/") -> dict:
     raise FileNotFoundError(f"No google credentials found in default locations or path: {path_to_check}")
 
 
+def find_generic_keyfile(base_path: str, filename: str) -> str:
+    """
+    Locates a generic text keyfile
+    Args:
+        base_path: Base directory to check in addition to XDG directories (default ~/)
+        filename: File basename to read
+    Returns:
+        str contents of located file
+    """
+    path_to_check = os.path.expanduser(base_path)
+    paths_to_check = (path_to_check,
+                      os.path.join(path_to_check, filename),
+                      os.path.expanduser(f"~/.local/share/neon/{filename}"))
+    for path in paths_to_check:
+        if os.path.isfile(path):
+            try:
+                with open(path, "r") as f:
+                    credential = f.read().strip()
+                return credential
+            except Exception as e:
+                LOG.error(f"Invalid credential found at: {path}")
+                raise e
+    raise FileNotFoundError(f"No credentials found in default locations or path: {path_to_check}")
+
+
 def find_neon_wolfram_key(base_path: str = "~/") -> str:
     """
     Locates Wolfram|Alpha API key
@@ -132,20 +157,29 @@ def find_neon_wolfram_key(base_path: str = "~/") -> str:
     Returns:
         str Wolfram|Alpha API key
     """
-    path_to_check = os.path.expanduser(base_path)
-    paths_to_check = (path_to_check,
-                      os.path.join(path_to_check, "wolfram.txt"),
-                      os.path.expanduser("~/.local/share/neon/wolfram.txt"))
-    for path in paths_to_check:
-        if os.path.isfile(path):
-            try:
-                with open(path, "r") as f:
-                    credential = f.read().strip()
-                return credential
-            except Exception as e:
-                LOG.error(f"Invalid google credential found at: {path}")
-                raise e
-    raise FileNotFoundError(f"No Wolfram|Alpha credentials found in default locations or path: {path_to_check}")
+    return find_generic_keyfile(base_path, "wolfram.txt")
+
+
+def find_neon_alpha_vantage_key(base_path: str = "~/") -> str:
+    """
+    Locates Alpha Vantage API key
+    Args:
+        base_path: Base directory to check in addition to XDG directories (default ~/)
+    Returns:
+        str Alpha Vantage API key
+    """
+    return find_generic_keyfile(base_path, "alpha_vantage.txt")
+
+
+def find_neon_owm_key(base_path: str = "~/") -> str:
+    """
+    Locates Open Weather Map key
+    Args:
+        base_path: Base directory to check in addition to XDG directories (default ~/)
+    Returns:
+        str Open Weather Map API key
+    """
+    return find_generic_keyfile(base_path, "owm.txt")
 
 
 def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = None):
@@ -210,3 +244,33 @@ def repo_is_neon(repo_url: str) -> bool:
             LOG.info(f"Assuming repository uses Neon auth: {repo_url}")
             return True
     return False
+
+
+def build_new_auth_config(key_path: str = "~/") -> dict:
+    auth_config = dict()
+    try:
+        auth_config["github"] = {"token": find_neon_git_token(key_path)}
+    except Exception as e:
+        LOG.error(e)
+    try:
+        auth_config["amazon"] = find_neon_aws_keys(key_path)
+    except Exception as e:
+        LOG.error(e)
+    try:
+        auth_config["wolfram"] = {"app_id": find_neon_wolfram_key(key_path)}
+    except Exception as e:
+        LOG.error(e)
+    try:
+        auth_config["google"] = find_neon_google_keys(key_path)
+    except Exception as e:
+        LOG.error(e)
+    try:
+        auth_config["alpha_vantage"] = {"api_key": find_neon_alpha_vantage_key(key_path)}
+    except Exception as e:
+        LOG.error(e)
+    try:
+        auth_config["owm"] = {"api_key": find_neon_owm_key(key_path)}
+    except Exception as e:
+        LOG.error(e)
+
+    return auth_config
