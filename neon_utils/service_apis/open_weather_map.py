@@ -55,6 +55,7 @@ def get_forecast(lat: Union[str, float], lng: Union[str, float], units: str = "m
 
     data = json.loads(resp["content"])
     if data.get('cod'):
+        data['cod'] = str(data['cod'])  # 400 is str, 401 is int; cast all to str for safe refs
         LOG.error(f"Error return: {data}")
         # TODO: Handle failures
     return data
