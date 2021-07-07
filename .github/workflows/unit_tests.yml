@@ -22,6 +22,16 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
           pip install pytest pytest-timeout pytest-cov
+      - name: Export credentials
+        run: |
+          mkdir -p ~/.local/share/neon
+          echo ${WOLFRAM_ID} > ~/.local/share/neon/wolfram.txt
+          echo ${AV_API_KEY} > ~/.local/share/neon/alpha_vantage.txt
+          echo ${OWM_KEY} > ~/.local/share/neon/owm.txt
+        env:
+          WOLFRAM_ID: ${{secrets.wolfram_id}}
+          AV_API_KEY: ${{secrets.alpha_vantage_key}}
+          OWM_KEY: ${{secrets.open_weather_map_key}}
       - name: Test Service APIs
         run: |
           pytest tests/service_api_tests.py --doctest-modules --junitxml=tests/service-api-test-results.xml
