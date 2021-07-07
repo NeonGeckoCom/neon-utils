@@ -252,6 +252,7 @@ def build_new_auth_config(key_path: str = "~/") -> dict:
     :param key_path: path to locate key files (default locations checked in addition)
     :return: dict of located authentication keys
     """
+    key_path = key_path or "~/"
     auth_config = dict()
     try:
         auth_config["github"] = {"token": find_neon_git_token(key_path)}
