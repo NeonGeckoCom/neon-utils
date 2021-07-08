@@ -162,7 +162,7 @@ class AlphaVantageTests(unittest.TestCase):
                                                             '08. previous close', '09. change', '10. change percent'})
 
     def test_get_stock_symbol_spec_key(self):
-        matches = get_stock_symbol("tencent", api_key="demo")
+        matches = search_stock_by_name("tencent", api_key="demo")
         self.assertIsInstance(matches, list)
         for match in matches:
             self.assertIsInstance(match, dict)
@@ -170,7 +170,7 @@ class AlphaVantageTests(unittest.TestCase):
         self.assertEqual(matches[0]["symbol"], "TCEHY")
 
     def test_get_stock_symbol_conf_key(self):
-        matches = get_stock_symbol("alphabet")
+        matches = search_stock_by_name("alphabet")
         self.assertIsInstance(matches, list)
         for match in matches:
             self.assertIsInstance(match, dict)
@@ -178,12 +178,12 @@ class AlphaVantageTests(unittest.TestCase):
         self.assertEqual(matches[0]["symbol"], "GOOGL")
 
     def test_get_stock_symbol_invalid_key(self):
-        matches = get_stock_symbol("alphabet", api_key="demo")
+        matches = search_stock_by_name("alphabet", api_key="demo")
         self.assertIsInstance(matches, list)
         self.assertEqual(len(matches), 0)
 
     def test_get_stock_symbol_no_results(self):
-        matches = get_stock_symbol("google")
+        matches = search_stock_by_name("google")
         self.assertIsInstance(matches, list)
         self.assertEqual(len(matches), 0)
 
@@ -212,6 +212,8 @@ class AlphaVantageTests(unittest.TestCase):
     def test_get_stock_quote_no_api_key(self):
         pass  # TODO: This tests Neon API Proxy Server
 
+
+# TODO: Add FMP unit tests
 
 class OpenWeatherMapTests(unittest.TestCase):
     from neon_utils.authentication_utils import find_neon_owm_key

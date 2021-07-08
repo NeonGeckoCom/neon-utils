@@ -25,65 +25,52 @@ from neon_utils.logger import LOG
 from requests.adapters import HTTPAdapter
 from . import AUTH_CONFIG
 
-SESSION = requests.CachedSession(backend='memory', cache_name="alpha_vantage")
+SESSION = requests.CachedSession(backend='memory', cache_name="financial_modeling_prep")
 SESSION.mount('http://', HTTPAdapter(max_retries=8))
 SESSION.mount('https://', HTTPAdapter(max_retries=8))
 
 
 def search_stock_by_name(company: str, **kwargs) -> list:
     """
-    Queries Alpha Vantage for stocks matching the specified company
+    Queries FMP for stocks matching the specified company
     :param company: Company name/stock search term
     :param kwargs:
       'api_key' - optional str api_key to use for query (None to force remote lookup)
-      'region' - optional preferred region (default `United States`)
-    :return: list of dict matched stock data
+      'exchange' - optional preferred exchange (default None)
+    :return: list of dict matched stock data (`name`, `symbol`)
     """
-    api_key = kwargs.get("api_key", AUTH_CONFIG.get("alpha_vantage", {}).get("api_key"))
-    region = kwargs.get("region") or "United States"
+    api_key = kwargs.get("api_key", AUTH_CONFIG.get("financial_modeling_prep", {}).get("api_key"))
 
     if api_key:
-        query_params = {"function": "SYMBOL_SEARCH",
-                        "keywords": company,
+        query_params = {"query": company,
+                        "limit": 10,
                         "apikey": api_key}
-        resp = query_alpha_vantage_api(f"https://www.alphavantage.co/query?{urllib.parse.urlencode(query_params)}")
+        if kwargs.get("exchange"):
+            query_params["exchange"] = kwargs.get("exchange")
+        resp = query_fmp_api(f"https://financialmodelingprep.com/api/v3/search?{urllib.parse.urlencode(query_params)}")
     else:
         query_params = {**kwargs, **{"api": "symbol"}}
         resp = {}
         # TODO: Call Neon API and wrap response in adapter class
 
     data = json.loads(resp["content"])
-    if data.get("Information"):
-        LOG.warning(data.get("Information"))
-        # TODO: Handle API Errors DM
-    if not data.get("bestMatches"):
-        LOG.warning(f"No matches found for {company}")
-        return []
-    filtered_data = [stock for stock in data.get("bestMatches") if stock.get("4. region") == region]
-    if not filtered_data:
-        filtered_data = data.get("bestMatches")
-    data = [{"symbol": stock.get("1. symbol"),
-             "name": stock.get("2. name"),
-             "region": stock.get("4. region"),
-             "currency": stock.get("8. currency")} for stock in filtered_data]
     return data
 
 
 def get_stock_quote(symbol: str, **kwargs) -> dict:
     """
-    Queries Alpha Vantage for stock information for the specified company
+    Queries FMP for stock information for the specified company
     :param symbol: Stock ticker symbol
     :param kwargs:
       'api_key' - optional str api_key to use for query (None to force remote lookup)
     :return: dict stock data
     """
-    api_key = kwargs.get("api_key", AUTH_CONFIG.get("alpha_vantage", {}).get("api_key"))
+    api_key = kwargs.get("api_key", AUTH_CONFIG.get("financial_modeling_prep", {}).get("api_key"))
 
     if api_key:
-        query_params = {"function": "GLOBAL_QUOTE",
-                        "symbol": symbol,
-                        "apikey": api_key}
-        resp = query_alpha_vantage_api(f"https://www.alphavantage.co/query?{urllib.parse.urlencode(query_params)}")
+        query_params = {"apikey": api_key}
+        resp = query_fmp_api(f"https://financialmodelingprep.com/api/v3/company/profile/{symbol}?"
+                             f"{urllib.parse.urlencode(query_params)}")
     else:
         query_params = {**kwargs, **{"api": "quote"}}
         resp = {}
@@ -94,24 +81,18 @@ def get_stock_quote(symbol: str, **kwargs) -> dict:
         LOG.warning(data.get("Information"))
         # TODO: Handle API Errors DM
 
-    if not data.get("Global Quote"):
-        LOG.warning(f"No data found for {symbol}")
-        LOG.error(data)
-        return {}
-    return {"symbol": data.get("Global Quote")["01. symbol"],
-            "price": data.get("Global Quote")["05. price"],
-            "close": data.get("Global Quote")["08. previous close"]}
+    return data.get("profile")
 
 
-def query_alpha_vantage_api(url: str) -> dict:
+def query_fmp_api(url: str) -> dict:
     """
-    Query the Alpha Vantage API and return the result
+    Query the FMP API and return the result
     :param url: Alpha Vantage API URL to query
     :return: dict status_code, content, encoding
     """
-    if "global_quote" in url.lower():
+    if "/company/profile" in url.lower():
         expiration = 5*60  # Cache quotes for 5 minutes
-    elif "symbol_search" in url.lower():
+    elif "/search" in url.lower():
         expiration = None
     else:
         LOG.warning(f"Unknown URL request; caching for 15 minutes: {url}")
