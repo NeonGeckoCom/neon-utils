@@ -25,7 +25,7 @@ from enum import Enum
 from typing import Union
 from neon_utils.net_utils import get_ip_address
 from neon_utils.log_utils import LOG
-from . import AUTH_CONFIG
+from . import AUTH_CONFIG, NeonAPI, request_neon_api
 
 SESSION = requests.CachedSession(backend='memory', cache_name="wolfram_alpha", allowable_codes=(200, 501),
                                  expire_after=15*60)
@@ -64,16 +64,15 @@ def get_wolfram_alpha_response(query: str, api: QueryApi, units: str = "metric",
         query_params["appid"] = api_key
         query_params["i"] = query
         resp = query_wolfram_alpha_api(f"{api_to_url(api)}?{urllib.parse.urlencode(query_params)}")
-        if resp["status_code"] != 200:
-            LOG.error(f"Non-success response: {resp}")  # TODO: Handle failures
-            if resp["status_code"] == 403:
-                LOG.error(f"Invalid credential provided.")
     else:
         query_params["query"] = query
         query_params["api"] = repr(api)
-        resp = {}
-        # TODO: Call Neon API and wrap response in adapter class
+        resp = request_neon_api(NeonAPI.WOLFRAM_ALPHA, query_params)
 
+    if resp["status_code"] != 200:
+        LOG.error(f"Non-success response: {resp}")  # TODO: Handle failures
+        if resp["status_code"] == 403:
+            LOG.error(f"Invalid credential provided.")
     if resp.get("encoding"):
         return resp["content"].decode(resp["encoding"])
     else:

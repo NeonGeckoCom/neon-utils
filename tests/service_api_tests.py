@@ -31,6 +31,24 @@ VALID_LAT = "47.4797"
 VALID_LNG = "-122.2079"
 
 
+class ServiceAPITests(unittest.TestCase):
+    def test_request_neon_api_valid(self):
+        resp = request_neon_api(NeonAPI.ALPHA_VANTAGE, {"company": "alphabet"})
+        self.assertIsInstance(resp, dict)
+
+    def test_request_neon_api_invalid_api(self):
+        with self.assertRaises(TypeError):
+            request_neon_api("alpha_vantage", {"company": "alphabet"})
+
+    def test_request_neon_api_invalid_null_params(self):
+        with self.assertRaises(ValueError):
+            request_neon_api(NeonAPI.ALPHA_VANTAGE, {})
+
+    def test_request_neon_api_invalid_type_params(self):
+        with self.assertRaises(TypeError):
+            request_neon_api(NeonAPI.ALPHA_VANTAGE, ["alphabet"])
+
+
 class WolframAlphaTests(unittest.TestCase):
     FULL_QUERY = "https://api.wolframalpha.com/v2/query?input=what+time+is+it&format=image,plaintext" \
                  "&output=XML&appid=DEMO"

@@ -23,7 +23,7 @@ import requests_cache as requests
 
 from neon_utils.logger import LOG
 from requests.adapters import HTTPAdapter
-from . import AUTH_CONFIG
+from . import AUTH_CONFIG, NeonAPI, request_neon_api
 
 SESSION = requests.CachedSession(backend='memory', cache_name="financial_modeling_prep")
 SESSION.mount('http://', HTTPAdapter(max_retries=8))
@@ -50,8 +50,7 @@ def search_stock_by_name(company: str, **kwargs) -> list:
         resp = query_fmp_api(f"https://financialmodelingprep.com/api/v3/search?{urllib.parse.urlencode(query_params)}")
     else:
         query_params = {**kwargs, **{"api": "symbol"}}
-        resp = {}
-        # TODO: Call Neon API and wrap response in adapter class
+        resp = request_neon_api(NeonAPI.FINANCIAL_MODELING_PREP, query_params)
 
     data = json.loads(resp["content"])
     return data
@@ -73,8 +72,7 @@ def get_stock_quote(symbol: str, **kwargs) -> dict:
                              f"{urllib.parse.urlencode(query_params)}")
     else:
         query_params = {**kwargs, **{"api": "quote"}}
-        resp = {}
-        # TODO: Call Neon API and wrap response in adapter class
+        resp = request_neon_api(NeonAPI.FINANCIAL_MODELING_PREP, query_params)
 
     data = json.loads(resp["content"])
     if data.get("Information"):

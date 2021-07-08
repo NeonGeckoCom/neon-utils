@@ -23,7 +23,7 @@ import requests_cache as requests
 
 from neon_utils.logger import LOG
 from requests.adapters import HTTPAdapter
-from . import AUTH_CONFIG
+from . import AUTH_CONFIG, NeonAPI, request_neon_api
 
 SESSION = requests.CachedSession(backend='memory', cache_name="alpha_vantage")
 SESSION.mount('http://', HTTPAdapter(max_retries=8))
@@ -49,8 +49,7 @@ def search_stock_by_name(company: str, **kwargs) -> list:
         resp = query_alpha_vantage_api(f"https://www.alphavantage.co/query?{urllib.parse.urlencode(query_params)}")
     else:
         query_params = {**kwargs, **{"api": "symbol"}}
-        resp = {}
-        # TODO: Call Neon API and wrap response in adapter class
+        resp = request_neon_api(NeonAPI.ALPHA_VANTAGE, query_params)
 
     data = json.loads(resp["content"])
     if data.get("Information"):
@@ -86,8 +85,7 @@ def get_stock_quote(symbol: str, **kwargs) -> dict:
         resp = query_alpha_vantage_api(f"https://www.alphavantage.co/query?{urllib.parse.urlencode(query_params)}")
     else:
         query_params = {**kwargs, **{"api": "quote"}}
-        resp = {}
-        # TODO: Call Neon API and wrap response in adapter class
+        resp = request_neon_api(NeonAPI.ALPHA_VANTAGE, query_params)
 
     data = json.loads(resp["content"])
     if data.get("Information"):

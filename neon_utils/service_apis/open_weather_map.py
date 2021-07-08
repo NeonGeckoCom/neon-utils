@@ -25,7 +25,7 @@ import requests_cache as requests
 
 from neon_utils.logger import LOG
 from requests.adapters import HTTPAdapter
-from . import AUTH_CONFIG
+from . import AUTH_CONFIG, NeonAPI, request_neon_api
 
 SESSION = requests.CachedSession(backend='memory', cache_name="open_weather_map", allowable_codes=(200, 400),
                                  expire_after=3*60)
@@ -41,7 +41,8 @@ def get_forecast(lat: Union[str, float], lng: Union[str, float], units: str = "m
     :param units: Temperature and Speed units "metric", "imperial", or "standard"
     :param kwargs:
       'api_key' - optional str api_key to use for query (None to force remote lookup)
-    :return: dict stock data
+      'language' - optional language param (default english)
+    :return: dict weather data
     """
     api_key = kwargs.get("api_key", AUTH_CONFIG.get("owm", {}).get("api_key"))
 
@@ -50,8 +51,7 @@ def get_forecast(lat: Union[str, float], lng: Union[str, float], units: str = "m
         resp = query_owm_api(f"http://api.openweathermap.org/data/2.5/onecall?{urllib.parse.urlencode(query_params)}")
     else:
         query_params = {"lat": lat, "lon": lng, "units": units}
-        resp = {}
-        # TODO: Call Neon API and wrap response in adapter class
+        resp = request_neon_api(NeonAPI.OPEN_WEATHER_MAP, query_params)
 
     data = json.loads(resp["content"])
     if data.get('cod'):
