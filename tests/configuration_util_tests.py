@@ -599,6 +599,15 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(ngi_auth_vars["owm"], {"api_key": find_neon_owm_key(auth_path)})
         os.remove(ngi_auth_vars.file_path)
 
+    def test_write_mycroft_compatible_config(self):
+        test_path = os.path.join(CONFIG_PATH, "test.conf")
+        config = get_mycroft_compatible_config()
+        write_mycroft_compatible_config(test_path)
+        with open(test_path) as f:
+            from_disk = json.load(f)
+        self.assertEqual(from_disk, config)
+        os.remove(test_path)
+
 
 if __name__ == '__main__':
     unittest.main()

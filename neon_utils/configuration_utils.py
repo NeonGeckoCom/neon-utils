@@ -865,6 +865,19 @@ def get_mycroft_compatible_config(mycroft_only=False):
     return default_config
 
 
+def write_mycroft_compatible_config(file_to_write: str = "~/.mycroft/mycroft.conf") -> str:
+    """
+    Generates a mycroft-compatible configuration and writes it to the specified file
+    :param file_to_write: config file to write out
+    :return: path to written config file
+    """
+    configuration = get_mycroft_compatible_config()
+    file_path = os.path.expanduser(file_to_write)
+    with open(file_path, 'w') as f:
+        json.dump(configuration, f)
+    return file_path
+
+
 def create_config_from_setup_params(path=None) -> NGIConfig:
     """
     Populate a (probably) new local config with parameters gathered during setup
@@ -899,6 +912,6 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
             "https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/dev/.utilities/DEFAULT-SKILLS-DEV"
     else:
         local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
-
+    # TODO: Use XDG here DM
     local_conf.write_changes()
     return local_conf
