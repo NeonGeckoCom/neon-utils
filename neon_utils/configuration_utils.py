@@ -238,7 +238,7 @@ class NGIConfig:
         """
         try:
             self._loaded = os.path.getmtime(self.file_path)
-            with self.lock:
+            with self.lock.acquire(30):
                 with open(self.file_path, 'r') as f:
                     return self.parser.load(f) or dict()
         except FileNotFoundError as x:
@@ -642,6 +642,7 @@ def get_neon_skills_config() -> dict:
     mycroft_config = _safe_mycroft_config()
     neon_skills = deepcopy(core_config.get("skills", {}))
     neon_skills["directory"] = os.path.expanduser(core_config["dirVars"].get("skillsDir"))
+    neon_skills["directory_override"] = neon_skills["directory"]
     neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
     if not isinstance(neon_skills["auto_update_interval"], float):
         try:
@@ -815,11 +816,11 @@ def is_neon_core() -> bool:
         True if core is Neon, else False
     """
     import importlib.util
-    if importlib.util.find_spec("neon-speech"):
+    if importlib.util.find_spec("neon_speech"):
         return True
-    if importlib.util.find_spec("neon-core-client"):
+    if importlib.util.find_spec("neon_core_client"):
         return True
-    if importlib.util.find_spec("neon-core-server"):
+    if importlib.util.find_spec("neon_core_server"):
         return True
     return False
 
@@ -835,7 +836,7 @@ def get_mycroft_compatible_config(mycroft_only=False):
 
     default_config["lang"] = "en-us"
     default_config["language"] = get_neon_lang_config()
-    default_config["keys"] = {}  # TODO: Get keys DM
+    default_config["keys"] = get_neon_auth_config().content
     # default_config["text_parsers"]  TODO
     default_config["audio_parsers"] = speech["audio_parsers"]
     default_config["system_unit"] = user["units"]["measure"]
@@ -857,6 +858,8 @@ def get_mycroft_compatible_config(mycroft_only=False):
     default_config["stt"] = speech["stt"]
     default_config["tts"] = local["tts"]
     default_config["Audio"] = get_neon_audio_config()
+    default_config["disable_xdg"] = False
+    # TODO: Location config
     # default_config["Display"]
 
     return default_config
