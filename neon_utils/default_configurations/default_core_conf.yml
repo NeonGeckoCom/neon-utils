@@ -141,8 +141,8 @@ tts:
   }
 stt:
   module: google_cloud_streaming
-  translation_module: google
-  detection_module: google
+  translation_module: googletranslate_plug
+  detection_module: googletranslate_detection_plug
 
 logs:
   blacklist: ["enclosure.mouth.viseme", "enclosure.mouth.display"]

@@ -895,6 +895,9 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     local_conf["skills"]["neon_token"] = os.environ.get("GITHUB_TOKEN")
     local_conf["tts"]["module"] = os.environ.get("ttsModule", local_conf["tts"]["module"])
     local_conf["stt"]["module"] = os.environ.get("sttModule", local_conf["stt"]["module"])
+    local_conf["stt"]["translation_module"] = os.environ.get("translateModule", local_conf["stt"]["translation_module"])
+    local_conf["stt"]["detection_module"] = os.environ.get("detectionModule", local_conf["stt"]["detection_module"])
+
     if os.environ.get("installServer", "false") == "true":
         local_conf["devVars"]["devType"] = "server"
     else:
