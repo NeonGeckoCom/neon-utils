@@ -20,6 +20,7 @@
 import sys
 import os
 import unittest
+from time import sleep
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
@@ -474,11 +475,9 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         shutil.copy(ngi_local_conf, bak_local_conf)
 
-        i = 0
         config_objects = []
-        while i < 100:
+        for i in range(100):
             config_objects.append(NGIConfig("ngi_local_conf", CONFIG_PATH, True))
-            i += 1
 
         first_config = config_objects[0]
         last_config = config_objects[-1]
@@ -492,6 +491,22 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(first_config.content, last_config.content)
 
         shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_concurrent_config_read(self):
+        from threading import Thread
+        valid_config = NGIConfig("dep_user_info", CONFIG_PATH)
+        test_results = {}
+
+        def _open_config(idx):
+            from neon_utils.configuration_utils import NGIConfig as Config
+            config = Config("dep_user_info", CONFIG_PATH, True)
+            test_results[idx] = config.content == valid_config.content
+
+        for i in range(10):
+            Thread(target=_open_config, args=(i,), daemon=True).start()
+        while not len(test_results.keys()) == 10:
+            sleep(0.5)
+        self.assertTrue(all(test_results.values()))
 
     def test_new_ngi_config(self):
         config = NGIConfig("temp_conf", CONFIG_PATH)
