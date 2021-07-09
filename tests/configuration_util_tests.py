@@ -423,7 +423,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(mycroft_config["gui_websocket"]["host"], str)
         self.assertIsInstance(mycroft_config["gui_websocket"]["base_port"], int)
         self.assertIsInstance(mycroft_config["keys"], dict)
-        self.assertEqual(mycroft_config["skills"]["directory"], mycroft_config["skills"]["directory_override"])
+        # self.assertEqual(mycroft_config["skills"]["directory"], mycroft_config["skills"]["directory_override"])
         # self.assertIsInstance(mycroft_config["language"], dict)
         # self.assertIsInstance(mycroft_config["listener"], dict)
         # self.assertIsInstance(mycroft_config["stt"], dict)
