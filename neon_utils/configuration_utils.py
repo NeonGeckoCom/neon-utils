@@ -874,7 +874,7 @@ def write_mycroft_compatible_config(file_to_write: str = "~/.mycroft/mycroft.con
     configuration = get_mycroft_compatible_config()
     file_path = os.path.expanduser(file_to_write)
     with open(file_path, 'w') as f:
-        json.dump(configuration, f)
+        json.dump(configuration, f, indent=4)
     return file_path
 
 
