@@ -26,6 +26,11 @@ from neon_utils.message_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 
+VALID_STRING = 'This is only a test!'
+VALID_BYTES = b'This is only a test!'
+ENCODED_UTF8 = "VGhpcyBpcyBvbmx5IGEgdGVzdCE="
+ENCODED_UTF16 = "䝖灨祣灂祣療浢㕸䝉杅䝤穖䍤㵅"
+
 
 class MessageUtilTests(unittest.TestCase):
     def test_request_from_mobile(self):
@@ -48,6 +53,36 @@ class MessageUtilTests(unittest.TestCase):
 
         with self.assertRaises(AttributeError):
             get_message_user("Nobody")
+
+    def test_encode_bytes_valid(self):
+        encoded_8 = encode_bytes_to_b64_string(VALID_BYTES, 'utf-8')
+        self.assertIsInstance(encoded_8, str)
+        self.assertEqual(encoded_8, ENCODED_UTF8)
+
+    def test_encode_bytes_invalid_data_type(self):
+        with self.assertRaises(ValueError):
+            encode_bytes_to_b64_string(ENCODED_UTF8)
+
+    def test_encode_bytes_invalid_charset(self):
+        with self.assertRaises(EncodingError):
+            encode_bytes_to_b64_string(VALID_BYTES, "INVALID_ENCODING")
+
+    def test_decode_bytes_valid(self):
+        decoded_8 = decode_b64_string_to_bytes(ENCODED_UTF8, 'utf-8')
+        self.assertIsInstance(decoded_8, bytes)
+        self.assertEqual(decoded_8, VALID_BYTES)
+
+    def test_decode_bytes_invalid_data_type(self):
+        with self.assertRaises(ValueError):
+            decode_b64_string_to_bytes(VALID_BYTES)
+
+    def test_decode_bytes_incorrect_encoding(self):
+        with self.assertRaises(EncodingError):
+            decode_b64_string_to_bytes(ENCODED_UTF16, "utf-8")
+
+    def test_decode_bytes_invalid_encoding(self):
+        with self.assertRaises(EncodingError):
+            decode_b64_string_to_bytes(ENCODED_UTF8, "INVALID_ENCODING")
 
 
 if __name__ == '__main__':
