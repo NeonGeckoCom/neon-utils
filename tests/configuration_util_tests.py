@@ -20,6 +20,7 @@
 import sys
 import os
 import unittest
+from time import sleep
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
@@ -422,6 +423,8 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(mycroft_config["gui_websocket"], dict)
         self.assertIsInstance(mycroft_config["gui_websocket"]["host"], str)
         self.assertIsInstance(mycroft_config["gui_websocket"]["base_port"], int)
+        self.assertIsInstance(mycroft_config["keys"], dict)
+        # self.assertEqual(mycroft_config["skills"]["directory"], mycroft_config["skills"]["directory_override"])
         # self.assertIsInstance(mycroft_config["language"], dict)
         # self.assertIsInstance(mycroft_config["listener"], dict)
         # self.assertIsInstance(mycroft_config["stt"], dict)
@@ -472,11 +475,9 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         shutil.copy(ngi_local_conf, bak_local_conf)
 
-        i = 0
         config_objects = []
-        while i < 100:
+        for i in range(100):
             config_objects.append(NGIConfig("ngi_local_conf", CONFIG_PATH, True))
-            i += 1
 
         first_config = config_objects[0]
         last_config = config_objects[-1]
@@ -490,6 +491,22 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(first_config.content, last_config.content)
 
         shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_concurrent_config_read(self):
+        from threading import Thread
+        valid_config = NGIConfig("dep_user_info", CONFIG_PATH)
+        test_results = {}
+
+        def _open_config(idx):
+            from neon_utils.configuration_utils import NGIConfig as Config
+            config = Config("dep_user_info", CONFIG_PATH, True)
+            test_results[idx] = config.content == valid_config.content
+
+        for i in range(10):
+            Thread(target=_open_config, args=(i,), daemon=True).start()
+        while not len(test_results.keys()) == 10:
+            sleep(0.5)
+        self.assertTrue(all(test_results.values()))
 
     def test_new_ngi_config(self):
         config = NGIConfig("temp_conf", CONFIG_PATH)
@@ -596,6 +613,15 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(ngi_auth_vars["alpha_vantage"], {"api_key": find_neon_alpha_vantage_key(auth_path)})
         self.assertEqual(ngi_auth_vars["owm"], {"api_key": find_neon_owm_key(auth_path)})
         os.remove(ngi_auth_vars.file_path)
+
+    def test_write_mycroft_compatible_config(self):
+        test_path = os.path.join(CONFIG_PATH, "test.conf")
+        config = get_mycroft_compatible_config()
+        write_mycroft_compatible_config(test_path)
+        with open(test_path) as f:
+            from_disk = json.load(f)
+        self.assertEqual(from_disk, config)
+        os.remove(test_path)
 
 
 if __name__ == '__main__':
