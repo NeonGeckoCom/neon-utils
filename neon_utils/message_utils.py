@@ -16,9 +16,15 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
-from typing import Optional
 
+import base64
+
+from typing import Optional
 from mycroft_bus_client import Message
+
+
+class EncodingError(ValueError):
+    """Exception to indicate an invalid Encoding"""
 
 
 def request_from_mobile(message: Message) -> bool:
@@ -47,3 +53,46 @@ def get_message_user(message: Message) -> Optional[str]:
     if not hasattr(message, "context"):
         raise AttributeError(type(message))
     return message.context.get("username")
+
+
+def encode_bytes_to_b64_string(data: bytes, charset: str = "utf-8") -> str:
+    """
+    Encode a bytes object into a string that can be passed on the messagebus
+    :param data: bytes data to be encoded
+    :param charset: character set to decode b64 bytes (https://docs.python.org/3/library/codecs.html#standard-encodings)
+    :return: base64 encoded string
+    """
+    if not data or not isinstance(data, bytes):
+        raise ValueError(f"Invalid data provided to be encoded. type={type(data)}")
+
+    encoded = base64.b64encode(data)
+
+    try:
+        bytestr = encoded.decode(charset)
+    except LookupError:
+        raise EncodingError(f"Invalid charset provided: {charset}")
+
+    return bytestr
+
+
+def decode_b64_string_to_bytes(data: str, charset: str = "utf-8") -> bytes:
+    """
+    Decodes a base64-encoded string to bytes
+    :param data: string encoded data to decode
+    :param charset: character set of b64 string (https://docs.python.org/3/library/codecs.html#standard-encodings)
+    :return: decoded bytes object
+    """
+    if not data or not isinstance(data, str):
+        raise ValueError(f"Invalid data provided to be encoded. type={type(data)}")
+
+    try:
+        byte_data = data.encode(charset)
+    except LookupError:
+        raise EncodingError(f"Invalid charset provided: {charset}")
+
+    encoded = base64.b64decode(byte_data)
+
+    if not encoded:
+        raise EncodingError(f"Invalid charset provided for data. charset={charset}")
+
+    return encoded
