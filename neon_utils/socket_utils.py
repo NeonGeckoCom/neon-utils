@@ -59,7 +59,7 @@ def b64_to_dict(message: bytes) -> dict:
 
 def dict_to_b64(message: dict) -> bytes:
     """
-        Encodes python dictionary into base64 bytes
+        Encodes python dictionary into base64 message
         @param message: python dictionary to encode
 
         @return encoded bytes string
