@@ -47,21 +47,23 @@ def get_packet_data(socket, sequentially=False, batch_size=2048) -> bytes:
     return data
 
 
-def b64_to_dict(data: bytes) -> dict:
+def b64_to_dict(data: bytes, charset: str = "utf-8") -> dict:
     """
         Decodes base64-encoded message to python dictionary
         @param data: string bytes to decode
+        @param charset: character set encoding to use (https://docs.python.org/3/library/codecs.html#standard-encodings)
 
         @return decoded dictionary
     """
-    return eval(json.loads(base64.b64decode(data).decode()))
+    return eval(json.loads(base64.b64decode(data).decode(charset)))
 
 
-def dict_to_b64(data: dict) -> bytes:
+def dict_to_b64(data: dict, charset: str = "utf-8") -> bytes:
     """
         Encodes python dictionary into base64 message
         @param data: python dictionary to encode
+        @param charset: character set encoding to use (https://docs.python.org/3/library/codecs.html#standard-encodings)
 
-        @return encoded bytes string
+        @return base64 encoded string
     """
-    return base64.b64encode(json.dumps(str(data)).encode())
+    return base64.b64encode(json.dumps(str(data)).encode(charset))
