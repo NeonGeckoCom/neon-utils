@@ -28,16 +28,19 @@ TEST_DICT = {b"section 1": {"key1": "val1",
              "section 2": {"key_1": b"val1",
                            "key_2": f"val2"}}
 
+TEST_DICT_B64 = b'IntiJ3NlY3Rpb24gMSc6IHsna2V5MSc6ICd2YWwxJywgJ2tleTInOiAndmFsMid9LCAnc2VjdGlvbiAyJzogeydrZXlfMSc6IGIndmFsMScsICdrZXlfMic6ICd2YWwyJ319Ig=='
+
 
 class SocketUtilsTest(unittest.TestCase):
-    b64_str = None
 
     def test_01_dict_to_b64(self):
-        self.__class__.b64_str = dict_to_b64(TEST_DICT)
-        self.assertIsInstance(self.__class__.b64_str, bytes)
-        self.assertTrue(len(self.__class__.b64_str) > 0)
+        b64_str = dict_to_b64(TEST_DICT)
+        self.assertIsInstance(b64_str, bytes)
+        self.assertTrue(len(b64_str) > 0)
+        self.assertEqual(b64_str, TEST_DICT_B64)
 
     def test_02_b64_to_dict(self):
-        result_dict = b64_to_dict(self.b64_str)
+        result_dict = b64_to_dict(TEST_DICT_B64)
         self.assertIsInstance(result_dict, dict)
         self.assertTrue(len(list(result_dict)) > 0)
+        self.assertEqual(result_dict, TEST_DICT)
