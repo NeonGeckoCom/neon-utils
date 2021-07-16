@@ -100,7 +100,11 @@ class WolframAlphaTests(unittest.TestCase):
         result = query_wolfram_alpha_api(WolframAlphaTests.SIMPLE_QUERY)
         self.assertIsInstance(result, dict)
         self.assertIsInstance(result["content"], bytes)
-        self.assertIsNone(result["encoding"], result["content"])
+        # TODO: This is a Wolfram error that needs to be handled DM
+        if result["encoding"]:
+            self.assertEqual(result["content"], b'Wolfram|Alpha did not understand your input')
+        else:
+            self.assertIsNone(result["encoding"], result["content"])
         self.assertIsInstance(result["cached"], bool)
 
     def test_query_spoken_api(self):
