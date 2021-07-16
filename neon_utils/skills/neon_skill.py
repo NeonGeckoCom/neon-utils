@@ -64,7 +64,7 @@ class NeonSkill(MycroftSkill):
         self.user_config = get_neon_user_config()
         self.local_config = get_neon_local_config()
 
-        self.ngi_settings: Optional[NGIConfig] = None
+        self._ngi_settings: Optional[NGIConfig] = None
 
         super(NeonSkill, self).__init__(name, bus, use_settings)
         self.cache_loc = os.path.expanduser(self.local_config.get('dirVars', {}).get('cacheDir') or
@@ -128,6 +128,11 @@ class NeonSkill(MycroftSkill):
         LOG.warning("This reference is deprecated, use self.local_config directly")
         return self.local_config.content
 
+    @property
+    def ngi_settings(self):
+        LOG.warning("This reference is depreciated, use self.preference_skill for per-user skill settings")
+        return self._ngi_settings
+
     def _init_settings(self):
         """
         Initializes yml-based skill config settings, updating from default dict as necessary for added parameters
@@ -163,30 +168,20 @@ class NeonSkill(MycroftSkill):
                         default[pref["name"]] = value
 
         # Load or init configuration
-        # if os.path.isfile(os.path.join(self.root_dir, f"{self.name}.yml")):
-        #     LOG.warning(f"Config found in skill directory for {self.name}! Relocating to: {self.file_system.path}")
-        #     shutil.move(os.path.join(self.root_dir, f"{self.name}.yml"), self.file_system.path)
-        self.ngi_settings = NGIConfig(self.name, self.settings_write_path)
+        self._ngi_settings = NGIConfig(self.name, self.settings_write_path)
 
         # Load any new or updated keys
         try:
-            LOG.debug(self.ngi_settings.content)
+            LOG.debug(self._ngi_settings.content)
             LOG.debug(default)
-            if self.ngi_settings.content and len(self.ngi_settings.content.keys()) > 0 and len(default.keys()) > 0:
-                self.ngi_settings.make_equal_by_keys(default, recursive=False)
+            if self._ngi_settings.content and len(self._ngi_settings.content.keys()) > 0 and len(default.keys()) > 0:
+                self._ngi_settings.make_equal_by_keys(default, recursive=False)
             elif len(default.keys()) > 0:
                 LOG.info("No settings to load, use default")
-                self.ngi_settings.populate(default)
+                self._ngi_settings.populate(default)
         except Exception as e:
             LOG.error(e)
-            self.ngi_settings.populate(default)
-
-        # Make sure settings is initialized as a dictionary
-        if self.ngi_settings.content:
-            self.settings = self.ngi_settings.content  # Uses the default self.settings object for skills compat
-        else:
-            self.settings = dict()
-        LOG.debug(f"loaded settings={self.settings}")
+            self._ngi_settings.populate(default)
 
     @property
     def location_timezone(self) -> str:
@@ -428,9 +423,9 @@ class NeonSkill(MycroftSkill):
         else:
             for key, val in new_preferences.items():
                 self.settings[key] = val
-                self.ngi_settings[key] = val
+                self._ngi_settings[key] = val
             save_settings(self.settings_write_path, self.settings)
-            self.ngi_settings.write_changes()
+            self._ngi_settings.write_changes()
 
     def build_message(self, kind, utt, message, speaker=None):
         """
