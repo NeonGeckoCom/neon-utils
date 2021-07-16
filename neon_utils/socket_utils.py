@@ -29,7 +29,7 @@ def get_packet_data(socket, sequentially=False, batch_size=2048) -> bytes:
     """
         Gets all packet data by reading TCP socket stream sequentially
         :@param socket: TCP socket
-        :@param sequentially: TCP socket
+        :@param sequentially: marker indicating whether received packet data should be read once or sequentially
         :@param batch_size: size of packet added through one sequence
 
         :@return bytes string representing the received data
