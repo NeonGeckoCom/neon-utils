@@ -81,7 +81,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-timeout pytest-cov HolmesV[all]
+          pip install pytest pytest-timeout pytest-cov HolmesV[skills_minimal]
 
       - name: Test Skill Patcher
         run: |
