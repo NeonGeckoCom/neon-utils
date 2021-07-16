@@ -842,7 +842,7 @@ def get_mycroft_compatible_config(mycroft_only=False):
 
     default_config["lang"] = "en-us"
     default_config["language"] = get_neon_lang_config()
-    default_config["keys"] = get_neon_auth_config().content or dict()
+    default_config["keys"] = get_neon_auth_config().content
     # default_config["text_parsers"]  TODO
     default_config["audio_parsers"] = speech["audio_parsers"]
     default_config["system_unit"] = user["units"]["measure"]
