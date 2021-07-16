@@ -184,13 +184,3 @@ class NeonSkill:
         #         self.gui.register_settings()
         #     except Exception as e:
         #         LOG.error(e)
-
-
-CON_DICT = {"cattalk.com,12345,Cat Talk Convo": ["cat", "talk", "convo"],
-            "dogreport.com,54321,Dog Report Convo": ["dog", "report", "convo"]}
-
-DOM_DICT = {"cattalk.com": ["cat", "cats", "cattalk", "cat talk"],
-            "dogreport.com": ["dog", "dogs", "dogreport", "dog report"]}
-
-MSG_DICT = {"cattalk.com,12345,0,username,sid,how are you doing": ["how", "are", "you", "doing"],
-            "dogreport.com,54321,0,username,sid,I love my dog": ["i", "love", "my", "dog"]}
