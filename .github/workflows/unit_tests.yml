@@ -191,3 +191,12 @@ jobs:
         with:
           name: cache-util-test-results
           path: tests/cache-util-test-results.xml
+
+      - name: Test Socket Utils
+        run: |
+          pytest tests/socket_utils_tests.py --doctest-modules --junitxml=tests/socket-utils-test-results.xml
+      - name: Upload socket utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: socket-utils-test-results
+          path: tests/socket-utils-test-results.xml
