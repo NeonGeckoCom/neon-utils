@@ -243,8 +243,10 @@ class NGIConfig:
             with self.lock:
                 with open(self.file_path, 'r') as f:
                     return self.parser.load(f) or dict()
-        except FileNotFoundError as x:
-            LOG.error(f"Configuration file not found error: {x}")
+        except FileNotFoundError:
+            LOG.error(f"Configuration file not found! ({self.file_path})")
+        except PermissionError:
+            LOG.error(f"Permission Denied! ({self.file_path})")
         except Exception as c:
             LOG.error(f"{self.file_path} Configuration file error: {c}")
         return dict()
@@ -440,6 +442,8 @@ def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping
     """
     if not isinstance(dct_to_change, MutableMapping) or not isinstance(keys_dct, MutableMapping):
         raise AttributeError("merge_recursive_dicts expects two dict objects as args")
+    if not keys_dct:
+        raise ValueError("Empty keys_dct provided, not modifying anything.")
     for key in list(dct_to_change.keys()):
         if isinstance(keys_dct.get(key), dict) and isinstance(dct_to_change[key], MutableMapping):
             if max_depth > cur_depth and key not in ("tts", "stt"):

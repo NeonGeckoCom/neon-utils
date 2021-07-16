@@ -205,6 +205,12 @@ class ConfigurationUtilTests(unittest.TestCase):
                                                  "key_3": "val3"}
                                    })
 
+    def test_dict_make_equal_keys_no_keys(self):
+        to_update = deepcopy(TEST_DICT)
+        new_keys = dict()
+        with self.assertRaises(ValueError):
+            dict_make_equal_keys(to_update, new_keys)
+
     def test_dict_update_keys(self):
         to_update = deepcopy(TEST_DICT)
         new_keys = {"section 2": {"key_2": "new2",
@@ -622,6 +628,10 @@ class ConfigurationUtilTests(unittest.TestCase):
             from_disk = json.load(f)
         self.assertEqual(from_disk, config)
         os.remove(test_path)
+
+    def test_config_no_permissions(self):
+        with self.assertRaises(PermissionError):
+            NGIConfig("test_config", "/root/")
 
 
 if __name__ == '__main__':
