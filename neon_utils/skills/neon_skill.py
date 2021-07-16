@@ -76,11 +76,11 @@ class NeonSkill(MycroftSkill):
         self.check_for_signal = check_for_signal
 
         self.sys_tz = gettz()
-        self.gui_enabled = self.configuration_available.get("prefFlags", {}).get("guiEvents", False)
+        self.gui_enabled = self.local_config.get("prefFlags", {}).get("guiEvents", False)
 
         # if use_settings:
-        #     # self.settings = {}
-        #     # self._initial_settings = None
+        #     self.settings = {}
+        #     self._initial_settings = None
         #     self.init_settings()
         # else:
         #     LOG.error(f"{name} Skill requested no settings!")
@@ -92,7 +92,7 @@ class NeonSkill(MycroftSkill):
         # A server is a device that hosts the core and skills to serve clients,
         # but that a user will not interact with directly.
         # A server will likely serve multiple users and devices concurrently.
-        if self.configuration_available.get("devVars", {}).get("devType", "generic") == "server":
+        if self.local_config.get("devVars", {}).get("devType", "generic") == "server":
             self.server = True
             self.default_intent_timeout = 90
         else:
@@ -873,8 +873,8 @@ class NeonSkill(MycroftSkill):
         :param prefix: prefix to match
         """
         LOG.warning(f"Signal use is being depreciated. Transition to internal variables.")
-        os.makedirs(f"{self.configuration_available['dirVars']['ipcDir']}/signal", exist_ok=True)
-        for signal in os.listdir(self.configuration_available['dirVars']['ipcDir'] + '/signal'):
+        os.makedirs(f"{self.local_config['dirVars']['ipcDir']}/signal", exist_ok=True)
+        for signal in os.listdir(self.local_config['dirVars']['ipcDir'] + '/signal'):
             if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
                 # LOG.info('Removing ' + str(signal))
                 # os.remove(self.configuration_available['dirVars']['ipcDir'] + '/signal/' + signal)
