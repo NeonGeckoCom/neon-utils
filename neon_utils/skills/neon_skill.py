@@ -36,7 +36,8 @@ from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
 from neon_utils import create_signal, check_for_signal, wait_while_speaking
-from neon_utils.configuration_utils import NGIConfig, get_neon_lang_config, get_neon_user_config, get_neon_local_config
+from neon_utils.configuration_utils import NGIConfig, get_neon_lang_config, get_neon_user_config, get_neon_local_config, \
+    is_neon_core
 from neon_utils.location_utils import to_system_time
 from neon_utils.language_utils import DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
@@ -565,11 +566,11 @@ class NeonSkill(MycroftSkill):
         except FileNotFoundError:
             LOG.warning(f"`{voc_filename}` not found, checking in neon_core")
             from mycroft.skills.skill_data import read_vocab_file
+            from neon_utils.packaging_utils import get_core_root
             from itertools import chain
             import re
         lang = lang or self.lang
-        voc = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "neon_core",
-                           "res", "text", lang, f"{voc_filename}.voc")
+        voc = os.path.join(get_core_root(), "neon_core", "res", "text", lang, f"{voc_filename}.voc")
         if not os.path.exists(voc):
             raise FileNotFoundError(voc)
         vocab = read_vocab_file(voc)
@@ -592,6 +593,8 @@ class NeonSkill(MycroftSkill):
         Checks if the utterance is intended for Neon. Server utilizes current conversation, otherwise wake-word status
         and message "Neon" parameter used
         """
+        if not is_neon_core():
+            return True
         if message.context.get("neon_should_respond", False):
             return True
         elif message.data.get("Neon") or message.data.get("neon"):
