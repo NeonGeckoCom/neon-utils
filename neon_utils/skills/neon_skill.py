@@ -564,7 +564,7 @@ class NeonSkill(MycroftSkill):
         try:
             return super().voc_match(utt, voc_filename, lang, exact)
         except FileNotFoundError:
-            LOG.warning(f"`{voc_filename}` not found, checking in neon_core")
+            LOG.info(f"`{voc_filename}` not found, checking in neon_core")
             from mycroft.skills.skill_data import read_vocab_file
             from neon_utils.packaging_utils import get_core_root
             from itertools import chain
