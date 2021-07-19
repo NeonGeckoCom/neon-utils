@@ -18,24 +18,4 @@ jobs:
       - uses: ncipollo/release-action@v1
         with:
           token: ${{secrets.GITHUB_TOKEN}}
-          tag: ${VERSION}
-  build_and_publish:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.8
-      - name: Install Build Tools
-        run: |
-          python -m pip install build wheel
-
-      - name: Build Distribution Packages
-        run: |
-          python setup.py bdist_wheel
-      - name: Publish to Test PyPI
-        uses: pypa/gh-action-pypi-publish@master
-        with:
-          password: ${{secrets.PYPI_TEST}}
-          repository_url: https://test.pypi.org/legacy/
+          tag: ${{VERSION}}
