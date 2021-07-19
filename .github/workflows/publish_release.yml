@@ -1,14 +1,24 @@
-# This workflow will generate a distribution and upload it to PyPI
+# This workflow will generate a release distribution and upload it to PyPI
 
-name: Build and Publish (Dev)
+name: Create and Publish Release
 on:
   push:
     branches:
-      - dev
-    paths-ignore:
-      - 'version.py'
+      - master
+  workflow_dispatch:
 
 jobs:
+  tag_release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Version
+        run: |
+          export VERSION=$(python setup.py --version)
+      - uses: ncipollo/release-action@v1
+        with:
+          token: "${{secrets.GITHUB_TOKEN}}
+          tag: ${VERSION}
   build_and_publish:
     runs-on: ubuntu-latest
     steps:
@@ -20,14 +30,7 @@ jobs:
       - name: Install Build Tools
         run: |
           python -m pip install build wheel
-      - name: Increment Version
-        run: |
-          VER=$(python setup.py --version)
-          python version_bump.py
-      - name: Push Version Change
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: Increment Version
+
       - name: Build Distribution Packages
         run: |
           python setup.py bdist_wheel
