@@ -1,6 +1,6 @@
 # This workflow will generate a distribution and upload it to PyPI
 
-name: Build and Publish (Dev)
+name: Publish Alpha Build
 on:
   push:
     branches:

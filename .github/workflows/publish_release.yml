@@ -1,11 +1,10 @@
 # This workflow will generate a release distribution and upload it to PyPI
 
-name: Create and Publish Release
+name: Publish Build and GitHub Release
 on:
   push:
     branches:
       - master
-  workflow_dispatch:
 
 jobs:
   tag_release:
