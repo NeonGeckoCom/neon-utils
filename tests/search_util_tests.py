@@ -23,7 +23,16 @@ import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.search_utils import *
-from test_objects import CON_DICT, DOM_DICT, MSG_DICT
+
+
+CON_DICT = {"cattalk.com,12345,Cat Talk Convo": ["cat", "talk", "convo"],
+            "dogreport.com,54321,Dog Report Convo": ["dog", "report", "convo"]}
+
+DOM_DICT = {"cattalk.com": ["cat", "cats", "cattalk", "cat talk"],
+            "dogreport.com": ["dog", "dogs", "dogreport", "dog report"]}
+
+MSG_DICT = {"cattalk.com,12345,0,username,sid,how are you doing": ["how", "are", "you", "doing"],
+            "dogreport.com,54321,0,username,sid,I love my dog": ["i", "love", "my", "dog"]}
 
 
 class SearchUtilTests(unittest.TestCase):
