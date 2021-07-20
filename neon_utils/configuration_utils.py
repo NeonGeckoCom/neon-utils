@@ -921,6 +921,10 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
             "https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/dev/.utilities/DEFAULT-SKILLS-DEV"
     else:
         local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
+
+    if os.environ.get("skillRepo"):
+        local_conf["skills"]["default_skills"] = os.environ.get("skillRepo")
+
     # TODO: Use XDG here DM
     local_conf.write_changes()
     return local_conf
