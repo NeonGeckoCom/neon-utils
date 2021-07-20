@@ -17,12 +17,10 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-import setuptools
+import fileinput
+from os.path import join, dirname
 
-with open("README.md", "r") as f:
-    long_description = f.read()
-
-with open("./version.py", "r", encoding="utf-8") as v:
+with open(join(dirname(__file__), "version.py"), "r", encoding="utf-8") as v:
     for line in v.readlines():
         if line.startswith("__version__"):
             if '"' in line:
@@ -30,30 +28,18 @@ with open("./version.py", "r", encoding="utf-8") as v:
             else:
                 version = line.split("'")[1]
 
-with open("./requirements.txt", "r", encoding="utf-8") as r:
-    requirements = r.readlines()
+if "a" not in version:
+    parts = version.split('.')
+    parts[-1] = str(int(parts[-1]) + 1)
+    version = '.'.join(parts)
+    version = f"{version}a0"
+else:
+    post = version.split("a")[1]
+    new_post = int(post) + 1
+    version = version.replace(f"a{post}", f"a{new_post}")
 
-setuptools.setup(
-    name="neon-utils",
-    version=version,
-    author="NeonDaniel",
-    author_email="daniel@neon.ai",
-    description="Utilities for NeonAI",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    url="https://github.com/neongeckocom/neon-skill-utils",
-    packages=setuptools.find_packages(),
-    package_data={'': ['*.yml']},
-    include_package_data=True,
-    classifiers=[
-        "Programming Language :: Python :: 3",
-        "Operating System :: OS Independent"
-    ],
-    python_requires='>=3.6',
-    install_requires=requirements,
-    entry_points={
-        'console_scripts': [
-            "neon-config-import=neon_utils.configuration_utils:create_config_from_setup_params"
-        ]
-    }
-)
+for line in fileinput.input(join(dirname(__file__), "version.py"), inplace=True):
+    if line.startswith("__version__"):
+        print(f"__version__ = \"{version}\"")
+    else:
+        print(line.rstrip('\n'))
