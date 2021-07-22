@@ -7,7 +7,6 @@ pendulum~=2.1.2
 geopy~=2.1.0
 timezonefinder~=5.2.0
 netifaces~=0.10.9
-filelock~=3.0.12
 nltk~=3.5
 ruamel.yaml~=0.16.12
 pydub~=0.25.1
@@ -17,3 +16,5 @@ translate
 boto3
 ovos_utils>=0.0.6
 neon_mq_connector @ git+https://github.com/neongeckocom/neon_mq_connector
+
+combo-lock~=0.1

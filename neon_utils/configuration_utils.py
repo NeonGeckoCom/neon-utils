@@ -29,7 +29,7 @@ from copy import deepcopy
 from os.path import *
 from collections.abc import MutableMapping
 from contextlib import suppress
-from filelock import FileLock
+from combo_lock import NamedLock
 from glob import glob
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.configuration import read_mycroft_config, LocalConf
@@ -37,6 +37,7 @@ from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
+from neon_utils.parse_utils import clean_filename
 
 logging.getLogger("filelock").setLevel(logging.WARNING)
 
@@ -48,8 +49,9 @@ class NGIConfig:
         self.name = name
         self.path = path or get_config_dir()
         self.parser = YAML()
-        lock_filename = join(self.path, f".{self.name}.lock")
-        self.lock = FileLock(lock_filename, timeout=10)
+        # lock_filename = join(self.path, f".{self.name}.lock")
+        self.lock = NamedLock(clean_filename(repr(self)))
+        # self.lock = FileLock(lock_filename, timeout=10)
         self._pending_write = False
         self._content = dict()
         self._loaded = os.path.getmtime(self.file_path)
@@ -238,11 +240,13 @@ class NGIConfig:
         """
         try:
             self._loaded = os.path.getmtime(self.file_path)
-            with self.lock.acquire(30):
+            with self.lock:
                 with open(self.file_path, 'r') as f:
                     return self.parser.load(f) or dict()
-        except FileNotFoundError as x:
-            LOG.error(f"Configuration file not found error: {x}")
+        except FileNotFoundError:
+            LOG.error(f"Configuration file not found! ({self.file_path})")
+        except PermissionError:
+            LOG.error(f"Permission Denied! ({self.file_path})")
         except Exception as c:
             LOG.error(f"{self.file_path} Configuration file error: {c}")
         return dict()
@@ -252,7 +256,7 @@ class NGIConfig:
         Overwrites and/or updates the YML at the specified file_path.
         """
         try:
-            with self.lock.acquire(30):
+            with self.lock:
                 tmp_filename = join(self.path, f".{self.name}.tmp")
                 LOG.debug(f"tmp_filename={tmp_filename}")
                 shutil.copy2(self.file_path, tmp_filename)
@@ -438,6 +442,8 @@ def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping
     """
     if not isinstance(dct_to_change, MutableMapping) or not isinstance(keys_dct, MutableMapping):
         raise AttributeError("merge_recursive_dicts expects two dict objects as args")
+    if not keys_dct:
+        raise ValueError("Empty keys_dct provided, not modifying anything.")
     for key in list(dct_to_change.keys()):
         if isinstance(keys_dct.get(key), dict) and isinstance(dct_to_change[key], MutableMapping):
             if max_depth > cur_depth and key not in ("tts", "stt"):
@@ -915,6 +921,10 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
             "https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/dev/.utilities/DEFAULT-SKILLS-DEV"
     else:
         local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
+
+    if os.environ.get("skillRepo"):
+        local_conf["skills"]["default_skills"] = os.environ.get("skillRepo")
+
     # TODO: Use XDG here DM
     local_conf.write_changes()
     return local_conf

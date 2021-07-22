@@ -22,7 +22,7 @@ import sys
 import os
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-from test_objects import *
+from tests.skills.test_objects import *
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils import *
