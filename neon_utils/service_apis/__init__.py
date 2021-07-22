@@ -17,11 +17,14 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 import pika
+import uuid
 
+from threading import Event
 from enum import Enum
+from neon_utils import LOG
 from neon_utils.configuration_utils import get_neon_auth_config
-from neon_utils.socket_utils import dict_to_b64
-from neon_mq_connector.connector import MQConnector
+from neon_utils.socket_utils import dict_to_b64, b64_to_dict
+from neon_mq_connector.connector import MQConnector, ConsumerThread
 
 AUTH_CONFIG = get_neon_auth_config()
 
@@ -39,27 +42,62 @@ class NeonAPI(Enum):
 class NeonAPIMQHandler(MQConnector):
     def __init__(self, config: dict, service_name: str):
         super().__init__(config, service_name)
-
-    @staticmethod
-    def emit_request():
-        pass
+        self.connection = self.create_mq_connection(vhost='/neon_api')
 
 
-def request_neon_api(api: NeonAPI, query_params: dict) -> dict:
+def request_neon_api(api: NeonAPI, query_params: dict, timeout=5*60) -> dict:
     """
     Handle a request for information from the Neon API Proxy Server
     :param api: Service API to target
     :param query_params: Data parameters to pass to service API
+    :param timeout: Request timeout in seconds
     :return: dict response from API with: `status_code`, `content`, and `encoding`
     """
+
     if not isinstance(api, NeonAPI):
         raise TypeError(f"Expected a NeonAPI, got: {api}")
     if not query_params:
         raise ValueError("Got empty query params")
     if not isinstance(query_params, dict):
         raise TypeError(f"Expected dict, got: {query_params}")
-    request_data = {**query_params, **{"service": str(api)}}
-    # TODO: Send request to neon_api_proxy with request_data and get a response DM
-    return {"status_code": 501,
-            "content": "Neon API not implemented",
-            "encoding": None}
+
+    response_data = dict()
+
+    try:
+
+        request_data = {**query_params, **{"service": str(api)}}
+
+        response_event = Event()
+
+        neon_api_mq_handler = NeonAPIMQHandler(config=None, service_name='mq_handler')
+
+        message_id = neon_api_mq_handler.emit_mq_message(connection=neon_api_mq_handler.connection,
+                                                         queue='neon_api_input',
+                                                         request_data=request_data,
+                                                         exchange='')
+
+        def handle_neon_api_output(channel, method, properties, body):
+            """
+                Method that handles Neon API output.
+                In case received output message with the desired id, event stops
+            """
+            api_output = b64_to_dict(body)
+            if api_output['message_id'] == message_id:
+                response_data.update(api_output)
+
+        neon_api_mq_handler.consumers['neon_output_handler'] = ConsumerThread(connection=neon_api_mq_handler.connection,
+                                                                              queue='neon_api_output',
+                                                                              callback_func=handle_neon_api_output)
+        neon_api_mq_handler.run_consumers(names=('neon_output_handler',))
+
+        response_event.wait(timeout)
+
+        neon_api_mq_handler.stop_consumers()
+
+        neon_api_mq_handler.connection.close()
+    except Exception as ex:
+        LOG.error(f'Exception occurred while resolving Neon API: {ex}')
+    finally:
+        return response_data or {"status_code": 401,
+                                 "content": f"Neon API failed to give a response within {timeout} second(-s)",
+                                 "encoding": None}
