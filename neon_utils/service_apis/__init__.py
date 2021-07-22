@@ -86,6 +86,7 @@ def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 5 * 60) ->
             api_output_msg_id = api_output.pop('message_id', None)
             if api_output_msg_id == message_id:
                 response_data.update(api_output)
+                response_event.set()
 
         neon_api_mq_handler.consumers['neon_output_handler'] = ConsumerThread(connection=neon_api_mq_handler.connection,
                                                                               queue='neon_api_output',
