@@ -45,7 +45,7 @@ class NeonAPIMQHandler(MQConnector):
         self.connection = self.create_mq_connection(vhost='/neon_api')
 
 
-def request_neon_api(api: NeonAPI, query_params: dict, timeout=5*60) -> dict:
+def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 5 * 60) -> dict:
     """
     Handle a request for information from the Neon API Proxy Server
     :param api: Service API to target
@@ -69,6 +69,7 @@ def request_neon_api(api: NeonAPI, query_params: dict, timeout=5*60) -> dict:
 
         response_event = Event()
 
+        # TODO: decide on how to pass user configs to MQ Handler
         neon_api_mq_handler = NeonAPIMQHandler(config=None, service_name='mq_handler')
 
         message_id = neon_api_mq_handler.emit_mq_message(connection=neon_api_mq_handler.connection,
@@ -82,7 +83,8 @@ def request_neon_api(api: NeonAPI, query_params: dict, timeout=5*60) -> dict:
                 In case received output message with the desired id, event stops
             """
             api_output = b64_to_dict(body)
-            if api_output['message_id'] == message_id:
+            api_output_msg_id = api_output.pop('message_id', None)
+            if api_output_msg_id == message_id:
                 response_data.update(api_output)
 
         neon_api_mq_handler.consumers['neon_output_handler'] = ConsumerThread(connection=neon_api_mq_handler.connection,
