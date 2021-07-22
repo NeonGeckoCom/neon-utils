@@ -38,7 +38,7 @@ setuptools.setup(
     version=version,
     author="NeonDaniel",
     author_email="daniel@neon.ai",
-    description="Utilities for running Neon skills in Mycroft/OVOS",
+    description="Utilities for NeonAI",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/neongeckocom/neon-skill-utils",

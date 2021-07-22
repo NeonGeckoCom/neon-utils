@@ -17,8 +17,29 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-from .common_message_skill import CommonMessageSkill
-from .common_play_skill import CommonPlaySkill
-from .common_query_skill import CommonQuerySkill
-from .neon_fallback_skill import NeonFallbackSkill
-from .neon_skill import NeonSkill
+import fileinput
+from os.path import join, dirname
+
+with open(join(dirname(__file__), "version.py"), "r", encoding="utf-8") as v:
+    for line in v.readlines():
+        if line.startswith("__version__"):
+            if '"' in line:
+                version = line.split('"')[1]
+            else:
+                version = line.split("'")[1]
+
+if "a" not in version:
+    parts = version.split('.')
+    parts[-1] = str(int(parts[-1]) + 1)
+    version = '.'.join(parts)
+    version = f"{version}a0"
+else:
+    post = version.split("a")[1]
+    new_post = int(post) + 1
+    version = version.replace(f"a{post}", f"a{new_post}")
+
+for line in fileinput.input(join(dirname(__file__), "version.py"), inplace=True):
+    if line.startswith("__version__"):
+        print(f"__version__ = \"{version}\"")
+    else:
+        print(line.rstrip('\n'))
