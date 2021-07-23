@@ -22,7 +22,7 @@ import uuid
 from threading import Event
 from enum import Enum
 from neon_utils import LOG
-from neon_utils.configuration_utils import get_neon_auth_config
+from neon_utils.configuration_utils import get_neon_auth_config, get_default_local_config
 from neon_utils.socket_utils import dict_to_b64, b64_to_dict
 from neon_mq_connector.connector import MQConnector, ConsumerThread
 
@@ -47,11 +47,11 @@ class NeonAPIMQHandler(MQConnector):
 
 def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 5 * 60) -> dict:
     """
-    Handle a request for information from the Neon API Proxy Server
-    :param api: Service API to target
-    :param query_params: Data parameters to pass to service API
-    :param timeout: Request timeout in seconds
-    :return: dict response from API with: `status_code`, `content`, and `encoding`
+        Handle a request for information from the Neon API Proxy Server
+        :param api: Service API to target
+        :param query_params: Data parameters to pass to service API
+        :param timeout: Request timeout in seconds
+        :return: dict response from API with: `status_code`, `content`, and `encoding`
     """
 
     if not isinstance(api, NeonAPI):
@@ -67,37 +67,49 @@ def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 5 * 60) ->
 
         request_data = {**query_params, **{"service": str(api)}}
 
+        LOG.debug(f'Received request data: {request_data}')
+
         response_event = Event()
 
+        LOG.debug('Creating Neon API MQ Handler Instance...')
+
         # TODO: decide on how to pass user configs to MQ Handler
-        neon_api_mq_handler = NeonAPIMQHandler(config=None, service_name='mq_handler')
+        neon_api_mq_handler = NeonAPIMQHandler(config=get_default_local_config(), service_name='mq_handler')
+
+        LOG.debug(f'Established MQ connection: {neon_api_mq_handler.connection}')
 
         message_id = neon_api_mq_handler.emit_mq_message(connection=neon_api_mq_handler.connection,
                                                          queue='neon_api_input',
                                                          request_data=request_data,
                                                          exchange='')
 
+        LOG.debug(f'Generated message id: {message_id}')
+
         def handle_neon_api_output(channel, method, properties, body):
             """
                 Method that handles Neon API output.
                 In case received output message with the desired id, event stops
+
+
             """
             api_output = b64_to_dict(body)
+            LOG.debug('API output: ', api_output)
             api_output_msg_id = api_output.pop('message_id', None)
             if api_output_msg_id == message_id:
                 response_data.update(api_output)
+                channel.basic_ack(delivery_tag=method.delivery_tag)
                 response_event.set()
 
         neon_api_mq_handler.consumers['neon_output_handler'] = ConsumerThread(connection=neon_api_mq_handler.connection,
                                                                               queue='neon_api_output',
                                                                               callback_func=handle_neon_api_output)
+
         neon_api_mq_handler.run_consumers(names=('neon_output_handler',))
 
         response_event.wait(timeout)
 
         neon_api_mq_handler.stop_consumers()
 
-        neon_api_mq_handler.connection.close()
     except Exception as ex:
         LOG.error(f'Exception occurred while resolving Neon API: {ex}')
     finally:

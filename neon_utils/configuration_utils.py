@@ -917,7 +917,7 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
         local_conf["dirVars"]["skillsDir"] = os.path.join(root_path, "skills")
         local_conf["dirVars"]["diagsDir"] = os.path.join(root_path, "Diagnostics")
         local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
-        local_conf["skills"]["default_skills"] =\
+        local_conf["skills"]["default_skills"] = \
             "https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/dev/.utilities/DEFAULT-SKILLS-DEV"
     else:
         local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
@@ -928,3 +928,11 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     # TODO: Use XDG here DM
     local_conf.write_changes()
     return local_conf
+
+
+def get_default_local_config(path=None) -> dict:
+    default_local_config = NGIConfig("default_local_config", path)
+    if len(default_local_config.content) == 0:
+        LOG.info("Unable to obtain config")
+        return {}
+    return default_local_config.content
