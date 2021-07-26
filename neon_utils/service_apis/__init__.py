@@ -22,7 +22,7 @@ import uuid
 from threading import Event
 from enum import Enum
 from neon_utils import LOG
-from neon_utils.configuration_utils import get_neon_auth_config, get_default_local_config
+from neon_utils.configuration_utils import get_neon_auth_config, get_neon_local_config
 from neon_utils.socket_utils import dict_to_b64, b64_to_dict
 from neon_mq_connector.connector import MQConnector, ConsumerThread
 
@@ -73,8 +73,7 @@ def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 5 * 60) ->
 
         LOG.debug('Creating Neon API MQ Handler Instance...')
 
-        # TODO: decide on how to pass user configs to MQ Handler
-        neon_api_mq_handler = NeonAPIMQHandler(config=get_default_local_config(), service_name='mq_handler')
+        neon_api_mq_handler = NeonAPIMQHandler(config=get_neon_local_config(), service_name='mq_handler')
 
         LOG.debug(f'Established MQ connection: {neon_api_mq_handler.connection}')
 

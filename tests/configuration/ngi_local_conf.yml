@@ -27,3 +27,13 @@ devVars:
   clapThreshold: 10.0e10
   defaultVolume: 60
   defaultMicVolume: 100
+
+MQ:
+  server:
+    ''
+  users:
+    test_user:
+      user:
+        'test'
+      password:
+        ''

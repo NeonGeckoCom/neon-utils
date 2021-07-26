@@ -928,11 +928,3 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     # TODO: Use XDG here DM
     local_conf.write_changes()
     return local_conf
-
-
-def get_default_local_config(path=None) -> dict:
-    default_local_config = NGIConfig("default_local_config", path)
-    if len(default_local_config.content) == 0:
-        LOG.info("Unable to obtain config")
-        return {}
-    return default_local_config.content

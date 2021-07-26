@@ -1,9 +1,0 @@
-MQ:
-  server:
-    ''
-  users:
-    test_user:
-      user:
-        'test'
-      password:
-        ''
