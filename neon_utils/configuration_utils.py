@@ -361,11 +361,16 @@ def get_config_dir():
         if re.match(".*/lib/python.*/site-packages", p):
             clean_path = "/".join(p.split("/")[0:-4])
             if exists(join(clean_path, "NGI")):
+                LOG.warning(f"Depreciated core structure found at {clean_path}")
                 return join(clean_path, "NGI")
+            elif exists(join(clean_path, "neon_core")):
+                # Dev Environment
+                return clean_path
             elif exists(join(clean_path, "mycroft")):
+                LOG.info(f"Mycroft core structure found at {clean_path}")
                 return clean_path
             elif exists(join(clean_path, ".venv")):
-                # LOG.info(f"Saving config to .venv path: {clean_path}")
+                # Localized Production Environment (Servers)
                 return clean_path
     default_path = expanduser("~/.local/share/neon")
     # LOG.info(f"System packaged core found! Using default configuration at {default_path}")
