@@ -236,11 +236,8 @@ sttSpokenOpts: {Afrikaans: af-ZA, Amharic: am-ET, Armenian: hy-AM, Azerbaijani: 
                 'Chinese, Mandarin': zh}
 
 MQ:
-  server:
-    '3333.us'
+  server: api.neon.ai
   users:
     mq_handler:
-      user:
-        'neon_api_utils'
-      password:
-        'Klatchat2021'
+      user: 'neon_api_utils'
+      password: 'Klatchat2021'
