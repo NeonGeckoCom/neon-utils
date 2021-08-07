@@ -94,22 +94,24 @@ def get_log_file_for_module(module_name: Union[str, list]) -> str:
     """
     if isinstance(module_name, list):
         module_name = module_name[-1]
-    if module_name in ("neon_speech_client", "neon_speech"):
+    if module_name.startswith("neon_speech"):
         log_name = "voice.log"
-    elif module_name in ("neon_audio_client", "neon_audio"):
+    elif module_name.startswith("neon_audio"):
         log_name = "audio.log"
-    elif module_name in ("neon_enclosure_client", "neon_enclosure"):
+    elif module_name.startswith("neon_enclosure"):
         log_name = "enclosure.log"
+    elif any(x for x in ("neon_messagebus", "neon_core.messagebus", "mycroft.messagebus") if module_name.startswith(x)):
+        log_name = "bus.log"
+    elif any(x for x in ("neon_skills", "neon_core.skills", "mycroft.skills") if module_name.startswith(x)):
+        log_name = "skills.log"
+    elif any(x for x in ("neon_gui", "neon_core.gui") if module_name.startswith(x)):
+        log_name = "display.log"
     elif module_name == "neon_core_client":
         log_name = "client.log"
     elif module_name == "neon_core_server":
         log_name = "server.log"
     elif module_name == "mycroft-gui-app":
         log_name = "gui.log"
-    elif ".messagebus.service" in module_name:
-        log_name = "bus.log"
-    elif ".skills" in module_name:
-        log_name = "skills.log"
     else:
         log_name = "extras.log"
 
