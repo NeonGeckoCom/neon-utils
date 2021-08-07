@@ -122,7 +122,13 @@ class LogUtilTests(unittest.TestCase):
         self.assertEqual("voice.log", os.path.basename(get_log_file_for_module("neon_speech")))
         self.assertEqual("bus.log", os.path.basename(get_log_file_for_module(["python3", "-m",
                                                                               "mycroft.messagebus.service"])))
+        self.assertEqual("bus.log", os.path.basename(get_log_file_for_module("neon_messagebus_service")))
         self.assertEqual("skills.log", os.path.basename(get_log_file_for_module("mycroft.skills")))
+        self.assertEqual("skills.log", os.path.basename(get_log_file_for_module("neon_skills_service")))
+        self.assertEqual("gui.log", os.path.basename(get_log_file_for_module("mycroft-gui-app")))
+        self.assertEqual("display.log", os.path.basename(get_log_file_for_module("neon_gui_service")))
+        self.assertEqual("display.log", os.path.basename(get_log_file_for_module("neon_core.gui")))
+
         self.assertEqual("extras.log", os.path.basename(get_log_file_for_module("NGI.gui")))
         self.assertEqual("extras.log", os.path.basename(get_log_file_for_module("nothing")))
 
