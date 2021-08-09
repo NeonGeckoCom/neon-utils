@@ -43,7 +43,7 @@ class NeonAPIMQHandler(MQConnector):
         self.connection = self.create_mq_connection(vhost='/neon_api')
 
 
-def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 10) -> dict:
+def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 60) -> dict:
     """
         Handle a request for information from the Neon API Proxy Server
         :param api: Service API to target
