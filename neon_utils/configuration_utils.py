@@ -827,11 +827,13 @@ def is_neon_core() -> bool:
         True if core is Neon, else False
     """
     import importlib.util
-    if importlib.util.find_spec("neon_speech"):
+    if importlib.util.find_spec("neon_core"):
         return True
     if importlib.util.find_spec("neon_core_client"):
+        LOG.info("Found neon_core_client; assuming neon_core")
         return True
     if importlib.util.find_spec("neon_core_server"):
+        LOG.info("Found neon_core_server; assuming neon_core")
         return True
     return False
 
@@ -933,3 +935,27 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     # TODO: Use XDG here DM
     local_conf.write_changes()
     return local_conf
+
+
+def parse_skill_default_settings(settings_meta: dict) -> dict:
+    """
+    Parses default skill settings from settingsmeta file contents
+    :param settings_meta: parsed contents of settingsmeta.yml or settingsmeta.json
+    :return: parsed dict of default settings keys/values
+    """
+    if not isinstance(settings_meta, dict):
+        LOG.error(settings_meta)
+        raise TypeError(f"Expected a dict, got: {type(settings_meta)}")
+    if not settings_meta:
+        LOG.debug(f"Empty Settings")
+        return dict()
+    else:
+        settings = dict()
+        try:
+            for settings_group in settings_meta.get("skillMetadata", dict()).get("sections", list()):
+                for field in settings_group.get("fields", list()):
+                    settings = {**settings, **{field.get("name"): field.get("value")}}
+            return settings
+        except Exception as e:
+            LOG.error(e)
+            raise e
