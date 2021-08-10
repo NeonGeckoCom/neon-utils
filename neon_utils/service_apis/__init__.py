@@ -43,7 +43,7 @@ class NeonAPIMQHandler(MQConnector):
         self.connection = self.create_mq_connection(vhost='/neon_api')
 
 
-def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 60) -> dict:
+def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 30) -> dict:
     """
         Handle a request for information from the Neon API Proxy Server
         :param api: Service API to target
@@ -84,7 +84,7 @@ def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 60) -> dic
                 In case received output message with the desired id, event stops
             """
             api_output = b64_to_dict(body)
-            LOG.debug('API output: ', api_output)
+            LOG.debug(f'API output: {api_output}')
             api_output_msg_id = api_output.pop('message_id', None)
             if api_output_msg_id == message_id:
                 response_data.update(api_output)
