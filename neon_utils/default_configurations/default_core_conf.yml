@@ -180,6 +180,8 @@ dirVars:
   coreDir: /opt/neon
   # coreDir is depreciated for packaged Neon Installations
   rootDir: ~/.local/share/neon
+  confDir: ~/.config/neon
+  cacheDir: ~/.cache/neon
   skillsDir: ~/.local/share/neon/skills
   ngiDir: /opt/neon/NGI
   # ngiDir is depreciated for packaged Neon Installations
@@ -187,7 +189,6 @@ dirVars:
   tempDir: /tmp/neon
   docsDir: ~/Documents/NeonGecko
   diagsDir: ~/Documents/NeonGecko/Diagnostics
-  cacheDir: ~/.local/share/neon/cache
   ipcDir: /tmp/neon/ipc
   # Changes to ipcDir must also be made in NGI/utilities/configHelper
   musicDir: ~/Music

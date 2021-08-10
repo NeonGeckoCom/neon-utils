@@ -633,6 +633,12 @@ class ConfigurationUtilTests(unittest.TestCase):
         with self.assertRaises(PermissionError):
             NGIConfig("test_config", "/root/")
 
+    def test_parse_skill_configuration_valid(self):
+        with open(join(CONFIG_PATH, "skill_settingsmeta.json")) as f:
+            default_settings = json.load(f)
+        parsed_settings = parse_skill_default_settings(default_settings)
+        self.assertIsInstance(parsed_settings, dict)
+
 
 if __name__ == '__main__':
     unittest.main()

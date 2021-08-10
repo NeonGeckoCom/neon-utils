@@ -64,3 +64,8 @@ class TestFBS(NeonFallbackSkill):
 class TestNeonSkill(NeonSkill):
     def __init__(self):
         super(TestNeonSkill, self).__init__(name="Test Neon Skill")
+
+
+class TestPatchedSkill(PatchedMycroftSkill):
+    def __init__(self):
+        super(TestPatchedSkill, self).__init__(name="Test Mycroft Skill")

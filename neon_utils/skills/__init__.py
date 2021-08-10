@@ -22,3 +22,4 @@ from .common_play_skill import CommonPlaySkill
 from .common_query_skill import CommonQuerySkill
 from .neon_fallback_skill import NeonFallbackSkill
 from .neon_skill import NeonSkill
+from .mycroft_skill import PatchedMycroftSkill

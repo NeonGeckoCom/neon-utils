@@ -103,6 +103,13 @@ class SkillObjectTests(unittest.TestCase):
 
         self.assertIsInstance(skill.build_user_dict(), dict)
 
+    def test_patched_mycroft_skill(self):
+        skill = TestPatchedSkill()
+        self.assertIsInstance(skill, MycroftSkill)
+        self.assertEqual(skill.name, "Test Mycroft Skill")
+
+        self.assertEqual(skill.file_system.path, skill.settings_write_path)
+
 
 if __name__ == '__main__':
     unittest.main()
