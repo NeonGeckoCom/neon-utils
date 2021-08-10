@@ -1,0 +1,133 @@
+{
+  "skillMetadata": {
+    "sections": [
+      {
+        "name": "SIP credentials",
+        "fields": [
+          {
+            "name": "gateway",
+            "type": "text",
+            "label": "Gateway",
+            "value": "sipxcom.com"
+          },
+          {
+            "name": "user",
+            "type": "text",
+            "label": "user",
+            "value": ""
+          },
+          {
+            "name": "password",
+            "type": "password",
+            "label": "password",
+            "value": ""
+          }
+        ]
+      },
+      {
+        "name": "Contact List",
+        "fields": [
+          {
+            "name": "contact_name",
+            "type": "text",
+            "label": "contact name, pick something mycroft can understand!",
+            "value": ""
+          },
+          {
+            "name": "contact_address",
+            "type": "text",
+            "label": "contact address",
+            "value": ""
+          },
+          {
+            "name": "add_contact",
+            "type": "checkbox",
+            "label": "update",
+            "value": "false"
+          },
+          {
+            "name": "delete_contact",
+            "type": "checkbox",
+            "label": "delete",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "name": "Incoming calls",
+        "fields": [
+          {
+            "name": "auto_answer",
+            "type": "checkbox",
+            "label": "automatically answer all incoming calls",
+            "value": "false"
+          },
+          {
+            "name": "auto_speech",
+            "type": "text",
+            "label": "speak this when answering",
+            "value": "I am busy, call again later"
+          },
+          {
+            "name": "auto_reject",
+            "type": "checkbox",
+            "label": "automatically reject all incoming calls",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "name": "Local Variables",
+        "fields": [
+          {
+            "name": "record_dir",
+            "type": "text",
+            "label": "Recording Audio Directory",
+            "value": ""
+          },
+          {
+            "name": "debug",
+            "type": "checkbox",
+            "label": "Enable BareSIP debug logging",
+            "value": "false"
+          },
+          {
+            "name": "intercept_allowed",
+            "type": "checkbox",
+            "label": "Flag to intercept utterances in skill",
+            "value": "false"
+          }
+        ]
+      },
+      {
+        "name": "SipXCom",
+        "fields": [
+          {
+            "name": "sipxcom_gateway",
+            "type": "text",
+            "label": "sipxcom REST api url",
+            "value": "https://sipx.mattkeys.net"
+          },
+          {
+            "name": "sipxcom_user",
+            "type": "text",
+            "label": "sipxcom username",
+            "value": "MattKeys"
+          },
+          {
+            "name": "sipxcom_password",
+            "type": "password",
+            "label": "sipxcom password",
+            "value": "secret"
+          },
+          {
+            "name": "sipxcom_sync",
+            "type": "checkbox",
+            "label": "automatically retrieve contacts from sipxcom",
+            "value": "false"
+          }
+        ]
+      }
+    ]
+  }
+}
