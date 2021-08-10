@@ -68,4 +68,4 @@ class TestNeonSkill(NeonSkill):
 
 class TestPatchedSkill(PatchedMycroftSkill):
     def __init__(self):
-        super(PatchedMycroftSkill, self).__init__(name="Test Mycroft Skill")
+        super(TestPatchedSkill, self).__init__(name="Test Mycroft Skill")

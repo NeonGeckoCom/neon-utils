@@ -104,7 +104,7 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.build_user_dict(), dict)
 
     def test_patched_mycroft_skill(self):
-        skill = PatchedMycroftSkill()
+        skill = TestPatchedSkill()
         self.assertIsInstance(skill, MycroftSkill)
         self.assertEqual(skill.name, "Test Mycroft Skill")
 
