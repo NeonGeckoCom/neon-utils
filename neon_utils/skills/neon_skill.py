@@ -43,9 +43,8 @@ from neon_utils.language_utils import DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
 from neon_utils.cache_utils import LRUCache
+from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 
-from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
-# from mycroft.skills.skill_data import read_vocab_file
 
 LOG.name = "neon_skill"
 
