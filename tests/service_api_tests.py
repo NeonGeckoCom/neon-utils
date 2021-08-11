@@ -231,10 +231,10 @@ class AlphaVantageTests(unittest.TestCase):
     def test_get_stock_quote_invalid_key(self):
         quote = get_stock_quote("MSFT", api_key="INVALID")
         self.assertIsInstance(quote, dict)
-        if "symbol" in quote:
+        if "symbol" in quote.keys():
             LOG.warning("Invalid API key produced valid result!")
             self.assertEqual(quote.get("symbol"), "MSFT")
-        self.assertTrue(quote.get("error"))
+        self.assertTrue(quote.get("error"), quote)
 
     def test_get_stock_quote_invalid_symbol(self):
         quote = get_stock_quote("International Business Machines")
