@@ -15,4 +15,6 @@ langdetect~=1.0.8
 translate
 boto3
 ovos_utils>=0.0.6
+neon_mq_connector @ git+https://github.com/neongeckocom/neon_mq_connector
+
 combo-lock~=0.1
