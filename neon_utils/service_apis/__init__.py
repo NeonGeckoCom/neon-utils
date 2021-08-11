@@ -35,6 +35,7 @@ class NeonAPI(Enum):
     OPEN_WEATHER_MAP = "open_weather_map"
     WOLFRAM_ALPHA = "wolfram_alpha"
     FINANCIAL_MODELING_PREP = "financial_modeling_prep"
+    NOT_IMPLEMENTED = "not_implemented"
 
 
 class NeonAPIMQHandler(MQConnector):

@@ -19,6 +19,8 @@
 
 import json
 import urllib.parse
+from json import JSONDecodeError
+
 import requests_cache as requests
 
 from neon_utils.logger import LOG
@@ -48,10 +50,17 @@ def search_stock_by_name(company: str, **kwargs) -> list:
                         "apikey": api_key}
         resp = query_alpha_vantage_api(f"https://www.alphavantage.co/query?{urllib.parse.urlencode(query_params)}")
     else:
-        query_params = {**kwargs, **{"api": "symbol"}}
+        query_params = {**kwargs, **{"api": "symbol", "company": company}}
         resp = request_neon_api(NeonAPI.ALPHA_VANTAGE, query_params)
 
-    data = json.loads(resp["content"])
+    if resp["status_code"] == -1:
+        data = {"error": resp["content"]}
+    else:
+        try:
+            data = json.loads(resp["content"])
+        except JSONDecodeError:
+            data = {"error": "Error decoding response",
+                    "response": resp}
     if data.get("Information"):
         LOG.warning(data.get("Information"))
         # TODO: Handle API Errors DM
@@ -84,18 +93,26 @@ def get_stock_quote(symbol: str, **kwargs) -> dict:
                         "apikey": api_key}
         resp = query_alpha_vantage_api(f"https://www.alphavantage.co/query?{urllib.parse.urlencode(query_params)}")
     else:
-        query_params = {**kwargs, **{"api": "quote"}}
+        query_params = {**kwargs, **{"api": "quote", "symbol": symbol}}
         resp = request_neon_api(NeonAPI.ALPHA_VANTAGE, query_params)
 
-    data = json.loads(resp["content"])
+    if resp["status_code"] == -1:
+        data = {"error": resp["content"]}
+    else:
+        try:
+            data = json.loads(resp["content"])
+        except JSONDecodeError:
+            data = {"error": "Error decoding response",
+                    "response": resp}
     if data.get("Information"):
         LOG.warning(data.get("Information"))
         # TODO: Handle API Errors DM
 
     if not data.get("Global Quote"):
         LOG.warning(f"No data found for {symbol}")
+        data["error"] = data.get("error") or "No data found"
         LOG.error(data)
-        return {}
+        return data
     return {"symbol": data.get("Global Quote")["01. symbol"],
             "price": data.get("Global Quote")["05. price"],
             "close": data.get("Global Quote")["08. previous close"]}

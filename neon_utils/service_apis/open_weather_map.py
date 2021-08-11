@@ -19,6 +19,7 @@
 
 import json
 import urllib.parse
+from json import JSONDecodeError
 from typing import Union
 
 import requests_cache as requests
@@ -33,6 +34,20 @@ SESSION.mount('http://', HTTPAdapter(max_retries=8))
 SESSION.mount('https://', HTTPAdapter(max_retries=8))
 
 
+def get_current_weather(lat: Union[str, float], lng: Union[str, float], units: str = "metric", **kwargs) -> dict:
+    """
+    Queries Open Weather Map for current weather at the specified location
+    :param lat: latitude
+    :param lng: longitude
+    :param units: Temperature and Speed units "metric", "imperial", or "standard"
+    :param kwargs:
+      'api_key' - optional str api_key to use for query (None to force remote lookup)
+      'language' - optional language param (default english)
+    :return: dict weather data (https://openweathermap.org/current#current_JSON)
+    """
+    return _make_api_call(lat, lng, units, "http://api.openweathermap.org/data/2.5/weather", **kwargs)
+
+
 def get_forecast(lat: Union[str, float], lng: Union[str, float], units: str = "metric", **kwargs) -> dict:
     """
     Queries Open Weather Map for weather data at the specified location
@@ -42,18 +57,37 @@ def get_forecast(lat: Union[str, float], lng: Union[str, float], units: str = "m
     :param kwargs:
       'api_key' - optional str api_key to use for query (None to force remote lookup)
       'language' - optional language param (default english)
+    :return: dict weather data (https://openweathermap.org/api/one-call-api#hist_example)
+    """
+    return _make_api_call(lat, lng, units, "http://api.openweathermap.org/data/2.5/onecall", **kwargs)
+
+
+def _make_api_call(lat: Union[str, float], lng: Union[str, float], units: str, base_url: str, **kwargs) -> dict:
+    """
+    Common wrapper for API calls to OWM
+    :param lat: latitude
+    :param lng: longitude
+    :param units: Temperature and Speed units "metric", "imperial", or "standard"
+    :param base_url: Base API URL to query
+    :param kwargs:
+      'api_key' - optional str api_key to use for query (None to force remote lookup)
+      'language' - optional language param (default english)
     :return: dict weather data
     """
     api_key = kwargs.get("api_key", AUTH_CONFIG.get("owm", {}).get("api_key"))
 
     if api_key:
         query_params = {"lat": lat, "lon": lng, "units": units, "appid": api_key}
-        resp = query_owm_api(f"http://api.openweathermap.org/data/2.5/onecall?{urllib.parse.urlencode(query_params)}")
+        resp = query_owm_api(f"{base_url}?{urllib.parse.urlencode(query_params)}")
     else:
-        query_params = {"lat": lat, "lon": lng, "units": units}
+        query_params = {"lat": lat, "lng": lng, "units": units}
         resp = request_neon_api(NeonAPI.OPEN_WEATHER_MAP, query_params)
 
-    data = json.loads(resp["content"])
+    try:
+        data = json.loads(resp["content"])
+    except JSONDecodeError:
+        data = {"error": "Error decoding response",
+                "response": resp}
     if data.get('cod'):
         data['cod'] = str(data['cod'])  # 400 is str, 401 is int; cast all to str for safe refs
         LOG.error(f"Error return: {data}")
