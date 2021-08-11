@@ -83,14 +83,11 @@ def _make_api_call(lat: Union[str, float], lng: Union[str, float], units: str, b
         query_params = {"lat": lat, "lng": lng, "units": units}
         resp = request_neon_api(NeonAPI.OPEN_WEATHER_MAP, query_params)
 
-    if resp["status_code"] == 401:
-        data = {"error": resp["content"]}
-    else:
-        try:
-            data = json.loads(resp["content"])
-        except JSONDecodeError:
-            data = {"error": "Error decoding response",
-                    "response": resp}
+    try:
+        data = json.loads(resp["content"])
+    except JSONDecodeError:
+        data = {"error": "Error decoding response",
+                "response": resp}
     if data.get('cod'):
         data['cod'] = str(data['cod'])  # 400 is str, 401 is int; cast all to str for safe refs
         LOG.error(f"Error return: {data}")
