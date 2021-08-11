@@ -37,6 +37,11 @@ class ServiceAPITests(unittest.TestCase):
         self.assertIsInstance(resp, dict)
         self.assertNotEqual(resp['status_code'], 401)
 
+    def test_request_neon_api_not_implemented(self):
+        resp = request_neon_api(NeonAPI.NOT_IMPLEMENTED, {"request": "data"})
+        self.assertIsInstance(resp, dict)
+        self.assertEqual(resp['status_code'], 401)
+
     def test_request_neon_api_invalid_api(self):
         with self.assertRaises(TypeError):
             request_neon_api("alpha_vantage", {"company": "alphabet"})
@@ -155,7 +160,8 @@ class WolframAlphaTests(unittest.TestCase):
         self.assertIsInstance(resp, bytes)
 
     def test_get_wolfram_alpha_response_no_api_key(self):
-        pass  # TODO: This tests Neon API Proxy Server
+        resp = get_wolfram_alpha_response("Who is the prime minister of India", QueryApi.SIMPLE, app_id=None)
+        self.assertIsInstance(resp, bytes)
 
 
 class AlphaVantageTests(unittest.TestCase):
@@ -219,24 +225,35 @@ class AlphaVantageTests(unittest.TestCase):
     def test_get_stock_quote_conf_key(self):
         quote = get_stock_quote("GOOGL")
         self.assertIsInstance(quote, dict)
-        self.assertEqual(set(quote.keys()), {"symbol", "price", "close"})
+        self.assertEqual(set(quote.keys()), {"symbol", "price", "close"}, quote)
         self.assertEqual(quote["symbol"], "GOOGL")
 
     def test_get_stock_quote_invalid_key(self):
-        quote = get_stock_quote("GOOGL", api_key="demo")
+        quote = get_stock_quote("GOOGL", api_key="INVALID")
         self.assertIsInstance(quote, dict)
-        self.assertFalse(quote)
+        self.assertTrue(quote.get("error"))
 
     def test_get_stock_quote_invalid_symbol(self):
         quote = get_stock_quote("International Business Machines")
         self.assertIsInstance(quote, dict)
-        self.assertFalse(quote)
+        self.assertTrue(quote.get("error"))
 
     def test_get_stock_quote_no_api_key(self):
-        pass  # TODO: This tests Neon API Proxy Server
+        quote = get_stock_quote("IBM", api_key=None)
+        self.assertIsInstance(quote, dict)
+        self.assertEqual(set(quote.keys()), {"symbol", "price", "close"})
+        self.assertEqual(quote["symbol"], "IBM")
 
+    def test_get_stock_symbol_no_api_key(self):
+        matches = search_stock_by_name("tencent", api_key=None)
+        self.assertIsInstance(matches, list)
+        for match in matches:
+            self.assertIsInstance(match, dict)
+            self.assertEqual(match["region"], "United States")
+        self.assertEqual(matches[0]["symbol"], "TCEHY")
 
 # TODO: Add FMP unit tests
+
 
 class OpenWeatherMapTests(unittest.TestCase):
     from neon_utils.authentication_utils import find_neon_owm_key
@@ -279,6 +296,14 @@ class OpenWeatherMapTests(unittest.TestCase):
         self.assertIsInstance(data["hourly"], list)
         self.assertIsInstance(data["daily"], list)
 
+    def test_get_current_weather(self):
+        data = get_current_weather(VALID_LAT, VALID_LNG)
+        self.assertIsInstance(data, dict)
+        self.assertIsInstance(data["weather"], list)
+        self.assertIsInstance(data["weather"][0], dict)
+
+        self.assertIsInstance(data["main"], dict)
+
     def test_get_forecast_invalid_location(self):
         data = get_forecast("lat", "lon", api_key=OpenWeatherMapTests.API_KEY)
         self.assertIsInstance(data, dict)
@@ -290,7 +315,12 @@ class OpenWeatherMapTests(unittest.TestCase):
         self.assertEqual(data['cod'], '401')
 
     def test_get_forecast_no_api_key(self):
-        pass  # TODO: This tests Neon API Proxy Server
+        data = get_forecast(VALID_LAT, VALID_LNG, api_key=None)
+        self.assertIsInstance(data, dict)
+        self.assertIsInstance(data["current"], dict)
+        self.assertIsInstance(data["minutely"], list)
+        self.assertIsInstance(data["hourly"], list)
+        self.assertIsInstance(data["daily"], list)
 
 
 if __name__ == '__main__':
