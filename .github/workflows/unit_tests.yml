@@ -6,6 +6,66 @@ on:
   workflow_dispatch:
 
 jobs:
+  service_api_tests:
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest pytest-timeout pytest-cov
+      - name: Export credentials
+        run: |
+          mkdir -p ~/.local/share/neon
+          echo ${WOLFRAM_ID} > ~/.local/share/neon/wolfram.txt
+          echo ${AV_API_KEY} > ~/.local/share/neon/alpha_vantage.txt
+          echo ${OWM_KEY} > ~/.local/share/neon/owm.txt
+        env:
+          WOLFRAM_ID: ${{secrets.wolfram_id}}
+          AV_API_KEY: ${{secrets.alpha_vantage_key}}
+          OWM_KEY: ${{secrets.open_weather_map_key}}
+      - name: Test Service APIs
+        run: |
+          pytest tests/service_api_tests.py --doctest-modules --junitxml=tests/service-api-test-results.xml
+      - name: Upload service API test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: service-api-test-results
+          path: tests/service-api-test-results.xml
+  skill_object_tests:
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          sudo apt install gcc libfann-dev
+          pip install -r requirements.txt
+          pip install pytest pytest-timeout pytest-cov holmesv[skills]
+
+      - name: Test Skills Objects
+        run: |
+          pytest tests/neon_skill_tests.py --doctest-modules --junitxml=tests/skill-object-test-results.xml
+      - name: Upload skill test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: skill-test-results
+          path: tests/skill-object-test-results.xml
   unit_tests:
     strategy:
       matrix:
@@ -21,7 +81,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pytest pytest-timeout pytest-cov
+          pip install pytest pytest-timeout pytest-cov HolmesV[skills_minimal]
 
       - name: Test Skill Patcher
         run: |

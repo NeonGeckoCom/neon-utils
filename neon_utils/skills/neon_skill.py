@@ -20,29 +20,31 @@
 import pathlib
 import pickle
 import json
-import shutil
+# import shutil
 import time
 import os
-import re
+# import re
 
 from copy import deepcopy
 from functools import wraps
-from itertools import chain
+# from itertools import chain
+
+from mycroft.skills.settings import save_settings
 from mycroft_bus_client.message import Message, dig_for_message
 from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
 from neon_utils import create_signal, check_for_signal, wait_while_speaking
-from neon_utils.configuration_utils import NGIConfig
+from neon_utils.configuration_utils import NGIConfig, get_neon_lang_config, get_neon_user_config, get_neon_local_config, \
+    is_neon_core
 from neon_utils.location_utils import to_system_time
-from neon_utils.language_utils import get_neon_lang_config, DetectorFactory, TranslatorFactory
+from neon_utils.language_utils import DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
 from neon_utils.cache_utils import LRUCache
+from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 
-from mycroft.skills.mycroft_skill.mycroft_skill import MycroftSkill
-from mycroft.skills.skill_data import read_vocab_file
 
 LOG.name = "neon_skill"
 
@@ -59,13 +61,12 @@ CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 class NeonSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        self.user_config = NGIConfig("ngi_user_info")
-        self.local_config = NGIConfig("ngi_local_conf")
+        self.user_config = get_neon_user_config()
+        self.local_config = get_neon_local_config()
 
-        self.ngi_settings: Optional[NGIConfig] = None
+        self._ngi_settings: Optional[NGIConfig] = None
 
         super(NeonSkill, self).__init__(name, bus, use_settings)
-
         self.cache_loc = os.path.expanduser(self.local_config.get('dirVars', {}).get('cacheDir') or
                                             "~/.local/share/neon/cache")
         self.lru_cache = LRUCache()
@@ -75,15 +76,15 @@ class NeonSkill(MycroftSkill):
         self.check_for_signal = check_for_signal
 
         self.sys_tz = gettz()
-        self.gui_enabled = self.configuration_available.get("prefFlags", {}).get("guiEvents", False)
+        self.gui_enabled = self.local_config.get("prefFlags", {}).get("guiEvents", False)
 
-        if use_settings:
-            self.settings = {}
-            self._initial_settings = None
-            self.init_settings()
-        else:
-            LOG.error(f"{name} Skill requested no settings!")
-            self.settings = None
+        # if use_settings:
+        #     self.settings = {}
+        #     self._initial_settings = None
+        #     self.init_settings()
+        # else:
+        #     LOG.error(f"{name} Skill requested no settings!")
+        #     self.settings = None
 
         self.scheduled_repeats = []
 
@@ -91,17 +92,17 @@ class NeonSkill(MycroftSkill):
         # A server is a device that hosts the core and skills to serve clients,
         # but that a user will not interact with directly.
         # A server will likely serve multiple users and devices concurrently.
-        if self.configuration_available.get("devVars", {}).get("devType", "generic") == "server":
+        if self.local_config.get("devVars", {}).get("devType", "generic") == "server":
             self.server = True
             self.default_intent_timeout = 90
         else:
             self.server = False
             self.default_intent_timeout = 60
 
-        self.neon_core = True
+        self.neon_core = True  # TODO: This should be depreciated DM
         self.actions_to_confirm = dict()
 
-        self.skill_mode = self.user_config.content.get('response_mode').get('speed_mode') or DEFAULT_SPEED_MODE
+        self.skill_mode = self.user_config.content.get('response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
         self.extension_time = SPEED_MODE_EXTENSION_TIME.get(self.skill_mode)
 
         try:
@@ -127,10 +128,17 @@ class NeonSkill(MycroftSkill):
         LOG.warning("This reference is deprecated, use self.local_config directly")
         return self.local_config.content
 
-    def init_settings(self):
+    @property
+    def ngi_settings(self):
+        LOG.warning("This reference is depreciated, use self.preference_skill for per-user skill settings")
+        return self._ngi_settings
+
+    def _init_settings(self):
         """
         Initializes yml-based skill config settings, updating from default dict as necessary for added parameters
         """
+        # TODO: This should just use the underlying Mycroft methods DM
+        super()._init_settings()
         if os.path.isfile(os.path.join(self.root_dir, "settingsmeta.yml")):
             skill_meta = NGIConfig("settingsmeta", self.root_dir).content
         elif os.path.isfile(os.path.join(self.root_dir, "settingsmeta.json")):
@@ -140,7 +148,7 @@ class NeonSkill(MycroftSkill):
             skill_meta = None
 
         # Load defaults from settingsmeta
-        default = {"__mycroft_skill_firstrun": True}
+        default = {}
         if skill_meta:
             # LOG.info(skill_meta)
             LOG.info(skill_meta["skillMetadata"]["sections"])
@@ -160,31 +168,23 @@ class NeonSkill(MycroftSkill):
                         default[pref["name"]] = value
 
         # Load or init configuration
-        if os.path.isfile(os.path.join(self.root_dir, f"{self.name}.yml")):
-            LOG.warning(f"Config found in skill directory for {self.name}! Relocating to: {self.file_system.path}")
-            shutil.move(os.path.join(self.root_dir, f"{self.name}.yml"), self.file_system.path)
-        self.ngi_settings = NGIConfig(self.name, self.file_system.path)
+        self._ngi_settings = NGIConfig(self.name, self.settings_write_path)
 
         # Load any new or updated keys
         try:
-            LOG.debug(self.ngi_settings.content)
+            LOG.debug(self._ngi_settings.content)
             LOG.debug(default)
-            if self.ngi_settings.content and len(self.ngi_settings.content.keys()) > 0 and len(default.keys()) > 0:
-                self.ngi_settings.make_equal_by_keys(default, recursive=False)
+            if self._ngi_settings.content and len(self._ngi_settings.content.keys()) > 0 and len(default.keys()) > 0:
+                self._ngi_settings.make_equal_by_keys(default, recursive=False)
             elif len(default.keys()) > 0:
                 LOG.info("No settings to load, use default")
-                self.ngi_settings.populate(default)
+                self._ngi_settings.populate(default)
         except Exception as e:
             LOG.error(e)
-            self.ngi_settings.populate(default)
-
-        # Make sure settings is initialized as a dictionary
-        if self.ngi_settings.content:
-            self.settings = self.ngi_settings.content  # Uses the default self.settings object for skills compat
-        LOG.debug(f"loaded settings={self.settings}")
+            self._ngi_settings.populate(default)
 
     @property
-    def location_timezone(self):
+    def location_timezone(self) -> str:
         """Get the timezone code, such as 'America/Los_Angeles'"""
         LOG.warning("This method does not support user-specific location and will use device default")
         return self.preference_location()["tz"]
@@ -373,6 +373,8 @@ class NeonSkill(MycroftSkill):
         return merged_dict
 
     def build_combined_skill_object(self, message=None) -> list:
+        # TODO: Depreciated? DM
+        LOG.error(f"This method is depreciated!")
         user = self.get_utterance_user(message)
         skill_dict = message.context["nick_profiles"][user]["skills"]
         skill_list = list(skill_dict.values())
@@ -404,13 +406,8 @@ class NeonSkill(MycroftSkill):
             for section, settings in new_preferences:
                 # section in user, brands, units, etc.
                 for key, val in settings:
-                    self.user_config.update_yaml_file(section, key, val, True)
-
-            self.user_config.update_yaml_file(final=True)
-            modified = ["ngi_user_info"]
-            self.bus.emit(Message('check.yml.updates',
-                                  {"modified": modified},
-                                  {"origin": self.skill_id}))
+                    self.user_config[section][key] = val
+            self.user_config.write_changes()
 
     def update_skill_settings(self, new_preferences: dict, message: Message = None, skill_global=False):
         """
@@ -426,8 +423,9 @@ class NeonSkill(MycroftSkill):
         else:
             for key, val in new_preferences.items():
                 self.settings[key] = val
-                self.ngi_settings.update_yaml_file(key, value=val, multiple=True)
-            self.ngi_settings.update_yaml_file(final=True)
+                self._ngi_settings[key] = val
+            save_settings(self.settings_write_path, self.settings)
+            self._ngi_settings.write_changes()
 
     def build_message(self, kind, utt, message, speaker=None):
         """
@@ -565,13 +563,13 @@ class NeonSkill(MycroftSkill):
         try:
             return super().voc_match(utt, voc_filename, lang, exact)
         except FileNotFoundError:
-            LOG.warning(f"`{voc_filename}` not found, checking in neon_core")
+            LOG.info(f"`{voc_filename}` not found, checking in neon_core")
             from mycroft.skills.skill_data import read_vocab_file
+            from neon_utils.packaging_utils import get_core_root
             from itertools import chain
             import re
         lang = lang or self.lang
-        voc = os.path.join(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "neon_core",
-                           "res", "text", lang, f"{voc_filename}.voc")
+        voc = os.path.join(get_core_root(), "neon_core", "res", "text", lang, f"{voc_filename}.voc")
         if not os.path.exists(voc):
             raise FileNotFoundError(voc)
         vocab = read_vocab_file(voc)
@@ -594,6 +592,8 @@ class NeonSkill(MycroftSkill):
         Checks if the utterance is intended for Neon. Server utilizes current conversation, otherwise wake-word status
         and message "Neon" parameter used
         """
+        if not is_neon_core():
+            return True
         if message.context.get("neon_should_respond", False):
             return True
         elif message.data.get("Neon") or message.data.get("neon"):
@@ -856,7 +856,6 @@ class NeonSkill(MycroftSkill):
         """
         Called by a skill to clear its gui display after the specified timeout
         :param timeout_seconds: seconds to wait before clearing gui display
-        :return:
         """
         from datetime import datetime as dt, timedelta
         expiration = dt.now(self.sys_tz) + timedelta(seconds=timeout_seconds)
@@ -865,19 +864,19 @@ class NeonSkill(MycroftSkill):
     def _clear_gui_timeout(self):
         """
         Handler for clear_gui_timeout function
-        :return:
         """
         LOG.info("Reset GUI!")
         self.gui.clear()
 
-    def clear_signals(self, prefix):
+    def clear_signals(self, prefix: str):
         """
         Clears all signals that begin with the passed prefix. Used with skill prefix for a skill to clear any signals it
         may have set
-        :param prefix: (str) prefix to match
+        :param prefix: prefix to match
         """
-        os.makedirs(f"{self.configuration_available['dirVars']['ipcDir']}/signal", exist_ok=True)
-        for signal in os.listdir(self.configuration_available['dirVars']['ipcDir'] + '/signal'):
+        LOG.warning(f"Signal use is being depreciated. Transition to internal variables.")
+        os.makedirs(f"{self.local_config['dirVars']['ipcDir']}/signal", exist_ok=True)
+        for signal in os.listdir(self.local_config['dirVars']['ipcDir'] + '/signal'):
             if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
                 # LOG.info('Removing ' + str(signal))
                 # os.remove(self.configuration_available['dirVars']['ipcDir'] + '/signal/' + signal)

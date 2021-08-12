@@ -36,7 +36,8 @@ class AuthUtilTests(unittest.TestCase):
         self.old_local_conf = os.path.join(config_path, "old_local_conf.yml")
         self.ngi_local_conf = os.path.join(config_path, "ngi_local_conf.yml")
         shutil.copy(self.ngi_local_conf, self.old_local_conf)
-        NGIConfig(self.ngi_local_conf, force_reload=True)
+        NGIConfig(os.path.splitext(os.path.basename(self.ngi_local_conf))[0], os.path.dirname(self.ngi_local_conf),
+                  force_reload=True)
 
     def tearDown(self) -> None:
         shutil.move(self.old_local_conf, self.ngi_local_conf)
@@ -45,9 +46,8 @@ class AuthUtilTests(unittest.TestCase):
         try:
             token = find_neon_git_token("/tmp")
             self.assertIsInstance(token, str)
-        except Exception:
-            with self.assertRaises(FileNotFoundError):
-                find_neon_git_token("/tmp")
+        except Exception as e:
+            self.assertIsInstance(e, FileNotFoundError)
 
         token = find_neon_git_token(CRED_PATH)
         self.assertEqual(token, "github token goes here")
@@ -56,9 +56,8 @@ class AuthUtilTests(unittest.TestCase):
         try:
             keys = find_neon_aws_keys("/tmp")
             self.assertEqual(list(keys.keys()), ["aws_access_key_id", "aws_secret_access_key"])
-        except Exception:
-            with self.assertRaises(FileNotFoundError):
-                find_neon_aws_keys("/tmp")
+        except Exception as e:
+            self.assertIsInstance(e, FileNotFoundError)
 
         keys = find_neon_aws_keys(CRED_PATH)
         self.assertEqual(keys, {"aws_access_key_id": "FAKE_KEY_ID",
@@ -68,9 +67,8 @@ class AuthUtilTests(unittest.TestCase):
         try:
             creds = find_neon_google_keys("/tmp")
             self.assertIsInstance(creds, dict)
-        except Exception:
-            with self.assertRaises(FileNotFoundError):
-                find_neon_google_keys("/tmp")
+        except Exception as e:
+            self.assertIsInstance(e, FileNotFoundError)
 
         creds = find_neon_google_keys(CRED_PATH)
         self.assertEqual(list(creds.keys()), ["type", "project_id", "private_key_id", "private_key", "client_email",
@@ -78,6 +76,36 @@ class AuthUtilTests(unittest.TestCase):
                                               "client_x509_cert_url"])
         self.assertEqual(creds["private_key"],
                          "-----BEGIN PRIVATE KEY-----\nREDACTED\nREDACTED\nREDACTED\n-----END PRIVATE KEY-----\n")
+
+    def test_get_wolfram_key(self):
+        try:
+            key = find_neon_wolfram_key("/tmp")
+            self.assertIsInstance(key, str)
+        except Exception as e:
+            self.assertIsInstance(e, FileNotFoundError)
+
+        key = find_neon_wolfram_key(CRED_PATH)
+        self.assertEqual(key, "RED-ACTED")
+
+    def test_get_alpha_vantage_key(self):
+        try:
+            key = find_neon_alpha_vantage_key("/tmp")
+            self.assertIsInstance(key, str)
+        except Exception as e:
+            self.assertIsInstance(e, FileNotFoundError)
+
+        key = find_neon_alpha_vantage_key(CRED_PATH)
+        self.assertEqual(key, "Alpha-Vantage")
+
+    def test_get_owm_key(self):
+        try:
+            key = find_neon_owm_key("/tmp")
+            self.assertIsInstance(key, str)
+        except Exception as e:
+            self.assertIsInstance(e, FileNotFoundError)
+
+        key = find_neon_owm_key(CRED_PATH)
+        self.assertEqual(key, "OpenWeatherMap")
 
     def test_write_github_token(self):
         config_path = os.path.join(ROOT_DIR, "configuration")
@@ -130,6 +158,13 @@ class AuthUtilTests(unittest.TestCase):
             repo_is_neon("not a url")
         with self.assertRaises(ValueError):
             repo_is_neon("")
+
+    def test_build_new_auth_config(self):
+        config = build_new_auth_config(CRED_PATH)
+        self.assertEqual(set(config.keys()), {"github", "amazon", "wolfram", "google", "alpha_vantage", "owm"})
+        for key in config.keys():
+            self.assertIsInstance(config[key], dict)
+            self.assertTrue(config[key])
 
 
 if __name__ == '__main__':

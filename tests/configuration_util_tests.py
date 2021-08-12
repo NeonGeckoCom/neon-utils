@@ -20,9 +20,11 @@
 import sys
 import os
 import unittest
+from time import sleep
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
+from neon_utils.authentication_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(ROOT_DIR, "configuration")
@@ -35,9 +37,13 @@ TEST_DICT = {"section 1": {"key1": "val1",
 
 class ConfigurationUtilTests(unittest.TestCase):
     def doCleanups(self) -> None:
-        for file in glob(os.path.join(CONFIG_PATH, "*.lock")):
+        for file in glob(os.path.join(CONFIG_PATH, ".*.lock")):
             os.remove(file)
-        for file in glob(os.path.join(CONFIG_PATH, "*.tmp")):
+        for file in glob(os.path.join(CONFIG_PATH, ".*.tmp")):
+            os.remove(file)
+        for file in glob(os.path.join(ROOT_DIR, "credentials", ".*.lock")):
+            os.remove(file)
+        for file in glob(os.path.join(ROOT_DIR, "credentials", ".*.tmp")):
             os.remove(file)
         if os.path.exists(os.path.join(CONFIG_PATH, "old_user_info.yml")):
             os.remove(os.path.join(CONFIG_PATH, "old_user_info.yml"))
@@ -198,6 +204,12 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(updated, {"section 2": {"key_2": {"2_data": "value"},
                                                  "key_3": "val3"}
                                    })
+
+    def test_dict_make_equal_keys_no_keys(self):
+        to_update = deepcopy(TEST_DICT)
+        new_keys = dict()
+        with self.assertRaises(ValueError):
+            dict_make_equal_keys(to_update, new_keys)
 
     def test_dict_update_keys(self):
         to_update = deepcopy(TEST_DICT)
@@ -417,6 +429,8 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(mycroft_config["gui_websocket"], dict)
         self.assertIsInstance(mycroft_config["gui_websocket"]["host"], str)
         self.assertIsInstance(mycroft_config["gui_websocket"]["base_port"], int)
+        # self.assertIsInstance(mycroft_config["keys"], dict)
+        # self.assertEqual(mycroft_config["skills"]["directory"], mycroft_config["skills"]["directory_override"])
         # self.assertIsInstance(mycroft_config["language"], dict)
         # self.assertIsInstance(mycroft_config["listener"], dict)
         # self.assertIsInstance(mycroft_config["stt"], dict)
@@ -467,11 +481,9 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         shutil.copy(ngi_local_conf, bak_local_conf)
 
-        i = 0
         config_objects = []
-        while i < 100:
+        for i in range(100):
             config_objects.append(NGIConfig("ngi_local_conf", CONFIG_PATH, True))
-            i += 1
 
         first_config = config_objects[0]
         last_config = config_objects[-1]
@@ -485,6 +497,22 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(first_config.content, last_config.content)
 
         shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_concurrent_config_read(self):
+        from threading import Thread
+        valid_config = NGIConfig("dep_user_info", CONFIG_PATH)
+        test_results = {}
+
+        def _open_config(idx):
+            from neon_utils.configuration_utils import NGIConfig as Config
+            config = Config("dep_user_info", CONFIG_PATH, True)
+            test_results[idx] = config.content == valid_config.content
+
+        for i in range(10):
+            Thread(target=_open_config, args=(i,), daemon=True).start()
+        while not len(test_results.keys()) == 10:
+            sleep(0.5)
+        self.assertTrue(all(test_results.values()))
 
     def test_new_ngi_config(self):
         config = NGIConfig("temp_conf", CONFIG_PATH)
@@ -556,11 +584,17 @@ class ConfigurationUtilTests(unittest.TestCase):
         NGIConfig.configuration_list = dict()
 
     def test_unequal_cache_configs(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+        shutil.copy(ngi_local_conf, bak_local_conf)
+
         def_config = get_neon_local_config(f"{ROOT_DIR}/test")
         oth_config = get_neon_local_config(CONFIG_PATH)
         self.assertNotEqual(def_config, oth_config)
         self.assertNotEqual(def_config.content, oth_config.content)
+
         shutil.rmtree(f"{ROOT_DIR}/test")
+        shutil.move(bak_local_conf, ngi_local_conf)
 
     def test_added_module_config(self):
         bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
@@ -574,6 +608,36 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(local_config["stt"]["some_module"], {"key": "value"})
         self.assertIn("dirVars", local_config.content.keys())
         shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_get_neon_auth_config(self):
+        auth_path = os.path.join(ROOT_DIR, "credentials")
+        ngi_auth_vars = get_neon_auth_config(auth_path)
+        self.assertEqual(ngi_auth_vars["amazon"], find_neon_aws_keys(auth_path))
+        self.assertEqual(ngi_auth_vars["google"], find_neon_google_keys(auth_path))
+        self.assertEqual(ngi_auth_vars["github"], {"token": find_neon_git_token(auth_path)})
+        self.assertEqual(ngi_auth_vars["wolfram"], {"app_id": find_neon_wolfram_key(auth_path)})
+        self.assertEqual(ngi_auth_vars["alpha_vantage"], {"api_key": find_neon_alpha_vantage_key(auth_path)})
+        self.assertEqual(ngi_auth_vars["owm"], {"api_key": find_neon_owm_key(auth_path)})
+        os.remove(ngi_auth_vars.file_path)
+
+    def test_write_mycroft_compatible_config(self):
+        test_path = os.path.join(CONFIG_PATH, "test.conf")
+        config = get_mycroft_compatible_config()
+        write_mycroft_compatible_config(test_path)
+        with open(test_path) as f:
+            from_disk = json.load(f)
+        self.assertEqual(from_disk, config)
+        os.remove(test_path)
+
+    def test_config_no_permissions(self):
+        with self.assertRaises(PermissionError):
+            NGIConfig("test_config", "/root/")
+
+    def test_parse_skill_configuration_valid(self):
+        with open(join(CONFIG_PATH, "skill_settingsmeta.json")) as f:
+            default_settings = json.load(f)
+        parsed_settings = parse_skill_default_settings(default_settings)
+        self.assertIsInstance(parsed_settings, dict)
 
 
 if __name__ == '__main__':
