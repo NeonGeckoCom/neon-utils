@@ -555,12 +555,13 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.rmtree(test_dir)
         NGIConfig.configuration_list = dict()
 
-    def test_create_config_from_setup_params_non_dev_mode(self):
+    def test_create_config_from_setup_params_non_dev_mode_spec_dev_type(self):
         test_dir = f"{ROOT_DIR}/test_setup_config"
         os.environ["devMode"] = "false"
         os.environ["autoStart"] = "true"
         os.environ["autoUpdate"] = "true"
         os.environ["devName"] = "Test-Device"
+        os.environ["devType"] = "neonPi"
         os.environ["sttModule"] = "stt_module"
         os.environ["ttsModule"] = "tts_module"
         os.environ["installServer"] = "false"
@@ -572,7 +573,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertTrue(local_config["prefFlags"]["autoStart"])
         self.assertTrue(local_config["prefFlags"]["autoUpdate"])
         self.assertEqual(local_config["devVars"]["devName"], "Test-Device")
-        self.assertEqual(local_config["devVars"]["devType"], "linux")
+        self.assertEqual(local_config["devVars"]["devType"], "neonPi")
         self.assertEqual(local_config["stt"]["module"], "stt_module")
         self.assertEqual(local_config["tts"]["module"], "tts_module")
 
