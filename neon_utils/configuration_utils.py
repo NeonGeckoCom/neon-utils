@@ -913,6 +913,8 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
 
     if os.environ.get("installServer", "false") == "true":
         local_conf["devVars"]["devType"] = "server"
+    elif os.environ.get("devType"):
+        local_conf["devVars"]["devType"] = os.environ.get("devType")
     else:
         import platform
         local_conf["devVars"]["devType"] = platform.system().lower()
