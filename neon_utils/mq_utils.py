@@ -58,10 +58,16 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
         api_output = b64_to_dict(body)
         api_output_msg_id = api_output.pop('message_id', None)
         emit_event.wait(timeout)
+        if not emit_event.is_set():
+            LOG.error(f"Error occurred emitting request: {request_data}")
+            LOG.warning(f"Ignoring response to message_id: {api_output_msg_id}")
         if api_output_msg_id == message_id:
             LOG.debug(f'MQ output: {api_output}')
+            try:
+                channel.basic_ack(delivery_tag=method.delivery_tag)
+            except Exception as e:
+                LOG.error(e)
             response_data.update(api_output)
-            channel.basic_ack(delivery_tag=method.delivery_tag)
             response_event.set()
 
     try:
