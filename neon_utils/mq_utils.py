@@ -57,7 +57,7 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
         """
         api_output = b64_to_dict(body)
         api_output_msg_id = api_output.pop('message_id', None)
-        emit_event.wait(5)
+        emit_event.wait(timeout)
         if api_output_msg_id == message_id:
             LOG.debug(f'MQ output: {api_output}')
             response_data.update(api_output)
@@ -81,7 +81,7 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
                                                          queue=target_queue,
                                                          request_data=request_data,
                                                          exchange='')
-        LOG.debug(f'Generated message id: {message_id} for request: {request_data}')
+        LOG.debug(f'Sent request: {request_data}')
         emit_event.set()
         response_event.wait(timeout)
         if not response_event.is_set():
