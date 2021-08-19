@@ -20,10 +20,10 @@
 import os
 import sys
 import unittest
+import pika
+
 from multiprocessing import Process
 from time import time, sleep
-
-import pika
 from neon_mq_connector.connector import MQConnector, ConsumerThread
 
 from neon_utils.socket_utils import *
@@ -34,6 +34,9 @@ from neon_utils.mq_utils import *
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 TEST_PATH = os.path.join(ROOT_DIR, "tests", "ccl_files")
 
+INPUT_CHANNEL = str(time())
+OUTPUT_CHANNEL = str(time())
+
 
 class TestMQConnector(MQConnector):
     def __init__(self, config: dict, service_name: str, vhost: str):
@@ -43,23 +46,14 @@ class TestMQConnector(MQConnector):
     @staticmethod
     def respond(channel, method, _, body):
         request = b64_to_dict(body)
-        if request.get("fail"):
-            raise Exception("Failure Case!")
         response = dict_to_b64({"message_id": request["message_id"],
                                 "success": True,
                                 "request_data": request["data"]})
-        channel.queue_declare(queue='neon_utils_test_output')
+        channel.queue_declare(queue=OUTPUT_CHANNEL)
         channel.basic_publish(exchange='',
-                              routing_key='neon_utils_test_output',
+                              routing_key=OUTPUT_CHANNEL,
                               body=response,
                               properties=pika.BasicProperties(expiration='1000'))
-
-    def exception_handler(self, *args, **kwargs):
-        LOG.info("Handling Exception")
-        self.register_consumer("neon_utils_test", self.vhost, "neon_utils_test_input",
-                               self.respond)
-        self.run_consumers()
-        LOG.info("Exception Handled")
 
 
 class MqUtilTests(unittest.TestCase):
@@ -69,8 +63,8 @@ class MqUtilTests(unittest.TestCase):
         cls.test_connector = TestMQConnector(config=get_neon_local_config().content.get('MQ'),
                                              service_name="mq_handler",
                                              vhost=vhost)
-        cls.test_connector.register_consumer("neon_utils_test", vhost, "neon_utils_test_input",
-                                             cls.test_connector.respond, cls.test_connector.exception_handler)
+        cls.test_connector.register_consumer("neon_utils_test", vhost, INPUT_CHANNEL,
+                                             cls.test_connector.respond)
         cls.test_connector.run_consumers()
         sleep(5)
 
@@ -80,7 +74,7 @@ class MqUtilTests(unittest.TestCase):
 
     def test_get_mq_response_valid(self):
         request = {"data": time()}
-        response = get_mq_response("/neon_testing", request, "neon_utils_test_input", "neon_utils_test_output")
+        response = get_mq_response("/neon_testing", request, INPUT_CHANNEL, OUTPUT_CHANNEL)
         self.assertIsInstance(response, dict)
         self.assertTrue(response["success"])
         self.assertEqual(response["request_data"], request["data"])
@@ -91,7 +85,7 @@ class MqUtilTests(unittest.TestCase):
 
         def check_response(name: str):
             request = {"data": time()}
-            response = get_mq_response("/neon_testing", request, "neon_utils_test_input", "neon_utils_test_output")
+            response = get_mq_response("/neon_testing", request, INPUT_CHANNEL, OUTPUT_CHANNEL)
             self.assertIsInstance(response, dict)
             if not isinstance(response, dict):
                 responses[name] = {'success': False,
@@ -128,7 +122,7 @@ class MqUtilTests(unittest.TestCase):
     # def test_get_mq_response_error_in_handler(self):
     #     # TODO: Troubleshoot this DM
     #     request = {"fail": True}
-    #     response = get_mq_response("/neon_testing", request, "neon_utils_test_input", "neon_utils_test_output")
+    #     response = get_mq_response("/neon_testing", request, INPUT_CHANNEL, OUTPUT_CHANNEL)
     #     self.assertIsInstance(response, dict)
     #     self.assertFalse(response)
 
