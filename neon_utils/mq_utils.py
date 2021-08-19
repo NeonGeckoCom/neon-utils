@@ -18,6 +18,7 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 from threading import Event
+from time import sleep
 
 from pika.exceptions import ProbableAccessDeniedError
 
@@ -82,7 +83,7 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
         neon_api_mq_handler.register_consumer('neon_output_handler',
                                               neon_api_mq_handler.vhost, response_queue, handle_mq_response)
         neon_api_mq_handler.run_consumers(names=('neon_output_handler',))
-
+        sleep(1)  # TODO: Patching to wait for consumers to start DM
         message_id = neon_api_mq_handler.emit_mq_message(connection=neon_api_mq_handler.connection,
                                                          queue=target_queue,
                                                          request_data=request_data,
