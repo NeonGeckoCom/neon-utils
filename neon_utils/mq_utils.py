@@ -36,7 +36,9 @@ class NeonMQHandler(MQConnector):
 
     def run_consumers(self):
         super(NeonMQHandler, self).run_consumers(names=('neon_output_handler',), daemon=True)
-        self.consumers['neon_output_handler']._started.wait()
+        # self.consumers['neon_output_handler']._started.wait()
+        while not self.consumers['neon_output_handler'].channel.is_open:
+            sleep(0.1)
         # TODO: Waiting for consumers should be handled in NeonMQHandler DM
 
 

@@ -110,7 +110,7 @@ class MqUtilTests(unittest.TestCase):
             processes.append(p)
 
         for p in processes:
-            p.join(30)
+            p.join(60)
 
         for resp in responses.values():
             self.assertTrue(resp['success'], resp.get('reason'))
