@@ -34,6 +34,10 @@ class NeonMQHandler(MQConnector):
         self.vhost = vhost
         self.connection = self.create_mq_connection(vhost=vhost)
 
+    def stop_consumers(self):
+        self.connection.close()
+        super().stop_consumers()
+
 
 def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_queue: str, timeout: int = 30) -> dict:
     """
@@ -57,16 +61,19 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
             In case received output message with the desired id, event stops
         """
         api_output = b64_to_dict(body)
-        api_output_msg_id = api_output.pop('message_id', None)
+        api_output_msg_id = api_output.get('message_id', None)
         emit_event.wait(timeout)
         if not emit_event.is_set():
             LOG.error(f"Error occurred emitting request: {request_data}")
             LOG.warning(f"Ignoring response to message_id: {api_output_msg_id}")
-        if api_output_msg_id == message_id:
+        elif api_output_msg_id == message_id:
             LOG.debug(f'MQ output: {api_output}')
             channel.basic_ack(delivery_tag=method.delivery_tag)
             response_data.update(api_output)
             response_event.set()
+        else:
+            channel.basic_nack(delivery_tag=method.delivery_tag)
+            LOG.debug(f"Ignoring {api_output_msg_id}")
 
     try:
         # LOG.debug('Creating Neon MQ Handler Instance...')
@@ -89,7 +96,7 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
         emit_event.set()
         response_event.wait(timeout)
         if not response_event.is_set():
-            LOG.error(f"Timeout waiting for response on: {response_queue}")
+            LOG.error(f"Timeout waiting for response to: {message_id}")
         neon_api_mq_handler.stop_consumers()
     except ProbableAccessDeniedError:
         raise ValueError(f"{vhost} is not a valid endpoint for {config.get('users').get('mq_handler').get('user')}")

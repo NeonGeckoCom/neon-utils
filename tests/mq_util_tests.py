@@ -20,11 +20,11 @@
 import os
 import sys
 import unittest
+
 import pika
 
 from multiprocessing import Process
-from time import time, sleep
-from neon_mq_connector.connector import MQConnector, ConsumerThread
+from time import time
 
 from neon_utils.socket_utils import *
 
@@ -54,6 +54,7 @@ class TestMQConnector(MQConnector):
                               routing_key=OUTPUT_CHANNEL,
                               body=response,
                               properties=pika.BasicProperties(expiration='1000'))
+        channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
 class MqUtilTests(unittest.TestCase):
@@ -64,7 +65,7 @@ class MqUtilTests(unittest.TestCase):
                                              service_name="mq_handler",
                                              vhost=vhost)
         cls.test_connector.register_consumer("neon_utils_test", vhost, INPUT_CHANNEL,
-                                             cls.test_connector.respond)
+                                             cls.test_connector.respond, auto_ack=False)
         cls.test_connector.run_consumers()
         sleep(5)
 
