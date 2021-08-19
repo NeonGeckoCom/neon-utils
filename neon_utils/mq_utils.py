@@ -50,7 +50,6 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
     :return: response to request
     """
     response_event = Event()
-    emit_event = Event()
     message_id = None
     response_data = dict()
     config = dict()
@@ -62,18 +61,14 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
         """
         api_output = b64_to_dict(body)
         api_output_msg_id = api_output.get('message_id', None)
-        emit_event.wait(timeout)
-        if not emit_event.is_set():
-            LOG.error(f"Error occurred emitting request: {request_data}")
-            LOG.warning(f"Ignoring response to message_id: {api_output_msg_id}")
-        elif api_output_msg_id == message_id:
+        if api_output_msg_id == message_id:
             LOG.debug(f'MQ output: {api_output}')
             channel.basic_ack(delivery_tag=method.delivery_tag)
             response_data.update(api_output)
             response_event.set()
         else:
             channel.basic_nack(delivery_tag=method.delivery_tag)
-            LOG.debug(f"Ignoring {api_output_msg_id}")
+            LOG.debug(f"Ignoring {api_output_msg_id} waiting for {message_id}")
 
     try:
         # LOG.debug('Creating Neon MQ Handler Instance...')
@@ -93,7 +88,6 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
                                                          request_data=request_data,
                                                          exchange='')
         LOG.debug(f'Sent request: {request_data}')
-        emit_event.set()
         response_event.wait(timeout)
         if not response_event.is_set():
             LOG.error(f"Timeout waiting for response to: {message_id}")

@@ -23,7 +23,7 @@ import unittest
 
 import pika
 
-from multiprocessing import Process
+from threading import Thread
 from time import time
 
 from neon_utils.socket_utils import *
@@ -106,13 +106,14 @@ class MqUtilTests(unittest.TestCase):
             responses[name] = {'success': True}
 
         for i in range(8):
-            p = Process(target=check_response, args=(str(i),))
+            p = Thread(target=check_response, args=(str(i),))
             p.start()
             processes.append(p)
 
         for p in processes:
             p.join(30)
 
+        self.assertEqual(len(processes), len(responses))
         for resp in responses.values():
             self.assertTrue(resp['success'], resp.get('reason'))
 
