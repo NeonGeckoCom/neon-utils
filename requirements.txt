@@ -15,6 +15,5 @@ langdetect~=1.0.8
 translate
 boto3
 ovos_utils>=0.0.6
-#neon_mq_connector>=0.0.5a5
-neon_mq_connector @ git+https://github.com/neondaniel/neon_mq_connector@FEAT_MessageAck
+neon_mq_connector>=0.1.1a0
 combo-lock~=0.1

@@ -34,11 +34,6 @@ class NeonMQHandler(MQConnector):
         self.vhost = vhost
         self.connection = self.create_mq_connection(vhost=vhost)
 
-    def run_consumers(self):
-        super(NeonMQHandler, self).run_consumers(names=('neon_output_handler',), daemon=True)
-        self.consumers['neon_output_handler']._started.wait()
-        # TODO: Waiting for consumers should be handled in NeonMQHandler DM
-
 
 def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_queue: str, timeout: int = 30) -> dict:
     """
