@@ -69,10 +69,7 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
             LOG.warning(f"Ignoring response to message_id: {api_output_msg_id}")
         if api_output_msg_id == message_id:
             LOG.debug(f'MQ output: {api_output}')
-            try:
-                channel.basic_ack(delivery_tag=method.delivery_tag)
-            except Exception as e:
-                LOG.error(e)
+            channel.basic_ack(delivery_tag=method.delivery_tag)
             response_data.update(api_output)
             response_event.set()
 
@@ -86,7 +83,8 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str, response_
             raise ConnectionError("MQ Connection not established.")
 
         neon_api_mq_handler.register_consumer('neon_output_handler',
-                                              neon_api_mq_handler.vhost, response_queue, handle_mq_response)
+                                              neon_api_mq_handler.vhost, response_queue, handle_mq_response,
+                                              auto_ack=False)
         neon_api_mq_handler.run_consumers()
         message_id = neon_api_mq_handler.emit_mq_message(connection=neon_api_mq_handler.connection,
                                                          queue=target_queue,
