@@ -72,6 +72,7 @@ class MqUtilTests(unittest.TestCase):
         cls.test_connector.register_consumer("neon_utils_test", vhost, "neon_utils_test_input",
                                              cls.test_connector.respond, cls.test_connector.exception_handler)
         cls.test_connector.run_consumers()
+        sleep(5)
 
     @classmethod
     def tearDownClass(cls) -> None:
