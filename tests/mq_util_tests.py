@@ -118,7 +118,7 @@ class MqUtilTests(unittest.TestCase):
             processes.append(p)
 
         for p in processes:
-            p.join(30)
+            p.join(60)
 
         self.assertEqual(len(processes), len(responses))
         for resp in responses.values():

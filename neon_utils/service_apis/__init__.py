@@ -33,6 +33,7 @@ class NeonAPI(Enum):
     WOLFRAM_ALPHA = "wolfram_alpha"
     FINANCIAL_MODELING_PREP = "financial_modeling_prep"
     NOT_IMPLEMENTED = "not_implemented"
+    TEST_API = "api_test_endpoint"
 
 
 def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 30) -> dict:

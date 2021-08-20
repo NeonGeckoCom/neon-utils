@@ -33,9 +33,9 @@ VALID_LNG = "-122.2079"
 
 class ServiceAPITests(unittest.TestCase):
     def test_request_neon_api_valid(self):
-        resp = request_neon_api(NeonAPI.ALPHA_VANTAGE, {"company": "alphabet"})
+        resp = request_neon_api(NeonAPI.TEST_API, {"test": True})
         self.assertIsInstance(resp, dict)
-        self.assertNotEqual(resp['status_code'], 401)
+        self.assertEqual(resp['status_code'], 200)
 
     def test_request_neon_api_not_implemented(self):
         resp = request_neon_api(NeonAPI.NOT_IMPLEMENTED, {"request": "data"})
