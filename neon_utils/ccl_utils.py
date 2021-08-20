@@ -19,6 +19,7 @@
 
 import pickle
 
+from os import remove
 from os.path import isfile, exists, isdir, expanduser, join, basename, splitext, dirname
 from typing import Optional
 
@@ -26,7 +27,7 @@ from neon_utils.file_utils import decode_base64_string_to_file
 from neon_utils.logger import LOG
 
 try:
-    from script_parser import ScriptParser
+    from neon_script_parser import ScriptParser
 except ImportError:
     ScriptParser = None
     from neon_utils.mq_utils import get_mq_response
@@ -56,6 +57,7 @@ def parse_nct_to_ncs(nct_file_path: str, ncs_file_path: Optional[str] = None,
     if exists(ncs_file_path):
         if overwrite_existing:
             LOG.warning(f"File exists and will be overwritten: {ncs_file_path}")
+            remove(ncs_file_path)
         else:
             raise FileExistsError(f"{ncs_file_path} already exists")
 
@@ -86,6 +88,7 @@ def parse_text_to_ncs(text: str, ncs_file_path: str,
     if exists(ncs_file_path):
         if overwrite_existing:
             LOG.warning(f"File exists and will be overwritten: {ncs_file_path}")
+            remove(ncs_file_path)
         else:
             raise FileExistsError(f"{ncs_file_path} already exists")
 
@@ -133,5 +136,5 @@ def load_ncs_file(ncs_file_path: str) -> dict:
 def get_compiled_script_via_mq(text: str, meta: Optional[dict]) -> str:
     data = {"text": text,
             "meta": meta}
-    resp = get_mq_response("/neon_script_parser", data, "neon_script_parser_input", "neon_script_parser_output", 45)
-    return resp["content"]
+    resp = get_mq_response("/neon_script_parser", data, "neon_script_parser_input", timeout=45)
+    return resp["parsed_file"]
