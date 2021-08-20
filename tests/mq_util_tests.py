@@ -49,9 +49,10 @@ class TestMQConnector(MQConnector):
         response = dict_to_b64({"message_id": request["message_id"],
                                 "success": True,
                                 "request_data": request["data"]})
-        channel.queue_declare(queue=OUTPUT_CHANNEL)
+        reply_channel = request.get("routing_key") or OUTPUT_CHANNEL
+        channel.queue_declare(queue=reply_channel)
         channel.basic_publish(exchange='',
-                              routing_key=OUTPUT_CHANNEL,
+                              routing_key=reply_channel,
                               body=response,
                               properties=pika.BasicProperties(expiration='1000'))
         channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -67,13 +68,19 @@ class MqUtilTests(unittest.TestCase):
         cls.test_connector.register_consumer("neon_utils_test", vhost, INPUT_CHANNEL,
                                              cls.test_connector.respond, auto_ack=False)
         cls.test_connector.run_consumers()
-        sleep(5)
 
     @classmethod
     def tearDownClass(cls) -> None:
         cls.test_connector.stop_consumers()
 
     def test_get_mq_response_valid(self):
+        request = {"data": time()}
+        response = get_mq_response("/neon_testing", request, INPUT_CHANNEL)
+        self.assertIsInstance(response, dict)
+        self.assertTrue(response["success"])
+        self.assertEqual(response["request_data"], request["data"])
+
+    def test_get_mq_response_spec_output_channel_valid(self):
         request = {"data": time()}
         response = get_mq_response("/neon_testing", request, INPUT_CHANNEL, OUTPUT_CHANNEL)
         self.assertIsInstance(response, dict)
@@ -86,7 +93,7 @@ class MqUtilTests(unittest.TestCase):
 
         def check_response(name: str):
             request = {"data": time()}
-            response = get_mq_response("/neon_testing", request, INPUT_CHANNEL, OUTPUT_CHANNEL)
+            response = get_mq_response("/neon_testing", request, INPUT_CHANNEL)
             self.assertIsInstance(response, dict)
             if not isinstance(response, dict):
                 responses[name] = {'success': False,
