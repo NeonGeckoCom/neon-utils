@@ -37,7 +37,7 @@ SESSION.mount('https://', HTTPAdapter(max_retries=8))
 BASE_URL = "http://api.openweathermap.org/data/2.5"
 
 
-class QueryApi(Enum):
+class OpenWeatherMapApi(Enum):
     def __repr__(self):
         return self.value
     CURRENT = "weather"
@@ -55,7 +55,7 @@ def get_current_weather(lat: Union[str, float], lng: Union[str, float], units: s
       'language' - optional language param (default english)
     :return: dict weather data (https://openweathermap.org/current#current_JSON)
     """
-    return _make_api_call(lat, lng, units, QueryApi.CURRENT, **kwargs)
+    return _make_api_call(lat, lng, units, OpenWeatherMapApi.CURRENT, **kwargs)
 
 
 def get_forecast(lat: Union[str, float], lng: Union[str, float], units: str = "metric", **kwargs) -> dict:
@@ -69,10 +69,10 @@ def get_forecast(lat: Union[str, float], lng: Union[str, float], units: str = "m
       'language' - optional language param (default english)
     :return: dict weather data (https://openweathermap.org/api/one-call-api#hist_example)
     """
-    return _make_api_call(lat, lng, units, QueryApi.ONECALL, **kwargs)
+    return _make_api_call(lat, lng, units, OpenWeatherMapApi.ONECALL, **kwargs)
 
 
-def _make_api_call(lat: Union[str, float], lng: Union[str, float], units: str, target_api: QueryApi, **kwargs) -> dict:
+def _make_api_call(lat: Union[str, float], lng: Union[str, float], units: str, target_api: OpenWeatherMapApi, **kwargs) -> dict:
     """
     Common wrapper for API calls to OWM
     :param lat: latitude
