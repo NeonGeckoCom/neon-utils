@@ -89,7 +89,7 @@ def _make_api_call(lat: Union[str, float], lng: Union[str, float], units: str, t
     if api_key:
         query_params = {"lat": lat, "lon": lng, "units": units, "appid": api_key}
 
-        resp = query_owm_api(f"{BASE_URL}/{target_api}?{urllib.parse.urlencode(query_params)}")
+        resp = query_owm_api(f"{BASE_URL}/{repr(target_api)}?{urllib.parse.urlencode(query_params)}")
     else:
         query_params = {"lat": lat, "lng": lng, "units": units, "api": repr(target_api)}
         resp = request_neon_api(NeonAPI.OPEN_WEATHER_MAP, query_params)
