@@ -6,8 +6,8 @@ from copy import deepcopy
 from ruamel.yaml import YAML
 
 from neon_utils.logger import LOG
-from neon_utils.configuration_utils import dict_update_keys, parse_skill_default_settings,\
-    is_neon_core, get_neon_local_config
+from neon_utils.configuration_utils import dict_update_keys, parse_skill_default_settings, \
+    is_neon_core, get_neon_local_config, get_mycroft_compatible_config
 
 from mycroft.skills import MycroftSkill
 from mycroft.skills.settings import get_local_settings
@@ -28,6 +28,7 @@ class PatchedMycroftSkill(MycroftSkill):
         fs_path = deepcopy(self.file_system.path)
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         self.file_system.path = fs_path
+        self.config_core = get_mycroft_compatible_config()
 
     def _init_settings(self):
         self.settings_write_path = self.file_system.path

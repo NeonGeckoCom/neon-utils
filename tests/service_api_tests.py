@@ -157,7 +157,8 @@ class WolframAlphaTests(unittest.TestCase):
 
     def test_get_wolfram_alpha_bytes_response(self):
         resp = get_wolfram_alpha_response("Who is the prime minister of India", QueryApi.SIMPLE)
-        self.assertIsInstance(resp, bytes)
+        if resp != "Wolfram|Alpha did not understand your input":
+            self.assertIsInstance(resp, bytes)
 
     def test_get_wolfram_alpha_response_no_api_key(self):
         resp = get_wolfram_alpha_response("Who is the prime minister of India", QueryApi.SIMPLE, app_id=None)
