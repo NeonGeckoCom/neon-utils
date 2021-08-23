@@ -103,8 +103,6 @@ class SkillObjectTests(unittest.TestCase):
 
         self.assertIsInstance(skill.build_user_dict(), dict)
 
-        self.assertEqual(skill.config_core['system_unit'], skill.preference_unit()['measure'])
-
     def test_patched_mycroft_skill(self):
         skill = TestPatchedSkill()
         self.assertIsInstance(skill, MycroftSkill)
