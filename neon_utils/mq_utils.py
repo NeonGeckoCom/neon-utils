@@ -16,7 +16,7 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
-
+import logging
 import uuid
 
 from threading import Event
@@ -26,6 +26,8 @@ from neon_mq_connector.connector import MQConnector, ConsumerThread
 from neon_utils import LOG
 from neon_utils.socket_utils import b64_to_dict
 from neon_utils.configuration_utils import get_neon_local_config
+
+logging.getLogger("pika").setLevel(logging.WARNING)
 
 
 class NeonMQHandler(MQConnector):
