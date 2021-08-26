@@ -361,11 +361,16 @@ def get_config_dir():
         if re.match(".*/lib/python.*/site-packages", p):
             clean_path = "/".join(p.split("/")[0:-4])
             if exists(join(clean_path, "NGI")):
+                LOG.warning(f"Depreciated core structure found at {clean_path}")
                 return join(clean_path, "NGI")
+            elif exists(join(clean_path, "neon_core")):
+                # Dev Environment
+                return clean_path
             elif exists(join(clean_path, "mycroft")):
+                LOG.info(f"Mycroft core structure found at {clean_path}")
                 return clean_path
             elif exists(join(clean_path, ".venv")):
-                # LOG.info(f"Saving config to .venv path: {clean_path}")
+                # Localized Production Environment (Servers)
                 return clean_path
     default_path = expanduser("~/.local/share/neon")
     # LOG.info(f"System packaged core found! Using default configuration at {default_path}")
@@ -822,11 +827,13 @@ def is_neon_core() -> bool:
         True if core is Neon, else False
     """
     import importlib.util
-    if importlib.util.find_spec("neon_speech"):
+    if importlib.util.find_spec("neon_core"):
         return True
     if importlib.util.find_spec("neon_core_client"):
+        LOG.info("Found neon_core_client; assuming neon_core")
         return True
     if importlib.util.find_spec("neon_core_server"):
+        LOG.info("Found neon_core_server; assuming neon_core")
         return True
     return False
 
@@ -906,6 +913,8 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
 
     if os.environ.get("installServer", "false") == "true":
         local_conf["devVars"]["devType"] = "server"
+    elif os.environ.get("devType"):
+        local_conf["devVars"]["devType"] = os.environ.get("devType")
     else:
         import platform
         local_conf["devVars"]["devType"] = platform.system().lower()
@@ -917,7 +926,7 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
         local_conf["dirVars"]["skillsDir"] = os.path.join(root_path, "skills")
         local_conf["dirVars"]["diagsDir"] = os.path.join(root_path, "Diagnostics")
         local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
-        local_conf["skills"]["default_skills"] =\
+        local_conf["skills"]["default_skills"] = \
             "https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/dev/.utilities/DEFAULT-SKILLS-DEV"
     else:
         local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
@@ -928,3 +937,27 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     # TODO: Use XDG here DM
     local_conf.write_changes()
     return local_conf
+
+
+def parse_skill_default_settings(settings_meta: dict) -> dict:
+    """
+    Parses default skill settings from settingsmeta file contents
+    :param settings_meta: parsed contents of settingsmeta.yml or settingsmeta.json
+    :return: parsed dict of default settings keys/values
+    """
+    if not isinstance(settings_meta, dict):
+        LOG.error(settings_meta)
+        raise TypeError(f"Expected a dict, got: {type(settings_meta)}")
+    if not settings_meta:
+        LOG.debug(f"Empty Settings")
+        return dict()
+    else:
+        settings = dict()
+        try:
+            for settings_group in settings_meta.get("skillMetadata", dict()).get("sections", list()):
+                for field in settings_group.get("fields", list()):
+                    settings = {**settings, **{field.get("name"): field.get("value")}}
+            return settings
+        except Exception as e:
+            LOG.error(e)
+            raise e

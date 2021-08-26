@@ -180,6 +180,8 @@ dirVars:
   coreDir: /opt/neon
   # coreDir is depreciated for packaged Neon Installations
   rootDir: ~/.local/share/neon
+  confDir: ~/.config/neon
+  cacheDir: ~/.cache/neon
   skillsDir: ~/.local/share/neon/skills
   ngiDir: /opt/neon/NGI
   # ngiDir is depreciated for packaged Neon Installations
@@ -187,7 +189,6 @@ dirVars:
   tempDir: /tmp/neon
   docsDir: ~/Documents/NeonGecko
   diagsDir: ~/Documents/NeonGecko/Diagnostics
-  cacheDir: ~/.local/share/neon/cache
   ipcDir: /tmp/neon/ipc
   # Changes to ipcDir must also be made in NGI/utilities/configHelper
   musicDir: ~/Music
@@ -234,3 +235,10 @@ sttSpokenOpts: {Afrikaans: af-ZA, Amharic: am-ET, Armenian: hy-AM, Azerbaijani: 
                 Ukrainian: uk-UA, Hebrew: he-IL, Arabic: ar-IL, Persian: fa-IR, Hindi: hi-IN, Thai: th-TH,
                 Korean: ko-KR, Taiwanese: zh-TW, 'Chinese, Cantonese': yue-Hant-HK, Japanese: ja-JP,
                 'Chinese, Mandarin': zh}
+
+MQ:
+  server: api.neon.ai
+  users:
+    mq_handler:
+      user: 'neon_api_utils'
+      password: 'Klatchat2021'

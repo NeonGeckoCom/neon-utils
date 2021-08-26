@@ -17,9 +17,23 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-from .common_message_skill import CommonMessageSkill
-from .common_play_skill import CommonPlaySkill
-from .common_query_skill import CommonQuerySkill
-from .neon_fallback_skill import NeonFallbackSkill
-from .neon_skill import NeonSkill
-from .mycroft_skill import PatchedMycroftSkill
+from neon_utils.skills.neon_skill import NeonSkill
+
+
+class InstructorSkill(NeonSkill):
+    """This skill acts as an interface for other instruction-oriented skills"""
+
+    def __init__(self, name: str = ''):
+        super(InstructorSkill, self).__init__(name=name)
+
+    @abstractmethod
+    def _access_data_source(self, *args, **kwargs):
+        """A method to establish connection to the data source of instructions"""
+
+    @abstractmethod
+    def _search_in_data_source(self, *args, **kwargs):
+        """Search a data source for instructions"""
+
+    @abstractmethod
+    def _get_instructions(self, *args, **kwargs):
+        """Extract a set of instruction"""
