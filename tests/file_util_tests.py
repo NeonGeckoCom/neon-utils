@@ -31,12 +31,10 @@ class FileUtilTests(unittest.TestCase):
 
     __audio_data = None
 
-    @unittest.skip('...')
     def test_encode_file(self):
         byte_string = encode_file_to_base64_string(os.path.join(ROOT_DIR, "LICENSE.md"))
         self.assertIsInstance(byte_string, str)
 
-    @unittest.skip('...')
     def test_write_encoded_file(self):
         byte_string = encode_file_to_base64_string(os.path.join(ROOT_DIR, "LICENSE.md"))
         output_path = os.path.join(ROOT_DIR, "tests", "LICENSE.md")
@@ -49,7 +47,6 @@ class FileUtilTests(unittest.TestCase):
         self.assertEqual(original_text, duplicate_text)
         os.remove(output_file)
 
-    @unittest.skip('...')
     def test_get_most_recent_file_in_dir(self):
         newest = get_most_recent_file_in_dir(ROOT_DIR)
         self.assertIsInstance(newest, str)
@@ -63,7 +60,6 @@ class FileUtilTests(unittest.TestCase):
         newest_dne = get_most_recent_file_in_dir(os.path.join(ROOT_DIR, "*.fake"))
         self.assertIsNone(newest_dne)
 
-    @unittest.skip('...')
     def test_get_most_recent_file_in_dir_with_ext(self):
         newest = get_most_recent_file_in_dir(ROOT_DIR, "py")
         self.assertTrue(os.path.isfile(newest))
@@ -71,7 +67,6 @@ class FileUtilTests(unittest.TestCase):
         newest_dne = get_most_recent_file_in_dir(ROOT_DIR, "fake")
         self.assertIsNone(newest_dne)
 
-    @unittest.skip('...')
     def test_get_wav_as_wav(self):
         test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.wav")
         wav_data = get_file_as_wav(test_file, 16000)
@@ -82,7 +77,6 @@ class FileUtilTests(unittest.TestCase):
         self.assertIsInstance(wav_data, wave.Wave_read)
         self.assertEqual(wav_data.getframerate(), 44100)
 
-    @unittest.skip('...')
     def test_file_stream_wav(self):
         test_file = os.path.join(AUDIO_PATH, "stop.wav")
         stream = get_audio_file_stream(test_file)
@@ -91,7 +85,6 @@ class FileUtilTests(unittest.TestCase):
         stream = get_audio_file_stream(test_file, 44100)
         self.assertEqual(stream.sample_rate, 44100)
 
-    @unittest.skip('...')
     def test_get_mp3_as_wav(self):
         test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.mp3")
         wav_data = get_file_as_wav(test_file, 16000)
@@ -102,7 +95,6 @@ class FileUtilTests(unittest.TestCase):
         self.assertIsInstance(wav_data, wave.Wave_read)
         self.assertEqual(wav_data.getframerate(), 44100)
 
-    @unittest.skip('...')
     def test_file_stream_mp3(self):
         test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.mp3")
         stream = get_audio_file_stream(test_file)
@@ -111,7 +103,6 @@ class FileUtilTests(unittest.TestCase):
         stream = get_audio_file_stream(test_file, 44100)
         self.assertEqual(stream.sample_rate, 44100)
 
-    @unittest.skip('...')
     def test_get_flac_as_wav(self):
         test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.flac")
         wav_data = get_file_as_wav(test_file, 16000)
@@ -122,7 +113,6 @@ class FileUtilTests(unittest.TestCase):
         self.assertIsInstance(wav_data, wave.Wave_read)
         self.assertEqual(wav_data.getframerate(), 44100)
 
-    @unittest.skip('...')
     def test_file_stream_flac(self):
         test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.flac")
         stream = get_audio_file_stream(test_file)
@@ -131,7 +121,6 @@ class FileUtilTests(unittest.TestCase):
         stream = get_audio_file_stream(test_file, 44100)
         self.assertEqual(stream.sample_rate, 44100)
 
-    @unittest.skip('...')
     def test_get_ogg_as_wav(self):
         test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.ogg")
         wav_data = get_file_as_wav(test_file, 16000)
@@ -142,7 +131,6 @@ class FileUtilTests(unittest.TestCase):
         self.assertIsInstance(wav_data, wave.Wave_read)
         self.assertEqual(wav_data.getframerate(), 44100)
 
-    @unittest.skip('...')
     def test_file_stream_ogg(self):
         test_file = os.path.join(AUDIO_PATH, "testing 1 2 3.ogg")
         stream = get_audio_file_stream(test_file)
@@ -151,33 +139,27 @@ class FileUtilTests(unittest.TestCase):
         stream = get_audio_file_stream(test_file, 44100)
         self.assertEqual(stream.sample_rate, 44100)
 
-    @unittest.skip('...')
     def test_file_stream_invalid_path(self):
         with self.assertRaises(FileNotFoundError):
             get_audio_file_stream(os.path.join(AUDIO_PATH, "nothing"))
 
-    @unittest.skip('...')
     def test_file_stream_invalid_type(self):
         with self.assertRaises(Exception):
             get_audio_file_stream(os.path.join(ROOT_DIR, "README.md"))
 
-    @unittest.skip('...')
     def test_invalid_path_as_wav(self):
         with self.assertRaises(FileNotFoundError):
             get_file_as_wav(os.path.join(AUDIO_PATH, "nothing"), 44100)
 
-    @unittest.skip('...')
     def test_invalid_file_as_wav(self):
         with self.assertRaises(CouldntDecodeError):
             get_file_as_wav(os.path.join(ROOT_DIR, "README.md"), 44100)
 
-    @unittest.skip('...')
     def test_get_file_as_wav_no_ext(self):
         wav_data = get_file_as_wav(os.path.join(AUDIO_PATH, "testing 1 2 3"), 44100)
         self.assertEqual(wav_data.getframerate(), 44100)
         self.assertEqual(wav_data.getsampwidth(), 2)
 
-    @unittest.skip('...')
     def test_get_file_as_wav_change_width(self):
         wav_data = get_file_as_wav(os.path.join(AUDIO_PATH, "testing 1 2 3 (sr4).wav"), 44100)
         self.assertEqual(wav_data.getframerate(), 44100)

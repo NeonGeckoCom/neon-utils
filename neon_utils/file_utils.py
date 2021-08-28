@@ -200,7 +200,7 @@ def audio_bytes_from_file(file_path: str) -> dict:
 def audio_bytes_to_file(file_path: str, audio_data: List[float], sample_rate: int) -> str:
     """
         :param file_path: Path to file to write
-        :param audio_data: array of audio data float time series
+        :param audio_data: array of audio data as float time series
         :param sample_rate: audio data sample rate
 
         :returns Path to saved file if saved successfully None otherwise
