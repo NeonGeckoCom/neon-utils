@@ -21,9 +21,12 @@ import glob
 import os
 import base64
 import wave
+import librosa
+import soundfile as sf
+
 from tempfile import mkstemp
 
-from typing import Optional
+from typing import Optional, List
 from pydub import AudioSegment
 from ovos_utils.signal import ensure_directory_exists
 
@@ -171,3 +174,40 @@ def get_audio_file_stream(wav_file: str, sample_rate: int = 16000):
         return FileStream(wav_file)
     except Exception as e:
         raise e
+
+
+def audio_bytes_from_file(file_path: str) -> dict:
+    """
+        :param file_path: Path to file to read
+
+        :returns {sample_rate, data, audio_format} if audio format is supported, empty dict otherwise
+    """
+    supported_audio_formats = ['mp3', 'wav']
+
+    audio_format = file_path.split('.')[-1]
+    if audio_format in supported_audio_formats:
+        data, sample_rate = librosa.load(file_path)
+        raw_audio_data = dict(sample_rate=sample_rate,
+                              data=data,
+                              audio_format=audio_format)
+    else:
+        LOG.warning(f'Failed to resolve audio format: {audio_format}')
+        raw_audio_data = dict()
+
+    return raw_audio_data
+
+
+def audio_bytes_to_file(file_path: str, audio_data: List[float], sample_rate: int) -> str:
+    """
+        :param file_path: Path to file to write
+        :param audio_data: array of audio data float time series
+        :param sample_rate: audio data sample rate
+
+        :returns Path to saved file if saved successfully None otherwise
+    """
+    try:
+        sf.write(file=file_path, data=audio_data, samplerate=sample_rate)
+    except Exception as ex:
+        LOG.error(f'Exception occurred while writing {audio_data} to {file_path}: {ex}')
+        file_path = None
+    return file_path
