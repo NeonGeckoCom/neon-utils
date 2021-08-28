@@ -47,6 +47,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install Sound Library
+        run: sudo apt-get install libsndfile1
       - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -73,6 +75,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Install Sound Library
+        run: sudo apt-get install libsndfile1
       - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
