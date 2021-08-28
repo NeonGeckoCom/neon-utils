@@ -17,4 +17,5 @@ boto3
 ovos_utils>=0.0.6
 neon_mq_connector>=0.1.1a0
 combo-lock~=0.1
+soundfile~=0.10
 librosa~=0.8
