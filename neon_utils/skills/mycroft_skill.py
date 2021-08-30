@@ -38,26 +38,39 @@ class PatchedMycroftSkill(MycroftSkill):
         self.name = name or self.__class__.__name__
         skill_id = os.path.basename(os.path.dirname(os.path.abspath(sys.modules[self.__module__].__file__)))
 
+        # TODO: Use XDG spec to read config path from config DM
+
         self.file_system = FileSystemAccess(os.path.join('skills', skill_id))
         if is_neon_core():
-            LOG.info("Patching skill file system path")
-            if not os.listdir(self.file_system.path):
-                os.remove(self.file_system.path)
-            self.file_system.path = os.path.join(os.path.expanduser(get_neon_local_config()["dirVars"].get("confDir")
-                                                                    or "~/.config/neon"), "skills", skill_id)
-            if not os.path.isdir(self.file_system.path):
-                os.makedirs(self.file_system.path)
+            neon_conf_path = os.path.join(os.path.expanduser(get_neon_local_config()["dirVars"].get("confDir")
+                                                             or "~/.config/neon"), "skills", skill_id)
+            if neon_conf_path != self.file_system.path:
+                LOG.info("Patching skill file system path")
+                if os.listdir(self.file_system.path):
+                    LOG.warning(f"Files found in unused path: {self.file_system.path}")
+                else:
+                    os.rmdir(self.file_system.path)
+                self.file_system.path = neon_conf_path
+                if not os.path.isdir(self.file_system.path):
+                    os.makedirs(self.file_system.path)
         fs_path = deepcopy(self.file_system.path)
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
-        self.file_system.path = fs_path
+        if self.file_system.path != fs_path:
+            if os.listdir(self.file_system.path):
+                LOG.warning(f"Files found in unused path: {self.file_system.path}")
+            else:
+                LOG.debug(f"Removing Mycroft-created file_system")
+                os.rmdir(self.file_system.path)
+            self.file_system.path = fs_path
         self.config_core = get_mycroft_compatible_config()
 
     def _init_settings(self):
         self.settings_write_path = self.file_system.path
         skill_settings = get_local_settings(self.settings_write_path, self.name)
+        settings_from_disk = deepcopy(skill_settings)
         self.settings = dict_update_keys(skill_settings, self._read_default_settings())
-        if self.settings != skill_settings:
-            with open(self.settings_write_path, "w+") as f:
+        if self.settings != settings_from_disk:
+            with open(os.path.join(self.settings_write_path, 'settings.json'), "w+") as f:
                 json.dump(self.settings, f, indent=4)
         self._initial_settings = deepcopy(self.settings)
 
