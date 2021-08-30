@@ -56,7 +56,7 @@ jobs:
           python -m pip install --upgrade pip
           sudo apt install gcc libfann-dev
           pip install -r requirements.txt
-          pip install pytest pytest-timeout pytest-cov holmesv[skills]
+          pip install pytest pytest-timeout pytest-cov holmesv[skills]==2021.6.30a24
 
       - name: Test Skills Objects
         run: |
