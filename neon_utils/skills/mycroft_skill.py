@@ -1,3 +1,22 @@
+# NEON AI (TM) SOFTWARE, Software Development Kit & Application Development System
+#
+# Copyright 2008-2021 Neongecko.com Inc. | All Rights Reserved
+#
+# Notice of License - Duplicating this Notice of License near the start of any file containing
+# a derivative of this software is a condition of license for this software.
+# Friendly Licensing:
+# No charge, open source royalty free use of the Neon AI software source and object is offered for
+# educational users, noncommercial enthusiasts, Public Benefit Corporations (and LLCs) and
+# Social Purpose Corporations (and LLCs). Developers can contact developers@neon.ai
+# For commercial licensing, distribution of derivative works or redistribution please contact licenses@neon.ai
+# Distributed on an "AS IS” basis without warranties or conditions of any kind, either express or implied.
+# Trademarks of Neongecko: Neon AI(TM), Neon Assist (TM), Neon Communicator(TM), Klat(TM)
+# Authors: Guy Daniels, Daniel McKnight, Regina Bloomstine, Elon Gasper, Richard Leeds
+#
+# Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
+# US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
+# China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+
 import sys
 import json
 import os.path
@@ -17,10 +36,13 @@ from mycroft.filesystem import FileSystemAccess
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         self.name = name or self.__class__.__name__
-        self.file_system = FileSystemAccess(os.path.join('skills', self.name))
+        skill_id = os.path.basename(os.path.dirname(os.path.abspath(sys.modules[self.__module__].__file__)))
+
+        self.file_system = FileSystemAccess(os.path.join('skills', skill_id))
         if is_neon_core():
-            skill_id = os.path.basename(os.path.dirname(os.path.abspath(sys.modules[self.__module__].__file__)))
             LOG.info("Patching skill file system path")
+            if not os.listdir(self.file_system.path):
+                os.remove(self.file_system.path)
             self.file_system.path = os.path.join(os.path.expanduser(get_neon_local_config()["dirVars"].get("confDir")
                                                                     or "~/.config/neon"), "skills", skill_id)
             if not os.path.isdir(self.file_system.path):
