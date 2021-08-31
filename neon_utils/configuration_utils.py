@@ -360,6 +360,9 @@ def get_config_dir():
             return join(p, "NGI")
         if re.match(".*/lib/python.*/site-packages", p):
             clean_path = "/".join(p.split("/")[0:-4])
+            if clean_path.startswith("/usr") or clean_path.startswith("/lib"):
+                # Exclude system paths
+                continue
             if exists(join(clean_path, "NGI")):
                 LOG.warning(f"Depreciated core structure found at {clean_path}")
                 return join(clean_path, "NGI")
