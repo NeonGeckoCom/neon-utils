@@ -55,7 +55,12 @@ def get_current_weather(lat: Union[str, float], lng: Union[str, float], units: s
       'language' - optional language param (default english)
     :return: dict weather data (https://openweathermap.org/current#current_JSON)
     """
-    return _make_api_call(lat, lng, units, OpenWeatherMapApi.CURRENT, **kwargs)
+    forecast = _make_api_call(lat, lng, units, OpenWeatherMapApi.CURRENT, **kwargs)
+    if not forecast.get("weather"):
+        LOG.warning("Outdated backend API return. Reformatting into current")
+        forecast = {"main": forecast["current"],
+                    "weather": forecast["current"]["weather"]}
+    return forecast
 
 
 def get_forecast(lat: Union[str, float], lng: Union[str, float], units: str = "metric", **kwargs) -> dict:
@@ -100,8 +105,7 @@ def _make_api_call(lat: Union[str, float], lng: Union[str, float], units: str, t
         data = {"error": "Error decoding response",
                 "response": resp}
     if data.get('cod'):
-        data['cod'] = str(data['cod'])  # 400 is str, 401 is int; cast all to str for safe refs
-        LOG.error(f"Error return: {data}")
+        data['cod'] = str(data['cod'])
         # TODO: Handle failures
     return data
 

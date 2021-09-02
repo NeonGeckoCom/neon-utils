@@ -360,6 +360,9 @@ def get_config_dir():
             return join(p, "NGI")
         if re.match(".*/lib/python.*/site-packages", p):
             clean_path = "/".join(p.split("/")[0:-4])
+            if clean_path.startswith("/usr") or clean_path.startswith("/lib"):
+                # Exclude system paths
+                continue
             if exists(join(clean_path, "NGI")):
                 LOG.warning(f"Depreciated core structure found at {clean_path}")
                 return join(clean_path, "NGI")
@@ -451,7 +454,7 @@ def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping
         raise ValueError("Empty keys_dct provided, not modifying anything.")
     for key in list(dct_to_change.keys()):
         if isinstance(keys_dct.get(key), dict) and isinstance(dct_to_change[key], MutableMapping):
-            if max_depth > cur_depth and key not in ("tts", "stt"):
+            if max_depth > cur_depth and key not in ("tts", "stt", "hotwords"):
                 dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key], max_depth, cur_depth + 1)
         elif key not in keys_dct.keys():
             dct_to_change.pop(key)
