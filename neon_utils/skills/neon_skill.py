@@ -20,24 +20,21 @@
 import pathlib
 import pickle
 import json
-# import shutil
 import time
 import os
-# import re
 
 from copy import deepcopy
 from functools import wraps
-# from itertools import chain
 
 from mycroft.skills.settings import save_settings
-from mycroft_bus_client.message import Message, dig_for_message
-from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
+from mycroft_bus_client.message import Message
+from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
-from neon_utils import create_signal, check_for_signal, wait_while_speaking
-from neon_utils.configuration_utils import NGIConfig, get_neon_lang_config, get_neon_user_config, get_neon_local_config, \
-    is_neon_core
+from neon_utils import create_signal, check_for_signal
+from neon_utils.configuration_utils import NGIConfig, is_neon_core, \
+    get_neon_lang_config, get_neon_user_config, get_neon_local_config
 from neon_utils.location_utils import to_system_time
 from neon_utils.language_utils import DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
@@ -703,93 +700,6 @@ class NeonSkill(MycroftSkill):
         Accessor method
         """
         self._register_decorated()
-
-    def speak(self, utterance, expect_response=False, wait=False, meta=None, message=None, private=False, speaker=None):
-        """
-        Speak a sentence.
-        Arguments:
-            utterance (str):        sentence mycroft should speak
-            expect_response (bool): set to True if Mycroft should listen for a response immediately after
-                                    speaking the utterance.
-            message (Message):      message associated with the input that this speak is associated with
-            private (bool):         flag to indicate this message contains data that is private to the requesting user
-            speaker (dict):         dict containing language or voice data to override user preference values
-            wait (bool):            set to True to block while the text is being spoken.
-            meta:                   Information of what built the sentence.
-        """
-        # registers the skill as being active
-        meta = meta or {}
-        meta['skill'] = self.name
-        self.enclosure.register(self.name)
-        if utterance:
-            if not message:
-                # Find the associated message
-                LOG.debug('message is None.')
-                message = dig_for_message()
-                if not message:
-                    message = Message("speak")
-            if not speaker:
-                speaker = message.data.get("speaker", None)
-
-            nick = get_message_user(message)
-
-            if private and self.server:
-                LOG.debug("Private Message")
-                title = message.context["klat_data"]["title"]
-                need_at_sign = True
-                if title.startswith("!PRIVATE"):
-                    users = title.split(':')[1].split(',')
-                    for idx, val in enumerate(users):
-                        users[idx] = val.strip()
-                    if len(users) == 2 and "Neon" in users:
-                        need_at_sign = False
-                    elif len(users) == 1:
-                        need_at_sign = False
-                    elif nick.startswith("guest"):
-                        need_at_sign = False
-                if need_at_sign:
-                    LOG.debug("Send message to private cid!")
-                    utterance = f"@{nick} {utterance}"
-
-            data = {"utterance": utterance,
-                    "expect_response": expect_response,
-                    "meta": meta,
-                    "speaker": speaker}
-
-            if message.context.get("cc_data", {}).get("emit_response"):
-                msg_to_emit = message.reply("skills:execute.response", data)
-            else:
-                message.context.get("timing", {})["speech_start"] = time.time()
-                msg_to_emit = message.reply("speak", data, message.context)
-                LOG.debug(f"Skill speak! {data}")
-
-            LOG.debug(msg_to_emit.msg_type)
-            self.bus.emit(msg_to_emit)
-        else:
-            LOG.warning("Null utterance passed to speak")
-            LOG.warning(f"{self.name} | message={message}")
-
-        if wait:
-            wait_while_speaking()
-
-    def speak_dialog(self, key, data=None, expect_response=False, wait=False,
-                     message=None, private=False, speaker=None):
-        """ Speak a random sentence from a dialog file.
-
-        Arguments:
-            :param key: dialog file key (e.g. "hello" to speak from the file "locale/en-us/hello.dialog")
-            :param data: information used to populate key
-            :param expect_response: set to True if Mycroft should listen for a response immediately after speaking.
-            :param wait: set to True to block while the text is being spoken.
-            :param speaker: optional dict of speaker info to use
-            :param private: private flag (server use only)
-            :param message: associated message from request
-        """
-        data = data or {}
-        LOG.debug(f"data={data}")
-        self.speak(self.dialog_renderer.render(key, data),  # TODO: Pass index here to use non-random responses DM
-                   expect_response, message=message, private=private,
-                   speaker=speaker, wait=wait, meta={'dialog': key, 'data': data})
 
     def schedule_event(self, handler, when, data=None, name=None, context=None):
         # TODO: should 'when' already be a datetime? DM
