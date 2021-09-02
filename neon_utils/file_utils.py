@@ -22,7 +22,6 @@ import os
 import base64
 import wave
 import librosa
-import soundfile as sf
 
 from tempfile import mkstemp
 
@@ -205,6 +204,7 @@ def audio_bytes_to_file(file_path: str, audio_data: List[float], sample_rate: in
 
         :returns Path to saved file if saved successfully None otherwise
     """
+    import soundfile as sf
     try:
         sf.write(file=file_path, data=audio_data, samplerate=sample_rate)
     except Exception as ex:
