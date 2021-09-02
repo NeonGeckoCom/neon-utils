@@ -211,3 +211,28 @@ def audio_bytes_to_file(file_path: str, audio_data: List[float], sample_rate: in
         LOG.error(f'Exception occurred while writing {audio_data} to {file_path}: {ex}')
         file_path = None
     return file_path
+
+
+def resolve_neon_resource_file(res_name: str) -> Optional[str]:
+    """
+    Locates a resource file bundled with neon_utils or neon_core
+    :param res_name: resource name (i.e. snd/start_listening.wav) to locate
+    :return: path to resource or None if resource is not found
+    """
+    base_dir = os.path.join(os.path.dirname(__file__), "res")
+    res_file = os.path.join(base_dir, res_name)
+    if os.path.isfile(res_file):
+        return res_file
+
+    from neon_utils.packaging_utils import get_neon_core_root
+    try:
+        base_dir = os.path.join(get_neon_core_root(), "res")
+    except FileNotFoundError:
+        LOG.warning("No neon_core directory found")
+        return None
+
+    res_file = os.path.join(base_dir, res_name)
+    if os.path.isfile(res_file):
+        return res_file
+    LOG.warning(f"Requested res_file not found: {res_file}")
+    return None

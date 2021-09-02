@@ -43,7 +43,10 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/neongeckocom/neon-skill-utils",
     packages=setuptools.find_packages(),
-    package_data={'': ['*.yml']},
+    package_data={'': ['*.yml'],
+                  'neon_utils': ['res/precise_models/*', 'res/snd/*', 'res/text/*/*.voc', 'res/text/*/*.dialog',
+                                 'res/ui/*.qml', 'res/ui/*.png', 'res/*']
+                  },
     include_package_data=True,
     classifiers=[
         "Programming Language :: Python :: 3",
