@@ -21,7 +21,6 @@ import glob
 import os
 import base64
 import wave
-import librosa
 
 from tempfile import mkstemp
 
@@ -181,8 +180,14 @@ def audio_bytes_from_file(file_path: str) -> dict:
 
         :returns {sample_rate, data, audio_format} if audio format is supported, empty dict otherwise
     """
-    supported_audio_formats = ['mp3', 'wav']
+    try:
+        import librosa
+    except OSError as e:
+        if repr(e) == "sndfile library not found":
+            LOG.error("libsndfile missing, install via: sudo apt install libsndfile1")
+        raise e
 
+    supported_audio_formats = ['mp3', 'wav']
     audio_format = file_path.split('.')[-1]
     if audio_format in supported_audio_formats:
         data, sample_rate = librosa.load(file_path)
