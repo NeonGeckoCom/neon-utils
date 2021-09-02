@@ -165,6 +165,13 @@ class FileUtilTests(unittest.TestCase):
         self.assertEqual(wav_data.getframerate(), 44100)
         self.assertEqual(wav_data.getsampwidth(), 2)
 
+    def test_resolve_neon_resource_file_valid(self):
+        start_listening = resolve_neon_resource_file("snd/start_listening.wav")
+        self.assertTrue(os.path.isfile(start_listening))
+
+    def test_resolve_neon_resource_file_invalid(self):
+        self.assertIsNone(resolve_neon_resource_file("invalid/file"))
+
     def test_01_audio_bytes_from_file(self):
         test_path = "testing 1 2 3 (sw4).wav"
         audio_data = audio_bytes_from_file(os.path.join(AUDIO_PATH, test_path))
