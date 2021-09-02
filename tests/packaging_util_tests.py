@@ -47,7 +47,7 @@ class PackagingUtilTests(unittest.TestCase):
             self.assertTrue(os.path.isdir(os.path.join(core_dir, "neon_core")))
         except FileNotFoundError:
             with self.assertRaises(FileNotFoundError):
-                get_core_root()
+                get_neon_core_root()
 
     def test_get_mycroft_core_root(self):
         try:
@@ -56,7 +56,7 @@ class PackagingUtilTests(unittest.TestCase):
             self.assertTrue(os.path.isdir(os.path.join(core_dir, "mycroft")))
         except FileNotFoundError:
             with self.assertRaises(FileNotFoundError):
-                get_core_root()
+                get_mycroft_core_root()
 
     def test_get_packaged_core_version(self):
         try:
