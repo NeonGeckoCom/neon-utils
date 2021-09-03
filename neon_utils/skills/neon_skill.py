@@ -31,7 +31,7 @@ from functools import wraps
 
 from mycroft.skills.settings import save_settings
 from mycroft_bus_client.message import Message, dig_for_message
-from neon_utils.file_utils import get_most_recent_file_in_dir
+from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
@@ -569,8 +569,8 @@ class NeonSkill(MycroftSkill):
             from itertools import chain
             import re
         lang = lang or self.lang
-        voc = os.path.join(get_core_root(), "neon_core", "res", "text", lang, f"{voc_filename}.voc")
-        if not os.path.exists(voc):
+        voc = resolve_neon_resource_file(voc_filename)
+        if not voc:
             raise FileNotFoundError(voc)
         vocab = read_vocab_file(voc)
         cache_key = lang + voc_filename
