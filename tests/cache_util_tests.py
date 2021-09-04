@@ -31,6 +31,9 @@ class CacheUtilTests(unittest.TestCase):
     def setUp(self) -> None:
         self.lru_cache = LRUCache()
 
+    def tearDown(self) -> None:
+        self.lru_cache.clear()
+
     def test_put(self):
         max_size = self.lru_cache._capacity
 
@@ -50,18 +53,22 @@ class CacheUtilTests(unittest.TestCase):
         hits = self.lru_cache.hits
         missed = self.lru_cache.missed
         key = random.randint(0, self.lru_cache._capacity)
-        str_key = "a"
+        invalid_key = "a"
 
         for i in range(self.lru_cache._capacity):
             self.lru_cache.put(str(i), i)
+
+        for i in range(self.lru_cache._capacity):
+            self.assertIsNotNone(self.lru_cache.get(str(i)))
+
         result = self.lru_cache.get(str(key))
-        self.assertTrue(result)
+        self.assertIsNotNone(result)
         self.assertEqual(result, key)
-        self.assertEqual(self.lru_cache.hits, hits + 1)
+
+        self.assertEqual(self.lru_cache.hits, hits + 1 + self.lru_cache._capacity)
         self.assertEqual(self.lru_cache.cache.popitem()[1], key)
 
-        result = self.lru_cache.get(str_key)
-        self.assertFalse(result)
+        self.assertIsNone(self.lru_cache.get(invalid_key))
         self.assertEqual(self.lru_cache.missed, missed + 1)
 
     def test_clear(self):
