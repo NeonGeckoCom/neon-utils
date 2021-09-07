@@ -574,8 +574,9 @@ def get_neon_speech_config() -> dict:
 
     neon_stt_config = local_config.get("stt", {})
     merged_stt_config = {**mycroft.get("stt", {}), **neon_stt_config}
-    if merged_stt_config.keys() != neon_stt_config.keys():
-        LOG.warning(f"Keys missing from Neon config! {merged_stt_config.keys()}")
+    # stt keys will vary by installed/configured plugins
+    # if merged_stt_config.keys() != neon_stt_config.keys():
+    #     LOG.warning(f"Keys missing from Neon config! {merged_stt_config.keys()}")
 
     hotword_config = local_config.get("hotwords") or mycroft.get("hotwords")
     if hotword_config != local_config.get("hotwords"):
@@ -622,8 +623,9 @@ def get_neon_audio_config() -> dict:
     local_config = get_neon_local_config()
     neon_audio = local_config.get("audioService", {})
     merged_audio = {**mycroft.get("Audio", {}), **neon_audio}
-    if merged_audio.keys() != neon_audio.keys():
-        LOG.warning(f"Keys missing from Neon config! {merged_audio.keys()}")
+    # tts keys will vary by installed/configured plugins
+    # if merged_audio.keys() != neon_audio.keys():
+    #     LOG.warning(f"Keys missing from Neon config! {merged_audio.keys()}")
 
     return {"Audio": merged_audio,
             "tts": get_neon_tts_config(),

@@ -59,6 +59,9 @@ websocket:
   port: 8181
   route: "/core"
   ssl: false
+  allow_self_signed: true
+  ssl_cert:
+  ssl_key:
 
 gui:
   # TODO: This should be built so lang, enclosure are read from other places
@@ -158,6 +161,7 @@ api:
   version: v1
   update: true
   disabled: true
+  sync_skill_settings: false
 
 # Below are (mostly) depreciated DM
 
