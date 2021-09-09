@@ -454,8 +454,12 @@ def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping
         raise ValueError("Empty keys_dct provided, not modifying anything.")
     for key in list(dct_to_change.keys()):
         if isinstance(keys_dct.get(key), dict) and isinstance(dct_to_change[key], MutableMapping):
-            if max_depth > cur_depth and key not in ("tts", "stt", "hotwords"):
-                dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key], max_depth, cur_depth + 1)
+            if max_depth > cur_depth:
+                if key in ("tts", "stt", "hotwords", "language"):
+                    dct_to_change[key] = dict_update_keys(dct_to_change[key], keys_dct[key])
+                else:
+                    dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key],
+                                                              max_depth, cur_depth + 1)
         elif key not in keys_dct.keys():
             dct_to_change.pop(key)
             LOG.warning(f"Removing '{key}' from dict!")
@@ -507,16 +511,13 @@ def get_neon_lang_config() -> dict:
     Returns:
         dict of config params used by Language Detector and Translator modules
     """
-    core_config = get_neon_local_config()
-    language_config = deepcopy(get_neon_user_config().content.get("speech", {}))
-    language_config["internal"] = language_config.get("internal", "en-us")  # TODO: This is core, not user DM
-    language_config["user"] = language_config.get("stt_language", "en-us")
-    language_config["boost"] = False
-    language_config["detection_module"] = core_config.get("stt", {}).get("detection_module")
-    language_config["translation_module"] = core_config.get("stt", {}).get("translation_module")
+    lang_config = deepcopy(get_neon_local_config().get("language", {}))
+    user_lang_config = deepcopy(get_neon_user_config().content.get("speech", {}))
+    lang_config["internal"] = lang_config.get("core_lang", "en-us")
+    lang_config["user"] = user_lang_config.get("stt_language", "en-us")
 
-    merged_language = {**_safe_mycroft_config().get("language", {}), **language_config}
-    if merged_language.keys() != language_config.keys():
+    merged_language = {**_safe_mycroft_config().get("language", {}), **lang_config}
+    if merged_language.keys() != user_lang_config.keys():
         LOG.warning(f"Keys missing from Neon config! {merged_language.keys()}")
 
     return merged_language
@@ -725,6 +726,15 @@ def _move_config_sections(user_config, local_config):
                           "device": user_config.content.pop("device", {})}
         local_config.update_keys(config_to_move)
 
+    if not local_config.get("language"):
+        local_config["language"] = dict()
+    if local_config.get("stt", {}).get("detection_module"):
+        local_config["language"]["detection_module"] = local_config["stt"].pop("detection_module")
+        local_config.write_changes()
+    if local_config.get("stt", {}).get("translation_module"):
+        local_config["language"]["translation_module"] = local_config["stt"].pop("translation_module")
+        local_config.write_changes()
+
 
 def _safe_mycroft_config() -> dict:
     """
@@ -913,8 +923,8 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     local_conf["skills"]["neon_token"] = os.environ.get("GITHUB_TOKEN")
     local_conf["tts"]["module"] = os.environ.get("ttsModule", local_conf["tts"]["module"])
     local_conf["stt"]["module"] = os.environ.get("sttModule", local_conf["stt"]["module"])
-    local_conf["stt"]["translation_module"] = os.environ.get("translateModule", local_conf["stt"]["translation_module"])
-    local_conf["stt"]["detection_module"] = os.environ.get("detectionModule", local_conf["stt"]["detection_module"])
+    local_conf["language"]["translation_module"] = os.environ.get("translateModule", local_conf["language"]["translation_module"])
+    local_conf["language"]["detection_module"] = os.environ.get("detectionModule", local_conf["language"]["detection_module"])
 
     if os.environ.get("installServer", "false") == "true":
         local_conf["devVars"]["devType"] = "server"

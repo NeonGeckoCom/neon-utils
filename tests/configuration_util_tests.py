@@ -373,6 +373,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIn("detection_module", config)
         self.assertIn("translation_module", config)
         self.assertIn("boost", config)
+        self.assertIsInstance(config["libretranslate"], dict)
 
     def test_get_client_config(self):
         config = get_neon_client_config()
@@ -607,6 +608,20 @@ class ConfigurationUtilTests(unittest.TestCase):
         local_config = get_neon_local_config(CONFIG_PATH)
         self.assertEqual(local_config["tts"]["mozilla_remote"], {"url": "http://something.somewhere"})
         self.assertEqual(local_config["stt"]["some_module"], {"key": "value"})
+        self.assertIn("dirVars", local_config.content.keys())
+        shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_move_language_config(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+        ngi_test_conf = os.path.join(CONFIG_PATH, "local_conf_no_language.yml")
+
+        shutil.move(ngi_local_conf, bak_local_conf)
+        shutil.copy(ngi_test_conf, ngi_local_conf)
+        local_config = get_neon_local_config(CONFIG_PATH)
+        self.assertEqual(local_config["language"]["translation_module"], "old_translate_module")
+        self.assertEqual(local_config["language"]["detection_module"], "old_detection_module")
+        self.assertIsInstance(local_config["language"]["libretranslate"], dict)
         self.assertIn("dirVars", local_config.content.keys())
         shutil.move(bak_local_conf, ngi_local_conf)
 
