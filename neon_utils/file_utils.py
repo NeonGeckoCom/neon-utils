@@ -21,9 +21,10 @@ import glob
 import os
 import base64
 import wave
+
 from tempfile import mkstemp
 
-from typing import Optional
+from typing import Optional, List
 from pydub import AudioSegment
 from ovos_utils.signal import ensure_directory_exists
 
@@ -171,3 +172,72 @@ def get_audio_file_stream(wav_file: str, sample_rate: int = 16000):
         return FileStream(wav_file)
     except Exception as e:
         raise e
+
+
+def audio_bytes_from_file(file_path: str) -> dict:
+    """
+        :param file_path: Path to file to read
+
+        :returns {sample_rate, data, audio_format} if audio format is supported, empty dict otherwise
+    """
+    try:
+        import librosa
+    except OSError as e:
+        if repr(e) == "sndfile library not found":
+            LOG.error("libsndfile missing, install via: sudo apt install libsndfile1")
+        raise e
+
+    supported_audio_formats = ['mp3', 'wav']
+    audio_format = file_path.split('.')[-1]
+    if audio_format in supported_audio_formats:
+        data, sample_rate = librosa.load(file_path)
+        raw_audio_data = dict(sample_rate=sample_rate,
+                              data=data,
+                              audio_format=audio_format)
+    else:
+        LOG.warning(f'Failed to resolve audio format: {audio_format}')
+        raw_audio_data = dict()
+
+    return raw_audio_data
+
+
+def audio_bytes_to_file(file_path: str, audio_data: List[float], sample_rate: int) -> str:
+    """
+        :param file_path: Path to file to write
+        :param audio_data: array of audio data as float time series
+        :param sample_rate: audio data sample rate
+
+        :returns Path to saved file if saved successfully None otherwise
+    """
+    import soundfile as sf
+    try:
+        sf.write(file=file_path, data=audio_data, samplerate=sample_rate)
+    except Exception as ex:
+        LOG.error(f'Exception occurred while writing {audio_data} to {file_path}: {ex}')
+        file_path = None
+    return file_path
+
+
+def resolve_neon_resource_file(res_name: str) -> Optional[str]:
+    """
+    Locates a resource file bundled with neon_utils or neon_core
+    :param res_name: resource name (i.e. snd/start_listening.wav) to locate
+    :return: path to resource or None if resource is not found
+    """
+    base_dir = os.path.join(os.path.dirname(__file__), "res")
+    res_file = os.path.join(base_dir, res_name)
+    if os.path.isfile(res_file):
+        return res_file
+
+    from neon_utils.packaging_utils import get_neon_core_root
+    try:
+        base_dir = os.path.join(get_neon_core_root(), "res")
+    except FileNotFoundError:
+        LOG.warning("No neon_core directory found")
+        return None
+
+    res_file = os.path.join(base_dir, res_name)
+    if os.path.isfile(res_file):
+        return res_file
+    LOG.warning(f"Requested res_file not found: {res_file}")
+    return None

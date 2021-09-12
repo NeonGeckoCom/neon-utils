@@ -16,6 +16,7 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+
 import datetime
 import os
 import sys
@@ -103,12 +104,16 @@ class SkillObjectTests(unittest.TestCase):
 
         self.assertIsInstance(skill.build_user_dict(), dict)
 
+        self.assertEqual(skill.file_system.path, skill.settings_write_path)
+        self.assertNotEqual(os.path.basename(skill.file_system.path), skill.name)
+
     def test_patched_mycroft_skill(self):
         skill = TestPatchedSkill()
         self.assertIsInstance(skill, MycroftSkill)
         self.assertEqual(skill.name, "Test Mycroft Skill")
 
         self.assertEqual(skill.file_system.path, skill.settings_write_path)
+        self.assertNotEqual(os.path.basename(skill.file_system.path), skill.name)
 
 
 if __name__ == '__main__':

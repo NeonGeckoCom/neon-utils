@@ -16,7 +16,7 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
-
+import shutil
 import sys
 import os
 import unittest
@@ -608,6 +608,27 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(local_config["tts"]["mozilla_remote"], {"url": "http://something.somewhere"})
         self.assertEqual(local_config["stt"]["some_module"], {"key": "value"})
         self.assertIn("dirVars", local_config.content.keys())
+        shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_added_hotwords_config(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+
+        test_hotword_config = {"listen": True,
+                               "model": "model_path"}
+
+        shutil.move(ngi_local_conf, bak_local_conf)
+        local_config = get_neon_local_config(CONFIG_PATH)
+        hotwords_config = deepcopy(local_config["hotwords"])
+
+        local_config['hotwords']["test_hotword"] = test_hotword_config
+        for hotword, config in hotwords_config.items():
+            self.assertEqual(local_config['hotwords'][hotword], config)
+
+        fresh_config = get_neon_local_config(CONFIG_PATH)
+        self.assertEqual(fresh_config.content, local_config.content)
+        self.assertEqual(fresh_config['hotwords']['test_hotword'], test_hotword_config)
+
         shutil.move(bak_local_conf, ngi_local_conf)
 
     def test_get_neon_auth_config(self):

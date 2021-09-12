@@ -24,6 +24,7 @@ import pkg_resources
 import sysconfig
 
 from os.path import exists, join
+from neon_utils.logger import LOG
 
 
 def get_packaged_core_version() -> str:
@@ -78,6 +79,36 @@ def get_neon_core_version() -> str:
 
 
 def get_core_root():
+    """
+    Depreciated 2020.09.01
+    :return:
+    """
+    LOG.warning(f"This method is depreciated, please update to use get_neon_core_root()")
+    return get_mycroft_core_root()
+
+
+def get_neon_core_root():
+    """
+    Determines the root of the available/active Neon Core. Should be the immediate parent directory of 'neon_core' dir
+    Returns:
+        Path to the core directory containing 'neon_core'
+    """
+    site = sysconfig.get_paths()['platlib']
+    if exists(join(site, 'neon_core')):
+        return site
+    for p in [path for path in sys.path if path != ""]:
+        if exists(join(p, "neon_core")):
+            return join(p, "neon_core")
+        if re.match(".*/lib/python.*/site-packages", p):
+            clean_path = "/".join(p.split("/")[0:-4])
+            if exists(join(clean_path, "neon_core")):
+                return join(clean_path, "neon_core")
+            elif exists(join(p, "neon_core")):
+                return join(p, "neon_core")
+    raise FileNotFoundError("Could not determine core directory")
+
+
+def get_mycroft_core_root():
     """
     Determines the root of the available/active Neon Core. Should be the immediate parent directory of 'mycroft' dir
     Returns:
