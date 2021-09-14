@@ -367,8 +367,11 @@ def get_config_dir():
                 LOG.warning(f"Depreciated core structure found at {clean_path}")
                 return join(clean_path, "NGI")
             elif exists(join(clean_path, "neon_core")):
-                # Dev Environment
+                # Cloned Dev Environment
                 return clean_path
+            elif exists(join(clean_path, "NeonCore", "neon_core")):
+                # Installed Dev Environment
+                return join(clean_path, "NeonCore")
             elif exists(join(clean_path, "mycroft")):
                 LOG.info(f"Mycroft core structure found at {clean_path}")
                 return clean_path
