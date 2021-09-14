@@ -19,6 +19,17 @@
 
 import setuptools
 
+from os import path
+
+
+def get_requirements(requirements_filename: str):
+    requirements_file = path.join(path.abspath(path.dirname(__file__)), "requirements", requirements_filename)
+    with open(requirements_file, 'r', encoding='utf-8') as r:
+        requirements = r.readlines()
+    requirements = [r.strip() for r in requirements if r.strip() and not r.strip().startswith("#")]
+    return requirements
+
+
 with open("README.md", "r") as f:
     long_description = f.read()
 
@@ -29,9 +40,6 @@ with open("./version.py", "r", encoding="utf-8") as v:
                 version = line.split('"')[1]
             else:
                 version = line.split("'")[1]
-
-with open("./requirements.txt", "r", encoding="utf-8") as r:
-    requirements = r.readlines()
 
 setuptools.setup(
     name="neon-utils",
@@ -53,7 +61,7 @@ setuptools.setup(
         "Operating System :: OS Independent"
     ],
     python_requires='>=3.6',
-    install_requires=requirements,
+    install_requires=get_requirements("requirements.txt"),
     entry_points={
         'console_scripts': [
             "neon-config-import=neon_utils.configuration_utils:create_config_from_setup_params"
