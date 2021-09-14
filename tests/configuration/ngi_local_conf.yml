@@ -27,14 +27,3 @@ devVars:
   clapThreshold: 10.0e10
   defaultVolume: 60
   defaultMicVolume: 100
-
-hotwords:
-  Hey Neon: { module: jarbas_pocketsphinx_ww_plug,
-              phonemes: HH EY . N IY AA N .,
-              threshold: 1e-20,
-              lang: en-us,
-              sample_rate: 16000,
-              listen: True,
-              sound: snd/start_listening.wav,
-              local_model_file: None
-  }

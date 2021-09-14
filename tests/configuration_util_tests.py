@@ -631,25 +631,6 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         shutil.move(bak_local_conf, ngi_local_conf)
 
-    def test_get_speech_config_updated_pocketsphinx_plugin(self):
-        config_path = get_config_dir()
-        test_config = join(CONFIG_PATH, "ngi_local_conf.yml")
-        config_file = join(config_path, "ngi_local_conf.yml")
-        backup_file = join(config_path, "_ngi_local_conf.bak")
-        if exists(config_file):
-            shutil.move(config_file, backup_file)
-        shutil.copy(test_config, config_file)
-
-        config = get_neon_speech_config()
-        self.assertIsInstance(config["hotwords"], dict)
-        self.assertEqual(config["hotwords"]["Hey Neon"]["module"], "ovos-ww-plugin-pocketsphinx")
-
-        local_conf = get_neon_local_config()
-        self.assertEqual(local_conf["hotwords"], config["hotwords"])
-
-        if exists(backup_file):
-            shutil.move(backup_file, config_file)
-
     def test_get_neon_auth_config(self):
         auth_path = os.path.join(ROOT_DIR, "credentials")
         ngi_auth_vars = get_neon_auth_config(auth_path)
