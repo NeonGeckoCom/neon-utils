@@ -582,6 +582,15 @@ def get_neon_speech_config() -> dict:
     if hotword_config != local_config.get("hotwords"):
         LOG.warning(f"Neon hotword config missing! {hotword_config}")
 
+    for hotword in hotword_config.values():
+        if hotword["module"] == "jarbas_pocketsphinx_ww_plug":
+            LOG.warning("Hotword referencing jarbas-pocketsphinx-ww-plug found!")
+            import importlib.util
+            if not importlib.util.find_spec("jarbas-wake-word-plugin-pocketsphinx"):
+                LOG.info("jarbas pocketsphinx plugin not found; updating config to ovos")
+                hotword["module"] = "ovos-ww-plugin-pocketsphinx"
+                local_config.write_changes()
+
     neon_audio_parser_config = local_config.get("audio_parsers", {})
     merged_audio_parser_config = {**mycroft.get("audio_parsers", {}), **neon_audio_parser_config}
     if merged_audio_parser_config.keys() != neon_audio_parser_config.keys():
