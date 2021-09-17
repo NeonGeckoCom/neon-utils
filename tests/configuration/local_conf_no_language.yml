@@ -9,7 +9,6 @@ prefFlags:
   metrics: False
   saveAudio: False
   saveText: True
-  # TODO: These should go somewhere in HAL/Enclosure
   localGui: True
   guiEvents: True
 
@@ -37,7 +36,6 @@ devVars:
   defaultVolume: 60
   defaultMicVolume: 100
   installUser:
-  # TODO: Depreciate installUser
 
 gestures:
   clapThreshold: 10.0e10
@@ -64,7 +62,6 @@ websocket:
   ssl_key:
 
 gui:
-  # TODO: This should be built so lang, enclosure are read from other places
   # Host information for the gui server
   lang: en-us
   enclosure: generic
@@ -75,7 +72,7 @@ gui:
   resource_root: https://0000.us/klatchat/app/files/neon_qml
 
 hotwords:
-  Hey Neon: { module: ovos-ww-plugin-pocketsphinx,
+  Hey Neon: { module: jarbas_pocketsphinx_ww_plug,
               phonemes: HH EY . N IY AA N .,
               threshold: 1e-20,
               lang: en-us,
@@ -144,13 +141,8 @@ tts:
   }
 stt:
   module: google_cloud_streaming
-
-language:
-  boost: False
-  core_lang: en-us
-  translation_module: libretranslate_plug
-  detection_module: libretranslate_detection_plug
-  libretranslate: {"libretranslate_host": "https://translate.neon.ai:5000"}
+  translation_module: old_translate_module
+  detection_module: old_detection_module
 
 logs:
   blacklist: ["enclosure.mouth.viseme", "enclosure.mouth.display"]
