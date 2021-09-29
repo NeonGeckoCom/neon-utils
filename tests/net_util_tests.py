@@ -31,6 +31,10 @@ class NetUtilTests(unittest.TestCase):
         from socket import socket
         cls.base_socket = socket
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        socket.socket = cls.base_socket
+
     def setUp(self):
         socket.socket = self.base_socket
 
@@ -85,6 +89,16 @@ class NetUtilTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             check_url_response("ssh://github.com")
 
+    def test_check_url_connection_invalid_args(self):
+        from neon_utils.net_utils import check_url_response
+
+        with self.assertRaises(ValueError):
+            check_url_response("")
+        with self.assertRaises(ValueError):
+            check_url_response(123)
+        with self.assertRaises(ValueError):
+            check_url_response(None)
+
     def test_check_url_connection_valid_offline(self):
         def mock_socket(*args, **kwargs):
             raise ConnectionError("Socket is disabled!")
@@ -102,10 +116,13 @@ class NetUtilTests(unittest.TestCase):
         from neon_utils.net_utils import check_online
         self.assertTrue(check_online())
         self.assertTrue(check_online(("google.com", "github.com")))
+        self.assertTrue(check_online(("api.neon.ai", "google.com")))
+        self.assertTrue(check_online(("", "google.com")))
 
     def test_check_online_invalid_offline(self):
         from neon_utils.net_utils import check_online
         self.assertFalse(check_online(("api.neon.ai",)))
+        self.assertFalse(check_online(("",)))
 
     def test_check_online_valid_offline(self):
         def mock_socket(*args, **kwargs):
@@ -121,6 +138,8 @@ class NetUtilTests(unittest.TestCase):
             check_online(None)
         with self.assertRaises(ValueError):
             check_online("google.com")
+        with self.assertRaises(ValueError):
+            check_online(123)
 
 
 if __name__ == '__main__':

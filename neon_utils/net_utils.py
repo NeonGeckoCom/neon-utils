@@ -20,7 +20,7 @@
 import socket
 import netifaces
 import requests
-from requests.exceptions import MissingSchema, InvalidSchema, ConnectionError
+from requests.exceptions import MissingSchema, InvalidSchema, InvalidURL, ConnectionError
 
 
 def get_ip_address() -> str:
@@ -57,6 +57,8 @@ def check_url_response(url: str = "https://google.com") -> bool:
     :param url: URL to connect to (http/https schema expected)
     :returns: resp.ok if request is completed, False if ConnectionError is raised
     """
+    if not isinstance(url, str):
+        raise ValueError(f"{url} is not a str")
     try:
         resp = requests.get(url)
         return resp.ok
@@ -64,6 +66,8 @@ def check_url_response(url: str = "https://google.com") -> bool:
         return check_url_response(f"http://{url}")
     except InvalidSchema:
         raise ValueError(f"{url} is not a valid http url")
+    except InvalidURL:
+        raise ValueError(f"{url} is not a valid URL")
     except ConnectionError:
         # Offline Response
         return False
@@ -79,6 +83,11 @@ def check_online(valid_urls: tuple = ("https://google.com", "https://github.com"
     """
     if not isinstance(valid_urls, tuple):
         raise ValueError(f"Expected tuple, got {type(valid_urls)}")
-    if any([check_url_response(url) for url in valid_urls]):
-        return True
+    for url in valid_urls:
+        try:
+            if check_url_response(url):
+                return True
+        except ValueError:
+            pass
+
     return False
