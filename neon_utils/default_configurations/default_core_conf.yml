@@ -105,6 +105,7 @@ skills:
   auto_update: True
   install_essential: True
   install_default: True
+  wait_for_internet: True
   debug: True
   blacklist: []
   priority: [
