@@ -20,17 +20,41 @@
 import os
 import sys
 import unittest
+import socket
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from neon_utils.net_utils import *
 
 
 class NetUtilTests(unittest.TestCase):
-    def test_get_ip_address(self):
+    @classmethod
+    def setUpClass(cls) -> None:
+        from socket import socket
+        cls.base_socket = socket
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        socket.socket = cls.base_socket
+
+    def setUp(self):
+        socket.socket = self.base_socket
+
+    def test_get_ip_address_valid(self):
+        from neon_utils.net_utils import get_ip_address
+
         ip_addr = get_ip_address()
         self.assertIsInstance(ip_addr, str)
 
+    def test_get_ip_address_offline(self):
+        def mock_socket(*args, **kwargs):
+            raise OSError("Socket is disabled!")
+        socket.socket = mock_socket
+        from neon_utils.net_utils import get_ip_address
+
+        with self.assertRaises(OSError):
+            get_ip_address()
+
     def test_get_adapter_info(self):
+        from neon_utils.net_utils import get_adapter_info
         try:
             info = get_adapter_info()
             self.assertIsInstance(info, dict)
@@ -45,8 +69,77 @@ class NetUtilTests(unittest.TestCase):
             print("No Connection")
 
     def test_get_adapter_fail(self):
+        from neon_utils.net_utils import get_adapter_info
+
         with self.assertRaises(IndexError):
             get_adapter_info("FAIL")
+
+    def test_check_url_connection_valid_online(self):
+        from neon_utils.net_utils import check_url_response
+
+        self.assertTrue(check_url_response())
+        self.assertTrue(check_url_response("google.com"))
+        self.assertTrue(check_url_response("https://github.com"))
+
+    def test_check_url_connection_invalid_schema(self):
+        from neon_utils.net_utils import check_url_response
+
+        with self.assertRaises(ValueError):
+            check_url_response("smb://google.com")
+        with self.assertRaises(ValueError):
+            check_url_response("ssh://github.com")
+
+    def test_check_url_connection_invalid_args(self):
+        from neon_utils.net_utils import check_url_response
+
+        with self.assertRaises(ValueError):
+            check_url_response("")
+        with self.assertRaises(ValueError):
+            check_url_response(123)
+        with self.assertRaises(ValueError):
+            check_url_response(None)
+
+    def test_check_url_connection_valid_offline(self):
+        def mock_socket(*args, **kwargs):
+            raise ConnectionError("Socket is disabled!")
+        socket.socket = mock_socket
+        from neon_utils.net_utils import check_url_response
+
+        self.assertFalse(check_url_response())
+
+    def test_check_url_connection_invalid_url(self):
+        from neon_utils.net_utils import check_url_response
+
+        self.assertFalse(check_url_response("https://api.neon.ai"))
+
+    def test_check_online_valid_online(self):
+        from neon_utils.net_utils import check_online
+        self.assertTrue(check_online())
+        self.assertTrue(check_online(("google.com", "github.com")))
+        self.assertTrue(check_online(("api.neon.ai", "google.com")))
+        self.assertTrue(check_online(("", "google.com")))
+
+    def test_check_online_invalid_offline(self):
+        from neon_utils.net_utils import check_online
+        self.assertFalse(check_online(("api.neon.ai",)))
+        self.assertFalse(check_online(("",)))
+
+    def test_check_online_valid_offline(self):
+        def mock_socket(*args, **kwargs):
+            raise ConnectionError("Socket is disabled!")
+        socket.socket = mock_socket
+        from neon_utils.net_utils import check_online
+        self.assertFalse(check_online())
+        self.assertFalse(check_online(("google.com", "github.com")))
+
+    def test_check_online_invalid_params(self):
+        from neon_utils.net_utils import check_online
+        with self.assertRaises(ValueError):
+            check_online(None)
+        with self.assertRaises(ValueError):
+            check_online("google.com")
+        with self.assertRaises(ValueError):
+            check_online(123)
 
 
 if __name__ == '__main__':
