@@ -180,6 +180,7 @@ remoteVars:
   url: https://api.mycroft.ai
   ver: v1
   remoteHost: 167.172.112.7
+  enableConnection: true
 
 gnome:
   favApps:
