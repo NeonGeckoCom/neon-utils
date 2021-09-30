@@ -808,6 +808,12 @@ def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
     if not auth_config.content:
         LOG.info("Populating empty auth configuration")
         auth_config._content = build_new_auth_config(path)
+        auth_config.write_changes()
+
+    if not auth_config.content:
+        LOG.info("Empty auth_config generated, adding 'created' key to prevent regeneration attempts")
+        auth_config._content = {"_loaded": True}
+        auth_config.write_changes()
 
     LOG.info(f"Loaded auth config from {auth_config.file_path}")
     return auth_config
