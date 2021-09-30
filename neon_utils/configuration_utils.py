@@ -37,7 +37,6 @@ from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
-from neon_utils.parse_utils import clean_filename
 
 logging.getLogger("filelock").setLevel(logging.WARNING)
 
@@ -49,9 +48,7 @@ class NGIConfig:
         self.name = name
         self.path = path or get_config_dir()
         self.parser = YAML()
-        # lock_filename = join(self.path, f".{self.name}.lock")
-        self.lock = NamedLock(clean_filename(repr(self)))
-        # self.lock = FileLock(lock_filename, timeout=10)
+        self.lock = NamedLock(repr(self))
         self._pending_write = False
         self._content = dict()
         self._loaded = os.path.getmtime(self.file_path)
@@ -86,7 +83,9 @@ class NGIConfig:
 
     def write_changes(self):
         if self._pending_write or self._disk_content_hash != hash(repr(self._content)):
-            self._write_yaml_file()
+            if not self._write_yaml_file():
+                LOG.info("Changes were not written, reloading config")
+                self.check_for_updates()
 
     def populate(self, content, check_existing=False):
         if not check_existing:
@@ -97,7 +96,7 @@ class NGIConfig:
         if old_content == self._content:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
-        self._write_yaml_file()
+        self.write_changes()
 
     def remove_key(self, *key):
         for item in key:
@@ -118,7 +117,7 @@ class NGIConfig:
         self._content = dict_make_equal_keys(self._content, other, depth)
         if old_content == self._content:
             return
-        self._write_yaml_file()
+        self.write_changes()
 
     def update_keys(self, other):
         """
@@ -133,7 +132,7 @@ class NGIConfig:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
 
-        self._write_yaml_file()
+        self.write_changes()
 
     def check_for_updates(self) -> dict:
         """
@@ -144,14 +143,8 @@ class NGIConfig:
         if new_content:
             LOG.debug(f"{self.name} Checked for Updates")
             self._content = new_content
-        else:
-            LOG.error("new_content is empty!!")
-            new_content = self._load_yaml_file()
-            if new_content:
-                LOG.debug("second attempt success")
-                self._content = new_content
-            else:
-                LOG.error("second attempt failed")
+        elif self._content:
+            LOG.error("new_content is empty! keeping current config")
         return self._content
 
     def update_yaml_file(self, header=None, sub_header=None, value="", multiple=False, final=False):
@@ -189,7 +182,7 @@ class NGIConfig:
                 return
 
         if not multiple:
-            self._write_yaml_file()
+            self.write_changes()
         else:
             LOG.debug("More than one change")
             self._pending_write = True
@@ -214,7 +207,7 @@ class NGIConfig:
         """
         self._content = pref_dict
 
-        self._write_yaml_file()
+        self.write_changes()
         return self
 
     def from_json(self, json_path: str):
@@ -228,7 +221,7 @@ class NGIConfig:
         """
         self._content = load_commented_json(json_path)
 
-        self._write_yaml_file()
+        self.write_changes()
         return self
 
     def _load_yaml_file(self) -> dict:
@@ -239,10 +232,14 @@ class NGIConfig:
                  selected YAML.
         """
         try:
-            self._loaded = os.path.getmtime(self.file_path)
             with self.lock:
                 with open(self.file_path, 'r') as f:
-                    return self.parser.load(f) or dict()
+                    config = self.parser.load(f)
+                if not config:
+                    LOG.error(f"Empty config file found at: {self.file_path}")
+                    config = dict()
+                self._loaded = os.path.getmtime(self.file_path)
+            return config
         except FileNotFoundError:
             LOG.error(f"Configuration file not found! ({self.file_path})")
         except PermissionError:
@@ -251,23 +248,34 @@ class NGIConfig:
             LOG.error(f"{self.file_path} Configuration file error: {c}")
         return dict()
 
-    def _write_yaml_file(self):
+    def _write_yaml_file(self) -> bool:
         """
         Overwrites and/or updates the YML at the specified file_path.
+        :return: True if changes were written to disk, else False
         """
-        try:
-            with self.lock:
-                tmp_filename = join(self.path, f".{self.name}.tmp")
-                LOG.debug(f"tmp_filename={tmp_filename}")
-                shutil.copy2(self.file_path, tmp_filename)
+        to_write = deepcopy(self._content)
+        if not to_write:
+            LOG.error(f"Config content empty! Skipping write to disk and reloading")
+            return False
+        with self.lock:
+            if self._loaded != os.path.getmtime(self.file_path):
+                LOG.warning("File on disk modified! Skipping write to disk")
+                return False
+            tmp_filename = join(self.path, f".{self.name}.tmp")
+            # LOG.debug(f"tmp_filename={tmp_filename}")
+            shutil.copy2(self.file_path, tmp_filename)
+            try:
                 with open(self.file_path, 'w+') as f:
-                    self.parser.dump(self._content, f)
+                    self.parser.dump(to_write, f)
                     LOG.debug(f"YAML updated {self.name}")
                 self._loaded = os.path.getmtime(self.file_path)
                 self._pending_write = False
                 self._disk_content_hash = hash(repr(self._content))
-        except FileNotFoundError as x:
-            LOG.error(f"Configuration file not found error: {x}")
+            except Exception as e:
+                LOG.error(e)
+                LOG.info(f"Restoring config from tmp file backup")
+                shutil.copy2(tmp_filename, self.file_path)
+            return True
 
     @property
     def content(self) -> dict:
@@ -321,7 +329,7 @@ class NGIConfig:
                 self._content = to_update
         else:
             raise TypeError("__add__ expects an argument other than None")
-        self._write_yaml_file()
+        self.write_changes()
 
     def __sub__(self, *other):
         # with self.lock.acquire(30):
@@ -344,7 +352,7 @@ class NGIConfig:
                     raise TypeError("{} config is empty".format(self.name))
         else:
             raise TypeError("__sub__ expects an argument other than None")
-        self._write_yaml_file()
+        self.write_changes()
 
 
 def get_config_dir():
@@ -352,6 +360,13 @@ def get_config_dir():
     Get a default directory in which to find configuration files
     Returns: Path to configuration or else default
     """
+    if os.getenv("NEON_CONFIG_PATH"):
+        config_path = expanduser(os.getenv("NEON_CONFIG_PATH"))
+        if os.path.isdir(config_path):
+            LOG.info(f"Got config path from environment vars: {config_path}")
+            return config_path
+        else:
+            LOG.error(f"NEON_CONFIG_PATH is not valid and will be ignored: {config_path}")
     site = sysconfig.get_paths()['platlib']
     if exists(join(site, 'NGI')):
         return join(site, "NGI")
@@ -393,8 +408,9 @@ def create_file(filename):
         os.makedirs(os.path.dirname(filename), exist_ok=True)
     except OSError:
         pass
-    with open(filename, 'w') as f:
-        f.write('')
+    with NamedLock(filename):
+        with open(filename, 'w') as f:
+            f.write('')
 
 
 def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys_to_remove: list) -> MutableMapping:
@@ -504,8 +520,9 @@ def write_to_json(preference_dict: MutableMapping, output_path: str):
     """
     if not os.path.exists(output_path):
         create_file(output_path)
-    with open(output_path, "w") as out:
-        json.dump(preference_dict, out, indent=4)
+    with NamedLock(output_path):
+        with open(output_path, "w") as out:
+            json.dump(preference_dict, out, indent=4)
 
 
 def get_neon_lang_config() -> dict:
@@ -733,10 +750,8 @@ def _move_config_sections(user_config, local_config):
         local_config["language"] = dict()
     if local_config.get("stt", {}).get("detection_module"):
         local_config["language"]["detection_module"] = local_config["stt"].pop("detection_module")
-        local_config.write_changes()
     if local_config.get("stt", {}).get("translation_module"):
         local_config["language"]["translation_module"] = local_config["stt"].pop("translation_module")
-        local_config.write_changes()
 
 
 def _safe_mycroft_config() -> dict:
@@ -887,6 +902,8 @@ def get_mycroft_compatible_config(mycroft_only=False):
     default_config["server"] = get_neon_api_config()
     default_config["websocket"] = get_neon_bus_config()
     default_config["gui_websocket"] = {**default_config.get("gui_websocket", {}), **local["gui"]}
+    default_config["gui_websocket"]["base_port"] = \
+        default_config["gui_websocket"].get("base_port") or default_config["gui_websocket"].get("port")
     default_config["listener"] = speech["listener"]
     # default_config["precise"]
     default_config["hotwords"] = speech["hotwords"]
@@ -910,8 +927,9 @@ def write_mycroft_compatible_config(file_to_write: str = "~/.mycroft/mycroft.con
     """
     configuration = get_mycroft_compatible_config()
     file_path = os.path.expanduser(file_to_write)
-    with open(file_path, 'w') as f:
-        json.dump(configuration, f, indent=4)
+    with NamedLock(file_path):
+        with open(file_path, 'w') as f:
+            json.dump(configuration, f, indent=4)
     return file_path
 
 
