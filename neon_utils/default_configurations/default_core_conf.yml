@@ -105,6 +105,7 @@ skills:
   auto_update: True
   install_essential: True
   install_default: True
+  wait_for_internet: True
   debug: True
   blacklist: []
   priority: [
@@ -180,6 +181,7 @@ remoteVars:
   url: https://api.mycroft.ai
   ver: v1
   remoteHost: 167.172.112.7
+  enableConnection: true
 
 gnome:
   favApps:
