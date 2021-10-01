@@ -76,11 +76,18 @@ class NGIConfig:
         return file_path
 
     @property
-    def requires_reload(self):
+    def requires_reload(self) -> bool:
+        """
+        Checks if yml file on disk has been modified since this config instance was last updated
+        :returns: True if yml modified time is different than at last update
+        """
         return self._loaded != os.path.getmtime(self.file_path)
 
     def check_reload(self):
-        if self._loaded != os.path.getmtime(self.file_path):
+        """
+        Conditionally calls `self.check_for_updates` if `self.requires_reload` returns True.
+        """
+        if self.requires_reload:
             self.check_for_updates()
 
     def write_changes(self) -> bool:
@@ -117,21 +124,26 @@ class NGIConfig:
             recursive: flag to indicate configuration may be merged recursively
             depth: int depth to recurse (0 includes top-level keys only)
         """
-        old_content = deepcopy(self.content)
-        if not recursive:
-            depth = 0
-        self._content = dict_make_equal_keys(self._content, other, depth)
-        if old_content == self._content:
-            return
+        with self.lock:
+            old_content = deepcopy(self._content)
+            if not recursive:
+                depth = 0
+            self._content = dict_make_equal_keys(self._content, other, depth)
+            if old_content == self._content:
+                return
 
-        if not self.write_changes():  # TODO: This should probably reload and re-validate DM
+        if not self.write_changes():
             # This is probably because multiple instances are syncing with default config simultaneously
             LOG.warning("Disk contents are newer than this config object, changes were not written.")
-            old_content = deepcopy(self.content)
-            self._content = dict_make_equal_keys(self._content, other, depth)
+            self.check_reload()
+            with self.lock:
+                old_content = deepcopy(self._content)
+                self._content = dict_make_equal_keys(self._content, other, depth)
             if old_content != self._content:
                 LOG.error("Still found changes, writing them")
-                self.write_changes()
+                success = self.write_changes()
+                if not success:
+                    LOG.error("Failed to write changes! Disk and config object are out of sync")
 
     def update_keys(self, other):
         """
@@ -140,14 +152,25 @@ class NGIConfig:
         Args:
             other: dict of keys and default values this should be added to this configuration
         """
-        old_content = deepcopy(self._content)
-        self._content = dict_update_keys(self._content, other)  # to_change, one_with_all_keys
+        with self.lock:
+            old_content = deepcopy(self._content)
+            self._content = dict_update_keys(self._content, other)  # to_change, one_with_all_keys
         if old_content == self._content:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
 
         if not self.write_changes():
-            LOG.error("Disk contents are newer than this config object, changes were not written.")
+            # This is probably because multiple instances are syncing with default config simultaneously
+            LOG.warning("Disk contents are newer than this config object, changes were not written.")
+            self.check_reload()
+            with self.lock:
+                old_content = deepcopy(self._content)
+                self._content = dict_update_keys(old_content, other)
+            if old_content != self._content:
+                LOG.error("Still found changes, writing them")
+                success = self.write_changes()
+                if not success:
+                    LOG.error("Failed to write changes! Disk and config object are out of sync")
 
     def check_for_updates(self) -> dict:
         """
@@ -323,7 +346,7 @@ class NGIConfig:
         return item in self._content
 
     def __setitem__(self, key, value):
-        LOG.info(f"Config changes pending write to disk!")
+        # LOG.info(f"Config changes pending write to disk!")
         self._pending_write = True
         self._content[key] = value
 
