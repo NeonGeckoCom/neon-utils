@@ -1,0 +1,63 @@
+user:
+  first_name: Test
+  middle_name: ''
+  last_name: Test
+  preferred_name: Test
+  full_name: Test  Test
+  dob: YYYY/MM/DD
+  age: ''
+  email: test@neongecko.com
+  username: DemoTest
+  password: ''
+  picture: ''
+  about: ''
+  phone: ''
+  phone_verified: false
+  email_verified: false
+
+brands:
+  ignored_brands:
+    apple: 3
+  favorite_brands:
+    google: 3
+    neon: 3
+  specially_requested:
+    microsoft: 5
+
+speech:
+  stt_language: en
+  stt_region: US
+  alt_languages: [en]
+  tts_language: en-us
+  tts_gender: female
+  neon_voice: ''
+  secondary_tts_language: ''
+  secondary_tts_gender: ''
+  secondary_neon_voice: ''
+  speed_multiplier: 1.0
+
+units:
+  time: 12
+  # 12, 24
+  date: MDY
+  # MDY, YMD, YDM
+  measure: imperial
+  # imperial, metric
+
+location:
+  lat: 51.5073219
+  lng: -0.1276474
+  city: Westminster
+  state: England
+  country: United Kingdom
+  tz: Europe/London
+  utc: 1.0
+
+response_mode:
+  speed_mode: quick
+
+privacy:
+  save_audio: true
+listener:
+  wake_word: okay computer
+  phonemes: OW K AE Y . K OW M P AH T EH R
