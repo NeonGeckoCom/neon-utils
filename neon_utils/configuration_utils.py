@@ -44,7 +44,7 @@ logging.getLogger("filelock").setLevel(logging.WARNING)
 
 class NGIConfig:
     configuration_list = dict()
-    configuration_locks = dict()
+    # configuration_locks = dict()
 
     def __init__(self, name, path=None, force_reload: bool = False):
         self.name = name
@@ -52,9 +52,9 @@ class NGIConfig:
         self.parser = YAML()
         # TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
         lock_filename = join(self.path, f".{self.name}.lock")
-        if lock_filename not in NGIConfig.configuration_locks:
-            NGIConfig.configuration_locks[lock_filename] = FileLock(lock_filename, timeout=10)
-        self.lock = NGIConfig.configuration_locks[lock_filename]
+        # if lock_filename not in NGIConfig.configuration_locks:
+        #     NGIConfig.configuration_locks[lock_filename] = FileLock(lock_filename, timeout=10)
+        self.lock = FileLock(lock_filename, timeout=10)
         self._pending_write = False
         self._content = dict()
         self._loaded = os.path.getmtime(self.file_path)
@@ -414,9 +414,9 @@ def create_file(filename):
         os.makedirs(os.path.dirname(filename), exist_ok=True)
     except OSError:
         pass
-    with NamedLock(filename):
-        with open(filename, 'w') as f:
-            f.write('')
+    # with NamedLock(filename): # TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
+    with open(filename, 'w') as f:
+        f.write('')
 
 
 def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys_to_remove: list) -> MutableMapping:
@@ -526,9 +526,9 @@ def write_to_json(preference_dict: MutableMapping, output_path: str):
     """
     if not os.path.exists(output_path):
         create_file(output_path)
-    with NamedLock(output_path):
-        with open(output_path, "w") as out:
-            json.dump(preference_dict, out, indent=4)
+    # with NamedLock(output_path): TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
+    with open(output_path, "w") as out:
+        json.dump(preference_dict, out, indent=4)
 
 
 def get_neon_lang_config() -> dict:
@@ -933,9 +933,9 @@ def write_mycroft_compatible_config(file_to_write: str = "~/.mycroft/mycroft.con
     """
     configuration = get_mycroft_compatible_config()
     file_path = os.path.expanduser(file_to_write)
-    with NamedLock(file_path):
-        with open(file_path, 'w') as f:
-            json.dump(configuration, f, indent=4)
+    # with NamedLock(file_path): TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
+    with open(file_path, 'w') as f:
+        json.dump(configuration, f, indent=4)
     return file_path
 
 
