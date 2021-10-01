@@ -16,10 +16,12 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+import logging
 import shutil
 import sys
 import os
 import unittest
+from pprint import pformat
 from time import sleep
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -707,24 +709,31 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.copytree(config_path, backup_path)
 
         def _open_config(idx):
+            success = True
+            try:
+                local_config = deepcopy(get_neon_local_config(config_path).content)
+                self.assertNotIn("translation_module", local_config["stt"])
+                self.assertNotIn("detection_module", local_config["stt"])
+            except Exception as e:
+                LOG.error(e)
+                success = False
+            try:
+                user_config = get_neon_user_config(config_path)
+                self.assertNotIn("listener", user_config.content.keys())
+            except Exception as e:
+                LOG.error(e)
+                success = False
             try:
                 lang_config = get_neon_lang_config()
                 self.assertIsInstance(lang_config["boost"], bool)
-
-                local_config = get_neon_local_config(config_path)
-                self.assertNotIn("translation_module", local_config["stt"])
-                self.assertNotIn("detection_module", local_config["stt"])
-                user_config = get_neon_user_config(config_path)
-                self.assertNotIn("listener", user_config.content.keys())
-                success = True
             except Exception as e:
                 LOG.error(e)
                 success = False
             test_results[idx] = success
 
-        for i in range(10):
+        for i in range(64):
             Thread(target=_open_config, args=(i,), daemon=True).start()
-        while not len(test_results.keys()) == 10:
+        while not len(test_results.keys()) == 64:
             sleep(0.5)
         self.assertTrue(all(test_results.values()))
 

@@ -29,8 +29,6 @@ from copy import deepcopy
 from os.path import *
 from collections.abc import MutableMapping
 from contextlib import suppress
-# from combo_lock import NamedLock
-from filelock import FileLock
 from glob import glob
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.configuration import read_mycroft_config, LocalConf
@@ -38,6 +36,7 @@ from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
+from neon_utils.lock_utils import create_master_lock
 
 logging.getLogger("filelock").setLevel(logging.WARNING)
 
@@ -54,7 +53,7 @@ class NGIConfig:
         lock_filename = join(self.path, f".{self.name}.lock")
         # if lock_filename not in NGIConfig.configuration_locks:
         #     NGIConfig.configuration_locks[lock_filename] = FileLock(lock_filename, timeout=10)
-        self.lock = FileLock(lock_filename, timeout=10)
+        self.lock = create_master_lock(lock_filename)
         self._pending_write = False
         self._content = dict()
         self._loaded = os.path.getmtime(self.file_path)
@@ -87,11 +86,14 @@ class NGIConfig:
         if self._loaded != os.path.getmtime(self.file_path):
             self.check_for_updates()
 
-    def write_changes(self):
+    def write_changes(self) -> bool:
+        """
+        Writes any changes to disk. If disk contents have changed, this config object will not modify config files
+        :return: True if changes were written, False if disk config has been updated.
+        """
+        # TODO: Add some param to force overwrite? DM
         if self._pending_write or self._disk_content_hash != hash(repr(self._content)):
-            if not self._write_yaml_file():
-                LOG.info("Changes were not written, reloading config")
-                self.check_for_updates()
+            return self._write_yaml_file()
 
     def populate(self, content, check_existing=False):
         if not check_existing:
@@ -102,7 +104,8 @@ class NGIConfig:
         if old_content == self._content:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
-        self.write_changes()
+        if not self.write_changes():
+            LOG.error("Disk contents are newer than this config object, changes were not written.")
 
     def remove_key(self, *key):
         for item in key:
@@ -117,13 +120,21 @@ class NGIConfig:
             recursive: flag to indicate configuration may be merged recursively
             depth: int depth to recurse (0 includes top-level keys only)
         """
-        old_content = deepcopy(self._content)
+        old_content = deepcopy(self.content)
         if not recursive:
             depth = 0
         self._content = dict_make_equal_keys(self._content, other, depth)
         if old_content == self._content:
             return
-        self.write_changes()
+
+        if not self.write_changes():  # TODO: This should probably reload and re-validate DM
+            # This is probably because multiple instances are syncing with default config simultaneously
+            LOG.warning("Disk contents are newer than this config object, changes were not written.")
+            old_content = deepcopy(self.content)
+            self._content = dict_make_equal_keys(self._content, other, depth)
+            if old_content != self._content:
+                LOG.error("Still found changes, writing them")
+                self.write_changes()
 
     def update_keys(self, other):
         """
@@ -138,7 +149,8 @@ class NGIConfig:
             LOG.warning(f"Update called with no change: {self.file_path}")
             return
 
-        self.write_changes()
+        if not self.write_changes():
+            LOG.error("Disk contents are newer than this config object, changes were not written.")
 
     def check_for_updates(self) -> dict:
         """
@@ -188,7 +200,8 @@ class NGIConfig:
                 return
 
         if not multiple:
-            self.write_changes()
+            if not self.write_changes():
+                LOG.error("Disk contents are newer than this config object, changes were not written.")
         else:
             LOG.debug("More than one change")
             self._pending_write = True
@@ -213,7 +226,8 @@ class NGIConfig:
         """
         self._content = pref_dict
 
-        self.write_changes()
+        if not self.write_changes():
+            LOG.error("Disk contents are newer than this config object, changes were not written.")
         return self
 
     def from_json(self, json_path: str):
@@ -227,7 +241,8 @@ class NGIConfig:
         """
         self._content = load_commented_json(json_path)
 
-        self.write_changes()
+        if not self.write_changes():
+            LOG.error("Disk contents are newer than this config object, changes were not written.")
         return self
 
     def _load_yaml_file(self) -> dict:
@@ -335,7 +350,8 @@ class NGIConfig:
                 self._content = to_update
         else:
             raise TypeError("__add__ expects an argument other than None")
-        self.write_changes()
+        if not self.write_changes():
+            LOG.error("Disk contents are newer than this config object, changes were not written.")
 
     def __sub__(self, *other):
         # with self.lock.acquire(30):
@@ -358,7 +374,8 @@ class NGIConfig:
                     raise TypeError("{} config is empty".format(self.name))
         else:
             raise TypeError("__sub__ expects an argument other than None")
-        self.write_changes()
+        if not self.write_changes():
+            LOG.error("Disk contents are newer than this config object, changes were not written.")
 
 
 def get_config_dir():
@@ -369,7 +386,7 @@ def get_config_dir():
     if os.getenv("NEON_CONFIG_PATH"):
         config_path = expanduser(os.getenv("NEON_CONFIG_PATH"))
         if os.path.isdir(config_path):
-            LOG.info(f"Got config path from environment vars: {config_path}")
+            # LOG.info(f"Got config path from environment vars: {config_path}")
             return config_path
         else:
             LOG.error(f"NEON_CONFIG_PATH is not valid and will be ignored: {config_path}")
@@ -537,13 +554,14 @@ def get_neon_lang_config() -> dict:
     Returns:
         dict of config params used by Language Detector and Translator modules
     """
-    lang_config = deepcopy(get_neon_local_config().get("language", {}))
+    lang_config = deepcopy(get_neon_local_config().content.get("language", {}))
+    # TODO: Make sure lang_config is valid here!
     user_lang_config = deepcopy(get_neon_user_config().content.get("speech", {}))
     lang_config["internal"] = lang_config.get("core_lang", "en-us")
     lang_config["user"] = user_lang_config.get("stt_language", "en-us")
-
+    lang_config["boost"] = lang_config.get("boost", False)
     merged_language = {**_safe_mycroft_config().get("language", {}), **lang_config}
-    if merged_language.keys() != user_lang_config.keys():
+    if merged_language.keys() != lang_config.keys():
         LOG.warning(f"Keys missing from Neon config! {merged_language.keys()}")
 
     return merged_language
@@ -738,26 +756,30 @@ def _move_config_sections(user_config, local_config):
         local_config (NGIConfig): local configuration object
     """
     depreciated_user_configs = ("interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
-    if any([d in user_config.content for d in depreciated_user_configs]):
-        LOG.warning("Depreciated keys found in user config! Adding them to local config")
-        if "wake_words_enabled" in user_config.content.get("interface", dict()):
-            user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
-        config_to_move = {"interface": user_config.content.pop("interface", {}),
-                          "listener": user_config.content.pop("listener", {}),
-                          "skills": user_config.content.pop("skills", {}),
-                          "session": user_config.content.pop("session", {}),
-                          "tts": user_config.content.pop("tts", {}),
-                          "stt": user_config.content.pop("stt", {}),
-                          "logs": user_config.content.pop("logs", {}),
-                          "device": user_config.content.pop("device", {})}
-        local_config.update_keys(config_to_move)
+    try:
+        if any([d in user_config.content for d in depreciated_user_configs]):
+            LOG.warning("Depreciated keys found in user config! Adding them to local config")
+            if "wake_words_enabled" in user_config.content.get("interface", dict()):
+                user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
+            config_to_move = {"interface": user_config.content.pop("interface", {}),
+                              "listener": user_config.content.pop("listener", {}),
+                              "skills": user_config.content.pop("skills", {}),
+                              "session": user_config.content.pop("session", {}),
+                              "tts": user_config.content.pop("tts", {}),
+                              "stt": user_config.content.pop("stt", {}),
+                              "logs": user_config.content.pop("logs", {}),
+                              "device": user_config.content.pop("device", {})}
+            local_config.update_keys(config_to_move)
 
-    if not local_config.get("language"):
-        local_config["language"] = dict()
-    if local_config.get("stt", {}).get("detection_module"):
-        local_config["language"]["detection_module"] = local_config["stt"].pop("detection_module")
-    if local_config.get("stt", {}).get("translation_module"):
-        local_config["language"]["translation_module"] = local_config["stt"].pop("translation_module")
+        if not local_config.get("language"):
+            local_config["language"] = dict()
+        if local_config.get("stt", {}).get("detection_module"):
+            local_config["language"]["detection_module"] = local_config["stt"].pop("detection_module")
+        if local_config.get("stt", {}).get("translation_module"):
+            local_config["language"]["translation_module"] = local_config["stt"].pop("translation_module")
+    except KeyError:
+        # If some other instance moves these values, just pass
+        pass
 
 
 def _safe_mycroft_config() -> dict:
@@ -983,7 +1005,8 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
         local_conf["skills"]["default_skills"] = os.environ.get("skillRepo")
 
     # TODO: Use XDG here DM
-    local_conf.write_changes()
+    if not local_conf.write_changes():
+        LOG.error("Disk contents are newer than this config object, changes were not written.")
     return local_conf
 
 
