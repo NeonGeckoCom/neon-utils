@@ -20,6 +20,8 @@
 from threading import Lock
 from filelock import FileLock, Timeout
 
+# TODO: Consider rebasing MasterLock to extend combo-lock DM
+
 
 class LockException(Exception):
     """
@@ -59,6 +61,11 @@ class MasterLock:
 
 
 def create_master_lock(lock_path: str):
+    """
+    Creates a MasterLock object with a FileLock at the specified path. Note that lock objects with the same path will
+    block each other
+    :param lock_path: Valid file path to store the lock file at
+    """
     thread_lock = Lock()
     file_lock = FileLock(lock_path)
     return MasterLock(thread_lock, file_lock)
