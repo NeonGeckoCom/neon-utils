@@ -29,7 +29,8 @@ from copy import deepcopy
 from os.path import *
 from collections.abc import MutableMapping
 from contextlib import suppress
-from combo_lock import NamedLock
+# from combo_lock import NamedLock
+from filelock import FileLock
 from glob import glob
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.configuration import read_mycroft_config, LocalConf
@@ -43,12 +44,17 @@ logging.getLogger("filelock").setLevel(logging.WARNING)
 
 class NGIConfig:
     configuration_list = dict()
+    configuration_locks = dict()
 
     def __init__(self, name, path=None, force_reload: bool = False):
         self.name = name
         self.path = path or get_config_dir()
         self.parser = YAML()
-        self.lock = NamedLock(repr(self))
+        # TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
+        lock_filename = join(self.path, f".{self.name}.lock")
+        if lock_filename not in NGIConfig.configuration_locks:
+            NGIConfig.configuration_locks[lock_filename] = FileLock(lock_filename, timeout=10)
+        self.lock = NGIConfig.configuration_locks[lock_filename]
         self._pending_write = False
         self._content = dict()
         self._loaded = os.path.getmtime(self.file_path)
