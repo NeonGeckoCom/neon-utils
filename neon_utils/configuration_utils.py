@@ -49,10 +49,7 @@ class NGIConfig:
         self.name = name
         self.path = path or get_config_dir()
         self.parser = YAML()
-        # TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
         lock_filename = join(self.path, f".{self.name}.lock")
-        # if lock_filename not in NGIConfig.configuration_locks:
-        #     NGIConfig.configuration_locks[lock_filename] = FileLock(lock_filename, timeout=10)
         self.lock = create_master_lock(lock_filename)
         self._pending_write = False
         self._content = dict()
@@ -777,7 +774,7 @@ def _move_config_sections(user_config, local_config):
             local_config["language"]["detection_module"] = local_config["stt"].pop("detection_module")
         if local_config.get("stt", {}).get("translation_module"):
             local_config["language"]["translation_module"] = local_config["stt"].pop("translation_module")
-    except KeyError:
+    except (KeyError, RuntimeError):
         # If some other instance moves these values, just pass
         pass
 
