@@ -38,8 +38,6 @@ from neon_utils import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_master_lock
 
-logging.getLogger("filelock").setLevel(logging.WARNING)
-
 
 class NGIConfig:
     configuration_list = dict()
@@ -277,7 +275,7 @@ class NGIConfig:
                 with open(self.file_path, 'r') as f:
                     config = self.parser.load(f)
                 if not config:
-                    LOG.error(f"Empty config file found at: {self.file_path}")
+                    LOG.debug(f"Empty config file found at: {self.file_path}")
                     config = dict()
                 self._loaded = os.path.getmtime(self.file_path)
             return config
