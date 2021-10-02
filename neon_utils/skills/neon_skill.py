@@ -28,7 +28,6 @@ from functools import wraps
 
 from mycroft.skills.settings import save_settings
 from mycroft_bus_client.message import Message
-from neon_utils.file_utils import get_most_recent_file_in_dir
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
@@ -41,6 +40,7 @@ from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user
 from neon_utils.cache_utils import LRUCache
 from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
+from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
 
 
 LOG.name = "neon_skill"
