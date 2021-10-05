@@ -3,6 +3,7 @@ requests
 requests_cache~=0.6
 beautifulsoup4~=4.9.3
 lxml~=4.5.2
+filelock~=3.2.0
 pendulum~=2.1.2
 geopy~=2.1.0
 timezonefinder~=5.2.0
@@ -19,3 +20,4 @@ neon_mq_connector>=0.1.1a0
 combo-lock~=0.1
 soundfile~=0.10.3
 librosa~=0.8
+filelock~=3.2.0

@@ -255,3 +255,12 @@ jobs:
         with:
           name: mq-util-test-results
           path: tests/mq-util-test-results.xml
+
+      - name: Test Lock Utils
+        run: |
+          pytest tests/lock_util_tests.py --doctest-modules --junitxml=tests/lock-util-test-results.xml
+      - name: Upload lock utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: lock-util-test-results
+          path: tests/lock-util-test-results.xml
