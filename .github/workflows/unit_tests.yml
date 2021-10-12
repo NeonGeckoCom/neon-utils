@@ -264,3 +264,12 @@ jobs:
         with:
           name: lock-util-test-results
           path: tests/lock-util-test-results.xml
+
+      - name: Test Validator Utils
+        run: |
+          pytest tests/validator_util_tests.py --doctest-modules --junitxml=tests/validator-util-test-results.xml
+      - name: Upload validator utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: validator-util-test-results
+          path: tests/validator-util-test-results.xml
