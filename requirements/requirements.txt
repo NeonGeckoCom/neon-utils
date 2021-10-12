@@ -16,7 +16,7 @@ langdetect~=1.0.8
 translate
 boto3
 ovos_utils>=0.0.6
-neon_mq_connector>=0.1.2
+neon_mq_connector~=0.1.2
 combo-lock~=0.1
 soundfile~=0.10.3
 librosa~=0.8
