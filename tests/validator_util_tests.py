@@ -47,6 +47,41 @@ class ValidatorUtilTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             numeric_confirmation_validator("")
 
+    def test_string_confirmation_validator_valid(self):
+        validator = string_confirmation_validator("test phrase")
+        self.assertTrue(validator("test phrase"))
+        self.assertTrue(validator("yes test phrase yes"))
+
+        self.assertFalse(validator("test no phrase"))
+        self.assertFalse(validator("phrase test"))
+
+    def test_string_confirmation_validator_type_error(self):
+        with self.assertRaises(TypeError):
+            string_confirmation_validator(123)
+
+        with self.assertRaises(ValueError):
+            string_confirmation_validator("")
+
+    def test_voc_confirmation_validator_valid(self):
+        sys.path.append(os.path.dirname(__file__))
+        from valid_skill import ValidNeonSkill
+        validator = voc_confirmation_validator("test", ValidNeonSkill())
+        self.assertTrue(validator("test"))
+        self.assertTrue(validator("something"))
+
+        self.assertFalse(validator("else"))
+        self.assertFalse(validator("false"))
+
+    def test_voc_confirmation_validator_type_error(self):
+        sys.path.append(os.path.dirname(__file__))
+        from valid_skill import ValidNeonSkill
+        skill = ValidNeonSkill()
+        with self.assertRaises(TypeError):
+            voc_confirmation_validator(123, skill)
+
+        with self.assertRaises(FileNotFoundError):
+            voc_confirmation_validator("invalid", skill)
+
 
 if __name__ == '__main__':
     unittest.main()

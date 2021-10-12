@@ -16,12 +16,15 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+
 import lingua_nostra.lang
+
+from mycroft.skills.core import MycroftSkill
 
 
 def numeric_confirmation_validator(confirmation_num: str, lang: str = "en"):
     """
-    Returns a validator method that returns true if the passed confirmation_num is in the passed string.
+    Returns a validator method that returns true if the confirmation_num is in the passed string.
      The confirmation_num must be the only number in the utterance (something 123 != 1 something 123).
     :param confirmation_num: number to locate in utterance
     :param lang: language to use for extracting number from strings
@@ -39,3 +42,37 @@ def numeric_confirmation_validator(confirmation_num: str, lang: str = "en"):
         spoken_num = "".join([str(round(n)) for n in extract_numbers(utt)])
         return confirmation_num == spoken_num
     return wrapped_validator
+
+
+def string_confirmation_validator(confirmation_str: str):
+    """
+    Returns a validator method that returns true if the confirmation_str is in the passed string.
+    :param confirmation_str: substring to locate in utterance
+    :return: True if the confirmation is in the spoken utterance.
+    """
+    if not isinstance(confirmation_str, str):
+        raise TypeError(f"Expected str, got {type(confirmation_str)}")
+    if not confirmation_str:
+        raise ValueError(f"Got empty confirmation string")
+
+    def wrapped_validator(utt):
+        return confirmation_str in utt
+    return wrapped_validator
+
+
+def voc_confirmation_validator(confirmation_voc: str, skill: MycroftSkill):
+    """
+    Returns a validator method that returns true if the confirmation_voc vocab resource is in the passed string.
+    :param confirmation_voc: vocab resource to locate in utterance
+    :param skill: skill with access to the passed vocab
+    :return: True if the confirmation is in the spoken utterance.
+    """
+    if not isinstance(confirmation_voc, str):
+        raise TypeError(f"Expected str, got {type(confirmation_voc)}")
+    if not skill.find_resource(f"{confirmation_voc}.voc"):
+        raise FileNotFoundError(f"Could not locate requested vocab: {confirmation_voc}")
+
+    def wrapped_validator(utt):
+        return skill.voc_match(utt, confirmation_voc)
+    return wrapped_validator
+
