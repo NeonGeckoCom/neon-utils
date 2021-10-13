@@ -209,10 +209,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             spoken.set()
 
         def skill_response_thread(s: MycroftSkill, idx: str):
-            def get_response(_):
+            def intent_handler(message):
                 resp = s.get_response(test_dialog)
                 test_results[idx] = resp
-            get_response(Message("converse_message", {}, {"username": "valid_converse_user"}))
+            intent_handler(Message("converse_message", {}, {"username": "valid_converse_user"}))
 
         test_results = dict()
         spoken = Event()
