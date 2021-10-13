@@ -20,6 +20,7 @@
 import sys
 import os
 import unittest
+from time import time
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.message_utils import *
@@ -30,6 +31,20 @@ VALID_STRING = 'This is only a test!'
 VALID_BYTES = b'This is only a test!'
 ENCODED_UTF8 = "VGhpcyBpcyBvbmx5IGEgdGVzdCE="
 ENCODED_UTF16 = "䝖灨祣灂祣療浢㕸䝉杅䝤穖䍤㵅"
+
+
+def get_message_standard(message):
+    print(message)
+    return dig_for_message()
+
+
+def get_message_alt_name(msg):
+    print(msg)
+    return dig_for_message()
+
+
+def get_message_no_name(_):
+    return dig_for_message()
 
 
 class MessageUtilTests(unittest.TestCase):
@@ -83,6 +98,43 @@ class MessageUtilTests(unittest.TestCase):
     def test_decode_bytes_invalid_encoding(self):
         with self.assertRaises(EncodingError):
             decode_b64_string_to_bytes(ENCODED_UTF8, "INVALID_ENCODING")
+
+    def test_dig_for_message_simple(self):
+        test_msg = Message("test message", {"test": "data"}, {"time": time()})
+        self.assertEqual(test_msg, get_message_standard(test_msg))
+        test_msg = Message("test message", {"test": "data"}, {"time": time()})
+        self.assertEqual(test_msg, get_message_alt_name(test_msg))
+        test_msg = Message("test message", {"test": "data"}, {"time": time()})
+        self.assertEqual(test_msg, get_message_no_name(test_msg))
+
+    def test_dig_for_message_nested(self):
+        message = Message("test message", {"test": "data"}, {"time": time()})
+
+        def simple_wrapper():
+            return get_message_no_name(message)
+
+        self.assertEqual(simple_wrapper(), message)
+
+        message = Message("test message", {"test": "data"}, {"time": time()})
+
+        def get_message():
+            return dig_for_message()
+
+        def wrapper_method(msg):
+            self.assertEqual(msg, get_message())
+
+        wrapper_method(message)
+
+    def test_dig_for_message_invalid_type(self):
+        tester = Message("test message", {"test": "data"}, {"time": time()})
+
+        def wrapper_method(_):
+            return dig_for_message()
+        self.assertIsNone(wrapper_method(dict()))
+
+    def test_dig_for_message_no_method_call(self):
+        message = Message("test message", {"test": "data"}, {"time": time()})
+        self.assertIsNone(dig_for_message())
 
 
 if __name__ == '__main__':
