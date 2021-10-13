@@ -27,11 +27,11 @@ from threading import Event
 from typing import Optional
 
 from ruamel.yaml import YAML
-from mycroft_bus_client.message import Message, dig_for_message
+from mycroft_bus_client.message import Message
 
 from neon_utils.skill_override_functions import wait_while_speaking
 from neon_utils.logger import LOG
-from neon_utils.message_utils import get_message_user
+from neon_utils.message_utils import get_message_user, dig_for_message
 from neon_utils.configuration_utils import dict_update_keys, parse_skill_default_settings, \
     is_neon_core, get_neon_local_config, get_mycroft_compatible_config
 
