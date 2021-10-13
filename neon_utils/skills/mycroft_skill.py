@@ -24,6 +24,7 @@ import os.path
 
 from copy import deepcopy
 from threading import Event
+from typing import Optional
 
 from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message, dig_for_message
@@ -185,14 +186,12 @@ class PatchedMycroftSkill(MycroftSkill):
                    expect_response, message=message, private=private,
                    speaker=speaker, wait=wait, meta={'dialog': key, 'data': data})
 
-    def get_response(self, dialog='', data=None, validator=None,
-                     on_fail=None, num_retries=-1, message=None):
+    def get_response(self, dialog: str = '', data: Optional[dict] = None, validator=None,
+                     on_fail=None, num_retries: int = -1, message: Optional[Message] = None) -> Optional[str]:
         """
-        Gets a response from a user. Wraps the default Mycroft method to add support for multiple users and running
-        without a wake word.
-
-        Example:
-            color = self.get_response('ask.favorite.color')
+        Gets a response from a user. Speaks the passed dialog file or string and then optionally plays a listening
+        confirmation sound and starts listening if in wake words mode.
+        Wraps the default Mycroft method to add support for multiple users and running without a wake word.
 
         Arguments:
             dialog (str): Optional dialog to speak to the user
@@ -211,6 +210,7 @@ class PatchedMycroftSkill(MycroftSkill):
         Returns:
             str: User's reply or None if timed out or canceled
         """
+        message = message or dig_for_message()
         user = get_message_user(message) if message else "local"
         data = data or {}
 
