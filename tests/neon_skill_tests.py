@@ -55,6 +55,16 @@ def get_test_mycroft_skill(bus_events: dict):
     return skill
 
 
+def get_test_neon_skill(bus_events: dict):
+    skill = NeonSkill()
+    bus = FakeBus()
+    for event, callback in bus_events.items():
+        bus.on(event, callback)
+    bus.run_in_thread()
+    skill.bind(bus)
+    return skill
+
+
 class SkillObjectTests(unittest.TestCase):
     def test_common_message_skill_init(self):
         skill = TestCMS()
@@ -169,6 +179,40 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             resp = s.get_response(test_dialog, message=Message("converse_message", {},
                                                                {"username": "valid_converse_user"}))
             test_results[idx] = resp
+
+        test_results = dict()
+        spoken = Event()
+        test_dialog = "testing get response multi user."
+        valid_message = Message("recognizer_loop:utterance",
+                                {"utterances": ["testing one", "testing 1", "resting one"]},
+                                {"timing": {},
+                                 "username": "valid_converse_user"})
+        invalid_message = Message("recognizer_loop:utterance",
+                                  {"utterances": ["invalid return"]},
+                                  {"timing": {},
+                                   "username": "invalid_converse_user"})
+
+        skill = get_test_mycroft_skill({"speak": handle_speak})
+        t = Thread(target=skill_response_thread, args=(skill, valid_message.context["username"]), daemon=True)
+        t.start()
+        spoken.wait(30)
+        sleep(1)
+        skill.converse(invalid_message)
+        skill.converse(valid_message)
+        skill.converse(invalid_message)
+        t.join(5)
+        self.assertEqual(test_results[valid_message.context["username"]], valid_message.data["utterances"][0])
+
+    def test_get_response_dig_for_message(self):
+        def handle_speak(_):
+            check_for_signal("isSpeaking")
+            spoken.set()
+
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            def intent_handler(message):
+                resp = s.get_response(test_dialog)
+                test_results[idx] = resp
+            intent_handler(Message("converse_message", {}, {"username": "valid_converse_user"}))
 
         test_results = dict()
         spoken = Event()
