@@ -211,7 +211,7 @@ class PatchedMycroftSkill(MycroftSkill):
             str: User's reply or None if timed out or canceled
         """
         message = message or dig_for_message()
-        user = get_message_user(message) if message else "local"
+        user = get_message_user(message) or "local" if message else "local"
         data = data or {}
 
         def on_fail_default(utterance):
@@ -254,7 +254,7 @@ class PatchedMycroftSkill(MycroftSkill):
         return self._wait_response(is_cancel, validator, on_fail_fn,
                                    num_retries, message, user)
 
-    def _wait_response(self, is_cancel, validator, on_fail, num_retries, message=None, user="local"):
+    def _wait_response(self, is_cancel, validator, on_fail, num_retries, message=None, user: str = None):
         """
         Loop until a valid response is received from the user or the retry
         limit is reached.
@@ -265,6 +265,7 @@ class PatchedMycroftSkill(MycroftSkill):
             on_fail (callable): function handling retries
             message (Message): message associated with request
         """
+        user = user or "local"
         num_fails = 0
         while True:
             response = self.__get_response(user)

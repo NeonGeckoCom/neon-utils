@@ -170,6 +170,30 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         t.join(5)
         self.assertEqual(test_results[message.context["username"]], message.data["utterances"][0])
 
+    def test_get_response_no_username(self):
+        def handle_speak(_):
+            check_for_signal("isSpeaking")
+            spoken.set()
+
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            resp = s.get_response(test_dialog)
+            test_results[idx] = resp
+
+        test_results = dict()
+        spoken = Event()
+        test_dialog = "testing get response."
+        message = Message("recognizer_loop:utterance", {"utterances": ["testing one", "testing 1", "resting one"]},
+                          {"timing": {}})
+
+        skill = get_test_mycroft_skill({"speak": handle_speak})
+        t = Thread(target=skill_response_thread, args=(skill, "0"), daemon=True)
+        t.start()
+        spoken.wait(30)
+        sleep(1)
+        skill.converse(message)
+        t.join(5)
+        self.assertEqual(test_results["0"], message.data["utterances"][0])
+
     def test_get_response_multi_user(self):
         def handle_speak(_):
             check_for_signal("isSpeaking")
