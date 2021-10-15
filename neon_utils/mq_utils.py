@@ -23,7 +23,7 @@ from threading import Event
 from pika.exceptions import ProbableAccessDeniedError
 from neon_mq_connector.connector import MQConnector, ConsumerThread
 
-from neon_utils import LOG
+from neon_utils.logger import LOG
 from neon_utils.socket_utils import b64_to_dict
 from neon_utils.configuration_utils import get_neon_local_config
 
