@@ -50,22 +50,25 @@ def get_likes_from_csv(file: str, user: Optional[str],
     lines_to_evaluate.reverse()
     likes = {}
     for line in lines_to_evaluate:
-        date_str, profile, device, phrase, transcription_filename, brand = line.rstrip("\n").split(",", 5)
-        # Date,Profile,Device,Phrase,Instance,Brand
-        if date_limit and datetime.now() - datetime.strptime(date_str, "%Y-%m-%d") > date_limit:
-            # Stop parsing once we reach our oldest date limit
-            break
-        if user and profile != user:
-            # Ignore anything from other users than requested
-            continue
+        try:
+            date_str, profile, device, phrase, transcription_filename, brand = line.rstrip("\n").split(",", 5)
+            # Date,Profile,Device,Phrase,Instance,Brand
+            if date_limit and datetime.now() - datetime.strptime(date_str, "%Y-%m-%d") > date_limit:
+                # Stop parsing once we reach our oldest date limit
+                break
+            if user and profile != user:
+                # Ignore anything from other users than requested
+                continue
 
-        transcription_subdir = f"{profile}-{date_str}"
-        if brand not in likes.keys():
-            likes[brand] = []
-        likes[brand].append({"date": date_str,
-                             "user": profile,
-                             "file": os.path.join(transcription_subdir, transcription_filename),
-                             "utterance": phrase})
+            transcription_subdir = f"{profile}-{date_str}"
+            if brand not in likes.keys():
+                likes[brand] = []
+            likes[brand].append({"date": date_str,
+                                 "user": profile,
+                                 "file": os.path.join(transcription_subdir, transcription_filename),
+                                 "utterance": phrase})
+        except ValueError:
+            LOG.error(f"Could not process line in {file}: {line}")
     return likes
 
 
