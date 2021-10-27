@@ -182,6 +182,17 @@ def find_neon_owm_key(base_path: str = "~/") -> str:
     return find_generic_keyfile(base_path, "owm.txt")
 
 
+def find_neon_free_geo_ip_key(base_path: str = "~/") -> str:
+    """
+    Locates FreeGeoIp key
+    Args:
+        base_path: Base directory to check in addition to XDG directories (default ~/)
+    Returns:
+        str FreeGeoIp API key
+    """
+    return find_generic_keyfile(base_path, "free_geo_ip.txt")
+
+
 def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = None):
     """
     Populates configuration with the specified Amazon keys to be referenced by tts/translation modules.
@@ -254,29 +265,18 @@ def build_new_auth_config(key_path: str = "~/") -> dict:
     """
     key_path = key_path or "~/"
     auth_config = dict()
-    try:
-        auth_config["github"] = {"token": find_neon_git_token(key_path)}
-    except Exception as e:
-        LOG.error(e)
-    try:
-        auth_config["amazon"] = find_neon_aws_keys(key_path)
-    except Exception as e:
-        LOG.error(e)
-    try:
-        auth_config["wolfram"] = {"app_id": find_neon_wolfram_key(key_path)}
-    except Exception as e:
-        LOG.error(e)
-    try:
-        auth_config["google"] = find_neon_google_keys(key_path)
-    except Exception as e:
-        LOG.error(e)
-    try:
-        auth_config["alpha_vantage"] = {"api_key": find_neon_alpha_vantage_key(key_path)}
-    except Exception as e:
-        LOG.error(e)
-    try:
-        auth_config["owm"] = {"api_key": find_neon_owm_key(key_path)}
-    except Exception as e:
-        LOG.error(e)
+    services = {"github": ("token", find_neon_git_token),
+                "amazon": find_neon_aws_keys,
+                "wolfram": ("app_id", find_neon_wolfram_key),
+                "google": find_neon_google_keys,
+                "alpha_vantage": ("api_key", find_neon_alpha_vantage_key),
+                "owm": ("api_key", find_neon_owm_key),
+                "free_geo_ip": ("api_key", find_neon_free_geo_ip_key)}
+    for service_name, value_key in services.items():
+        try:
+            auth_config[service_name] = {value_key[0]: value_key[1](key_path)} \
+                if isinstance(value_key, tuple) else value_key(key_path)
+        except Exception as e:
+            LOG.error(e)
 
     return auth_config

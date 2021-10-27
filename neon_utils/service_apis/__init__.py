@@ -32,6 +32,7 @@ class NeonAPI(Enum):
     OPEN_WEATHER_MAP = "open_weather_map"
     WOLFRAM_ALPHA = "wolfram_alpha"
     FINANCIAL_MODELING_PREP = "financial_modeling_prep"
+    FREE_GEO_IP = "free_geo_ip"
     NOT_IMPLEMENTED = "not_implemented"
     TEST_API = "api_test_endpoint"
 

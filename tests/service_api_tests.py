@@ -25,6 +25,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.service_apis.wolfram_alpha import *
 from neon_utils.service_apis.alpha_vantage import *
 from neon_utils.service_apis.open_weather_map import *
+from neon_utils.service_apis.free_geo_ip import *
 
 IP_ADDR = "50.47.129.133"
 VALID_LAT = "47.4797"
@@ -329,6 +330,29 @@ class OpenWeatherMapTests(unittest.TestCase):
         self.assertIsInstance(data["minutely"], list)
         self.assertIsInstance(data["hourly"], list)
         self.assertIsInstance(data["daily"], list)
+
+
+class FreeGeoIpTests(unittest.TestCase):
+    from neon_utils.authentication_utils import find_neon_free_geo_ip_key
+    API_KEY = find_neon_free_geo_ip_key()
+
+    def test_find_location_valid(self):
+        location = get_location_for_address(IP_ADDR, api_key=self.API_KEY)
+        self.assertIsInstance(location, dict)
+        print(location)
+
+    def test_find_location_invalid_address(self):
+        with self.assertRaises(ValueError):
+            get_location_for_address("192.168.1.10")
+
+        with self.assertRaises(ValueError):
+            get_location_for_address("")
+
+        with self.assertRaises(ValueError):
+            get_location_for_address(123.456)
+
+        with self.assertRaises(ValueError):
+            get_location_for_address("hostname")
 
 
 if __name__ == '__main__':

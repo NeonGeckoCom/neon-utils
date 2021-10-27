@@ -44,10 +44,12 @@ jobs:
           echo ${WOLFRAM_ID} > ~/.local/share/neon/wolfram.txt
           echo ${AV_API_KEY} > ~/.local/share/neon/alpha_vantage.txt
           echo ${OWM_KEY} > ~/.local/share/neon/owm.txt
+          echo ${FGI_KEY} > ~/.local/share/neon/free_geo_ip.txt
         env:
           WOLFRAM_ID: ${{secrets.wolfram_id}}
           AV_API_KEY: ${{secrets.alpha_vantage_key}}
           OWM_KEY: ${{secrets.open_weather_map_key}}
+          FGI_KEY: ${{secrets.free_geo_ip_key}}
       - name: Test Service APIs
         run: |
           pytest tests/service_api_tests.py --doctest-modules --junitxml=tests/service-api-test-results.xml

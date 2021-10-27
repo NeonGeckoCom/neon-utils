@@ -107,6 +107,16 @@ class AuthUtilTests(unittest.TestCase):
         key = find_neon_owm_key(CRED_PATH)
         self.assertEqual(key, "OpenWeatherMap")
 
+    def test_get_free_geo_ip_key(self):
+        try:
+            key = find_neon_free_geo_ip_key("/tmp")
+            self.assertIsInstance(key, str)
+        except Exception as e:
+            self.assertIsInstance(e, FileNotFoundError)
+
+        key = find_neon_free_geo_ip_key(CRED_PATH)
+        self.assertEqual(key, "FreeGeoIp")
+
     def test_write_github_token(self):
         config_path = os.path.join(ROOT_DIR, "configuration")
         token = "TOKEN"
@@ -161,7 +171,8 @@ class AuthUtilTests(unittest.TestCase):
 
     def test_build_new_auth_config(self):
         config = build_new_auth_config(CRED_PATH)
-        self.assertEqual(set(config.keys()), {"github", "amazon", "wolfram", "google", "alpha_vantage", "owm"})
+        self.assertEqual(set(config.keys()), {"github", "amazon", "wolfram", "google", "alpha_vantage", "owm",
+                                              "free_geo_ip"})
         for key in config.keys():
             self.assertIsInstance(config[key], dict)
             self.assertTrue(config[key])
