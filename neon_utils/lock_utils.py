@@ -16,11 +16,11 @@
 # Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
-
+import logging
 from threading import Lock
 from filelock import FileLock, Timeout
 
-# TODO: Consider rebasing MasterLock to extend combo-lock DM
+logging.getLogger("filelock").setLevel(logging.WARNING)
 
 
 class LockException(Exception):
