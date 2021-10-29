@@ -14,7 +14,7 @@ prefFlags:
 
 devVars:
   devName: NGI-Kudu
-  devType: generic
+  devType: NeonTestRunner
   # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU
   version: 2021-02-26-185606
   installUser: neon
