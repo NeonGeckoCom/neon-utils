@@ -523,6 +523,12 @@ class PatchedMycroftSkillTests(unittest.TestCase):
     # TODO: Test settings load
 
 
+class NeonSkillTests(unittest.TestCase):
+    def test_send_email_valid(self):
+        skill = get_test_neon_skill(dict())
+        self.assertTrue(skill.send_email("Test Message",
+                                         "This is a test\ncalled from neon_skill_tests.py in neon-utils",
+                                         email_addr="test@neongecko.com"))
 # TODO: NeonSkill Tests
 
 

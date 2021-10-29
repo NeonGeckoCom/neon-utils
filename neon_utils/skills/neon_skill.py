@@ -37,8 +37,9 @@ from neon_utils.configuration_utils import NGIConfig, is_neon_core, \
 from neon_utils.location_utils import to_system_time
 from neon_utils.language_utils import DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
-from neon_utils.message_utils import request_from_mobile, get_message_user
+from neon_utils.message_utils import request_from_mobile, get_message_user, dig_for_message
 from neon_utils.cache_utils import LRUCache
+from neon_utils.mq_utils import send_mq_request
 from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
 
@@ -659,29 +660,31 @@ class NeonSkill(MycroftSkill):
 
     def send_email(self, title, body, message=None, email_addr=None, attachments=None):
         """
-        Send an email to the registered user's email.
+        Send an email to the registered user's email. Method here for backwards compatibility with Mycroft skills.
         Email address priority: email_addr, user prefs from message, fallback to DeviceApi for Mycroft method
 
         Arguments:
             title (str): Title of email
             body  (str): HTML body of email. This supports
                          simple HTML like bold and italics
-            email_addr (str): Optional email address to use
+            email_addr (str): Optional email address to send message to
             attachments (dict): Optional dict of file names to Base64 encoded files
             message (Message): Optional message to get email from
         """
+        message = message or dig_for_message()
         if not email_addr and message:
             email_addr = self.preference_user(message).get("email")
 
         if email_addr:
             LOG.info("Send email via Neon Server")
-            try:
-                LOG.debug(f"body={body}")
-                self.bus.emit(Message("neon.send_email", {"title": title, "email": email_addr, "body": body,
-                                                          "attachments": attachments}))
-            except Exception as e:
-                LOG.error(e)
+            request_data = {"recipient": email_addr,
+                            "subject": title,
+                            "body": body,
+                            "attachments": attachments}
+            data = send_mq_request("/neon_emails", request_data, "neon_emails_input")
+            return data.get("success")
         else:
+            LOG.warning("Attempting to send email via Mycroft Backend")
             super().send_email(title, body)
 
     def make_active(self, duration_minutes=5):
