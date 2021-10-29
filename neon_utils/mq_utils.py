@@ -43,6 +43,12 @@ class NeonMQHandler(MQConnector):
 
 def get_mq_response(vhost: str, request_data: dict, target_queue: str,
                     response_queue: str = None, timeout: int = 30) -> dict:
+    LOG.warning(f"This method has been depreciated, please use: `send_mq_request`")
+    return send_mq_request(vhost, request_data, target_queue, response_queue, timeout, True)
+
+
+def send_mq_request(vhost: str, request_data: dict, target_queue: str,
+                    response_queue: str = None, timeout: int = 30, expect_response: bool = True) -> dict:
     """
     Sends a request to the MQ server and returns the response.
     :param vhost: vhost to target
@@ -50,6 +56,7 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str,
     :param target_queue: queue to post request to
     :param response_queue: optional queue to monitor for a response. Generally should be blank
     :param timeout: time in seconds to wait for a response before timing out
+    :param expect_response: boolean indicating whether or not a response is expected
     :return: response to request
     """
     response_queue = response_queue or uuid.uuid4().hex
@@ -84,20 +91,24 @@ def get_mq_response(vhost: str, request_data: dict, target_queue: str,
         if not neon_api_mq_handler.connection.is_open:
             raise ConnectionError("MQ Connection not established.")
 
-        neon_api_mq_handler.register_consumer('neon_output_handler',
-                                              neon_api_mq_handler.vhost, response_queue, handle_mq_response,
-                                              auto_ack=False)
-        neon_api_mq_handler.run_consumers()
-        request_data['routing_key'] = response_queue
+        if expect_response:
+            neon_api_mq_handler.register_consumer('neon_output_handler',
+                                                  neon_api_mq_handler.vhost, response_queue, handle_mq_response,
+                                                  auto_ack=False)
+            neon_api_mq_handler.run_consumers()
+            request_data['routing_key'] = response_queue
+
         message_id = neon_api_mq_handler.emit_mq_message(connection=neon_api_mq_handler.connection,
                                                          queue=target_queue,
                                                          request_data=request_data,
                                                          exchange='')
         LOG.debug(f'Sent request: {request_data}')
-        response_event.wait(timeout)
-        if not response_event.is_set():
-            LOG.error(f"Timeout waiting for response to: {message_id} on {response_queue}")
-        neon_api_mq_handler.stop_consumers()
+
+        if expect_response:
+            response_event.wait(timeout)
+            if not response_event.is_set():
+                LOG.error(f"Timeout waiting for response to: {message_id} on {response_queue}")
+            neon_api_mq_handler.stop_consumers()
     except ProbableAccessDeniedError:
         raise ValueError(f"{vhost} is not a valid endpoint for {config.get('users').get('mq_handler').get('user')}")
     except Exception as ex:
