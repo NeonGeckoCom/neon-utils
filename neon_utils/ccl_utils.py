@@ -30,7 +30,7 @@ try:
     from neon_script_parser import ScriptParser
 except ImportError:
     ScriptParser = None
-    from neon_utils.mq_utils import get_mq_response
+    from neon_utils.mq_utils import get_mq_response, send_mq_request
 
 
 def parse_nct_to_ncs(nct_file_path: str, ncs_file_path: Optional[str] = None,
@@ -136,5 +136,5 @@ def load_ncs_file(ncs_file_path: str) -> dict:
 def get_compiled_script_via_mq(text: str, meta: Optional[dict]) -> str:
     data = {"text": text,
             "meta": meta}
-    resp = get_mq_response("/neon_script_parser", data, "neon_script_parser_input", timeout=45)
+    resp = send_mq_request("/neon_script_parser", data, "neon_script_parser_input", timeout=45)
     return resp["parsed_file"]

@@ -19,7 +19,7 @@
 
 from enum import Enum
 from neon_utils.configuration_utils import get_neon_auth_config
-from neon_utils.mq_utils import get_mq_response
+from neon_utils.mq_utils import send_mq_request
 
 AUTH_CONFIG = get_neon_auth_config()
 
@@ -53,7 +53,7 @@ def request_neon_api(api: NeonAPI, query_params: dict, timeout: int = 30) -> dic
         raise TypeError(f"Expected dict, got: {query_params}")
 
     request_data = {**query_params, **{"service": str(api)}}
-    response = get_mq_response("/neon_api", request_data, "neon_api_input", "neon_api_output", timeout)
+    response = send_mq_request("/neon_api", request_data, "neon_api_input", "neon_api_output", timeout)
     return response or {"status_code": 401,
                         "content": f"Neon API failed to give a response within {timeout} seconds",
                         "encoding": None}
