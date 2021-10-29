@@ -22,8 +22,10 @@ import time
 from typing import Optional
 
 from mycroft_bus_client import Message
-
 from neon_utils.logger import LOG
+from neon_utils.configuration_utils import get_neon_local_config
+
+IPC_DIR = get_neon_local_config()["dirVars"]["ipcDir"]
 
 
 def neon_must_respond(message: Message) -> bool:
@@ -141,8 +143,9 @@ def create_signal(signal_name: str) -> bool:
         signal_name (str): The signal's name.  Must only contain characters
             valid in filenames.
     """
+    LOG.warning("This method and signal use are deprecated and will not work in some configurations")
     try:
-        path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name)
+        path = os.path.join(IPC_DIR, "signal", signal_name)
         _create_file(path)
         return os.path.isfile(path)
     except IOError:
@@ -155,10 +158,11 @@ def clear_signals(prefix: str):
     may have set
     :param prefix: (str) prefix to match
     """
-    os.makedirs("/tmp/mycroft/ipc/signal", exist_ok=True)
-    for signal in os.listdir("/tmp/mycroft/ipc/signal"):
+    LOG.warning("This method and signal use are deprecated and will not work in some configurations")
+    os.makedirs(f"{IPC_DIR}/signal", exist_ok=True)
+    for signal in os.listdir(f"{IPC_DIR}/signal"):
         if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
-            os.remove(os.path.join("/tmp/mycroft/ipc/signal", signal))
+            os.remove(os.path.join(f"{IPC_DIR}/signal", signal))
 
 
 def check_for_signal(signal_name: str, sec_lifetime: Optional[int] = 0):
@@ -174,8 +178,10 @@ def check_for_signal(signal_name: str, sec_lifetime: Optional[int] = 0):
     Returns:
         bool: True if the signal is defined, False otherwise
     """
+    # TODO: Log deprecation warning after isSpeaking check is refactored DM
+    # LOG.warning("This method and signal use are deprecated and will not work in some configurations")
     import time
-    path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name)
+    path = os.path.join(IPC_DIR, "signal", signal_name)  # /tmp/neon/ipc/signal/isSpeaking
     if os.path.isfile(path):
         # noinspection PyTypeChecker
         if sec_lifetime == 0:

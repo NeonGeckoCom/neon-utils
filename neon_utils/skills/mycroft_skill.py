@@ -24,13 +24,14 @@ import os.path
 
 from copy import deepcopy
 from threading import Event
+from typing import Optional
 
 from ruamel.yaml import YAML
-from mycroft_bus_client.message import Message, dig_for_message
+from mycroft_bus_client.message import Message
 
 from neon_utils.skill_override_functions import wait_while_speaking
 from neon_utils.logger import LOG
-from neon_utils.message_utils import get_message_user
+from neon_utils.message_utils import get_message_user, dig_for_message
 from neon_utils.configuration_utils import dict_update_keys, parse_skill_default_settings, \
     is_neon_core, get_neon_local_config, get_mycroft_compatible_config
 
@@ -185,14 +186,12 @@ class PatchedMycroftSkill(MycroftSkill):
                    expect_response, message=message, private=private,
                    speaker=speaker, wait=wait, meta={'dialog': key, 'data': data})
 
-    def get_response(self, dialog='', data=None, validator=None,
-                     on_fail=None, num_retries=-1, message=None):
+    def get_response(self, dialog: str = '', data: Optional[dict] = None, validator=None,
+                     on_fail=None, num_retries: int = -1, message: Optional[Message] = None) -> Optional[str]:
         """
-        Gets a response from a user. Wraps the default Mycroft method to add support for multiple users and running
-        without a wake word.
-
-        Example:
-            color = self.get_response('ask.favorite.color')
+        Gets a response from a user. Speaks the passed dialog file or string and then optionally plays a listening
+        confirmation sound and starts listening if in wake words mode.
+        Wraps the default Mycroft method to add support for multiple users and running without a wake word.
 
         Arguments:
             dialog (str): Optional dialog to speak to the user
@@ -211,7 +210,8 @@ class PatchedMycroftSkill(MycroftSkill):
         Returns:
             str: User's reply or None if timed out or canceled
         """
-        user = get_message_user(message) if message else "local"
+        message = message or dig_for_message()
+        user = get_message_user(message) or "local" if message else "local"
         data = data or {}
 
         def on_fail_default(utterance):
@@ -254,7 +254,7 @@ class PatchedMycroftSkill(MycroftSkill):
         return self._wait_response(is_cancel, validator, on_fail_fn,
                                    num_retries, message, user)
 
-    def _wait_response(self, is_cancel, validator, on_fail, num_retries, message=None, user="local"):
+    def _wait_response(self, is_cancel, validator, on_fail, num_retries, message=None, user: str = None):
         """
         Loop until a valid response is received from the user or the retry
         limit is reached.
@@ -265,6 +265,7 @@ class PatchedMycroftSkill(MycroftSkill):
             on_fail (callable): function handling retries
             message (Message): message associated with request
         """
+        user = user or "local"
         num_fails = 0
         while True:
             response = self.__get_response(user)

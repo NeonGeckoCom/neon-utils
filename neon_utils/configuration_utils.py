@@ -34,7 +34,7 @@ from ovos_utils.json_helper import load_commented_json
 from ovos_utils.configuration import read_mycroft_config, LocalConf
 from ruamel.yaml import YAML
 from typing import Optional
-from neon_utils import LOG
+from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_master_lock
 

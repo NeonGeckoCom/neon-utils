@@ -23,7 +23,7 @@ import socket
 import threading
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from neon_utils import LOG
+from neon_utils.logger import LOG
 from neon_utils.socket_utils import *
 
 TEST_DICT = {b"section 1": {"key1": "val1",

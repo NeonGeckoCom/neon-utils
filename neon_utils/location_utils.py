@@ -24,7 +24,7 @@ from dateutil.tz import tzlocal, gettz
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 
-from neon_utils import LOG
+from neon_utils.logger import LOG
 
 
 def get_coordinates(gps_loc: dict) -> (float, float):

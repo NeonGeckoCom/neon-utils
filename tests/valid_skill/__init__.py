@@ -17,4 +17,13 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-__version__ = "0.11.0"
+from neon_utils.skills import NeonSkill
+
+
+class ValidNeonSkill(NeonSkill):
+    def __init__(self):
+        super(ValidNeonSkill, self).__init__(name="ValidNeonSkill")
+
+
+def create_skill():
+    return ValidNeonSkill()

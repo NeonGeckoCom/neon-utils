@@ -28,7 +28,7 @@ from typing import Optional, List
 from pydub import AudioSegment
 from ovos_utils.signal import ensure_directory_exists
 
-from neon_utils import LOG
+from neon_utils.logger import LOG
 
 
 def encode_file_to_base64_string(path: str) -> str:

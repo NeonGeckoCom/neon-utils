@@ -18,6 +18,7 @@
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
 import base64
+import inspect
 
 from typing import Optional
 from mycroft_bus_client import Message
@@ -96,3 +97,20 @@ def decode_b64_string_to_bytes(data: str, charset: str = "utf-8") -> bytes:
         raise EncodingError(f"Invalid charset provided for data. charset={charset}")
 
     return encoded
+
+
+def dig_for_message(max_records: int = 10) -> Optional[Message]:
+    """
+    Dig Through the stack for message. Looks at the current stack for a passed argument of type 'Message'
+    :param max_records: Maximum number of stack records to look through
+    :return: Message if found in args, else None
+    """
+    stack = inspect.stack()[1:]  # First frame will be this function call
+    stack = stack if len(stack) <= max_records else stack[:max_records]
+    for record in stack:
+        args = inspect.getargvalues(record.frame)
+        if args.args:
+            for arg in args.args:
+                if isinstance(args.locals[arg], Message):
+                    return args.locals[arg]
+    return None
