@@ -102,7 +102,7 @@ def send_mq_request(vhost: str, request_data: dict, target_queue: str,
                                                          queue=target_queue,
                                                          request_data=request_data,
                                                          exchange='')
-        LOG.debug(f'Sent request: {request_data}')
+        LOG.debug(f'Sent request with keys: {request_data.keys()}')
 
         if expect_response:
             response_event.wait(timeout)
