@@ -118,7 +118,7 @@ class NeonSkill(MycroftSkill):
             self.lang_detector = DetectorFactory.create()
             self.translator = TranslatorFactory.create()
         else:
-            self.language_detector, self.translator = None, None
+            self.lang_detector, self.translator = None, None
 
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
