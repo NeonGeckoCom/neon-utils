@@ -35,7 +35,6 @@ from neon_utils import create_signal, check_for_signal
 from neon_utils.configuration_utils import NGIConfig, is_neon_core, \
     get_neon_lang_config, get_neon_user_config, get_neon_local_config
 from neon_utils.location_utils import to_system_time
-from neon_utils.language_utils import DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
 from neon_utils.message_utils import request_from_mobile, get_message_user, dig_for_message
 from neon_utils.cache_utils import LRUCache
@@ -43,6 +42,11 @@ from neon_utils.mq_utils import send_mq_request
 from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
 
+try:
+    from neon_core.language import DetectorFactory, TranslatorFactory
+except ImportError:
+    LOG.error(f"neon_core package not found, language detection/translation will be disabled.")
+    DetectorFactory, TranslatorFactory = None, None
 
 LOG.name = "neon_skill"
 
@@ -97,20 +101,24 @@ class NeonSkill(MycroftSkill):
             self.server = False
             self.default_intent_timeout = 60
 
-        self.neon_core = True  # TODO: This should be depreciated DM
+        try:
+            import neon_core
+            self.neon_core = True
+        except ImportError:
+            self.neon_core = False
+
         self.actions_to_confirm = dict()
 
         self.skill_mode = self.user_config.content.get('response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
         self.extension_time = SPEED_MODE_EXTENSION_TIME.get(self.skill_mode)
 
-        try:
+        self.language_config = get_neon_lang_config()
+        if DetectorFactory and TranslatorFactory:
             # Lang support
-            self.language_config = get_neon_lang_config()
-            self.lang_detector = DetectorFactory.create()  # Default fastlang
-            self.translator = TranslatorFactory.create()  # Default Amazon
-        except Exception as e:
-            LOG.error(e)
-            self.language_config, self.language_detector, self.translator = None, None, None
+            self.lang_detector = DetectorFactory.create()
+            self.translator = TranslatorFactory.create()
+        else:
+            self.language_detector, self.translator = None, None
 
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
