@@ -17,9 +17,14 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-from neon_core.language import TranslatorFactory, DetectorFactory, get_language_dir
 from neon_utils.configuration_utils import get_neon_lang_config
 from neon_utils import LOG
+
+try:
+    from neon_core.language import TranslatorFactory, DetectorFactory, get_language_dir
+except ImportError:
+    LOG.error("neon_core not found; language utils are not fully supported on this platform.")
+
 
 LOG.warning(f"neon_utils.language_utils has been deprecated! Please import from neon_core.language")
 
