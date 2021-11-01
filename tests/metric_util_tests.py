@@ -27,6 +27,14 @@ from neon_utils.metrics_utils import *
 
 
 class MetricUtilTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.environ["NEON_CONFIG_PATH"] = os.path.join(os.path.dirname(__file__), "configuration")
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        os.environ.pop("NEON_CONFIG_PATH")
+
     def test_stopwatch_simple(self):
         sleep_time = 1.00
         stopwatch = Stopwatch()
@@ -57,6 +65,12 @@ class MetricUtilTests(unittest.TestCase):
         stopwatch = Stopwatch()
         self.assertIsNone(stopwatch._metric)
         self.assertFalse(stopwatch._report)
+
+    def test_report_metric(self):
+        self.assertTrue(report_metric("test", data="this is only a test"))
+
+    def test_announce_connection(self):
+        self.assertTrue(announce_connection())
 
 
 if __name__ == '__main__':
