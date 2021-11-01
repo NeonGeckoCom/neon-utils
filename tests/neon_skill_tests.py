@@ -109,7 +109,7 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.scheduled_repeats, list)  # TODO: What is this param for?
         self.assertIsInstance(skill.server, bool)
         self.assertIsInstance(skill.default_intent_timeout, int)
-        self.assertTrue(skill.neon_core)  # TODO: This should be depreciated
+        self.assertFalse(skill.neon_core)
         self.assertIsInstance(skill.actions_to_confirm, dict)
 
         self.assertIsInstance(skill.skill_mode, str)
