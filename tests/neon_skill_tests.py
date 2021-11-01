@@ -109,15 +109,17 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.scheduled_repeats, list)  # TODO: What is this param for?
         self.assertIsInstance(skill.server, bool)
         self.assertIsInstance(skill.default_intent_timeout, int)
-        self.assertFalse(skill.neon_core)
+        self.assertFalse(skill.neon_core)  # TODO: Test against NeonCore too DM
         self.assertIsInstance(skill.actions_to_confirm, dict)
 
         self.assertIsInstance(skill.skill_mode, str)
         self.assertIsInstance(skill.extension_time, int)
 
         self.assertIsInstance(skill.language_config, dict)
-        self.assertIsInstance(skill.lang_detector, LanguageDetector)
-        self.assertIsInstance(skill.translator, LanguageTranslator)
+        self.assertIsNone(skill.lang_detector)
+        self.assertIsNone(skill.translator)
+        # self.assertIsInstance(skill.lang_detector, LanguageDetector)
+        # self.assertIsInstance(skill.translator, LanguageTranslator)
 
         self.assertIsInstance(skill.settings, dict)
 
