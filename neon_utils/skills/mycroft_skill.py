@@ -248,7 +248,7 @@ class PatchedMycroftSkill(MycroftSkill):
             dialog = self.dialog_renderer.render(dialog, data)
 
         if dialog:
-            self.speak(dialog, expect_response=True, wait=True, message=message)
+            self.speak(dialog, expect_response=True, wait=False, message=message)
         else:
             self.bus.emit(message.forward('mycroft.mic.listen'))
         return self._wait_response(is_cancel, validator, on_fail_fn,
@@ -320,6 +320,7 @@ class PatchedMycroftSkill(MycroftSkill):
         converse.response = None
         default_converse = self.converse
         self.converse = converse
+        wait_while_speaking()
         event.wait(15)  # 10 for listener, 5 for STT, then timeout
         self.converse = default_converse
         return converse.response
