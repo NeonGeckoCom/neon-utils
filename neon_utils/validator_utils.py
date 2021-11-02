@@ -17,8 +17,7 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-import lingua_nostra.lang
-
+from lingua_nostra import parse, set_default_lang
 from mycroft.skills.core import MycroftSkill
 
 
@@ -35,11 +34,10 @@ def numeric_confirmation_validator(confirmation_num: str, lang: str = "en"):
     if not confirmation_num.isnumeric():
         raise ValueError(f"{confirmation_num} is not numeric")
 
-    from lingua_nostra.parse import extract_numbers
-    lingua_nostra.lang.set_active_lang(lang)
+    set_default_lang(lang)
 
     def wrapped_validator(utt):
-        spoken_num = "".join([str(round(n)) for n in extract_numbers(utt)])
+        spoken_num = "".join([str(round(n)) for n in parse.extract_numbers(utt)])
         return confirmation_num == spoken_num
     return wrapped_validator
 
