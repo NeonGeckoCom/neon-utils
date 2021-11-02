@@ -11,11 +11,7 @@ netifaces~=0.10.9
 nltk~=3.5
 ruamel.yaml~=0.16.12
 pydub~=0.25.1
-fastlang==0.0.4
 lingua-nostra~=0.4.5
-langdetect~=1.0.8
-translate
-boto3
 ovos_utils>=0.0.6
 neon_mq_connector~=0.1.2
 combo-lock~=0.1
