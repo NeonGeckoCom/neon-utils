@@ -74,12 +74,12 @@ class PatchedMycroftSkill(MycroftSkill):
     def _init_settings(self):
         self.settings_write_path = self.file_system.path
         skill_settings = get_local_settings(self.settings_write_path, self.name)
-        settings_from_disk = deepcopy(skill_settings)
+        settings_from_disk = dict(skill_settings)
         self.settings = dict_update_keys(skill_settings, self._read_default_settings())
         if self.settings != settings_from_disk:
             with open(os.path.join(self.settings_write_path, 'settings.json'), "w+") as f:
                 json.dump(self.settings, f, indent=4)
-        self._initial_settings = deepcopy(self.settings)
+        self._initial_settings = dict(self.settings)
 
     def _read_default_settings(self):
         yaml_path = os.path.join(self.root_dir, "settingsmeta.yml")
