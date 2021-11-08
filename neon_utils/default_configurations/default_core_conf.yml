@@ -109,7 +109,9 @@ skills:
   debug: True
   blacklist: []
   priority: [
-    "device-control-center.neon"
+    "about.neon.neongeckocom",
+    "date-time.neon.neongeckocom",
+    "skill-weather.neongeckocom"
   ]
   essential_skills: []
   default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
