@@ -17,7 +17,13 @@
 # US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
 # China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
 
-from lingua_nostra import parse, set_default_lang
+from neon_utils import LOG
+try:
+    from lingua_nostra import parse, set_default_lang
+except ImportError as e:
+    LOG.error(e)
+    from lingua_franca import parse, set_default_lang
+
 from mycroft.skills.core import MycroftSkill
 
 
