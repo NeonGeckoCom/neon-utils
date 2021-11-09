@@ -575,7 +575,7 @@ class NeonSkill(MycroftSkill):
             from itertools import chain
             import re
         lang = lang or self.lang
-        voc = resolve_neon_resource_file(voc_filename)
+        voc = resolve_neon_resource_file(f"text/{lang}/{voc_filename}.voc")
         if not voc:
             raise FileNotFoundError(voc)
         vocab = read_vocab_file(voc)
