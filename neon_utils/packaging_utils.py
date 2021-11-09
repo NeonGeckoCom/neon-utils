@@ -95,7 +95,7 @@ def get_neon_core_root():
     """
     site = sysconfig.get_paths()['platlib']
     if exists(join(site, 'neon_core')):
-        return site
+        return join(site, 'neon_core')
     for p in [path for path in sys.path if path != ""]:
         if exists(join(p, "neon_core")):
             return join(p, "neon_core")
