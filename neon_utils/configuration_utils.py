@@ -810,7 +810,7 @@ def _safe_mycroft_config() -> dict:
         mycroft = read_mycroft_config()
     except FileNotFoundError:
         mycroft = LocalConf(os.path.join(os.path.dirname(__file__), "default_configurations", "mycroft.conf"))
-    return mycroft
+    return dict(mycroft)
 
 
 def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
@@ -959,6 +959,7 @@ def get_mycroft_compatible_config(mycroft_only=False):
     default_config["tts"] = local["tts"]
     default_config["Audio"] = get_neon_audio_config()
     default_config["disable_xdg"] = False
+    default_config["ipc_path"] = local["dirVars"]["ipcDir"]
     # TODO: Location config
     # default_config["Display"]
 
