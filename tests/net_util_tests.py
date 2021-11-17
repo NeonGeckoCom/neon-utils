@@ -141,6 +141,11 @@ class NetUtilTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             check_online(123)
 
+    def test_check_port_is_open_valid(self):
+        from neon_utils.net_utils import check_port_is_open
+        self.assertTrue(check_port_is_open("api.neon.ai", 5672))
+        self.assertFalse(check_port_is_open("api.neon.ai", 443))
+
 
 if __name__ == '__main__':
     unittest.main()
