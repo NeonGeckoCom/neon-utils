@@ -20,8 +20,8 @@ import logging
 import uuid
 
 from threading import Event
-from pika.exceptions import ProbableAccessDeniedError
-from neon_mq_connector.connector import MQConnector, ConsumerThread
+from pika.exceptions import ProbableAccessDeniedError, StreamLostError
+from neon_mq_connector.connector import MQConnector
 
 from neon_utils.logger import LOG
 from neon_utils.socket_utils import b64_to_dict
@@ -36,14 +36,11 @@ class NeonMQHandler(MQConnector):
         self.vhost = vhost
         self.connection = self.create_mq_connection(vhost=vhost)
 
-    def stop_consumers(self):
-        self.connection.close()
-        super().stop_consumers()
-
 
 def get_mq_response(vhost: str, request_data: dict, target_queue: str,
                     response_queue: str = None, timeout: int = 30) -> dict:
-    LOG.warning(f"This method has been depreciated, please use: `send_mq_request`")
+    # TODO: Remove in v1.0.0 DM
+    LOG.warning(f"This method has been deprecated, please use: `send_mq_request`")
     return send_mq_request(vhost, request_data, target_queue, response_queue, timeout, True)
 
 
@@ -65,6 +62,14 @@ def send_mq_request(vhost: str, request_data: dict, target_queue: str,
     message_id = None
     response_data = dict()
     config = dict()
+
+    def on_error(thread, error):
+        """
+        Override default error handler to suppress certain logged errors.
+        """
+        if isinstance(error, StreamLostError):
+            return
+        LOG.error(f"{thread} raised {error}")
 
     def handle_mq_response(channel, method, _, body):
         """
@@ -93,8 +98,8 @@ def send_mq_request(vhost: str, request_data: dict, target_queue: str,
 
         if expect_response:
             neon_api_mq_handler.register_consumer('neon_output_handler',
-                                                  neon_api_mq_handler.vhost, response_queue, handle_mq_response,
-                                                  auto_ack=False)
+                                                  neon_api_mq_handler.vhost, response_queue,
+                                                  handle_mq_response, on_error, auto_ack=False)
             neon_api_mq_handler.run_consumers()
             request_data['routing_key'] = response_queue
 
