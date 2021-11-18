@@ -91,3 +91,16 @@ def check_online(valid_urls: tuple = ("https://google.com", "https://github.com"
             pass
 
     return False
+
+
+def check_port_is_open(addr: str, port: int) -> bool:
+    """
+    Checks if the specified port at addr is open
+    :param addr: IP or URL to query
+    :param port: port to check
+    :returns: True if the port is reachable, else False
+    """
+    test_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    status = test_connection.connect_ex((addr, port))
+    return status == 0
+
