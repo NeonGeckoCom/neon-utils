@@ -73,16 +73,16 @@ class MqUtilTests(unittest.TestCase):
     def tearDownClass(cls) -> None:
         cls.test_connector.stop_consumers()
 
-    def test_get_mq_response_valid(self):
+    def test_send_mq_request_valid(self):
         request = {"data": time()}
-        response = get_mq_response("/neon_testing", request, INPUT_CHANNEL)
+        response = send_mq_request("/neon_testing", request, INPUT_CHANNEL)
         self.assertIsInstance(response, dict)
         self.assertTrue(response["success"])
         self.assertEqual(response["request_data"], request["data"])
 
-    def test_get_mq_response_spec_output_channel_valid(self):
+    def test_send_mq_request_spec_output_channel_valid(self):
         request = {"data": time()}
-        response = get_mq_response("/neon_testing", request, INPUT_CHANNEL, OUTPUT_CHANNEL)
+        response = send_mq_request("/neon_testing", request, INPUT_CHANNEL, OUTPUT_CHANNEL)
         self.assertIsInstance(response, dict)
         self.assertTrue(response["success"])
         self.assertEqual(response["request_data"], request["data"])
@@ -93,7 +93,7 @@ class MqUtilTests(unittest.TestCase):
 
         def check_response(name: str):
             request = {"data": time()}
-            response = get_mq_response("/neon_testing", request, INPUT_CHANNEL)
+            response = send_mq_request("/neon_testing", request, INPUT_CHANNEL)
             self.assertIsInstance(response, dict)
             if not isinstance(response, dict):
                 responses[name] = {'success': False,
@@ -124,9 +124,9 @@ class MqUtilTests(unittest.TestCase):
         for resp in responses.values():
             self.assertTrue(resp['success'], resp.get('reason'))
 
-    def test_get_mq_response_invalid_vhost(self):
+    def test_send_mq_request_invalid_vhost(self):
         with self.assertRaises(ValueError):
-            get_mq_response("invalid_endpoint", {}, "test", "test")
+            send_mq_request("invalid_endpoint", {}, "test", "test")
 
     # def test_get_mq_response_error_in_handler(self):
     #     # TODO: Troubleshoot this DM
