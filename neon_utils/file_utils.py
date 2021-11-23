@@ -293,6 +293,8 @@ def parse_skill_readme_file(readme_path: str) -> dict:
     def _format_readme_line(ln: str):
         nonlocal category
         if section == "examples":
+            if not any((ln.startswith('-'), ln.startswith('*'))):
+                return None
             parsed = clean_quotes(ln.lstrip('-').lstrip('*').lower().strip())
             if parsed.split(maxsplit=1)[0] == "neon":
                 return parsed.split(maxsplit=1)[1]
@@ -304,6 +306,8 @@ def parse_skill_readme_file(readme_path: str) -> dict:
                 category = parsed
             return parsed
         if section == "credits":
+            if ln.strip().startswith('['):
+                return ln.split('[', 1)[1].split(']', 1)[0]
             return ln.rstrip('\n').lstrip('@')
         if section == "tags":
             return ln.lstrip('#').rstrip('\n')
@@ -317,6 +321,9 @@ def parse_skill_readme_file(readme_path: str) -> dict:
             section = new_section
         elif line.strip():
             parsed_line = _format_readme_line(line)
+            if not parsed_line:
+                # Nothing to parse in this line
+                continue
             if section in list_sections:
                 if section not in parsed_data:
                     parsed_data[section] = list()
@@ -326,5 +333,9 @@ def parse_skill_readme_file(readme_path: str) -> dict:
                     parsed_data[section] = parsed_line
                 else:
                     parsed_data[section] = " ".join((parsed_data[section], parsed_line))
-    parsed_data["category"] = category or parsed_data.get("categories", [None])[0]
+    parsed_data["category"] = category or parsed_data.get("categories", [""])[0]
+
+    if len(parsed_data["credits"]) == 1:
+        parsed_data["credits"] = parsed_data["credits"][0].split(' ')
+
     return parsed_data

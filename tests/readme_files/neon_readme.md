@@ -19,7 +19,7 @@ Use the [link](https://neongecko.com/ContactUs) or [submit an issue on GitHub](h
 
 ## Credits
 
-@NeonGeckoCom
+[NeonGeckoCom](https://github.com/NeonGeckoCom)
 @NeonDaniel
 
 ## Category
