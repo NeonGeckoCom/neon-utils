@@ -24,7 +24,8 @@ from pydub.exceptions import CouldntDecodeError
 from neon_utils.file_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-AUDIO_PATH = os.path.join(ROOT_DIR,"tests", "audio_files")
+AUDIO_PATH = os.path.join(ROOT_DIR, "tests", "audio_files")
+README_PATH = os.path.join(ROOT_DIR, "tests", "readme_files")
 
 
 class FileUtilTests(unittest.TestCase):
@@ -188,6 +189,47 @@ class FileUtilTests(unittest.TestCase):
         self.assertTrue(os.path.exists(audio_path))
         os.remove(audio_path)
         self.assertFalse(os.path.exists(audio_path))
+
+    def test_parse_neon_skill_readme_file_valid(self):
+        str_sections = ("title", "icon", "summary", "description", "contact support", "category")
+        list_sections = ("examples", "credits", "categories", "tags")
+        neon_data = parse_skill_readme_file(os.path.join(README_PATH, "neon_readme.md"))
+        self.assertIsInstance(neon_data, dict)
+        self.assertEqual(set(neon_data.keys()), {"title", "icon", "summary", "description", "examples",
+                                                 "contact support", "credits", "category", "tags", "categories"})
+
+        for val in neon_data.values():
+            if val in str_sections:
+                self.assertIsInstance(val, str)
+            elif val in list_sections:
+                self.assertIsInstance(val, list)
+
+        self.assertEqual(neon_data["title"], "Demo")
+        self.assertEqual(neon_data["icon"], "https://0000.us/klatchat/app/files/neon_images/icons/neon_skill.png")
+        self.assertEqual(neon_data["summary"], "Skill to demo Neon capabilities")
+        self.assertEqual(neon_data["description"],
+                         "The demo skill will prompt on first run if you'd like to see a demo. User may accept or "
+                         "decline and optionally choose to be asked again on next run. The demo may also be run at "
+                         "any time via intent.")
+        self.assertEqual(neon_data["contact support"],
+                         "Use the [link](https://neongecko.com/ContactUs) or [submit an issue on GitHub]"
+                         "(https://help.github.com/en/articles/creating-an-issue)")
+        self.assertEqual(neon_data["category"], "Information")
+
+        self.assertEqual(neon_data["examples"], ["show me the demo"])
+        self.assertEqual(set(neon_data["credits"]), {"NeonGeckoCom", "NeonDaniel"})
+        self.assertEqual(neon_data["categories"], ["Information"])
+        self.assertEqual(neon_data["tags"], ["NeonGecko", "NeonAI", "Demo"])
+
+    def test_parse_skill_readme_file_invalid(self):
+        with self.assertRaises(FileNotFoundError):
+            parse_skill_readme_file(os.path.join(README_PATH, "invalid_path"))
+
+        with self.assertRaises(FileNotFoundError):
+            parse_skill_readme_file(README_PATH)
+
+        with self.assertRaises(ValueError):
+            parse_skill_readme_file("")
 
 
 if __name__ == '__main__':
