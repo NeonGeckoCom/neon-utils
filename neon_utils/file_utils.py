@@ -335,7 +335,7 @@ def parse_skill_readme_file(readme_path: str) -> dict:
                     parsed_data[section] = " ".join((parsed_data[section], parsed_line))
     parsed_data["category"] = category or parsed_data.get("categories", [""])[0]
 
-    if len(parsed_data["credits"]) == 1:
+    if parsed_data.get("credits") and len(parsed_data["credits"]) == 1:
         parsed_data["credits"] = parsed_data["credits"][0].split(' ')
 
     return parsed_data
