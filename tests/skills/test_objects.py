@@ -24,7 +24,8 @@
 # OR PROFITS;  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
-# SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.#
+# SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+#
 # This software is an enhanced derivation of the Mycroft Project which is licensed under the
 # Apache software Foundation software license 2.0 https://www.apache.org/licenses/LICENSE-2.0
 # Changes Copyright 2008-2021 Neongecko.com Inc. | All Rights Reserved
