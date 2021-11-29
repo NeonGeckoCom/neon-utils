@@ -292,6 +292,13 @@ def parse_skill_readme_file(readme_path: str) -> dict:
 
     def _format_readme_line(ln: str):
         nonlocal category
+        if section == "incompatible skills":
+            if not any((ln.startswith('-'), ln.startswith('*'))):
+                return None
+            parsed = clean_quotes(ln.lstrip('-').lstrip('*').lower().strip())
+            if parsed.startswith('['):
+                return parsed.split('(', 1)[1].split(')', 1)[0]
+            return parsed
         if section == "examples":
             if not any((ln.startswith('-'), ln.startswith('*'))):
                 return None
@@ -334,7 +341,8 @@ def parse_skill_readme_file(readme_path: str) -> dict:
                 else:
                     parsed_data[section] = " ".join((parsed_data[section], parsed_line))
     parsed_data["category"] = category or parsed_data.get("categories", [""])[0]
-
+    if parsed_data.get("incompatible skills"):
+        parsed_data["incompatible_skills"] = parsed_data.pop("incompatible skills")
     if parsed_data.get("credits") and len(parsed_data["credits"]) == 1:
         parsed_data["credits"] = parsed_data["credits"][0].split(' ')
 
