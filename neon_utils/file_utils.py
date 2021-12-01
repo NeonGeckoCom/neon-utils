@@ -250,3 +250,109 @@ def resolve_neon_resource_file(res_name: str) -> Optional[str]:
         return res_file
     LOG.warning(f"Requested res_file not found: {res_file}")
     return None
+
+
+def parse_skill_readme_file(readme_path: str) -> dict:
+    """
+    Parse a Neon skill README.md into a dictionary
+    :param readme_path: absolute path to README.md file
+    :return: dict of parsed data
+    """
+    from neon_utils.parse_utils import clean_quotes
+
+    # Check passed path
+    if not readme_path:
+        raise ValueError("Null path")
+    readme_path = os.path.expanduser(readme_path)
+    if not os.path.isfile(readme_path):
+        raise FileNotFoundError(f"{readme_path} is not a valid file")
+
+    # Initialize parser params
+    list_sections = ("examples", "incompatible skills", "platforms", "categories", "tags", "credits")
+    section = "header"
+    category = None
+    parsed_data = {}
+    with open(readme_path, "r") as readme:
+        lines = readme.readlines()
+
+    def _check_section_start(ln: str):
+        # Handle section start
+        if ln.startswith("# ![](https://0000.us/klatchat/app/files/neon_images/icons/neon_paw.png)"):
+            # Old style title line
+            parsed_data["title"] = ln.split(')', 1)[1].strip()
+            parsed_data["icon"] = ln.split('(', 1)[1].split(')', 1)[0].strip()
+            return
+        elif section == "header" and ln.startswith("# <img src="):
+            # Title line
+            parsed_data["title"] = ln.split(">", 1)[1].strip()
+            parsed_data["icon"] = ln.split("src=", 1)[1].split()[0].strip('"').strip("'").lstrip("./")
+            return "summary"
+        elif ln.startswith("# ") or ln.startswith("## "):
+            # Top-level section
+            if ln.startswith("## About"):
+                # Handle Mycroft 'About' section
+                return "description"
+            elif ln.startswith("## Category"):
+                # Handle 'Category' as 'Categories'
+                return "categories"
+            else:
+                return line.lstrip("#").strip().lower()
+        return
+
+    def _format_readme_line(ln: str):
+        nonlocal category
+        if section == "incompatible skills":
+            if not any((ln.startswith('-'), ln.startswith('*'))):
+                return None
+            parsed = clean_quotes(ln.lstrip('-').lstrip('*').lower().strip())
+            if parsed.startswith('['):
+                return parsed.split('(', 1)[1].split(')', 1)[0]
+            return parsed
+        if section == "examples":
+            if not any((ln.startswith('-'), ln.startswith('*'))):
+                return None
+            parsed = clean_quotes(ln.lstrip('-').lstrip('*').lower().strip())
+            if parsed.split(maxsplit=1)[0] == "neon":
+                return parsed.split(maxsplit=1)[1]
+            else:
+                return parsed
+        if section == "categories":
+            parsed = ln.rstrip('\n').strip('*')
+            if ln.startswith('**'):
+                category = parsed
+            return parsed
+        if section == "credits":
+            if ln.strip().startswith('['):
+                return ln.split('[', 1)[1].split(']', 1)[0]
+            return ln.rstrip('\n').lstrip('@')
+        if section == "tags":
+            return ln.lstrip('#').rstrip('\n')
+        if section in list_sections:
+            return clean_quotes(ln.lstrip('-').lstrip('*').lower().strip())
+        return ln.rstrip('\n').rstrip()
+
+    for line in lines:
+        new_section = _check_section_start(line)
+        if new_section:
+            section = new_section
+        elif line.strip():
+            parsed_line = _format_readme_line(line)
+            if not parsed_line:
+                # Nothing to parse in this line
+                continue
+            if section in list_sections:
+                if section not in parsed_data:
+                    parsed_data[section] = list()
+                parsed_data[section].append(parsed_line)
+            else:
+                if section not in parsed_data:
+                    parsed_data[section] = parsed_line
+                else:
+                    parsed_data[section] = " ".join((parsed_data[section], parsed_line))
+    parsed_data["category"] = category or parsed_data.get("categories", [""])[0]
+    if parsed_data.get("incompatible skills"):
+        parsed_data["incompatible_skills"] = parsed_data.pop("incompatible skills")
+    if parsed_data.get("credits") and len(parsed_data["credits"]) == 1:
+        parsed_data["credits"] = parsed_data["credits"][0].split(' ')
+
+    return parsed_data
