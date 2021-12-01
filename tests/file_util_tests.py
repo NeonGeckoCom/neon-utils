@@ -221,7 +221,14 @@ class FileUtilTests(unittest.TestCase):
         self.assertEqual(neon_data["categories"], ["Information"])
         self.assertEqual(neon_data["tags"], ["NeonGecko", "NeonAI", "Demo"])
 
-    # TODO: Add more sample files to test DM
+        for readme in ("legacy_neon_readme.md", "complex_neon_readme.md"):
+            neon_data = parse_skill_readme_file(os.path.join(README_PATH, readme))
+            self.assertIsInstance(neon_data, dict)
+            for val in neon_data.values():
+                if val in str_sections:
+                    self.assertIsInstance(val, str)
+                elif val in list_sections:
+                    self.assertIsInstance(val, list)
 
     def test_parse_skill_readme_file_invalid(self):
         with self.assertRaises(FileNotFoundError):
