@@ -113,7 +113,7 @@ skills:
     "skill-date_time.neongeckocom",
     "skill-weather.neongeckocom",
     "skill-ovos-homescreen.openvoiceos",
-    "skill-balena-wifi-setup"
+    "skill-balena-wifi-setup.openvoiceos"
   ]
   essential_skills: []
   default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/tree/master/skill_lists/DEFAULT-SKILLS
