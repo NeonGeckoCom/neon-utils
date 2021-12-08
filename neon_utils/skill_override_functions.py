@@ -444,10 +444,13 @@ def wait_while_speaking():
     begin.
     """
     LOG.warning(f"This method is deprecated; use messagebus API directly")
-    LOG.debug("Wait while speaking!")
-    time.sleep(0.3)  # Wait briefly in for any queued speech to begin
-    while is_speaking():
-        time.sleep(0.1)
+    from neon_utils.signal_utils import wait_for_signal_clear, wait_for_signal_create
+    wait_for_signal_create("isSpeaking", 1)
+    wait_for_signal_clear("isSpeaking")
+    # LOG.debug("Wait while speaking!")
+    # time.sleep(0.3)  # Wait briefly in for any queued speech to begin
+    # while is_speaking():
+    #     time.sleep(0.1)
 
 
 def is_speaking(sec_lifetime=-1):

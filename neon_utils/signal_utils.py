@@ -40,11 +40,13 @@ def check_signal_manager_available() -> bool:
     """
     Method to check if a signal manager service is available
     """
-    response = BUS.wait_for_response(Message("neon.signal_manager_active"))
-    return response is not None
+    if BUS.connected_event.wait(30):  # Wait up to 30 seconds for the bus service
+        response = BUS.wait_for_response(Message("neon.signal_manager_active"))
+        return response is not None
+    return False
 
 
-def manager_create_signal(signal_name: str) -> bool:
+def manager_create_signal(signal_name: str, *_, **__) -> bool:
     """
     Backwards-compatible method for creating a signal
     :param signal_name: named signal to create
@@ -56,7 +58,7 @@ def manager_create_signal(signal_name: str) -> bool:
     return stat.data.get("is_set")
 
 
-def manager_check_for_signal(signal_name: str, sec_lifetime: int = 0) -> bool:
+def manager_check_for_signal(signal_name: str, sec_lifetime: int = 0, *_, **__) -> bool:
     """
     Backwards-compatible method for checking for a signal
     :param signal_name: name of signal to check
@@ -116,12 +118,12 @@ def fs_wait_for_signal_clear(signal_name: str, timeout: int = 30):
     return check_for_signal(signal_name, -1)
 
 
-create_signal = manager_create_signal
-check_for_signal = manager_check_for_signal
-wait_for_signal_clear = manager_wait_for_signal_clear
-wait_for_signal_create = manager_wait_for_signal_create
-
-if not check_signal_manager_available():
+if check_signal_manager_available():
+    create_signal = manager_create_signal
+    check_for_signal = manager_check_for_signal
+    wait_for_signal_clear = manager_wait_for_signal_clear
+    wait_for_signal_create = manager_wait_for_signal_create
+else:
     LOG.warning("No signal manager available; falling back to FS signals")
     create_signal = ovos_utils.signal.create_signal
     check_for_signal = ovos_utils.signal.check_for_signal
