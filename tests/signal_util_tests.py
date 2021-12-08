@@ -157,6 +157,38 @@ class SignalUtilsTests(unittest.TestCase):
         self.assertEqual(neon_utils.signal_utils.wait_for_signal_create,
                          neon_utils.signal_utils.fs_wait_for_signal_create)
 
+    def test_signal_utils_reload(self):
+        import ovos_utils.signal
+        import neon_utils.signal_utils
+        importlib.reload(neon_utils.signal_utils)
+        from neon_utils.signal_utils import check_for_signal
+        neon_utils.signal_utils.BUS = self.test_bus
+        self.assertFalse(neon_utils.signal_utils.check_signal_manager_available())
+        self.assertEqual(neon_utils.signal_utils.check_for_signal,
+                         ovos_utils.signal.check_for_signal)
+        self.assertEqual(neon_utils.signal_utils.create_signal,
+                         ovos_utils.signal.create_signal)
+        self.assertEqual(neon_utils.signal_utils.wait_for_signal_clear,
+                         neon_utils.signal_utils.fs_wait_for_signal_clear)
+        self.assertEqual(neon_utils.signal_utils.wait_for_signal_create,
+                         neon_utils.signal_utils.fs_wait_for_signal_create)
+        self.assertEqual(check_for_signal,
+                         ovos_utils.signal.check_for_signal)
+
+        TestSignalManager(self.test_bus)
+        neon_utils.signal_utils.init_signal_handlers()
+        from neon_utils.signal_utils import check_for_signal
+        self.assertEqual(neon_utils.signal_utils.check_for_signal,
+                         neon_utils.signal_utils.manager_check_for_signal)
+        self.assertEqual(neon_utils.signal_utils.create_signal,
+                         neon_utils.signal_utils.manager_create_signal)
+        self.assertEqual(neon_utils.signal_utils.wait_for_signal_clear,
+                         neon_utils.signal_utils.manager_wait_for_signal_clear)
+        self.assertEqual(neon_utils.signal_utils.wait_for_signal_create,
+                         neon_utils.signal_utils.manager_wait_for_signal_create)
+        self.assertEqual(check_for_signal,
+                         neon_utils.signal_utils.manager_check_for_signal)
+
 
 if __name__ == '__main__':
     unittest.main()
