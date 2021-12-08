@@ -99,9 +99,9 @@ def check_signal_manager_available() -> bool:
     """
     if BUS.connected_event.wait(10):  # Wait up to 10 seconds for the bus service
         response = BUS.wait_for_response(Message("neon.signal_manager_active"))
+        LOG.debug(f"signal_manager_active={response is not None}")
         return response is not None
-    LOG.error(f"Signal manager gave up waiting for the MessageBus")
-    BUS.close()
+    LOG.error(f"Signal manager check gave up waiting for the MessageBus")
     return False
 
 
