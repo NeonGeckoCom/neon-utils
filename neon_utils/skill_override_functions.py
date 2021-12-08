@@ -33,20 +33,19 @@ from typing import Optional
 from mycroft_bus_client import Message
 from neon_utils.logger import LOG
 from neon_utils.configuration_utils import get_neon_local_config
-
+from neon_utils.signal_utils import wait_for_signal_clear
+from neon_utils.signal_utils import check_for_signal as _check_for_signal, create_signal as _create_signal
 IPC_DIR = get_neon_local_config()["dirVars"]["ipcDir"]
 
 
 def check_for_signal(signal_name: str, sec_lifetime: int = 0):
     LOG.warning(f"This reference is deprecated, import from neon_utils.signal_utils directly")
-    from neon_utils.signal_utils import check_for_signal
-    check_for_signal(signal_name, sec_lifetime)
+    _check_for_signal(signal_name, sec_lifetime)
 
 
 def create_signal(signal_name: str):
     LOG.warning(f"This reference is deprecated, import from neon_utils.signal_utils directly")
-    from neon_utils.signal_utils import create_signal
-    create_signal(signal_name)
+    _create_signal(signal_name)
 
 
 def neon_must_respond(message: Message) -> bool:
@@ -444,11 +443,9 @@ def wait_while_speaking():
     begin.
     """
     LOG.warning(f"This method is deprecated; use messagebus API directly")
-    from neon_utils.signal_utils import wait_for_signal_clear, wait_for_signal_create
-    wait_for_signal_create("isSpeaking", 1)
-    wait_for_signal_clear("isSpeaking")
     # LOG.debug("Wait while speaking!")
-    # time.sleep(0.3)  # Wait briefly in for any queued speech to begin
+    time.sleep(0.3)  # Wait briefly in for any queued speech to begin
+    wait_for_signal_clear("isSpeaking")
     # while is_speaking():
     #     time.sleep(0.1)
 

@@ -32,6 +32,7 @@ import unittest
 import importlib
 import mycroft_bus_client
 
+from threading import Event
 from os.path import join, dirname
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
@@ -96,6 +97,8 @@ class SignalUtilsTests(unittest.TestCase):
 
     def setUp(self):
         self.test_bus = FakeBus()
+        self.test_bus.connected_event = Event()
+        self.test_bus.connected_event.set()
 
         def get_test_bus():
             return self.test_bus

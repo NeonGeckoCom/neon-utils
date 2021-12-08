@@ -40,9 +40,11 @@ def check_signal_manager_available() -> bool:
     """
     Method to check if a signal manager service is available
     """
-    if BUS.connected_event.wait(30):  # Wait up to 30 seconds for the bus service
+    if BUS.connected_event.wait(10):  # Wait up to 10 seconds for the bus service
         response = BUS.wait_for_response(Message("neon.signal_manager_active"))
         return response is not None
+    LOG.error(f"Signal manager gave up waiting for the MessageBus")
+    BUS.close()
     return False
 
 
@@ -107,14 +109,14 @@ def manager_wait_for_signal_clear(signal_name: str, timeout: int = 30) -> bool:
 def fs_wait_for_signal_create(signal_name: str, timeout: int = 30):
     expiration = time() + timeout
     while not check_for_signal(signal_name, -1) and time() < expiration:
-        sleep(0.2)
+        sleep(0.1)
     return check_for_signal(signal_name, -1)
 
 
 def fs_wait_for_signal_clear(signal_name: str, timeout: int = 30):
     expiration = time() + timeout
     while check_for_signal(signal_name, -1) and time() < expiration:
-        sleep(0.2)
+        sleep(0.1)
     return check_for_signal(signal_name, -1)
 
 
