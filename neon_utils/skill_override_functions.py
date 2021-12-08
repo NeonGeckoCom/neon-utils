@@ -33,6 +33,7 @@ from typing import Optional
 from mycroft_bus_client import Message
 from neon_utils.logger import LOG
 from neon_utils.configuration_utils import get_neon_local_config
+from neon_utils.signal_utils import create_signal, check_for_signal, wait_for_signal_clear
 
 IPC_DIR = get_neon_local_config()["dirVars"]["ipcDir"]
 
@@ -146,21 +147,6 @@ def speak_dialog(key, data=None, expect_response=False, message=None, private=Fa
     super(TYPE, SKILL).speak_dialog(key, data, expect_response, wait)
 
 
-def create_signal(signal_name: str) -> bool:
-    """Create a named signal. i.e. "CORE_signalName" or "nick_SKILL_signalName
-    Args:
-        signal_name (str): The signal's name.  Must only contain characters
-            valid in filenames.
-    """
-    LOG.warning("This method and signal use are deprecated and will not work in some configurations")
-    try:
-        path = os.path.join(IPC_DIR, "signal", signal_name)
-        _create_file(path)
-        return os.path.isfile(path)
-    except IOError:
-        return False
-
-
 def clear_signals(prefix: str):
     """
     Clears all signals that begin with the passed prefix. Used with skill prefix for a skill to clear any signals it
@@ -172,42 +158,6 @@ def clear_signals(prefix: str):
     for signal in os.listdir(f"{IPC_DIR}/signal"):
         if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
             os.remove(os.path.join(f"{IPC_DIR}/signal", signal))
-
-
-def check_for_signal(signal_name: str, sec_lifetime: Optional[int] = 0):
-    """See if a named signal exists
-
-    Args:
-        signal_name (str): The signal's name.  Must only contain characters
-            valid in filenames.
-        sec_lifetime (int, optional): How many seconds the signal should
-            remain valid.  If 0 or not specified, it is a single-use signal.
-            If -1, it never expires.
-
-    Returns:
-        bool: True if the signal is defined, False otherwise
-    """
-    # TODO: Log deprecation warning after isSpeaking check is refactored DM
-    # LOG.warning("This method and signal use are deprecated and will not work in some configurations")
-    import time
-    path = os.path.join(IPC_DIR, "signal", signal_name)  # /tmp/neon/ipc/signal/isSpeaking
-    if os.path.isfile(path):
-        # noinspection PyTypeChecker
-        if sec_lifetime == 0:
-            # consume this single-use signal
-            try:
-                os.remove(path)
-            except Exception as x:
-                print(' >>> ERROR removing signal ' + signal_name + ', error == ' + str(x))
-        elif sec_lifetime == -1:
-            return True
-        elif int(os.path.getctime(path) + sec_lifetime) < int(time.time()):
-            # remove once expired
-            os.remove(path)
-            return False
-        return True
-    # No such signal exists
-    return False
 
 
 def _create_file(filename: str):
@@ -483,9 +433,7 @@ def wait_while_speaking():
     begin.
     """
     LOG.debug("Wait while speaking!")
-    time.sleep(0.3)  # Wait briefly in for any queued speech to begin
-    while is_speaking():
-        time.sleep(0.1)
+    wait_for_signal_clear("isSpeaking", 300)
 
 
 def is_speaking(sec_lifetime=-1):
@@ -499,6 +447,7 @@ def is_speaking(sec_lifetime=-1):
     Returns:
         bool: True while still speaking
     """
+    LOG.warning(f"This method is deprecated; use messageebus API directly")
     return check_for_signal("isSpeaking", sec_lifetime)
 
 
