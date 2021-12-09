@@ -175,7 +175,7 @@ class SignalUtilsTests(unittest.TestCase):
     def test_check_signal_manager_available_lazy_load_bus(self):
         from mycroft_bus_client import MessageBusClient
         from neon_utils.signal_utils import check_signal_manager_available
-        neon_utils.signal_utils.init_signal_bus(None)
+        neon_utils.signal_utils._BUS = None
         neon_utils.signal_utils.check_signal_manager_available()
         self.assertIsInstance(neon_utils.signal_utils._BUS, MessageBusClient)
 

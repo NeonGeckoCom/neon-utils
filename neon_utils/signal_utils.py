@@ -41,6 +41,8 @@ def init_signal_bus(bus: MessageBusClient):
     :param bus: Connected and Running MessageBusClient
     """
     global _BUS
+    if not bus.started_running:
+        bus.run_in_thread()
     _BUS = bus
 
 
@@ -87,11 +89,7 @@ def check_signal_manager_available() -> bool:
     global _BUS
     if not _BUS:
         LOG.warning("Initializing new messagebus connection")
-        _BUS = MessageBusClient()
-        _BUS.run_in_thread()
-    if not _BUS.started_running:
-        LOG.warning("Specified MessageBusClient is not running and will be started now")
-        _BUS.run_in_thread()
+        init_signal_bus(MessageBusClient())
     if _BUS.connected_event.wait(10):  # Wait up to 10 seconds for the bus service
         response = _BUS.wait_for_response(Message("neon.signal_manager_active"))
         LOG.debug(f"signal_manager_active={response is not None}")
