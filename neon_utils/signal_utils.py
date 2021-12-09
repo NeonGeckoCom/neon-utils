@@ -84,10 +84,14 @@ def check_signal_manager_available() -> bool:
     """
     Method to check if a signal manager service is available
     """
+    global _BUS
     if not _BUS:
-        raise RuntimeError("Method called before bus initialized via: init_signal_bus")
+        LOG.warning("Initializing new messagebus connection")
+        _BUS = MessageBusClient()
+        _BUS.run_in_thread()
     if not _BUS.started_running:
-        raise RuntimeError("Specified MessageBusClient is not running")
+        LOG.warning("Specified MessageBusClient is not running and will be started now")
+        _BUS.run_in_thread()
     if _BUS.connected_event.wait(10):  # Wait up to 10 seconds for the bus service
         response = _BUS.wait_for_response(Message("neon.signal_manager_active"))
         LOG.debug(f"signal_manager_active={response is not None}")
@@ -168,20 +172,7 @@ def _fs_wait_for_signal_clear(signal_name: str, timeout: int = 30):
     return check_for_signal(signal_name, -1)
 
 
-try:
-    create_signal
-except NameError:
-    # Init default file handler methods
-    create_signal = ovos_utils.signal.create_signal
-    check_for_signal = ovos_utils.signal.check_for_signal
-    wait_for_signal_clear = _fs_wait_for_signal_clear
-    wait_for_signal_create = _fs_wait_for_signal_create
-
-# try:
-#
-#     init_signal_handlers()
-# except RuntimeError:
-#     create_signal = ovos_utils.signal.create_signal
-#     check_for_signal = ovos_utils.signal.check_for_signal
-#     wait_for_signal_clear = _fs_wait_for_signal_clear
-#     wait_for_signal_create = _fs_wait_for_signal_create
+create_signal = ovos_utils.signal.create_signal
+check_for_signal = ovos_utils.signal.check_for_signal
+wait_for_signal_clear = _fs_wait_for_signal_clear
+wait_for_signal_create = _fs_wait_for_signal_create
