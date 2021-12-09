@@ -264,3 +264,12 @@ jobs:
         with:
           name: validator-util-test-results
           path: tests/validator-util-test-results.xml
+
+      - name: Test Signal Utils
+        run: |
+          pytest tests/signal_util_tests.py --doctest-modules --junitxml=tests/signal-util-test-results.xml
+      - name: Upload signal utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: signal-util-test-results
+          path: tests/signal-util-test-results.xml
