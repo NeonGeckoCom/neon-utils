@@ -29,8 +29,6 @@
 import os
 import sys
 import unittest
-import importlib
-import mycroft_bus_client
 
 from threading import Event
 from os.path import join, dirname
@@ -38,6 +36,7 @@ from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+import neon_utils.signal_utils
 
 
 class TestSignalManager:
@@ -99,28 +98,17 @@ class SignalUtilsTests(unittest.TestCase):
         self.test_bus = FakeBus()
         self.test_bus.connected_event = Event()
         self.test_bus.connected_event.set()
-
-        def get_test_bus():
-            return self.test_bus
-
-        mycroft_bus_client.MessageBusClient = get_test_bus
-        mycroft_bus_client.client.MessageBusClient = get_test_bus
-
-    # def doCleanups(self) -> None:
-    #     if self.manager:
-    #         del self.manager
+        self.test_bus.run_in_thread()
+        neon_utils.signal_utils.init_signal_bus(self.test_bus)
+        neon_utils.signal_utils.init_signal_handlers()
 
     def test_signal_file(self):
-        import neon_utils.signal_utils
-        importlib.reload(neon_utils.signal_utils)
         self.assertTrue(neon_utils.signal_utils.create_signal("test", self.test_config))
         self.assertTrue(neon_utils.signal_utils.check_for_signal("test", -1, self.test_config))
         self.assertTrue(neon_utils.signal_utils.check_for_signal("test", 0, self.test_config))
         self.assertFalse(neon_utils.signal_utils.check_for_signal("test", -1, self.test_config))
 
     def test_check_signal_manager_available(self):
-        import neon_utils.signal_utils
-        importlib.reload(neon_utils.signal_utils)
         self.assertFalse(neon_utils.signal_utils.check_signal_manager_available())
 
         TestSignalManager(self.test_bus)
@@ -128,66 +116,61 @@ class SignalUtilsTests(unittest.TestCase):
 
     def test_signal_utils_manager_available(self):
         TestSignalManager(self.test_bus)
-        import neon_utils.signal_utils
-        importlib.reload(neon_utils.signal_utils)
-        self.assertEqual(neon_utils.signal_utils.BUS, self.test_bus)
+        neon_utils.signal_utils.init_signal_handlers()
+        self.assertEqual(neon_utils.signal_utils._BUS, self.test_bus)
         self.assertTrue(neon_utils.signal_utils.check_signal_manager_available())
 
         self.assertEqual(neon_utils.signal_utils.check_for_signal,
-                         neon_utils.signal_utils.manager_check_for_signal)
+                         neon_utils.signal_utils._manager_check_for_signal)
         self.assertEqual(neon_utils.signal_utils.create_signal,
-                         neon_utils.signal_utils.manager_create_signal)
+                         neon_utils.signal_utils._manager_create_signal)
         self.assertEqual(neon_utils.signal_utils.wait_for_signal_clear,
-                         neon_utils.signal_utils.manager_wait_for_signal_clear)
+                         neon_utils.signal_utils._manager_wait_for_signal_clear)
         self.assertEqual(neon_utils.signal_utils.wait_for_signal_create,
-                         neon_utils.signal_utils.manager_wait_for_signal_create)
+                         neon_utils.signal_utils._manager_wait_for_signal_create)
 
     def test_signal_utils_manager_unavailable(self):
         import ovos_utils.signal
-        import neon_utils.signal_utils
-        importlib.reload(neon_utils.signal_utils)
-        neon_utils.signal_utils.BUS = self.test_bus
+        neon_utils.signal_utils.init_signal_handlers()
         self.assertFalse(neon_utils.signal_utils.check_signal_manager_available())
         self.assertEqual(neon_utils.signal_utils.check_for_signal,
                          ovos_utils.signal.check_for_signal)
         self.assertEqual(neon_utils.signal_utils.create_signal,
                          ovos_utils.signal.create_signal)
         self.assertEqual(neon_utils.signal_utils.wait_for_signal_clear,
-                         neon_utils.signal_utils.fs_wait_for_signal_clear)
+                         neon_utils.signal_utils._fs_wait_for_signal_clear)
         self.assertEqual(neon_utils.signal_utils.wait_for_signal_create,
-                         neon_utils.signal_utils.fs_wait_for_signal_create)
+                         neon_utils.signal_utils._fs_wait_for_signal_create)
 
     def test_signal_utils_reload(self):
         import ovos_utils.signal
-        import neon_utils.signal_utils
-        importlib.reload(neon_utils.signal_utils)
         from neon_utils.signal_utils import check_for_signal
-        neon_utils.signal_utils.BUS = self.test_bus
         self.assertFalse(neon_utils.signal_utils.check_signal_manager_available())
         self.assertEqual(neon_utils.signal_utils.check_for_signal,
                          ovos_utils.signal.check_for_signal)
         self.assertEqual(neon_utils.signal_utils.create_signal,
                          ovos_utils.signal.create_signal)
         self.assertEqual(neon_utils.signal_utils.wait_for_signal_clear,
-                         neon_utils.signal_utils.fs_wait_for_signal_clear)
+                         neon_utils.signal_utils._fs_wait_for_signal_clear)
         self.assertEqual(neon_utils.signal_utils.wait_for_signal_create,
-                         neon_utils.signal_utils.fs_wait_for_signal_create)
+                         neon_utils.signal_utils._fs_wait_for_signal_create)
         self.assertEqual(check_for_signal,
                          ovos_utils.signal.check_for_signal)
 
         TestSignalManager(self.test_bus)
         neon_utils.signal_utils.init_signal_handlers()
-        from neon_utils.signal_utils import check_for_signal
         self.assertEqual(neon_utils.signal_utils.check_for_signal,
-                         neon_utils.signal_utils.manager_check_for_signal)
+                         neon_utils.signal_utils._manager_check_for_signal)
         self.assertEqual(neon_utils.signal_utils.create_signal,
-                         neon_utils.signal_utils.manager_create_signal)
+                         neon_utils.signal_utils._manager_create_signal)
         self.assertEqual(neon_utils.signal_utils.wait_for_signal_clear,
-                         neon_utils.signal_utils.manager_wait_for_signal_clear)
+                         neon_utils.signal_utils._manager_wait_for_signal_clear)
         self.assertEqual(neon_utils.signal_utils.wait_for_signal_create,
-                         neon_utils.signal_utils.manager_wait_for_signal_create)
+                         neon_utils.signal_utils._manager_wait_for_signal_create)
+
+        # Previously imported method is not updated
         self.assertEqual(check_for_signal,
-                         neon_utils.signal_utils.manager_check_for_signal)
+                         ovos_utils.signal.check_for_signal)
 
 
 if __name__ == '__main__':

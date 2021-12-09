@@ -25,36 +25,23 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from time import time, sleep
 
-from mycroft_bus_client import MessageBusClient, Message
 import ovos_utils.signal
 
+from time import time, sleep
+from mycroft_bus_client import MessageBusClient, Message
 from neon_utils.logger import LOG
 
-BUS = MessageBusClient()
-BUS.run_in_thread()
+_BUS: MessageBusClient = None
 
 
-def fs_wait_for_signal_create(signal_name: str, timeout: int = 30):
-    expiration = time() + timeout
-    while not check_for_signal(signal_name, -1) and time() < expiration:
-        sleep(0.1)
-    return check_for_signal(signal_name, -1)
-
-
-def fs_wait_for_signal_clear(signal_name: str, timeout: int = 30):
-    expiration = time() + timeout
-    while check_for_signal(signal_name, -1) and time() < expiration:
-        sleep(0.1)
-    return check_for_signal(signal_name, -1)
-
-
-# Init default file handler methods
-create_signal = ovos_utils.signal.create_signal
-check_for_signal = ovos_utils.signal.check_for_signal
-wait_for_signal_clear = fs_wait_for_signal_clear
-wait_for_signal_create = fs_wait_for_signal_create
+def init_signal_bus(bus: MessageBusClient):
+    """
+    Specify a MessageBusClient to use for methods in this module
+    :param bus: Connected and Running MessageBusClient
+    """
+    global _BUS
+    _BUS = bus
 
 
 def init_signal_handlers():
@@ -70,16 +57,16 @@ def init_signal_handlers():
     global wait_for_signal_create
     if check_signal_manager_available():
         LOG.info("Signal Manager Available")
-        create_signal = manager_create_signal
-        check_for_signal = manager_check_for_signal
-        wait_for_signal_clear = manager_wait_for_signal_clear
-        wait_for_signal_create = manager_wait_for_signal_create
+        create_signal = _manager_create_signal
+        check_for_signal = _manager_check_for_signal
+        wait_for_signal_clear = _manager_wait_for_signal_clear
+        wait_for_signal_create = _manager_wait_for_signal_create
     else:
         LOG.warning("No signal manager available; falling back to FS signals")
         create_signal = ovos_utils.signal.create_signal
         check_for_signal = ovos_utils.signal.check_for_signal
-        wait_for_signal_clear = fs_wait_for_signal_clear
-        wait_for_signal_create = fs_wait_for_signal_create
+        wait_for_signal_clear = _fs_wait_for_signal_clear
+        wait_for_signal_create = _fs_wait_for_signal_create
 
     try:
         import mycroft.util.signal
@@ -97,41 +84,45 @@ def check_signal_manager_available() -> bool:
     """
     Method to check if a signal manager service is available
     """
-    if BUS.connected_event.wait(10):  # Wait up to 10 seconds for the bus service
-        response = BUS.wait_for_response(Message("neon.signal_manager_active"))
+    if not _BUS:
+        raise RuntimeError("Method called before bus initialized via: init_signal_bus")
+    if not _BUS.started_running:
+        raise RuntimeError("Specified MessageBusClient is not running")
+    if _BUS.connected_event.wait(10):  # Wait up to 10 seconds for the bus service
+        response = _BUS.wait_for_response(Message("neon.signal_manager_active"))
         LOG.debug(f"signal_manager_active={response is not None}")
         return response is not None
     LOG.error(f"Signal manager check gave up waiting for the MessageBus")
     return False
 
 
-def manager_create_signal(signal_name: str, *_, **__) -> bool:
+def _manager_create_signal(signal_name: str, *_, **__) -> bool:
     """
     Backwards-compatible method for creating a signal
     :param signal_name: named signal to create
     :return: True if signal exists
     """
-    stat = BUS.wait_for_response(Message("neon.create_signal",
-                                         {"signal_name": signal_name}),
+    stat = _BUS.wait_for_response(Message("neon.create_signal",
+                                          {"signal_name": signal_name}),
                                  f"neon.create_signal.{signal_name}", 10) or Message('')
     return stat.data.get("is_set")
 
 
-def manager_check_for_signal(signal_name: str, sec_lifetime: int = 0, *_, **__) -> bool:
+def _manager_check_for_signal(signal_name: str, sec_lifetime: int = 0, *_, **__) -> bool:
     """
     Backwards-compatible method for checking for a signal
     :param signal_name: name of signal to check
     :param sec_lifetime: max age of signal in seconds before clearing it and returning False
     :return: True if signal exists
     """
-    stat = BUS.wait_for_response(Message("neon.check_for_signal",
-                                         {"signal_name": signal_name,
+    stat = _BUS.wait_for_response(Message("neon.check_for_signal",
+                                          {"signal_name": signal_name,
                                           "sec_lifetime": sec_lifetime}),
                                  f"neon.check_for_signal.{signal_name}", 10) or Message('')
     return stat.data.get("is_set")
 
 
-def manager_wait_for_signal_create(signal_name: str, timeout: int = 30) -> bool:
+def _manager_wait_for_signal_create(signal_name: str, timeout: int = 30) -> bool:
     """
     Block until the specified signal is set or timeout is reached
     :param signal_name: name of signal to check
@@ -140,14 +131,14 @@ def manager_wait_for_signal_create(signal_name: str, timeout: int = 30) -> bool:
     """
     timeout = 300 if timeout > 300 else timeout  # Cap wait at 5 minutes
     bus_wait_time = timeout + 5  # Allow some padding for bus handler
-    stat = BUS.wait_for_response(Message("neon.wait_for_signal_create",
-                                         {"signal_name": signal_name,
+    stat = _BUS.wait_for_response(Message("neon.wait_for_signal_create",
+                                          {"signal_name": signal_name,
                                           "timeout": timeout}),
                                  f"neon.wait_for_signal_create.{signal_name}", bus_wait_time)
     return stat.data.get("is_set")
 
 
-def manager_wait_for_signal_clear(signal_name: str, timeout: int = 30) -> bool:
+def _manager_wait_for_signal_clear(signal_name: str, timeout: int = 30) -> bool:
     """
     Block until the specified signal is cleared or timeout is reached
     :param signal_name: name of signal to check
@@ -156,12 +147,41 @@ def manager_wait_for_signal_clear(signal_name: str, timeout: int = 30) -> bool:
     """
     timeout = 300 if timeout > 300 else timeout  # Cap wait at 5 minutes
     bus_wait_time = timeout + 5  # Allow some padding for bus handler
-    stat = BUS.wait_for_response(Message("neon.wait_for_signal_clear",
-                                         {"signal_name": signal_name,
+    stat = _BUS.wait_for_response(Message("neon.wait_for_signal_clear",
+                                          {"signal_name": signal_name,
                                           "timeout": timeout}),
                                  f"neon.wait_for_signal_clear.{signal_name}", bus_wait_time)
     return stat.data.get("is_set")
 
 
-# Check for service handlers on import
-init_signal_handlers()
+def _fs_wait_for_signal_create(signal_name: str, timeout: int = 30):
+    expiration = time() + timeout
+    while not check_for_signal(signal_name, -1) and time() < expiration:
+        sleep(0.1)
+    return check_for_signal(signal_name, -1)
+
+
+def _fs_wait_for_signal_clear(signal_name: str, timeout: int = 30):
+    expiration = time() + timeout
+    while check_for_signal(signal_name, -1) and time() < expiration:
+        sleep(0.1)
+    return check_for_signal(signal_name, -1)
+
+
+try:
+    create_signal
+except NameError:
+    # Init default file handler methods
+    create_signal = ovos_utils.signal.create_signal
+    check_for_signal = ovos_utils.signal.check_for_signal
+    wait_for_signal_clear = _fs_wait_for_signal_clear
+    wait_for_signal_create = _fs_wait_for_signal_create
+
+# try:
+#
+#     init_signal_handlers()
+# except RuntimeError:
+#     create_signal = ovos_utils.signal.create_signal
+#     check_for_signal = ovos_utils.signal.check_for_signal
+#     wait_for_signal_clear = _fs_wait_for_signal_clear
+#     wait_for_signal_create = _fs_wait_for_signal_create
