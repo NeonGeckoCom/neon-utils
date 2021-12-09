@@ -109,12 +109,14 @@ skills:
   debug: True
   blacklist: []
   priority: [
-    "about.neon.neongeckocom",
-    "date-time.neon.neongeckocom",
-    "skill-weather.neongeckocom"
+    "skill-about.neongeckocom",
+    "skill-date_time.neongeckocom",
+    "skill-weather.neongeckocom",
+    "skill-ovos-homescreen.openvoiceos",
+    "skill-balena-wifi-setup.openvoiceos"
   ]
   essential_skills: []
-  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
+  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/tree/master/skill_lists/DEFAULT-SKILLS
   skill_manager: "osm"
   # recommended osm, optional msm
   appstore_sync_interval: 6.0
