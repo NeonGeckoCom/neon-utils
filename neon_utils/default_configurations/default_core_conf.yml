@@ -116,7 +116,7 @@ skills:
     "skill-balena-wifi-setup.openvoiceos"
   ]
   essential_skills: []
-  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/tree/master/skill_lists/DEFAULT-SKILLS
+  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/master/skill_lists/DEFAULT-SKILLS
   skill_manager: "osm"
   # recommended osm, optional msm
   appstore_sync_interval: 6.0

@@ -750,6 +750,14 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.rmtree(config_path)
         shutil.move(backup_path, config_path)
 
+    def test_default_config(self):
+        config = get_neon_local_config("/tmp/neon/test/")
+        import requests
+        resp = requests.get(config["skills"]["default_skills"])
+        self.assertTrue(resp.ok)
+        shutil.rmtree("/tmp/neon/test")
+        # TODO: Test any other default values
+
 
 if __name__ == '__main__':
     unittest.main()
