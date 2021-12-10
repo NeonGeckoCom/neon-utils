@@ -40,7 +40,6 @@ from mycroft_bus_client.message import Message
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
-from neon_utils import create_signal, check_for_signal
 from neon_utils.configuration_utils import NGIConfig, is_neon_core, \
     get_neon_lang_config, get_neon_user_config, get_neon_local_config
 from neon_utils.location_utils import to_system_time
@@ -56,6 +55,9 @@ try:
 except ImportError:
     LOG.error(f"neon_core package not found, language detection/translation will be disabled.")
     DetectorFactory, TranslatorFactory = None, None
+
+import neon_utils.signal_utils
+neon_utils.signal_utils.init_signal_handlers()
 
 LOG.name = "neon_skill"
 
@@ -82,20 +84,8 @@ class NeonSkill(MycroftSkill):
                                             "~/.local/share/neon/cache")
         self.lru_cache = LRUCache()
 
-        # TODO: Depreciate these references, signal use is discouraged DM
-        self.create_signal = create_signal
-        self.check_for_signal = check_for_signal
-
         self.sys_tz = gettz()
         self.gui_enabled = self.local_config.get("prefFlags", {}).get("guiEvents", False)
-
-        # if use_settings:
-        #     self.settings = {}
-        #     self._initial_settings = None
-        #     self.init_settings()
-        # else:
-        #     LOG.error(f"{name} Skill requested no settings!")
-        #     self.settings = None
 
         self.scheduled_repeats = []
 
@@ -133,19 +123,34 @@ class NeonSkill(MycroftSkill):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
 
+    @staticmethod
+    def create_signal(*args, **kwargs):
+        # TODO: Deprecate in v1.0.0
+        LOG.warning("Signal usage deprecated; update to use events or internal variables")
+        neon_utils.signal_utils.create_signal(*args, **kwargs)
+
+    @staticmethod
+    def check_for_signal(*args, **kwargs):
+        # TODO: Deprecate in v1.0.0
+        LOG.warning("Signal usage deprecated; update to use events or internal variables")
+        neon_utils.signal_utils.check_for_signal(*args, **kwargs)
+
     @property
     def user_info_available(self):
+        # TODO: Deprecate in v1.0.0
         LOG.warning("This reference is deprecated, use self.preference_x methods for user preferences")
         return self.user_config.content
 
     @property
     def configuration_available(self):
+        # TODO: Deprecate in v1.0.0
         LOG.warning("This reference is deprecated, use self.local_config directly")
         return self.local_config.content
 
     @property
     def ngi_settings(self):
-        LOG.warning("This reference is depreciated, use self.preference_skill for per-user skill settings")
+        # TODO: Deprecate in v1.0.0
+        LOG.warning("This reference is deprecated, use self.preference_skill for per-user skill settings")
         return self._ngi_settings
 
     def _init_settings(self):
