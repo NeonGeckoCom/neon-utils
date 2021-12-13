@@ -26,4 +26,21 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-__version__ = "0.14.1"
+import os
+import sys
+import unittest
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+
+
+class DeprecatedMethodTests(unittest.TestCase):
+    def test_signal_methods(self):
+        from neon_utils import is_speaking, create_signal, check_for_signal
+        check_for_signal("isSpeaking")
+        self.assertFalse(is_speaking())
+        create_signal("isSpeaking")
+        self.assertTrue(is_speaking())
+
+
+if __name__ == '__main__':
+    unittest.main()
