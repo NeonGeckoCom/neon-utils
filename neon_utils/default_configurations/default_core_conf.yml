@@ -109,12 +109,14 @@ skills:
   debug: True
   blacklist: []
   priority: [
-    "about.neon.neongeckocom",
-    "date-time.neon.neongeckocom",
-    "skill-weather.neongeckocom"
+    "skill-about.neongeckocom",
+    "skill-date_time.neongeckocom",
+    "skill-weather.neongeckocom",
+    "skill-ovos-homescreen.openvoiceos",
+    "skill-balena-wifi-setup.openvoiceos"
   ]
   essential_skills: []
-  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
+  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/master/skill_lists/DEFAULT-SKILLS
   skill_manager: "osm"
   # recommended osm, optional msm
   appstore_sync_interval: 6.0
@@ -248,6 +250,10 @@ sttSpokenOpts: {Afrikaans: af-ZA, Amharic: am-ET, Armenian: hy-AM, Azerbaijani: 
                 Ukrainian: uk-UA, Hebrew: he-IL, Arabic: ar-IL, Persian: fa-IR, Hindi: hi-IN, Thai: th-TH,
                 Korean: ko-KR, Taiwanese: zh-TW, 'Chinese, Cantonese': yue-Hant-HK, Japanese: ja-JP,
                 'Chinese, Mandarin': zh}
+
+signal:
+  use_signal_files: True
+  max_wait_seconds: 300
 
 MQ:
   server: api.neon.ai

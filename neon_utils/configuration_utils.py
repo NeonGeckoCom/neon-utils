@@ -756,6 +756,13 @@ def get_neon_skills_config() -> dict:
 
 
 def get_neon_client_config() -> dict:
+    """
+    Get a configuration dict for the client module.
+    Returns:
+        dict of config params used for the Neon client module
+    """
+    LOG.warning(f"The Neon client module has been deprecated. This method will be removed")
+    # TODO: Remove in v1.0.0
     core_config = get_neon_local_config()
     server_addr = core_config.get("remoteVars", {}).get("remoteHost", "167.172.112.7")
     if server_addr == "64.34.186.92":
@@ -767,12 +774,29 @@ def get_neon_client_config() -> dict:
 
 
 def get_neon_transcribe_config() -> dict:
+    """
+    Get a configuration dict for the transcription module.
+    Returns:
+        dict of config params used for the Neon transcription module
+    """
     local_config = get_neon_local_config()
     user_config = get_neon_user_config()
     neon_transcribe_config = dict()
     neon_transcribe_config["transcript_dir"] = local_config["dirVars"].get("docsDir", "")
     neon_transcribe_config["audio_permission"] = user_config["privacy"].get("save_audio", False)
     return neon_transcribe_config
+
+
+def get_neon_gui_config() -> dict:
+    """
+    Get a configuration dict for the gui module.
+    Returns:
+        dict of config params used for the Neon gui module
+    """
+    local_config = get_neon_local_config()
+    gui_config = local_config["gui"]
+    gui_config["base_port"] = gui_config["port"]
+    return gui_config
 
 
 def _move_config_sections(user_config, local_config):

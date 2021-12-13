@@ -312,6 +312,20 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["tts"], dict)
         self.assertIsInstance(config["language"], dict)
 
+    def test_get_gui_config(self):
+        config = get_neon_gui_config()
+        self.assertIsInstance(config, dict)
+        self.assertIsInstance(config["lang"], str)
+        self.assertIsInstance(config["enclosure"], str)
+        self.assertIsInstance(config["host"], str)
+        self.assertIsInstance(config["port"], int)
+        self.assertIsInstance(config["base_port"], int)
+        self.assertIsInstance(config["route"], str)
+        self.assertIsInstance(config["ssl"], bool)
+        self.assertIsInstance(config["resource_root"], str)
+
+        self.assertEqual(config["port"], config["base_port"])
+
     def test_get_user_config_add_keys(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
         ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
@@ -749,6 +763,14 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         shutil.rmtree(config_path)
         shutil.move(backup_path, config_path)
+
+    def test_default_config(self):
+        config = get_neon_local_config("/tmp/neon/test/")
+        import requests
+        resp = requests.get(config["skills"]["default_skills"])
+        self.assertTrue(resp.ok)
+        shutil.rmtree("/tmp/neon/test")
+        # TODO: Test any other default values
 
 
 if __name__ == '__main__':
