@@ -33,6 +33,7 @@ from mycroft_bus_client import MessageBusClient, Message
 from neon_utils.logger import LOG
 
 _BUS: MessageBusClient = None
+_MAX_TIMEOUT: int = None
 
 
 def init_signal_bus(bus: MessageBusClient):
@@ -57,6 +58,9 @@ def init_signal_handlers():
     global check_for_signal
     global wait_for_signal_clear
     global wait_for_signal_create
+    global _MAX_TIMEOUT
+    from neon_utils.configuration_utils import get_neon_local_config
+    _MAX_TIMEOUT = int(get_neon_local_config()["signal"].get("max_wait_seconds")) or 300
     if check_signal_manager_available():
         LOG.info("Signal Manager Available")
         create_signal = _manager_create_signal
@@ -106,7 +110,7 @@ def _manager_create_signal(signal_name: str, *_, **__) -> bool:
     """
     stat = _BUS.wait_for_response(Message("neon.create_signal",
                                           {"signal_name": signal_name}),
-                                 f"neon.create_signal.{signal_name}", 10) or Message('')
+                                  f"neon.create_signal.{signal_name}", 10) or Message('')
     return stat.data.get("is_set")
 
 
@@ -119,8 +123,8 @@ def _manager_check_for_signal(signal_name: str, sec_lifetime: int = 0, *_, **__)
     """
     stat = _BUS.wait_for_response(Message("neon.check_for_signal",
                                           {"signal_name": signal_name,
-                                          "sec_lifetime": sec_lifetime}),
-                                 f"neon.check_for_signal.{signal_name}", 10) or Message('')
+                                           "sec_lifetime": sec_lifetime}),
+                                  f"neon.check_for_signal.{signal_name}", 10) or Message('')
     return stat.data.get("is_set")
 
 
@@ -131,12 +135,12 @@ def _manager_wait_for_signal_create(signal_name: str, timeout: int = 30) -> bool
     :param timeout: max seconds to wait for signal to be created, Default is 30 seconds
     :return: True if signal exists
     """
-    timeout = 300 if timeout > 300 else timeout  # Cap wait at 5 minutes
+    timeout = _MAX_TIMEOUT if timeout > _MAX_TIMEOUT else timeout  # Cap wait
     bus_wait_time = timeout + 5  # Allow some padding for bus handler
     stat = _BUS.wait_for_response(Message("neon.wait_for_signal_create",
                                           {"signal_name": signal_name,
-                                          "timeout": timeout}),
-                                 f"neon.wait_for_signal_create.{signal_name}", bus_wait_time)
+                                           "timeout": timeout}),
+                                  f"neon.wait_for_signal_create.{signal_name}", bus_wait_time)
     return stat.data.get("is_set")
 
 
@@ -147,12 +151,12 @@ def _manager_wait_for_signal_clear(signal_name: str, timeout: int = 30) -> bool:
     :param timeout: max seconds to wait for signal to be created, Default is 30 seconds
     :return: True if signal exists
     """
-    timeout = 300 if timeout > 300 else timeout  # Cap wait at 5 minutes
+    timeout = _MAX_TIMEOUT if timeout > _MAX_TIMEOUT else timeout  # Cap wait
     bus_wait_time = timeout + 5  # Allow some padding for bus handler
     stat = _BUS.wait_for_response(Message("neon.wait_for_signal_clear",
                                           {"signal_name": signal_name,
-                                          "timeout": timeout}),
-                                 f"neon.wait_for_signal_clear.{signal_name}", bus_wait_time)
+                                           "timeout": timeout}),
+                                  f"neon.wait_for_signal_clear.{signal_name}", bus_wait_time)
     return stat.data.get("is_set")
 
 
