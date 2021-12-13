@@ -35,17 +35,17 @@ from neon_utils.logger import LOG
 from neon_utils.configuration_utils import get_neon_local_config
 from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.signal_utils import check_for_signal as _check_for_signal, create_signal as _create_signal
-IPC_DIR = get_neon_local_config()["dirVars"]["ipcDir"]
+_IPC_DIR = get_neon_local_config()["dirVars"]["ipcDir"]
 
 
-def check_for_signal(signal_name: str, sec_lifetime: int = 0):
+def check_for_signal(signal_name: str, sec_lifetime: int = 0) -> bool:
     LOG.warning(f"This reference is deprecated, import from neon_utils.signal_utils directly")
-    _check_for_signal(signal_name, sec_lifetime)
+    return _check_for_signal(signal_name, sec_lifetime, config={"ipc_path": _IPC_DIR})
 
 
-def create_signal(signal_name: str):
+def create_signal(signal_name: str) -> bool:
     LOG.warning(f"This reference is deprecated, import from neon_utils.signal_utils directly")
-    _create_signal(signal_name)
+    return _create_signal(signal_name, config={"ipc_path": _IPC_DIR})
 
 
 def neon_must_respond(message: Message) -> bool:
@@ -164,10 +164,10 @@ def clear_signals(prefix: str):
     :param prefix: (str) prefix to match
     """
     LOG.warning("This method and signal use are deprecated and will not work in some configurations")
-    os.makedirs(f"{IPC_DIR}/signal", exist_ok=True)
-    for signal in os.listdir(f"{IPC_DIR}/signal"):
+    os.makedirs(f"{_IPC_DIR}/signal", exist_ok=True)
+    for signal in os.listdir(f"{_IPC_DIR}/signal"):
         if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
-            os.remove(os.path.join(f"{IPC_DIR}/signal", signal))
+            os.remove(os.path.join(f"{_IPC_DIR}/signal", signal))
 
 
 def _create_file(filename: str):
