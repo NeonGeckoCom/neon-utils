@@ -118,6 +118,7 @@ class SignalUtilsTests(unittest.TestCase):
         TestSignalManager(self.test_bus)
         neon_utils.signal_utils.init_signal_handlers()
         self.assertEqual(neon_utils.signal_utils._BUS, self.test_bus)
+        self.assertIsInstance(neon_utils.signal_utils._MAX_TIMEOUT, int)
         self.assertTrue(neon_utils.signal_utils.check_signal_manager_available())
 
         self.assertEqual(neon_utils.signal_utils.check_for_signal,
@@ -133,6 +134,7 @@ class SignalUtilsTests(unittest.TestCase):
         import ovos_utils.signal
         neon_utils.signal_utils.init_signal_handlers()
         self.assertFalse(neon_utils.signal_utils.check_signal_manager_available())
+        self.assertIsInstance(neon_utils.signal_utils._MAX_TIMEOUT, int)
         self.assertEqual(neon_utils.signal_utils.check_for_signal,
                          ovos_utils.signal.check_for_signal)
         self.assertEqual(neon_utils.signal_utils.create_signal,
@@ -178,6 +180,7 @@ class SignalUtilsTests(unittest.TestCase):
         neon_utils.signal_utils._BUS = None
         neon_utils.signal_utils.check_signal_manager_available()
         self.assertIsInstance(neon_utils.signal_utils._BUS, MessageBusClient)
+        self.assertIsInstance(neon_utils.signal_utils._MAX_TIMEOUT, int)
 
 
 if __name__ == '__main__':
