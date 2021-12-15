@@ -27,16 +27,29 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-
 import logging
 
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Optional, Union
 
 from neon_utils.logger import LOG
 from neon_utils.configuration_utils import get_neon_local_config
 
 LOG_DIR = os.path.expanduser(get_neon_local_config()["dirVars"]["logsDir"])
+
+
+class ServiceLog(Enum):
+    SPEECH = "voice.log"
+    SKILLS = "skills.log"
+    AUDIO = "audio.log"
+    ENCLOSURE = "enclosure.log"
+    BUS = "bus.log"
+    GUI = "gui.log"
+    DISPLAY = "display.log"
+    SERVER = "server.log"
+    CLIENT = "client.log"
+    OTHER = "extras.log"
 
 
 def remove_old_logs(log_dir: str = LOG_DIR, history_to_retain: timedelta = timedelta(weeks=6)):
@@ -94,7 +107,7 @@ def get_logger(log_name: str, log_dir: str = LOG_DIR, std_out: bool = False) -> 
 
 def get_log_file_for_module(module_name: Union[str, list]) -> str:
     """
-    Gets the default log basename for the requested module
+    Gets the default log path for the requested module
     Args:
         module_name: Runnable argument passed to Popen
             (i.e. neon_speech_client, [python3, -m, mycroft.skills])
@@ -126,3 +139,14 @@ def get_log_file_for_module(module_name: Union[str, list]) -> str:
         log_name = "extras.log"
 
     return os.path.join(LOG_DIR, log_name)
+
+
+def init_log_for_module(service: ServiceLog, std_out: bool = False):
+    """
+    Initialize `LOG` singleton for the specified service in this thread
+    Args:
+        service: service requesting a logger object
+        std_out: if true, print logs to std_out instead of to files
+    """
+    log_file = "stdout" if std_out else os.path.join(LOG_DIR, service.value)
+    LOG.init({"path": log_file})

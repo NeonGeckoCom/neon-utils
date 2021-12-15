@@ -31,6 +31,7 @@ import os
 import sys
 import shutil
 import unittest
+from os.path import basename
 from time import time, sleep
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -140,6 +141,19 @@ class LogUtilTests(unittest.TestCase):
 
         self.assertEqual("extras.log", os.path.basename(get_log_file_for_module("NGI.gui")))
         self.assertEqual("extras.log", os.path.basename(get_log_file_for_module("nothing")))
+
+    def test_init_log_for_module(self):
+        init_log_for_module(ServiceLog.SPEECH)
+        self.assertEqual(basename(LOG.base_path), ServiceLog.SPEECH.value)
+        init_log_for_module(ServiceLog.AUDIO, True)
+        self.assertEqual(LOG.base_path, "stdout")
+        init_log_for_module(ServiceLog.AUDIO)
+        self.assertEqual(basename(LOG.base_path), ServiceLog.AUDIO.value)
+
+        from neon_utils.logger import LOG as neon_log
+        from ovos_utils.log import LOG as ovos_log
+        self.assertEqual(neon_log, ovos_log)
+        self.assertEqual(neon_log, LOG)
 
 
 if __name__ == '__main__':
