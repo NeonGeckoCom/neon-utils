@@ -31,6 +31,7 @@ import logging
 
 from datetime import datetime, timedelta
 from enum import Enum
+from os.path import isdir
 from typing import Optional, Union
 
 from neon_utils.logger import LOG
@@ -141,7 +142,7 @@ def get_log_file_for_module(module_name: Union[str, list]) -> str:
     return os.path.join(LOG_DIR, log_name)
 
 
-def init_log_for_module(service: ServiceLog, std_out: bool = False, max_bytes: int = 50000000,
+def init_log_for_module(service: ServiceLog = ServiceLog.OTHER, std_out: bool = False, max_bytes: int = 50000000,
                         backup_count: int = 3, level: str = logging.DEBUG):
     """
     Initialize `LOG` singleton for the specified service in this thread
@@ -152,6 +153,9 @@ def init_log_for_module(service: ServiceLog, std_out: bool = False, max_bytes: i
         backup_count: number of archived logs to save
         level: minimum log level to filter to
     """
+    if not isdir(LOG_DIR):
+        LOG.info(f"Creating log directory: {LOG_DIR}")
+        os.makedirs(LOG_DIR)
     log_file = "stdout" if std_out else os.path.join(LOG_DIR, service.value)
     LOG.init({"path": log_file,
               "max_bytes": max_bytes,
