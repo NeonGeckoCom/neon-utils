@@ -141,12 +141,19 @@ def get_log_file_for_module(module_name: Union[str, list]) -> str:
     return os.path.join(LOG_DIR, log_name)
 
 
-def init_log_for_module(service: ServiceLog, std_out: bool = False):
+def init_log_for_module(service: ServiceLog, std_out: bool = False, max_bytes: int = 50000000,
+                        backup_count: int = 3, level: str = logging.DEBUG):
     """
     Initialize `LOG` singleton for the specified service in this thread
     Args:
         service: service requesting a logger object
         std_out: if true, print logs to std_out instead of to files
+        max_bytes: maximum size in bytes allowed for this log file
+        backup_count: number of archived logs to save
+        level: minimum log level to filter to
     """
     log_file = "stdout" if std_out else os.path.join(LOG_DIR, service.value)
-    LOG.init({"path": log_file})
+    LOG.init({"path": log_file,
+              "max_bytes": max_bytes,
+              "backup_count": backup_count,
+              "level": level})
