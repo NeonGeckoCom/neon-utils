@@ -421,7 +421,7 @@ def get_config_dir():
         if os.path.isdir(config_path) and path_is_read_writable(config_path):
             # LOG.info(f"Got config path from environment vars: {config_path}")
             return config_path
-        elif path_is_read_writable(dirname(config_path)):
+        elif path_is_read_writable(dirname(config_path)) and not os.path.exists(config_path):
             LOG.info(f"Creating requested config path: {config_path}")
             os.makedirs(config_path)
             return config_path
