@@ -31,7 +31,6 @@ import json
 import os
 import sys
 import shutil
-import sysconfig
 
 from copy import deepcopy
 from os.path import *
@@ -45,7 +44,7 @@ from typing import Optional
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_lock
-from neon_utils.file_utils import check_path_permissions, path_is_read_writable, create_file
+from neon_utils.file_utils import path_is_read_writable, create_file
 
 
 class NGIConfig:
@@ -411,11 +410,42 @@ class NGIConfig:
             LOG.error("Disk contents are newer than this config object, changes were not written.")
 
 
+def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
+    """
+    Get legacy configuration locations based on install directories
+    :param sys_path: Optional list to override `sys.path`
+    :return: path to save config to if one is found, else None
+    """
+    sys_path = sys_path or sys.path
+    for p in [path for path in sys_path if sys_path]:
+        if re.match(".*/lib/python.*/site-packages", p):
+            # Get directory containing virtual environment
+            clean_path = "/".join(p.split("/")[0:-4])
+        else:
+            clean_path = p
+        invalid_path_prefixes = re.compile("^/usr|^/lib|.*/lib/python.*")
+        valid_path_mapping = (
+            (join(clean_path, "NGI"), join(clean_path, "NGI")),
+            (join(clean_path, "neon_core"), clean_path),
+            (join(clean_path, "mycroft"), clean_path),
+            (join(clean_path, ".venv"), clean_path)
+        )
+        if re.match(invalid_path_prefixes, clean_path):
+            # Exclude system paths
+            continue
+        for (path_to_check, path_to_write) in valid_path_mapping:
+            if exists(path_to_check) and path_is_read_writable(path_to_write):
+                # LOG.debug(f"Writing config to {path_to_write}")
+                return path_to_write
+    return None
+
+
 def get_config_dir():
     """
     Get a default directory in which to find configuration files
     Returns: Path to configuration or else default
     """
+    # Check envvar spec path
     if os.getenv("NEON_CONFIG_PATH"):
         config_path = expanduser(os.getenv("NEON_CONFIG_PATH"))
         if os.path.isdir(config_path) and path_is_read_writable(config_path):
@@ -427,32 +457,14 @@ def get_config_dir():
             return config_path
         else:
             LOG.error(f"NEON_CONFIG_PATH is not valid and will be ignored: {config_path}")
-    site = sysconfig.get_paths()['platlib']
-    if path_is_read_writable(join(site, 'NGI')):
-        return join(site, "NGI")
-    for p in [path for path in sys.path if path != ""]:
-        if path_is_read_writable(join(p, "NGI")):
-            return join(p, "NGI")
-        if re.match(".*/lib/python.*/site-packages", p):
-            clean_path = "/".join(p.split("/")[0:-4])
-            if clean_path.startswith("/usr") or clean_path.startswith("/lib"):
-                # Exclude system paths
-                continue
-            if exists(join(clean_path, "NGI")) and path_is_read_writable(join(clean_path, "NGI")):
-                LOG.warning(f"Depreciated core structure found at {clean_path}")
-                return join(clean_path, "NGI")
-            elif exists(join(clean_path, "neon_core")) and path_is_read_writable(join(clean_path, "neon_core")):
-                # Cloned Dev Environment
-                return clean_path
-            elif exists(join(clean_path, "NeonCore", "neon_core")) and path_is_read_writable(join(clean_path, "NeonCore", "neon_core")):
-                # Installed Dev Environment
-                return join(clean_path, "NeonCore")
-            elif exists(join(clean_path, "mycroft")) and path_is_read_writable(join(clean_path, "mycroft")):
-                LOG.info(f"Mycroft core structure found at {clean_path}")
-                return clean_path
-            elif exists(join(clean_path, ".venv")) and path_is_read_writable(join(clean_path, ".venv")):
-                # Localized Production Environment (Servers)
-                return clean_path
+
+    # TODO: Update modules to set NEON_CONFIG_PATH and log a deprecation warning here DM
+    # Check for legacy path spec
+    legacy_path = _get_legacy_config_dir()
+    if legacy_path:
+        LOG.warning(f"Legacy Config Path Found: {legacy_path}")
+        return legacy_path
+
     default_path = expanduser("~/.local/share/neon")
     # LOG.info(f"System packaged core found! Using default configuration at {default_path}")
     return default_path

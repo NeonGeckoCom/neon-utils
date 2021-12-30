@@ -177,7 +177,6 @@ class NGIConfigTests(unittest.TestCase):
         self.assertEqual(from_disk.content, test_conf.content)
         os.remove(test_conf.file_path)
 
-
     def test_config_cache(self):
         from neon_utils.configuration_utils import NGIConfig as NGIConf2
         bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
@@ -276,6 +275,44 @@ class ConfigurationUtilTests(unittest.TestCase):
             os.remove(file)
         if os.path.exists(os.path.join(CONFIG_PATH, "old_user_info.yml")):
             os.remove(os.path.join(CONFIG_PATH, "old_user_info.yml"))
+
+    def test_get_legacy_config_path(self):
+        from neon_utils.configuration_utils import _get_legacy_config_dir
+        test_dir = join(CONFIG_PATH, "config_path_test_dirs")
+
+        venv_path = join(test_dir, "arbitrary_venv")
+        mycroft_path = join(test_dir, "default_mycroft")
+        cloned_neon_path = join(test_dir, "cloned_neon")
+        legacy_neon_path = join(test_dir, "legacy_neon_path")
+
+        test_path = ["/lib/python3.8", "/usr/lib/python3.8", "/opt/mycroft"]
+        self.assertIsNone(_get_legacy_config_dir(test_path))
+
+        test_path.insert(0, f"{venv_path}/.venv/lib/python3.8/site-packages")
+        self.assertEqual(_get_legacy_config_dir(test_path), venv_path)
+
+        test_path.insert(0, mycroft_path)
+        self.assertEqual(_get_legacy_config_dir(test_path), mycroft_path)
+
+        test_path.insert(0, cloned_neon_path)
+        self.assertEqual(_get_legacy_config_dir(test_path), cloned_neon_path)
+
+        test_path.insert(0, legacy_neon_path)
+        self.assertEqual(_get_legacy_config_dir(test_path), f"{legacy_neon_path}/NGI")
+
+        dev_test_path = ['', '/usr/lib/python38.zip', '/usr/lib/python3.8', '/usr/lib/python3.8/lib-dynload',
+                         f'{join(test_dir, "dev_environment")}/venv/lib/python3.8/site-packages',
+                         f'{join(test_dir, "dev_environment")}/neon_cli',
+                         f'{join(test_dir, "dev_environment")}/transcripts_controller',
+                         f'{join(test_dir, "dev_environment")}/neon_enclosure',
+                         f'{join(test_dir, "dev_environment")}/neon_speech',
+                         f'{join(test_dir, "dev_environment")}/neon_audio',
+                         f'{join(test_dir, "dev_environment")}/NeonCore',
+                         f'{join(test_dir, "dev_environment")}/neon-test-utils',
+                         f'{join(test_dir, "dev_environment")}/neon_display',
+                         f'{join(test_dir, "dev_environment")}/neon_messagebus',
+                         f'{join(test_dir, "dev_environment")}/neon_gui']
+        self.assertEqual(_get_legacy_config_dir(dev_test_path), f'{join(test_dir, "dev_environment")}/NeonCore')
 
     def test_get_config_dir_default(self):
         config_path = get_config_dir()
