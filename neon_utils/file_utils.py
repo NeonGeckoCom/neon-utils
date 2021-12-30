@@ -373,13 +373,16 @@ def check_path_permissions(path: str) -> tuple:
 
 def path_is_writable(path: str) -> bool:
     """
-    Check if the specified path is writable by the current user
+    heck if the specified path is writable by the current user.
     :param path: str file path to check
     :return: True if path exists and is read/writable
     """
     if not path:
         return False
     try:
+        path = os.path.expanduser(path)
+        while path and not os.path.exists(path):
+            path = os.path.dirname(path)
         stat = check_path_permissions(path)
         return all(stat[:2])
     except FileNotFoundError:

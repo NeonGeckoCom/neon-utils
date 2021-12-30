@@ -418,10 +418,10 @@ def get_config_dir():
     """
     if os.getenv("NEON_CONFIG_PATH"):
         config_path = expanduser(os.getenv("NEON_CONFIG_PATH"))
-        if os.path.isdir(config_path) and all(check_path_permissions(config_path)[:1]):
+        if os.path.isdir(config_path) and path_is_writable(config_path):
             # LOG.info(f"Got config path from environment vars: {config_path}")
             return config_path
-        elif all(check_path_permissions(dirname(config_path))[:1]):
+        elif path_is_writable(dirname(config_path)):
             LOG.info(f"Creating requested config path: {config_path}")
             os.makedirs(config_path)
             return config_path

@@ -394,7 +394,8 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["disabled"], bool)
 
     def test_get_device_type(self):
-        self.assertIn(get_neon_device_type(), ("desktop", "pi", "linux"))
+        self.assertIn(get_neon_device_type(),
+                      ("desktop", "pi", "linux", "server"))
 
     def test_get_speech_config(self):
         config = get_neon_speech_config()
