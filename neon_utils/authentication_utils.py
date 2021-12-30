@@ -66,13 +66,9 @@ def find_generic_keyfile(base_path: str, filename: str) -> str:
                       os.path.expanduser(f"~/.local/share/neon/{filename}"))
     for path in paths_to_check:
         if os.path.isfile(path):
-            try:
-                with open(path, "r") as f:
-                    credential = f.read().strip()
-                return credential
-            except Exception as e:
-                LOG.error(f"Invalid credential found at: {path}")
-                raise e
+            with open(path, "r") as f:
+                credential = f.read().strip()
+            return credential
     raise FileNotFoundError(f"No credentials found in default locations or path: {path_to_check}")
 
 
