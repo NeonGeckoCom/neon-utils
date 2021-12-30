@@ -45,7 +45,7 @@ from typing import Optional
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_lock
-from neon_utils.file_utils import check_path_permissions, path_is_writable, create_file
+from neon_utils.file_utils import check_path_permissions, path_is_read_writable, create_file
 
 
 class NGIConfig:
@@ -78,7 +78,7 @@ class NGIConfig:
         """
         file_path = join(self.path, self.name + ".yml")
         if not isfile(file_path):
-            if path_is_writable(self.path):
+            if path_is_read_writable(self.path):
                 create_file(file_path)
                 LOG.debug(f"New YAML created: {file_path}")
             else:
@@ -308,7 +308,7 @@ class NGIConfig:
         if not to_write:
             LOG.error(f"Config content empty! Skipping write to disk and reloading")
             return False
-        if not path_is_writable(self.file_path):
+        if not path_is_read_writable(self.file_path):
             LOG.warning(f"Insufficient write permissions: {self.file_path}")
             return False
         with self.lock:
@@ -418,39 +418,39 @@ def get_config_dir():
     """
     if os.getenv("NEON_CONFIG_PATH"):
         config_path = expanduser(os.getenv("NEON_CONFIG_PATH"))
-        if os.path.isdir(config_path) and path_is_writable(config_path):
+        if os.path.isdir(config_path) and path_is_read_writable(config_path):
             # LOG.info(f"Got config path from environment vars: {config_path}")
             return config_path
-        elif path_is_writable(dirname(config_path)):
+        elif path_is_read_writable(dirname(config_path)):
             LOG.info(f"Creating requested config path: {config_path}")
             os.makedirs(config_path)
             return config_path
         else:
             LOG.error(f"NEON_CONFIG_PATH is not valid and will be ignored: {config_path}")
     site = sysconfig.get_paths()['platlib']
-    if path_is_writable(join(site, 'NGI')):
+    if path_is_read_writable(join(site, 'NGI')):
         return join(site, "NGI")
     for p in [path for path in sys.path if path != ""]:
-        if path_is_writable(join(p, "NGI")):
+        if path_is_read_writable(join(p, "NGI")):
             return join(p, "NGI")
         if re.match(".*/lib/python.*/site-packages", p):
             clean_path = "/".join(p.split("/")[0:-4])
             if clean_path.startswith("/usr") or clean_path.startswith("/lib"):
                 # Exclude system paths
                 continue
-            if path_is_writable(join(clean_path, "NGI")):
+            if path_is_read_writable(join(clean_path, "NGI")):
                 LOG.warning(f"Depreciated core structure found at {clean_path}")
                 return join(clean_path, "NGI")
-            elif path_is_writable(join(clean_path, "neon_core")):
+            elif path_is_read_writable(join(clean_path, "neon_core")):
                 # Cloned Dev Environment
                 return clean_path
-            elif path_is_writable(join(clean_path, "NeonCore", "neon_core")):
+            elif path_is_read_writable(join(clean_path, "NeonCore", "neon_core")):
                 # Installed Dev Environment
                 return join(clean_path, "NeonCore")
-            elif path_is_writable(join(clean_path, "mycroft")):
+            elif path_is_read_writable(join(clean_path, "mycroft")):
                 LOG.info(f"Mycroft core structure found at {clean_path}")
                 return clean_path
-            elif path_is_writable(join(clean_path, ".venv")):
+            elif path_is_read_writable(join(clean_path, ".venv")):
                 # Localized Production Environment (Servers)
                 return clean_path
     default_path = expanduser("~/.local/share/neon")

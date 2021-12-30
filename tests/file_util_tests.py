@@ -258,13 +258,13 @@ class FileUtilTests(unittest.TestCase):
         self.assertEqual(check_path_permissions("~/"), (True, True, True))
 
     def test_check_path_is_writable(self):
-        self.assertFalse(path_is_writable("/test/fnf"))
-        self.assertFalse(path_is_writable("/opt"))
-        self.assertFalse(path_is_writable("/opt/dne_test_dir"))
-        self.assertTrue(path_is_writable("/tmp"))
-        self.assertTrue(path_is_writable("~/"))
-        self.assertTrue(path_is_writable("~/.dne_test_dir"))
-        self.assertFalse(path_is_writable('/'))
+        self.assertFalse(path_is_read_writable("/test/fnf"))
+        self.assertFalse(path_is_read_writable("/opt"))
+        self.assertFalse(path_is_read_writable("/opt/dne_test_dir"))
+        self.assertTrue(path_is_read_writable("/tmp"))
+        self.assertTrue(path_is_read_writable("~/"))
+        self.assertTrue(path_is_read_writable("~/.dne_test_dir"))
+        self.assertFalse(path_is_read_writable('/'))
 
     def test_create_file(self):
         valid_file = os.path.expanduser("~/test_pass")

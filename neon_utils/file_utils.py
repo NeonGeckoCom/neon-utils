@@ -371,9 +371,9 @@ def check_path_permissions(path: str) -> tuple:
     return stat
 
 
-def path_is_writable(path: str) -> bool:
+def path_is_read_writable(path: str) -> bool:
     """
-    heck if the specified path is writable by the current user.
+    Check if the specified path is readable and writable by the current user.
     :param path: str file path to check
     :return: True if path exists and is read/writable
     """
@@ -396,7 +396,7 @@ def create_file(filename: str):
             filename: Path to the file to be created
     """
     filename = os.path.expanduser(filename)
-    if not path_is_writable(os.path.dirname(filename)):
+    if not path_is_read_writable(os.path.dirname(filename)):
         raise PermissionError(f"Insufficient permissions to create {filename}")
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     # with NamedLock(filename): # TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
