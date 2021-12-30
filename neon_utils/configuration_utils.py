@@ -438,19 +438,19 @@ def get_config_dir():
             if clean_path.startswith("/usr") or clean_path.startswith("/lib"):
                 # Exclude system paths
                 continue
-            if path_is_read_writable(join(clean_path, "NGI")):
+            if exists(join(clean_path, "NGI")) and path_is_read_writable(join(clean_path, "NGI")):
                 LOG.warning(f"Depreciated core structure found at {clean_path}")
                 return join(clean_path, "NGI")
-            elif path_is_read_writable(join(clean_path, "neon_core")):
+            elif exists(join(clean_path, "neon_core")) and path_is_read_writable(join(clean_path, "neon_core")):
                 # Cloned Dev Environment
                 return clean_path
-            elif path_is_read_writable(join(clean_path, "NeonCore", "neon_core")):
+            elif exists(join(clean_path, "NeonCore", "neon_core")) and path_is_read_writable(join(clean_path, "NeonCore", "neon_core")):
                 # Installed Dev Environment
                 return join(clean_path, "NeonCore")
-            elif path_is_read_writable(join(clean_path, "mycroft")):
+            elif exists(join(clean_path, "mycroft")) and path_is_read_writable(join(clean_path, "mycroft")):
                 LOG.info(f"Mycroft core structure found at {clean_path}")
                 return clean_path
-            elif path_is_read_writable(join(clean_path, ".venv")):
+            elif exists(join(clean_path, ".venv")) and path_is_read_writable(join(clean_path, ".venv")):
                 # Localized Production Environment (Servers)
                 return clean_path
     default_path = expanduser("~/.local/share/neon")
