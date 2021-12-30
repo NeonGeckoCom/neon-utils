@@ -435,7 +435,6 @@ def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
             continue
         for (path_to_check, path_to_write) in valid_path_mapping:
             if exists(path_to_check) and path_is_read_writable(path_to_write):
-                # LOG.debug(f"Writing config to {path_to_write}")
                 return path_to_write
     return None
 
@@ -462,7 +461,7 @@ def get_config_dir():
     # Check for legacy path spec
     legacy_path = _get_legacy_config_dir()
     if legacy_path:
-        LOG.warning(f"Legacy Config Path Found: {legacy_path}")
+        # LOG.warning(f"Legacy Config Path Found: {legacy_path}")
         return legacy_path
 
     default_path = expanduser("~/.local/share/neon")
