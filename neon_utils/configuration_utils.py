@@ -45,6 +45,7 @@ from typing import Optional
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_lock
+from neon_utils.file_utils import check_path_permissions, path_is_writable, create_file
 
 
 class NGIConfig:
@@ -77,8 +78,11 @@ class NGIConfig:
         """
         file_path = join(self.path, self.name + ".yml")
         if not isfile(file_path):
-            create_file(file_path)
-            LOG.debug(f"New YAML created: {file_path}")
+            if path_is_writable(self.path):
+                create_file(file_path)
+                LOG.debug(f"New YAML created: {file_path}")
+            else:
+                raise PermissionError(f"Cannot write to path: {self.path}")
         return file_path
 
     @property
@@ -304,6 +308,9 @@ class NGIConfig:
         if not to_write:
             LOG.error(f"Config content empty! Skipping write to disk and reloading")
             return False
+        if not path_is_writable(self.file_path):
+            LOG.warning(f"Insufficient write permissions: {self.file_path}")
+            return False
         with self.lock:
             if self._loaded != os.path.getmtime(self.file_path):
                 LOG.warning("File on disk modified! Skipping write to disk")
@@ -411,55 +418,44 @@ def get_config_dir():
     """
     if os.getenv("NEON_CONFIG_PATH"):
         config_path = expanduser(os.getenv("NEON_CONFIG_PATH"))
-        if os.path.isdir(config_path):
+        if os.path.isdir(config_path) and all(check_path_permissions(config_path)[:1]):
             # LOG.info(f"Got config path from environment vars: {config_path}")
+            return config_path
+        elif all(check_path_permissions(dirname(config_path))[:1]):
+            LOG.info(f"Creating requested config path: {config_path}")
+            os.makedirs(config_path)
             return config_path
         else:
             LOG.error(f"NEON_CONFIG_PATH is not valid and will be ignored: {config_path}")
     site = sysconfig.get_paths()['platlib']
-    if exists(join(site, 'NGI')):
+    if path_is_writable(join(site, 'NGI')):
         return join(site, "NGI")
     for p in [path for path in sys.path if path != ""]:
-        if exists(join(p, "NGI")):
+        if path_is_writable(join(p, "NGI")):
             return join(p, "NGI")
         if re.match(".*/lib/python.*/site-packages", p):
             clean_path = "/".join(p.split("/")[0:-4])
             if clean_path.startswith("/usr") or clean_path.startswith("/lib"):
                 # Exclude system paths
                 continue
-            if exists(join(clean_path, "NGI")):
+            if path_is_writable(join(clean_path, "NGI")):
                 LOG.warning(f"Depreciated core structure found at {clean_path}")
                 return join(clean_path, "NGI")
-            elif exists(join(clean_path, "neon_core")):
+            elif path_is_writable(join(clean_path, "neon_core")):
                 # Cloned Dev Environment
                 return clean_path
-            elif exists(join(clean_path, "NeonCore", "neon_core")):
+            elif path_is_writable(join(clean_path, "NeonCore", "neon_core")):
                 # Installed Dev Environment
                 return join(clean_path, "NeonCore")
-            elif exists(join(clean_path, "mycroft")):
+            elif path_is_writable(join(clean_path, "mycroft")):
                 LOG.info(f"Mycroft core structure found at {clean_path}")
                 return clean_path
-            elif exists(join(clean_path, ".venv")):
+            elif path_is_writable(join(clean_path, ".venv")):
                 # Localized Production Environment (Servers)
                 return clean_path
     default_path = expanduser("~/.local/share/neon")
     # LOG.info(f"System packaged core found! Using default configuration at {default_path}")
     return default_path
-
-
-def create_file(filename):
-    """ Create the file filename and create any directories needed
-
-        Args:
-            filename: Path to the file to be created
-    """
-    try:
-        os.makedirs(os.path.dirname(filename), exist_ok=True)
-    except OSError:
-        pass
-    # with NamedLock(filename): # TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
-    with open(filename, 'w') as f:
-        f.write('')
 
 
 def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys_to_remove: list) -> MutableMapping:
@@ -853,16 +849,24 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     Returns:
         NGIConfig object with user config
     """
-    user_config = NGIConfig("ngi_user_info", path)
+    try:
+        user_config = NGIConfig("ngi_user_info", path)
+    except PermissionError:
+        LOG.error(f"Insufficient Permissions for path: {path}")
+        user_config = NGIConfig("ngi_user_info")
     default_user_config = NGIConfig("default_user_conf",
                                     os.path.join(os.path.dirname(__file__), "default_configurations"))
     if len(user_config.content) == 0:
         LOG.info("Created Empty User Config!")
         user_config.populate(default_user_config.content)
-    local_config = NGIConfig("ngi_local_conf", path)
-    _move_config_sections(user_config, local_config)
+        # TODO: Update from Mycroft config DM
+
+    if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
+        local_config = NGIConfig("ngi_local_conf", path)
+        _move_config_sections(user_config, local_config)
+
     user_config.make_equal_by_keys(default_user_config.content)
-    LOG.info(f"Loaded user config from {user_config.file_path}")
+    # LOG.info(f"Loaded user config from {user_config.file_path}")
     return user_config
 
 
@@ -875,17 +879,24 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     Returns:
         NGIConfig object with local config
     """
-    local_config = NGIConfig("ngi_local_conf", path)
+    try:
+        local_config = NGIConfig("ngi_local_conf", path)
+    except PermissionError:
+        LOG.error(f"Insufficient Permissions for path: {path}")
+        local_config = NGIConfig("ngi_local_conf")
     default_local_config = NGIConfig("default_core_conf",
                                      os.path.join(os.path.dirname(__file__), "default_configurations"))
     if len(local_config.content) == 0:
         LOG.info(f"Created Empty Local Config at {local_config.path}")
         local_config.populate(default_local_config.content)
         # TODO: Update from Mycroft config DM
-    user_config = NGIConfig("ngi_user_info", path)
-    _move_config_sections(user_config, local_config)
+
+    if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
+        user_config = NGIConfig("ngi_user_info", path)
+        _move_config_sections(user_config, local_config)
+
     local_config.make_equal_by_keys(default_local_config.content)
-    LOG.info(f"Loaded local config from {local_config.file_path}")
+    # LOG.info(f"Loaded local config from {local_config.file_path}")
     return local_config
 
 

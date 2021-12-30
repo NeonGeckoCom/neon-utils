@@ -250,6 +250,27 @@ class FileUtilTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             parse_skill_readme_file("")
 
+    def test_check_path_permissions(self):
+        with self.assertRaises(FileNotFoundError):
+            check_path_permissions("/test/fnf")
+        self.assertEqual(check_path_permissions("/opt"), (True, False, True))
+        self.assertEqual(check_path_permissions("/tmp"), (True, True, True))
+        self.assertEqual(check_path_permissions("~/"), (True, True, True))
+
+    def test_check_path_is_writable(self):
+        self.assertFalse(path_is_writable("/test/fnf"))
+        self.assertFalse(path_is_writable("/opt"))
+        self.assertTrue(path_is_writable("/tmp"))
+        self.assertTrue(path_is_writable("~/"))
+
+    def test_create_file(self):
+        valid_file = os.path.expanduser("~/test_pass")
+        with self.assertRaises(PermissionError):
+            create_file("/test_fail")
+        create_file("~/test_pass")
+        self.assertTrue(os.path.isfile(valid_file))
+        os.remove(valid_file)
+
 
 if __name__ == '__main__':
     unittest.main()
