@@ -865,6 +865,7 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     except PermissionError:
         LOG.error(f"Insufficient Permissions for path: {path}")
         user_config = NGIConfig("ngi_user_info")
+    _populate_read_only_config(path, basename(user_config.file_path), user_config)
     default_user_config = NGIConfig("default_user_conf",
                                     os.path.join(os.path.dirname(__file__), "default_configurations"))
     if len(user_config.content) == 0:
@@ -895,6 +896,7 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     except PermissionError:
         LOG.error(f"Insufficient Permissions for path: {path}")
         local_config = NGIConfig("ngi_local_conf")
+    _populate_read_only_config(path, basename(local_config.file_path), local_config)
     default_local_config = NGIConfig("default_core_conf",
                                      os.path.join(os.path.dirname(__file__), "default_configurations"))
     if len(local_config.content) == 0:
@@ -919,16 +921,12 @@ def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
     Returns:
         NGIConfig object with authentication config
     """
-    auth_config = NGIConfig("ngi_auth_vars", path)
-
-    # Handle reading unwritable config contents
-    requested_file = join(path or os.getenv("NEON_CONFIG_PATH", ""), "ngi_auth_vars.yml")
-    if os.path.isfile(requested_file) and auth_config.file_path != requested_file:
-        LOG.warning(f"Loading requested file contents into {auth_config.file_path}")
-        with auth_config.lock:
-            shutil.copy(requested_file, auth_config.file_path)
-        auth_config.check_for_updates()
-
+    try:
+        auth_config = NGIConfig("ngi_auth_vars", path)
+    except PermissionError:
+        LOG.error(f"Insufficient Permissions for path: {path}")
+        auth_config = NGIConfig("ngi_auth_vars")
+    _populate_read_only_config(path, basename(auth_config.file_path), auth_config)
     if not auth_config.content:
         LOG.info("Populating empty auth configuration")
         auth_config._content = build_new_auth_config(path)
@@ -941,6 +939,23 @@ def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
 
     LOG.info(f"Loaded auth config from {auth_config.file_path}")
     return auth_config
+
+
+def _populate_read_only_config(path: Optional[str], config_filename: str, loaded_config: NGIConfig):
+    """
+    Check if a requested config file wasn't loaded due to insufficient write
+    permissions and duplicate its contents into the loaded config object.
+    :param path: Optional requested config path to load from
+    :param config_filename: basename of the requested and loaded config file
+    :param loaded_config: Loaded config object to populate with RO config
+    """
+    # Handle reading unwritable config contents
+    requested_file = join(path or os.getenv("NEON_CONFIG_PATH", ""), config_filename)
+    if os.path.isfile(requested_file) and loaded_config.file_path != requested_file:
+        LOG.warning(f"Loading requested file contents into {loaded_config.file_path}")
+        with loaded_config.lock:
+            shutil.copy(requested_file, loaded_config.file_path)
+        loaded_config.check_for_updates()
 
 
 def get_neon_device_type() -> str:

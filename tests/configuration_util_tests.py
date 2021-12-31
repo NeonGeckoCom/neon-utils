@@ -844,6 +844,8 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.rmtree("/tmp/neon/test")
         # TODO: Test any other default values
 
+# TODO: Test load/migration of RO config
+
 
 if __name__ == '__main__':
     unittest.main()
