@@ -26,7 +26,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import logging
 import re
 import json
 import os
@@ -45,7 +44,7 @@ from ruamel.yaml import YAML
 from typing import Optional
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
-from neon_utils.lock_utils import create_master_lock
+from neon_utils.lock_utils import create_lock
 
 
 class NGIConfig:
@@ -57,7 +56,7 @@ class NGIConfig:
         self.path = path or get_config_dir()
         self.parser = YAML()
         lock_filename = join(self.path, f".{self.name}.lock")
-        self.lock = create_master_lock(lock_filename)
+        self.lock = create_lock(lock_filename)
         self._pending_write = False
         self._content = dict()
         self._loaded = os.path.getmtime(self.file_path)

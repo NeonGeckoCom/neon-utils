@@ -126,6 +126,18 @@ class LockUtilTests(unittest.TestCase):
         a.join()
         self.assertEqual(call_order, ['a', 'b'])
 
+    def test_create_lock(self):
+        _, lock_file = mkstemp()
+        lock = create_lock(lock_file)
+        self.assertIsInstance(lock, NamedLock)
+        lock = create_lock(lock_file, MasterLock)
+        self.assertIsInstance(lock, MasterLock)
+        lock = create_lock(lock_file, ComboLock)
+        self.assertIsInstance(lock, ComboLock)
+
+        lock = create_lock(None)
+        self.assertIsInstance(lock, NamedLock)
+
 
 if __name__ == '__main__':
     unittest.main()
