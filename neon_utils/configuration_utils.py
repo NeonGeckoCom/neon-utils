@@ -922,7 +922,7 @@ def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
     auth_config = NGIConfig("ngi_auth_vars", path)
 
     # Handle reading unwritable config contents
-    requested_file = join(path or os.getenv("NEON_CONFIG_PATH"), "ngi_auth_vars.yml")
+    requested_file = join(path or os.getenv("NEON_CONFIG_PATH", ""), "ngi_auth_vars.yml")
     if os.path.isfile(requested_file) and auth_config.file_path != requested_file:
         LOG.warning(f"Loading requested file contents into {auth_config.file_path}")
         with auth_config.lock:
