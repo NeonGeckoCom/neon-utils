@@ -27,8 +27,14 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import logging
+from tempfile import mkstemp
+
 from threading import Lock
+from typing import Union, Optional
+from combo_lock import ComboLock, NamedLock
 from filelock import FileLock, Timeout
+
+from neon_utils.logger import LOG
 
 logging.getLogger("filelock").setLevel(logging.WARNING)
 
@@ -79,3 +85,21 @@ def create_master_lock(lock_path: str):
     thread_lock = Lock()
     file_lock = FileLock(lock_path)
     return MasterLock(thread_lock, file_lock)
+
+
+def create_lock(lock_path: Optional[str], lock_type: Union[type(MasterLock), type(ComboLock)] = NamedLock):
+    """
+    Create a lock object with the specified lock_path
+    :param lock_path: valid file path; some locks will use this as a lock file, others as a UID
+    :param lock_type: Class of lock to create
+    :return: instance of the requested lock
+    """
+    if not lock_path:  # TODO: Check read/write permissions
+        _, lock_path = mkstemp()
+        LOG.warning(f"No valid lock_path provided, using temp file: {lock_path}")
+    if lock_type == MasterLock:
+        return create_master_lock(lock_path)
+    elif lock_type == NamedLock:
+        return NamedLock(lock_path)
+    elif lock_type == ComboLock:
+        return ComboLock(lock_path)
