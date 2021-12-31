@@ -920,6 +920,15 @@ def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
         NGIConfig object with authentication config
     """
     auth_config = NGIConfig("ngi_auth_vars", path)
+
+    # Handle reading unwritable config contents
+    requested_file = join(path or os.getenv("NEON_CONFIG_PATH"), "ngi_auth_vars.yml")
+    if os.path.isfile(requested_file) and auth_config.file_path != requested_file:
+        LOG.warning(f"Loading requested file contents into {auth_config.file_path}")
+        with auth_config.lock:
+            shutil.copy(requested_file, auth_config.file_path)
+        auth_config.check_for_updates()
+
     if not auth_config.content:
         LOG.info("Populating empty auth configuration")
         auth_config._content = build_new_auth_config(path)

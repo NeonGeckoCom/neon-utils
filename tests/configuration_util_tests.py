@@ -31,6 +31,8 @@ import shutil
 import sys
 import os
 import unittest
+
+from ruamel.yaml import safe_load
 from pprint import pformat
 from time import sleep
 
@@ -758,6 +760,21 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(ngi_auth_vars["alpha_vantage"], {"api_key": find_neon_alpha_vantage_key(auth_path)})
         self.assertEqual(ngi_auth_vars["owm"], {"api_key": find_neon_owm_key(auth_path)})
         os.remove(ngi_auth_vars.file_path)
+
+    def test_get_neon_auth_config_unwritable(self):
+        real_auth_config = join(get_config_dir(), "ngi_auth_vars.yml")
+        bak_auth_config = join(get_config_dir(), "ngi_auth.bak")
+        if isfile(real_auth_config):
+            shutil.copy(real_auth_config, bak_auth_config)
+        os.environ["NEON_CONFIG_PATH"] = os.path.join(ROOT_DIR, "configuration", "unwritable_path")
+        ngi_auth_vars = get_neon_auth_config()
+        with open(join(os.environ["NEON_CONFIG_PATH"], "ngi_auth_vars.yml")) as f:
+            contents = safe_load(f)
+        self.assertEqual(contents, ngi_auth_vars.content)
+        self.assertNotEqual(ngi_auth_vars.path, os.environ["NEON_CONFIG_PATH"])
+
+        if isfile(bak_auth_config):
+            shutil.move(bak_auth_config, real_auth_config)
 
     def test_write_mycroft_compatible_config(self):
         test_path = os.path.join(CONFIG_PATH, "test.conf")

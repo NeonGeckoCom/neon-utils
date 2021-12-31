@@ -265,6 +265,8 @@ class FileUtilTests(unittest.TestCase):
         self.assertTrue(path_is_read_writable("~/"))
         self.assertTrue(path_is_read_writable("~/.dne_test_dir"))
         self.assertFalse(path_is_read_writable('/'))
+        unwritable_path = os.path.join(ROOT_DIR, "tests", "configuration", "unwritable_path")
+        self.assertFalse(path_is_read_writable(unwritable_path))
 
     def test_create_file(self):
         valid_file = os.path.expanduser("~/test_pass")
