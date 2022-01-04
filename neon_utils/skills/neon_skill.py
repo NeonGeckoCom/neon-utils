@@ -1,50 +1,61 @@
-# NEON AI (TM) SOFTWARE, Software Development Kit & Application Development System
-#
-# Copyright 2008-2021 Neongecko.com Inc. | All Rights Reserved
-#
-# Notice of License - Duplicating this Notice of License near the start of any file containing
-# a derivative of this software is a condition of license for this software.
-# Friendly Licensing:
-# No charge, open source royalty free use of the Neon AI software source and object is offered for
-# educational users, noncommercial enthusiasts, Public Benefit Corporations (and LLCs) and
-# Social Purpose Corporations (and LLCs). Developers can contact developers@neon.ai
-# For commercial licensing, distribution of derivative works or redistribution please contact licenses@neon.ai
-# Distributed on an "AS IS” basis without warranties or conditions of any kind, either express or implied.
-# Trademarks of Neongecko: Neon AI(TM), Neon Assist (TM), Neon Communicator(TM), Klat(TM)
-# Authors: Guy Daniels, Daniel McKnight, Regina Bloomstine, Elon Gasper, Richard Leeds
-#
-# Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
-# US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
-# China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+# NEON AI (TM) SOFTWARE, Software Development Kit & Application Framework
+# All trademark and other rights reserved by their respective owners
+# Copyright 2008-2022 Neongecko.com Inc.
+# Contributors: Daniel McKnight, Guy Daniels, Elon Gasper, Richard Leeds,
+# Regina Bloomstine, Casimiro Ferreira, Andrii Pernatii, Kirill Hrymailo
+# BSD-3 License
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+# OR PROFITS;  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import pathlib
 import pickle
 import json
-# import shutil
 import time
 import os
-# import re
 
 from copy import deepcopy
 from functools import wraps
-# from itertools import chain
 
 from mycroft.skills.settings import save_settings
-from mycroft_bus_client.message import Message, dig_for_message
-from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
+from mycroft_bus_client.message import Message
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
-from neon_utils import create_signal, check_for_signal, wait_while_speaking
-from neon_utils.configuration_utils import NGIConfig, get_neon_lang_config, get_neon_user_config, get_neon_local_config, \
-    is_neon_core
+from neon_utils import create_signal, check_for_signal
+from neon_utils.configuration_utils import NGIConfig, is_neon_core, \
+    get_neon_lang_config, get_neon_user_config, get_neon_local_config
 from neon_utils.location_utils import to_system_time
-from neon_utils.language_utils import DetectorFactory, TranslatorFactory
 from neon_utils.logger import LOG
-from neon_utils.message_utils import request_from_mobile, get_message_user
+from neon_utils.message_utils import request_from_mobile, get_message_user, dig_for_message
 from neon_utils.cache_utils import LRUCache
+from neon_utils.mq_utils import send_mq_request
 from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
+from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
 
+try:
+    from neon_core.language import DetectorFactory, TranslatorFactory
+except ImportError:
+    LOG.error(f"neon_core package not found, language detection/translation will be disabled.")
+    DetectorFactory, TranslatorFactory = None, None
 
 LOG.name = "neon_skill"
 
@@ -99,20 +110,24 @@ class NeonSkill(MycroftSkill):
             self.server = False
             self.default_intent_timeout = 60
 
-        self.neon_core = True  # TODO: This should be depreciated DM
+        try:
+            import neon_core
+            self.neon_core = True
+        except ImportError:
+            self.neon_core = False
+
         self.actions_to_confirm = dict()
 
         self.skill_mode = self.user_config.content.get('response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
         self.extension_time = SPEED_MODE_EXTENSION_TIME.get(self.skill_mode)
 
-        try:
+        self.language_config = get_neon_lang_config()
+        if DetectorFactory and TranslatorFactory:
             # Lang support
-            self.language_config = get_neon_lang_config()
-            self.lang_detector = DetectorFactory.create()  # Default fastlang
-            self.translator = TranslatorFactory.create()  # Default Amazon
-        except Exception as e:
-            LOG.error(e)
-            self.language_config, self.language_detector, self.translator = None, None, None
+            self.lang_detector = DetectorFactory.create()
+            self.translator = TranslatorFactory.create()
+        else:
+            self.lang_detector, self.translator = None, None
 
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
@@ -569,7 +584,7 @@ class NeonSkill(MycroftSkill):
             from itertools import chain
             import re
         lang = lang or self.lang
-        voc = resolve_neon_resource_file(voc_filename)
+        voc = resolve_neon_resource_file(f"text/{lang}/{voc_filename}.voc")
         if not voc:
             raise FileNotFoundError(voc)
         vocab = read_vocab_file(voc)
@@ -662,29 +677,31 @@ class NeonSkill(MycroftSkill):
 
     def send_email(self, title, body, message=None, email_addr=None, attachments=None):
         """
-        Send an email to the registered user's email.
+        Send an email to the registered user's email. Method here for backwards compatibility with Mycroft skills.
         Email address priority: email_addr, user prefs from message, fallback to DeviceApi for Mycroft method
 
         Arguments:
             title (str): Title of email
             body  (str): HTML body of email. This supports
                          simple HTML like bold and italics
-            email_addr (str): Optional email address to use
+            email_addr (str): Optional email address to send message to
             attachments (dict): Optional dict of file names to Base64 encoded files
             message (Message): Optional message to get email from
         """
+        message = message or dig_for_message()
         if not email_addr and message:
             email_addr = self.preference_user(message).get("email")
 
         if email_addr:
             LOG.info("Send email via Neon Server")
-            try:
-                LOG.debug(f"body={body}")
-                self.bus.emit(Message("neon.send_email", {"title": title, "email": email_addr, "body": body,
-                                                          "attachments": attachments}))
-            except Exception as e:
-                LOG.error(e)
+            request_data = {"recipient": email_addr,
+                            "subject": title,
+                            "body": body,
+                            "attachments": attachments}
+            data = send_mq_request("/neon_emails", request_data, "neon_emails_input")
+            return data.get("success")
         else:
+            LOG.warning("Attempting to send email via Mycroft Backend")
             super().send_email(title, body)
 
     def make_active(self, duration_minutes=5):
@@ -703,93 +720,6 @@ class NeonSkill(MycroftSkill):
         Accessor method
         """
         self._register_decorated()
-
-    def speak(self, utterance, expect_response=False, wait=False, meta=None, message=None, private=False, speaker=None):
-        """
-        Speak a sentence.
-        Arguments:
-            utterance (str):        sentence mycroft should speak
-            expect_response (bool): set to True if Mycroft should listen for a response immediately after
-                                    speaking the utterance.
-            message (Message):      message associated with the input that this speak is associated with
-            private (bool):         flag to indicate this message contains data that is private to the requesting user
-            speaker (dict):         dict containing language or voice data to override user preference values
-            wait (bool):            set to True to block while the text is being spoken.
-            meta:                   Information of what built the sentence.
-        """
-        # registers the skill as being active
-        meta = meta or {}
-        meta['skill'] = self.name
-        self.enclosure.register(self.name)
-        if utterance:
-            if not message:
-                # Find the associated message
-                LOG.debug('message is None.')
-                message = dig_for_message()
-                if not message:
-                    message = Message("speak")
-            if not speaker:
-                speaker = message.data.get("speaker", None)
-
-            nick = get_message_user(message)
-
-            if private and self.server:
-                LOG.debug("Private Message")
-                title = message.context["klat_data"]["title"]
-                need_at_sign = True
-                if title.startswith("!PRIVATE"):
-                    users = title.split(':')[1].split(',')
-                    for idx, val in enumerate(users):
-                        users[idx] = val.strip()
-                    if len(users) == 2 and "Neon" in users:
-                        need_at_sign = False
-                    elif len(users) == 1:
-                        need_at_sign = False
-                    elif nick.startswith("guest"):
-                        need_at_sign = False
-                if need_at_sign:
-                    LOG.debug("Send message to private cid!")
-                    utterance = f"@{nick} {utterance}"
-
-            data = {"utterance": utterance,
-                    "expect_response": expect_response,
-                    "meta": meta,
-                    "speaker": speaker}
-
-            if message.context.get("cc_data", {}).get("emit_response"):
-                msg_to_emit = message.reply("skills:execute.response", data)
-            else:
-                message.context.get("timing", {})["speech_start"] = time.time()
-                msg_to_emit = message.reply("speak", data, message.context)
-                LOG.debug(f"Skill speak! {data}")
-
-            LOG.debug(msg_to_emit.msg_type)
-            self.bus.emit(msg_to_emit)
-        else:
-            LOG.warning("Null utterance passed to speak")
-            LOG.warning(f"{self.name} | message={message}")
-
-        if wait:
-            wait_while_speaking()
-
-    def speak_dialog(self, key, data=None, expect_response=False, wait=False,
-                     message=None, private=False, speaker=None):
-        """ Speak a random sentence from a dialog file.
-
-        Arguments:
-            :param key: dialog file key (e.g. "hello" to speak from the file "locale/en-us/hello.dialog")
-            :param data: information used to populate key
-            :param expect_response: set to True if Mycroft should listen for a response immediately after speaking.
-            :param wait: set to True to block while the text is being spoken.
-            :param speaker: optional dict of speaker info to use
-            :param private: private flag (server use only)
-            :param message: associated message from request
-        """
-        data = data or {}
-        LOG.debug(f"data={data}")
-        self.speak(self.dialog_renderer.render(key, data),  # TODO: Pass index here to use non-random responses DM
-                   expect_response, message=message, private=private,
-                   speaker=speaker, wait=wait, meta={'dialog': key, 'data': data})
 
     def schedule_event(self, handler, when, data=None, name=None, context=None):
         # TODO: should 'when' already be a datetime? DM

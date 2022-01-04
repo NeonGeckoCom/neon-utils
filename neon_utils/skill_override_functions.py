@@ -1,29 +1,53 @@
-# NEON AI (TM) SOFTWARE, Software Development Kit & Application Development System
-#
-# Copyright 2008-2021 Neongecko.com Inc. | All Rights Reserved
-#
-# Notice of License - Duplicating this Notice of License near the start of any file containing
-# a derivative of this software is a condition of license for this software.
-# Friendly Licensing:
-# No charge, open source royalty free use of the Neon AI software source and object is offered for
-# educational users, noncommercial enthusiasts, Public Benefit Corporations (and LLCs) and
-# Social Purpose Corporations (and LLCs). Developers can contact developers@neon.ai
-# For commercial licensing, distribution of derivative works or redistribution please contact licenses@neon.ai
-# Distributed on an "AS IS” basis without warranties or conditions of any kind, either express or implied.
-# Trademarks of Neongecko: Neon AI(TM), Neon Assist (TM), Neon Communicator(TM), Klat(TM)
-# Authors: Guy Daniels, Daniel McKnight, Regina Bloomstine, Elon Gasper, Richard Leeds
-#
-# Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
-# US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
-# China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+# NEON AI (TM) SOFTWARE, Software Development Kit & Application Framework
+# All trademark and other rights reserved by their respective owners
+# Copyright 2008-2022 Neongecko.com Inc.
+# Contributors: Daniel McKnight, Guy Daniels, Elon Gasper, Richard Leeds,
+# Regina Bloomstine, Casimiro Ferreira, Andrii Pernatii, Kirill Hrymailo
+# BSD-3 License
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+# OR PROFITS;  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
 import time
 from typing import Optional
 
 from mycroft_bus_client import Message
-
 from neon_utils.logger import LOG
+from neon_utils.configuration_utils import get_neon_local_config
+from neon_utils.signal_utils import wait_for_signal_clear
+from neon_utils.signal_utils import check_for_signal as _check_for_signal, create_signal as _create_signal
+
+# TODO: Refactor external references and deprecate this param
+IPC_DIR = get_neon_local_config()["dirVars"]["ipcDir"]
+
+
+def check_for_signal(signal_name: str, sec_lifetime: int = 0) -> bool:
+    LOG.warning(f"This reference is deprecated, import from neon_utils.signal_utils directly")
+    return _check_for_signal(signal_name, sec_lifetime, config={"ipc_path": IPC_DIR})
+
+
+def create_signal(signal_name: str) -> bool:
+    LOG.warning(f"This reference is deprecated, import from neon_utils.signal_utils directly")
+    return _create_signal(signal_name, config={"ipc_path": IPC_DIR})
 
 
 def neon_must_respond(message: Message) -> bool:
@@ -135,64 +159,17 @@ def speak_dialog(key, data=None, expect_response=False, message=None, private=Fa
     super(TYPE, SKILL).speak_dialog(key, data, expect_response, wait)
 
 
-def create_signal(signal_name: str) -> bool:
-    """Create a named signal. i.e. "CORE_signalName" or "nick_SKILL_signalName
-    Args:
-        signal_name (str): The signal's name.  Must only contain characters
-            valid in filenames.
-    """
-    try:
-        path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name)
-        _create_file(path)
-        return os.path.isfile(path)
-    except IOError:
-        return False
-
-
 def clear_signals(prefix: str):
     """
     Clears all signals that begin with the passed prefix. Used with skill prefix for a skill to clear any signals it
     may have set
     :param prefix: (str) prefix to match
     """
-    os.makedirs("/tmp/mycroft/ipc/signal", exist_ok=True)
-    for signal in os.listdir("/tmp/mycroft/ipc/signal"):
+    LOG.warning("This method and signal use are deprecated and will not work in some configurations")
+    os.makedirs(f"{IPC_DIR}/signal", exist_ok=True)
+    for signal in os.listdir(f"{IPC_DIR}/signal"):
         if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
-            os.remove(os.path.join("/tmp/mycroft/ipc/signal", signal))
-
-
-def check_for_signal(signal_name: str, sec_lifetime: Optional[int] = 0):
-    """See if a named signal exists
-
-    Args:
-        signal_name (str): The signal's name.  Must only contain characters
-            valid in filenames.
-        sec_lifetime (int, optional): How many seconds the signal should
-            remain valid.  If 0 or not specified, it is a single-use signal.
-            If -1, it never expires.
-
-    Returns:
-        bool: True if the signal is defined, False otherwise
-    """
-    import time
-    path = os.path.join('/tmp/mycroft/ipc', "signal", signal_name)
-    if os.path.isfile(path):
-        # noinspection PyTypeChecker
-        if sec_lifetime == 0:
-            # consume this single-use signal
-            try:
-                os.remove(path)
-            except Exception as x:
-                print(' >>> ERROR removing signal ' + signal_name + ', error == ' + str(x))
-        elif sec_lifetime == -1:
-            return True
-        elif int(os.path.getctime(path) + sec_lifetime) < int(time.time()):
-            # remove once expired
-            os.remove(path)
-            return False
-        return True
-    # No such signal exists
-    return False
+            os.remove(os.path.join(f"{IPC_DIR}/signal", signal))
 
 
 def _create_file(filename: str):
@@ -467,10 +444,12 @@ def wait_while_speaking():
     briefly to ensure that any preceding request to speak has time to
     begin.
     """
-    LOG.debug("Wait while speaking!")
+    LOG.warning(f"This method is deprecated; use messagebus API directly")
+    # LOG.debug("Wait while speaking!")
     time.sleep(0.3)  # Wait briefly in for any queued speech to begin
-    while is_speaking():
-        time.sleep(0.1)
+    wait_for_signal_clear("isSpeaking")
+    # while is_speaking():
+    #     time.sleep(0.1)
 
 
 def is_speaking(sec_lifetime=-1):
@@ -484,6 +463,7 @@ def is_speaking(sec_lifetime=-1):
     Returns:
         bool: True while still speaking
     """
+    LOG.warning(f"This method is deprecated; use messagebus API directly")
     return check_for_signal("isSpeaking", sec_lifetime)
 
 

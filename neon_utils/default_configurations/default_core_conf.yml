@@ -75,7 +75,7 @@ gui:
   resource_root: https://0000.us/klatchat/app/files/neon_qml
 
 hotwords:
-  Hey Neon: { module: jarbas_pocketsphinx_ww_plug,
+  Hey Neon: { module: ovos-ww-plugin-pocketsphinx,
               phonemes: HH EY . N IY AA N .,
               threshold: 1e-20,
               lang: en-us,
@@ -105,13 +105,18 @@ skills:
   auto_update: True
   install_essential: True
   install_default: True
+  wait_for_internet: True
   debug: True
   blacklist: []
   priority: [
-    "device-control-center.neon"
+    "skill-about.neongeckocom",
+    "skill-date_time.neongeckocom",
+    "skill-weather.neongeckocom",
+    "skill-ovos-homescreen.openvoiceos",
+    "skill-balena-wifi-setup.openvoiceos"
   ]
   essential_skills: []
-  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/master/DEFAULT-SKILLS
+  default_skills: https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/master/skill_lists/DEFAULT-SKILLS
   skill_manager: "osm"
   # recommended osm, optional msm
   appstore_sync_interval: 6.0
@@ -144,8 +149,13 @@ tts:
   }
 stt:
   module: google_cloud_streaming
-  translation_module: googletranslate_plug
-  detection_module: googletranslate_detection_plug
+
+language:
+  boost: False
+  core_lang: en-us
+  translation_module: libretranslate_plug
+  detection_module: libretranslate_detection_plug
+  libretranslate: {"libretranslate_host": "https://translate.neon.ai:5000"}
 
 logs:
   blacklist: ["enclosure.mouth.viseme", "enclosure.mouth.display"]
@@ -175,6 +185,7 @@ remoteVars:
   url: https://api.mycroft.ai
   ver: v1
   remoteHost: 167.172.112.7
+  enableConnection: true
 
 gnome:
   favApps:
@@ -239,6 +250,10 @@ sttSpokenOpts: {Afrikaans: af-ZA, Amharic: am-ET, Armenian: hy-AM, Azerbaijani: 
                 Ukrainian: uk-UA, Hebrew: he-IL, Arabic: ar-IL, Persian: fa-IR, Hindi: hi-IN, Thai: th-TH,
                 Korean: ko-KR, Taiwanese: zh-TW, 'Chinese, Cantonese': yue-Hant-HK, Japanese: ja-JP,
                 'Chinese, Mandarin': zh}
+
+signal:
+  use_signal_files: True
+  max_wait_seconds: 300
 
 MQ:
   server: api.neon.ai

@@ -1,0 +1,5 @@
+pytest
+pytest-timeout
+pytest-cov
+mock
+holmesv[skills_minimal]

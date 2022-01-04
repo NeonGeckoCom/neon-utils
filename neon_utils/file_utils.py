@@ -1,21 +1,30 @@
-# NEON AI (TM) SOFTWARE, Software Development Kit & Application Development System
-#
-# Copyright 2008-2021 Neongecko.com Inc. | All Rights Reserved
-#
-# Notice of License - Duplicating this Notice of License near the start of any file containing
-# a derivative of this software is a condition of license for this software.
-# Friendly Licensing:
-# No charge, open source royalty free use of the Neon AI software source and object is offered for
-# educational users, noncommercial enthusiasts, Public Benefit Corporations (and LLCs) and
-# Social Purpose Corporations (and LLCs). Developers can contact developers@neon.ai
-# For commercial licensing, distribution of derivative works or redistribution please contact licenses@neon.ai
-# Distributed on an "AS IS” basis without warranties or conditions of any kind, either express or implied.
-# Trademarks of Neongecko: Neon AI(TM), Neon Assist (TM), Neon Communicator(TM), Klat(TM)
-# Authors: Guy Daniels, Daniel McKnight, Regina Bloomstine, Elon Gasper, Richard Leeds
-#
-# Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
-# US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
-# China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+# NEON AI (TM) SOFTWARE, Software Development Kit & Application Framework
+# All trademark and other rights reserved by their respective owners
+# Copyright 2008-2022 Neongecko.com Inc.
+# Contributors: Daniel McKnight, Guy Daniels, Elon Gasper, Richard Leeds,
+# Regina Bloomstine, Casimiro Ferreira, Andrii Pernatii, Kirill Hrymailo
+# BSD-3 License
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+# OR PROFITS;  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import glob
 import os
@@ -28,7 +37,7 @@ from typing import Optional, List
 from pydub import AudioSegment
 from ovos_utils.signal import ensure_directory_exists
 
-from neon_utils import LOG
+from neon_utils.logger import LOG
 
 
 def encode_file_to_base64_string(path: str) -> str:
@@ -241,3 +250,109 @@ def resolve_neon_resource_file(res_name: str) -> Optional[str]:
         return res_file
     LOG.warning(f"Requested res_file not found: {res_file}")
     return None
+
+
+def parse_skill_readme_file(readme_path: str) -> dict:
+    """
+    Parse a Neon skill README.md into a dictionary
+    :param readme_path: absolute path to README.md file
+    :return: dict of parsed data
+    """
+    from neon_utils.parse_utils import clean_quotes
+
+    # Check passed path
+    if not readme_path:
+        raise ValueError("Null path")
+    readme_path = os.path.expanduser(readme_path)
+    if not os.path.isfile(readme_path):
+        raise FileNotFoundError(f"{readme_path} is not a valid file")
+
+    # Initialize parser params
+    list_sections = ("examples", "incompatible skills", "platforms", "categories", "tags", "credits")
+    section = "header"
+    category = None
+    parsed_data = {}
+    with open(readme_path, "r") as readme:
+        lines = readme.readlines()
+
+    def _check_section_start(ln: str):
+        # Handle section start
+        if ln.startswith("# ![](https://0000.us/klatchat/app/files/neon_images/icons/neon_paw.png)"):
+            # Old style title line
+            parsed_data["title"] = ln.split(')', 1)[1].strip()
+            parsed_data["icon"] = ln.split('(', 1)[1].split(')', 1)[0].strip()
+            return
+        elif section == "header" and ln.startswith("# <img src="):
+            # Title line
+            parsed_data["title"] = ln.split(">", 1)[1].strip()
+            parsed_data["icon"] = ln.split("src=", 1)[1].split()[0].strip('"').strip("'").lstrip("./")
+            return "summary"
+        elif ln.startswith("# ") or ln.startswith("## "):
+            # Top-level section
+            if ln.startswith("## About"):
+                # Handle Mycroft 'About' section
+                return "description"
+            elif ln.startswith("## Category"):
+                # Handle 'Category' as 'Categories'
+                return "categories"
+            else:
+                return line.lstrip("#").strip().lower()
+        return
+
+    def _format_readme_line(ln: str):
+        nonlocal category
+        if section == "incompatible skills":
+            if not any((ln.startswith('-'), ln.startswith('*'))):
+                return None
+            parsed = clean_quotes(ln.lstrip('-').lstrip('*').lower().strip())
+            if parsed.startswith('['):
+                return parsed.split('(', 1)[1].split(')', 1)[0]
+            return parsed
+        if section == "examples":
+            if not any((ln.startswith('-'), ln.startswith('*'))):
+                return None
+            parsed = clean_quotes(ln.lstrip('-').lstrip('*').lower().strip())
+            if parsed.split(maxsplit=1)[0] == "neon":
+                return parsed.split(maxsplit=1)[1]
+            else:
+                return parsed
+        if section == "categories":
+            parsed = ln.rstrip('\n').strip('*')
+            if ln.startswith('**'):
+                category = parsed
+            return parsed
+        if section == "credits":
+            if ln.strip().startswith('['):
+                return ln.split('[', 1)[1].split(']', 1)[0]
+            return ln.rstrip('\n').lstrip('@')
+        if section == "tags":
+            return ln.lstrip('#').rstrip('\n')
+        if section in list_sections:
+            return clean_quotes(ln.lstrip('-').lstrip('*').lower().strip())
+        return ln.rstrip('\n').rstrip()
+
+    for line in lines:
+        new_section = _check_section_start(line)
+        if new_section:
+            section = new_section
+        elif line.strip():
+            parsed_line = _format_readme_line(line)
+            if not parsed_line:
+                # Nothing to parse in this line
+                continue
+            if section in list_sections:
+                if section not in parsed_data:
+                    parsed_data[section] = list()
+                parsed_data[section].append(parsed_line)
+            else:
+                if section not in parsed_data:
+                    parsed_data[section] = parsed_line
+                else:
+                    parsed_data[section] = " ".join((parsed_data[section], parsed_line))
+    parsed_data["category"] = category or parsed_data.get("categories", [""])[0]
+    if parsed_data.get("incompatible skills"):
+        parsed_data["incompatible_skills"] = parsed_data.pop("incompatible skills")
+    if parsed_data.get("credits") and len(parsed_data["credits"]) == 1:
+        parsed_data["credits"] = parsed_data["credits"][0].split(' ')
+
+    return parsed_data

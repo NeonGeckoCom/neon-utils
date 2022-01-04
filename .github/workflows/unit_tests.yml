@@ -6,6 +6,22 @@ on:
   workflow_dispatch:
 
 jobs:
+  build_tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.head_ref }}
+      - name: Setup Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install Build Tools
+        run: |
+          python -m pip install build wheel
+      - name: Build Distribution Packages
+        run: |
+          python setup.py bdist_wheel
   service_api_tests:
     strategy:
       matrix:
@@ -20,8 +36,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-timeout pytest-cov
+          pip install -r requirements/requirements.txt
+          pip install -r requirements/test_requirements.txt
       - name: Export credentials
         run: |
           mkdir -p ~/.local/share/neon
@@ -57,8 +73,8 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           sudo apt install gcc libfann-dev
-          pip install -r requirements.txt
-          pip install pytest pytest-timeout pytest-cov holmesv[skills]==2021.8.30a2
+          pip install -r requirements/requirements.txt
+          pip install -r requirements/test_requirements.txt
 
       - name: Test Skills Objects
         run: |
@@ -84,8 +100,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-timeout pytest-cov HolmesV[skills_minimal]==2021.8.30a2
+          pip install -r requirements/requirements.txt
+          pip install -r requirements/test_requirements.txt
 
       - name: Test Skill Patcher
         run: |
@@ -168,15 +184,6 @@ jobs:
           name: message-util-test-results
           path: tests/message-util-test-results.xml
 
-      - name: Test Language Utils
-        run: |
-          pytest tests/language_util_tests.py --doctest-modules --junitxml=tests/language-util-test-results.xml
-      - name: Upload language utils test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: language-util-test-results
-          path: tests/language-util-test-results.xml
-
       - name: Test Log Utils
         run: |
           pytest tests/log_util_tests.py --doctest-modules --junitxml=tests/log-util-test-results.xml
@@ -239,3 +246,34 @@ jobs:
         with:
           name: mq-util-test-results
           path: tests/mq-util-test-results.xml
+
+      - name: Test Lock Utils
+        run: |
+          pytest tests/lock_util_tests.py --doctest-modules --junitxml=tests/lock-util-test-results.xml
+      - name: Upload lock utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: lock-util-test-results
+          path: tests/lock-util-test-results.xml
+
+      - name: Test Validator Utils
+        run: |
+          pytest tests/validator_util_tests.py --doctest-modules --junitxml=tests/validator-util-test-results.xml
+      - name: Upload validator utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: validator-util-test-results
+          path: tests/validator-util-test-results.xml
+
+      - name: Test Signal Utils
+        run: |
+          pytest tests/signal_util_tests.py --doctest-modules --junitxml=tests/signal-util-test-results.xml
+      - name: Upload signal utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: signal-util-test-results
+          path: tests/signal-util-test-results.xml
+
+      - name: Test Deprecated Compat
+        run: |
+          pytest tests/deprecated_compat_tests.py --doctest-modules --junitxml=tests/deprecated-compat-test-results.xml

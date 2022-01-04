@@ -1,25 +1,37 @@
-# NEON AI (TM) SOFTWARE, Software Development Kit & Application Development System
-#
-# Copyright 2008-2021 Neongecko.com Inc. | All Rights Reserved
-#
-# Notice of License - Duplicating this Notice of License near the start of any file containing
-# a derivative of this software is a condition of license for this software.
-# Friendly Licensing:
-# No charge, open source royalty free use of the Neon AI software source and object is offered for
-# educational users, noncommercial enthusiasts, Public Benefit Corporations (and LLCs) and
-# Social Purpose Corporations (and LLCs). Developers can contact developers@neon.ai
-# For commercial licensing, distribution of derivative works or redistribution please contact licenses@neon.ai
-# Distributed on an "AS IS” basis without warranties or conditions of any kind, either express or implied.
-# Trademarks of Neongecko: Neon AI(TM), Neon Assist (TM), Neon Communicator(TM), Klat(TM)
-# Authors: Guy Daniels, Daniel McKnight, Regina Bloomstine, Elon Gasper, Richard Leeds
-#
-# Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
-# US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
-# China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
+# NEON AI (TM) SOFTWARE, Software Development Kit & Application Framework
+# All trademark and other rights reserved by their respective owners
+# Copyright 2008-2022 Neongecko.com Inc.
+# Contributors: Daniel McKnight, Guy Daniels, Elon Gasper, Richard Leeds,
+# Regina Bloomstine, Casimiro Ferreira, Andrii Pernatii, Kirill Hrymailo
+# BSD-3 License
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+# OR PROFITS;  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import logging
 import shutil
 import sys
 import os
 import unittest
+from pprint import pformat
 from time import sleep
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -37,6 +49,8 @@ TEST_DICT = {"section 1": {"key1": "val1",
 
 class ConfigurationUtilTests(unittest.TestCase):
     def doCleanups(self) -> None:
+        if os.getenv("NEON_CONFIG_PATH"):
+            os.environ.pop("NEON_CONFIG_PATH")
         for file in glob(os.path.join(CONFIG_PATH, ".*.lock")):
             os.remove(file)
         for file in glob(os.path.join(CONFIG_PATH, ".*.tmp")):
@@ -74,6 +88,25 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         local_conf["prefFlags"]["devMode"] = False
         self.assertFalse(local_conf["prefFlags"]["devMode"])
+
+    def test_get_config_dir_default(self):
+        config_path = get_config_dir()
+        self.assertTrue(os.path.isdir(config_path))
+
+    def test_get_config_dir_valid_override(self):
+        os.environ["NEON_CONFIG_PATH"] = "~/"
+        self.assertIsNotNone(os.getenv("NEON_CONFIG_PATH"))
+        config_path = get_config_dir()
+        self.assertEqual(config_path, os.path.expanduser("~/"))
+        os.environ.pop("NEON_CONFIG_PATH")
+        self.assertIsNone(os.getenv("NEON_CONFIG_PATH"))
+
+    def test_get_config_dir_invalid_override(self):
+        os.environ["NEON_CONFIG_PATH"] = "/invalid"
+        config_path = get_config_dir()
+        self.assertNotEqual(config_path, "/invalid")
+        os.environ.pop("NEON_CONFIG_PATH")
+        self.assertIsNone(os.getenv("NEON_CONFIG_PATH"))
 
     def test_make_equal_keys(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
@@ -279,6 +312,20 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["tts"], dict)
         self.assertIsInstance(config["language"], dict)
 
+    def test_get_gui_config(self):
+        config = get_neon_gui_config()
+        self.assertIsInstance(config, dict)
+        self.assertIsInstance(config["lang"], str)
+        self.assertIsInstance(config["enclosure"], str)
+        self.assertIsInstance(config["host"], str)
+        self.assertIsInstance(config["port"], int)
+        self.assertIsInstance(config["base_port"], int)
+        self.assertIsInstance(config["route"], str)
+        self.assertIsInstance(config["ssl"], bool)
+        self.assertIsInstance(config["resource_root"], str)
+
+        self.assertEqual(config["port"], config["base_port"])
+
     def test_get_user_config_add_keys(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
         ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
@@ -373,6 +420,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIn("detection_module", config)
         self.assertIn("translation_module", config)
         self.assertIn("boost", config)
+        self.assertIsInstance(config["libretranslate"], dict)
 
     def test_get_client_config(self):
         config = get_neon_client_config()
@@ -610,6 +658,20 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIn("dirVars", local_config.content.keys())
         shutil.move(bak_local_conf, ngi_local_conf)
 
+    def test_move_language_config(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+        ngi_test_conf = os.path.join(CONFIG_PATH, "local_conf_no_language.yml")
+
+        shutil.move(ngi_local_conf, bak_local_conf)
+        shutil.copy(ngi_test_conf, ngi_local_conf)
+        local_config = get_neon_local_config(CONFIG_PATH)
+        self.assertEqual(local_config["language"]["translation_module"], "old_translate_module")
+        self.assertEqual(local_config["language"]["detection_module"], "old_detection_module")
+        self.assertIsInstance(local_config["language"]["libretranslate"], dict)
+        self.assertIn("dirVars", local_config.content.keys())
+        shutil.move(bak_local_conf, ngi_local_conf)
+
     def test_added_hotwords_config(self):
         bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
         ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
@@ -660,6 +722,55 @@ class ConfigurationUtilTests(unittest.TestCase):
             default_settings = json.load(f)
         parsed_settings = parse_skill_default_settings(default_settings)
         self.assertIsInstance(parsed_settings, dict)
+
+    def test_simultaneous_config_updates(self):
+        from threading import Thread
+        test_results = {}
+
+        config_path = join(CONFIG_PATH, "depreciated_language_config")
+        backup_path = join(CONFIG_PATH, "backup_config")
+        os.environ["NEON_CONFIG_PATH"] = config_path
+        shutil.copytree(config_path, backup_path)
+
+        def _open_config(idx):
+            success = True
+            try:
+                local_config = deepcopy(get_neon_local_config(config_path).content)
+                self.assertNotIn("translation_module", local_config["stt"])
+                self.assertNotIn("detection_module", local_config["stt"])
+            except Exception as e:
+                LOG.error(e)
+                success = False
+            try:
+                user_config = get_neon_user_config(config_path)
+                self.assertNotIn("listener", user_config.content.keys())
+            except Exception as e:
+                LOG.error(e)
+                success = False
+            try:
+                lang_config = get_neon_lang_config()
+                self.assertIsInstance(lang_config["boost"], bool)
+            except Exception as e:
+                LOG.error(e)
+                success = False
+            test_results[idx] = success
+
+        for i in range(64):
+            Thread(target=_open_config, args=(i,), daemon=True).start()
+        while not len(test_results.keys()) == 64:
+            sleep(0.5)
+        self.assertTrue(all(test_results.values()))
+
+        shutil.rmtree(config_path)
+        shutil.move(backup_path, config_path)
+
+    def test_default_config(self):
+        config = get_neon_local_config("/tmp/neon/test/")
+        import requests
+        resp = requests.get(config["skills"]["default_skills"])
+        self.assertTrue(resp.ok)
+        shutil.rmtree("/tmp/neon/test")
+        # TODO: Test any other default values
 
 
 if __name__ == '__main__':

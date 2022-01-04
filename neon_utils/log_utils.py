@@ -1,32 +1,56 @@
-# NEON AI (TM) SOFTWARE, Software Development Kit & Application Development System
-#
-# Copyright 2008-2021 Neongecko.com Inc. | All Rights Reserved
-#
-# Notice of License - Duplicating this Notice of License near the start of any file containing
-# a derivative of this software is a condition of license for this software.
-# Friendly Licensing:
-# No charge, open source royalty free use of the Neon AI software source and object is offered for
-# educational users, noncommercial enthusiasts, Public Benefit Corporations (and LLCs) and
-# Social Purpose Corporations (and LLCs). Developers can contact developers@neon.ai
-# For commercial licensing, distribution of derivative works or redistribution please contact licenses@neon.ai
-# Distributed on an "AS IS” basis without warranties or conditions of any kind, either express or implied.
-# Trademarks of Neongecko: Neon AI(TM), Neon Assist (TM), Neon Communicator(TM), Klat(TM)
-# Authors: Guy Daniels, Daniel McKnight, Regina Bloomstine, Elon Gasper, Richard Leeds
-#
-# Specialized conversational reconveyance options from Conversation Processing Intelligence Corp.
-# US Patents 2008-2021: US7424516, US20140161250, US20140177813, US8638908, US8068604, US8553852, US10530923, US10530924
-# China Patent: CN102017585  -  Europe Patent: EU2156652  -  Patents Pending
-import os
+# NEON AI (TM) SOFTWARE, Software Development Kit & Application Framework
+# All trademark and other rights reserved by their respective owners
+# Copyright 2008-2022 Neongecko.com Inc.
+# Contributors: Daniel McKnight, Guy Daniels, Elon Gasper, Richard Leeds,
+# Regina Bloomstine, Casimiro Ferreira, Andrii Pernatii, Kirill Hrymailo
+# BSD-3 License
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions are met:
+# 1. Redistributions of source code must retain the above copyright notice,
+#    this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright notice,
+#    this list of conditions and the following disclaimer in the documentation
+#    and/or other materials provided with the distribution.
+# 3. Neither the name of the copyright holder nor the names of its
+#    contributors may be used to endorse or promote products derived from this
+#    software without specific prior written permission.
+# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+# THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
+# PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR
+# CONTRIBUTORS  BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+# EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+# PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA,
+# OR PROFITS;  OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+# LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+# NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+# SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import os
 import logging
 
 from datetime import datetime, timedelta
+from enum import Enum
+from os.path import isdir
 from typing import Optional, Union
 
 from neon_utils.logger import LOG
 from neon_utils.configuration_utils import get_neon_local_config
 
 LOG_DIR = os.path.expanduser(get_neon_local_config()["dirVars"]["logsDir"])
+
+
+class ServiceLog(Enum):
+    SPEECH = "voice.log"
+    SKILLS = "skills.log"
+    AUDIO = "audio.log"
+    ENCLOSURE = "enclosure.log"
+    BUS = "bus.log"
+    GUI = "gui.log"
+    DISPLAY = "display.log"
+    SERVER = "server.log"
+    CLIENT = "client.log"
+    OTHER = "extras.log"
 
 
 def remove_old_logs(log_dir: str = LOG_DIR, history_to_retain: timedelta = timedelta(weeks=6)):
@@ -84,7 +108,7 @@ def get_logger(log_name: str, log_dir: str = LOG_DIR, std_out: bool = False) -> 
 
 def get_log_file_for_module(module_name: Union[str, list]) -> str:
     """
-    Gets the default log basename for the requested module
+    Gets the default log path for the requested module
     Args:
         module_name: Runnable argument passed to Popen
             (i.e. neon_speech_client, [python3, -m, mycroft.skills])
@@ -116,3 +140,24 @@ def get_log_file_for_module(module_name: Union[str, list]) -> str:
         log_name = "extras.log"
 
     return os.path.join(LOG_DIR, log_name)
+
+
+def init_log_for_module(service: ServiceLog = ServiceLog.OTHER, std_out: bool = False, max_bytes: int = 50000000,
+                        backup_count: int = 3, level: str = logging.DEBUG):
+    """
+    Initialize `LOG` singleton for the specified service in this thread
+    Args:
+        service: service requesting a logger object
+        std_out: if true, print logs to std_out instead of to files
+        max_bytes: maximum size in bytes allowed for this log file
+        backup_count: number of archived logs to save
+        level: minimum log level to filter to
+    """
+    if not isdir(LOG_DIR):
+        LOG.info(f"Creating log directory: {LOG_DIR}")
+        os.makedirs(LOG_DIR)
+    log_file = "stdout" if std_out else os.path.join(LOG_DIR, service.value)
+    LOG.init({"path": log_file,
+              "max_bytes": max_bytes,
+              "backup_count": backup_count,
+              "level": level})
