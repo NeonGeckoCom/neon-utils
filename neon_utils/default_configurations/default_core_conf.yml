@@ -124,7 +124,7 @@ skills:
   auto_update_interval: 24.0
   # time between automatic skill updates in hours
   msm_ver: False
-  repo_url: "https://github.com/MycroftAI/mycroft-skills"
+  repo_url: "https://github.com/NeonGeckoCom/neon_skills"
   repo_branch: "18.08"
   data_dir: "~/.neon/msm"
   neon_token:

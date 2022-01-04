@@ -31,6 +31,8 @@ import shutil
 import sys
 import os
 import unittest
+
+from ruamel.yaml import safe_load
 from pprint import pformat
 from time import sleep
 
@@ -47,7 +49,7 @@ TEST_DICT = {"section 1": {"key1": "val1",
                            "key_2": "val2"}}
 
 
-class ConfigurationUtilTests(unittest.TestCase):
+class NGIConfigTests(unittest.TestCase):
     def doCleanups(self) -> None:
         if os.getenv("NEON_CONFIG_PATH"):
             os.environ.pop("NEON_CONFIG_PATH")
@@ -88,18 +90,6 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         local_conf["prefFlags"]["devMode"] = False
         self.assertFalse(local_conf["prefFlags"]["devMode"])
-
-    def test_get_config_dir_default(self):
-        config_path = get_config_dir()
-        self.assertTrue(os.path.isdir(config_path))
-
-    def test_get_config_dir_valid_override(self):
-        os.environ["NEON_CONFIG_PATH"] = "~/"
-        self.assertIsNotNone(os.getenv("NEON_CONFIG_PATH"))
-        config_path = get_config_dir()
-        self.assertEqual(config_path, os.path.expanduser("~/"))
-        os.environ.pop("NEON_CONFIG_PATH")
-        self.assertIsNone(os.getenv("NEON_CONFIG_PATH"))
 
     def test_get_config_dir_invalid_override(self):
         os.environ["NEON_CONFIG_PATH"] = "/invalid"
@@ -188,6 +178,155 @@ class ConfigurationUtilTests(unittest.TestCase):
         from_disk = NGIConfig("mycroft", CONFIG_PATH)
         self.assertEqual(from_disk.content, test_conf.content)
         os.remove(test_conf.file_path)
+
+    def test_config_cache(self):
+        from neon_utils.configuration_utils import NGIConfig as NGIConf2
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+
+        shutil.copy(ngi_local_conf, bak_local_conf)
+        config_1 = NGIConfig("ngi_local_conf", CONFIG_PATH)
+        self.assertFalse(config_1.requires_reload)
+        config_2 = NGIConf2("ngi_local_conf", CONFIG_PATH, True)
+        self.assertFalse(config_2.requires_reload)
+        self.assertEqual(config_1._content, config_2._content)
+        self.assertNotEqual(config_1, config_2)
+
+        config_1.update_yaml_file("prefFlags", "autoStart", False)
+        self.assertFalse(config_1._pending_write)
+        self.assertEqual(config_2._content["prefFlags"]["autoStart"], True)
+        self.assertFalse(config_2._pending_write)
+
+        self.assertNotEqual(config_1._loaded, config_2._loaded)
+        self.assertGreater(config_1._loaded, config_2._loaded)
+        self.assertTrue(config_2.requires_reload)
+        self.assertEqual(config_1.content, config_2.content)
+        self.assertEqual(config_1._loaded, config_2._loaded)
+
+        config_2.update_yaml_file("prefFlags", "devMode", False, multiple=True)
+        self.assertFalse(config_2["prefFlags"]["devMode"])
+        self.assertTrue(config_2._pending_write)
+        config_2.write_changes()
+        self.assertFalse(config_2._pending_write)
+        self.assertTrue(config_1.requires_reload)
+        self.assertEqual(config_1.content["prefFlags"]["devMode"], False)
+
+        config_2.update_yaml_file("prefFlags", "devMode", True, multiple=True)
+        self.assertTrue(config_2._pending_write)
+        self.assertTrue(config_2["prefFlags"]["devMode"])
+        self.assertFalse(config_1["prefFlags"]["devMode"])
+
+        shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_multi_config(self):
+        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
+        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
+
+        shutil.copy(ngi_local_conf, bak_local_conf)
+
+        config_objects = []
+        for i in range(100):
+            config_objects.append(NGIConfig("ngi_local_conf", CONFIG_PATH, True))
+
+        first_config = config_objects[0]
+        last_config = config_objects[-1]
+        self.assertIsInstance(first_config, NGIConfig)
+        self.assertIsInstance(last_config, NGIConfig)
+
+        self.assertEqual(first_config.content, last_config.content)
+        first_config.update_yaml_file("prefFlags", "devMode", False)
+
+        self.assertFalse(last_config["prefFlags"]["devMode"])
+        self.assertEqual(first_config.content, last_config.content)
+
+        shutil.move(bak_local_conf, ngi_local_conf)
+
+    def test_concurrent_config_read(self):
+        from threading import Thread
+        valid_config = NGIConfig("dep_user_info", CONFIG_PATH)
+        test_results = {}
+
+        def _open_config(idx):
+            from neon_utils.configuration_utils import NGIConfig as Config
+            config = Config("dep_user_info", CONFIG_PATH, True)
+            test_results[idx] = config.content == valid_config.content
+
+        for i in range(10):
+            Thread(target=_open_config, args=(i,), daemon=True).start()
+        while not len(test_results.keys()) == 10:
+            sleep(0.5)
+        self.assertTrue(all(test_results.values()))
+
+    def test_new_ngi_config(self):
+        config = NGIConfig("temp_conf", CONFIG_PATH)
+        self.assertIsInstance(config.content, dict)
+        os.remove(os.path.join(CONFIG_PATH, "temp_conf.yml"))
+
+
+class ConfigurationUtilTests(unittest.TestCase):
+    def doCleanups(self) -> None:
+        if os.getenv("NEON_CONFIG_PATH"):
+            os.environ.pop("NEON_CONFIG_PATH")
+        for file in glob(os.path.join(CONFIG_PATH, ".*.lock")):
+            os.remove(file)
+        for file in glob(os.path.join(CONFIG_PATH, ".*.tmp")):
+            os.remove(file)
+        for file in glob(os.path.join(ROOT_DIR, "credentials", ".*.lock")):
+            os.remove(file)
+        for file in glob(os.path.join(ROOT_DIR, "credentials", ".*.tmp")):
+            os.remove(file)
+        if os.path.exists(os.path.join(CONFIG_PATH, "old_user_info.yml")):
+            os.remove(os.path.join(CONFIG_PATH, "old_user_info.yml"))
+
+    def test_get_legacy_config_path(self):
+        from neon_utils.configuration_utils import _get_legacy_config_dir
+        test_dir = join(CONFIG_PATH, "config_path_test_dirs")
+
+        venv_path = join(test_dir, "arbitrary_venv")
+        mycroft_path = join(test_dir, "default_mycroft")
+        cloned_neon_path = join(test_dir, "cloned_neon")
+        legacy_neon_path = join(test_dir, "legacy_neon_path")
+
+        test_path = ["/lib/python3.8", "/usr/lib/python3.8", "/opt/mycroft"]
+        self.assertIsNone(_get_legacy_config_dir(test_path))
+
+        test_path.insert(0, f"{venv_path}/.venv/lib/python3.8/site-packages")
+        self.assertEqual(_get_legacy_config_dir(test_path), venv_path)
+
+        test_path.insert(0, mycroft_path)
+        self.assertEqual(_get_legacy_config_dir(test_path), mycroft_path)
+
+        test_path.insert(0, cloned_neon_path)
+        self.assertEqual(_get_legacy_config_dir(test_path), cloned_neon_path)
+
+        test_path.insert(0, legacy_neon_path)
+        self.assertEqual(_get_legacy_config_dir(test_path), f"{legacy_neon_path}/NGI")
+
+        dev_test_path = ['', '/usr/lib/python38.zip', '/usr/lib/python3.8', '/usr/lib/python3.8/lib-dynload',
+                         f'{join(test_dir, "dev_environment")}/venv/lib/python3.8/site-packages',
+                         f'{join(test_dir, "dev_environment")}/neon_cli',
+                         f'{join(test_dir, "dev_environment")}/transcripts_controller',
+                         f'{join(test_dir, "dev_environment")}/neon_enclosure',
+                         f'{join(test_dir, "dev_environment")}/neon_speech',
+                         f'{join(test_dir, "dev_environment")}/neon_audio',
+                         f'{join(test_dir, "dev_environment")}/NeonCore',
+                         f'{join(test_dir, "dev_environment")}/neon-test-utils',
+                         f'{join(test_dir, "dev_environment")}/neon_display',
+                         f'{join(test_dir, "dev_environment")}/neon_messagebus',
+                         f'{join(test_dir, "dev_environment")}/neon_gui']
+        self.assertEqual(_get_legacy_config_dir(dev_test_path), f'{join(test_dir, "dev_environment")}/NeonCore')
+
+    def test_get_config_dir_default(self):
+        config_path = get_config_dir()
+        self.assertTrue(os.path.isdir(config_path))
+
+    def test_get_config_dir_valid_override(self):
+        os.environ["NEON_CONFIG_PATH"] = "~/"
+        self.assertIsNotNone(os.getenv("NEON_CONFIG_PATH"))
+        config_path = get_config_dir()
+        self.assertEqual(config_path, os.path.expanduser("~/"))
+        os.environ.pop("NEON_CONFIG_PATH")
+        self.assertIsNone(os.getenv("NEON_CONFIG_PATH"))
 
     def test_delete_recursive_dictionary_keys_simple(self):
         test_dict = deepcopy(TEST_DICT)
@@ -294,7 +433,8 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["disabled"], bool)
 
     def test_get_device_type(self):
-        self.assertIn(get_neon_device_type(), ("desktop", "pi", "linux"))
+        self.assertIn(get_neon_device_type(),
+                      ("desktop", "pi", "linux", "server"))
 
     def test_get_speech_config(self):
         config = get_neon_speech_config()
@@ -484,89 +624,6 @@ class ConfigurationUtilTests(unittest.TestCase):
         # self.assertIsInstance(mycroft_config["stt"], dict)
         # self.assertIsInstance(mycroft_config["tts"], dict)
 
-    def test_config_cache(self):
-        from neon_utils.configuration_utils import NGIConfig as NGIConf2
-        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
-        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
-
-        shutil.copy(ngi_local_conf, bak_local_conf)
-        config_1 = NGIConfig("ngi_local_conf", CONFIG_PATH)
-        self.assertFalse(config_1.requires_reload)
-        config_2 = NGIConf2("ngi_local_conf", CONFIG_PATH, True)
-        self.assertFalse(config_2.requires_reload)
-        self.assertEqual(config_1._content, config_2._content)
-        self.assertNotEqual(config_1, config_2)
-
-        config_1.update_yaml_file("prefFlags", "autoStart", False)
-        self.assertFalse(config_1._pending_write)
-        self.assertEqual(config_2._content["prefFlags"]["autoStart"], True)
-        self.assertFalse(config_2._pending_write)
-
-        self.assertNotEqual(config_1._loaded, config_2._loaded)
-        self.assertGreater(config_1._loaded, config_2._loaded)
-        self.assertTrue(config_2.requires_reload)
-        self.assertEqual(config_1.content, config_2.content)
-        self.assertEqual(config_1._loaded, config_2._loaded)
-
-        config_2.update_yaml_file("prefFlags", "devMode", False, multiple=True)
-        self.assertFalse(config_2["prefFlags"]["devMode"])
-        self.assertTrue(config_2._pending_write)
-        config_2.write_changes()
-        self.assertFalse(config_2._pending_write)
-        self.assertTrue(config_1.requires_reload)
-        self.assertEqual(config_1.content["prefFlags"]["devMode"], False)
-
-        config_2.update_yaml_file("prefFlags", "devMode", True, multiple=True)
-        self.assertTrue(config_2._pending_write)
-        self.assertTrue(config_2["prefFlags"]["devMode"])
-        self.assertFalse(config_1["prefFlags"]["devMode"])
-
-        shutil.move(bak_local_conf, ngi_local_conf)
-
-    def test_multi_config(self):
-        bak_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.bak")
-        ngi_local_conf = os.path.join(CONFIG_PATH, "ngi_local_conf.yml")
-
-        shutil.copy(ngi_local_conf, bak_local_conf)
-
-        config_objects = []
-        for i in range(100):
-            config_objects.append(NGIConfig("ngi_local_conf", CONFIG_PATH, True))
-
-        first_config = config_objects[0]
-        last_config = config_objects[-1]
-        self.assertIsInstance(first_config, NGIConfig)
-        self.assertIsInstance(last_config, NGIConfig)
-
-        self.assertEqual(first_config.content, last_config.content)
-        first_config.update_yaml_file("prefFlags", "devMode", False)
-
-        self.assertFalse(last_config["prefFlags"]["devMode"])
-        self.assertEqual(first_config.content, last_config.content)
-
-        shutil.move(bak_local_conf, ngi_local_conf)
-
-    def test_concurrent_config_read(self):
-        from threading import Thread
-        valid_config = NGIConfig("dep_user_info", CONFIG_PATH)
-        test_results = {}
-
-        def _open_config(idx):
-            from neon_utils.configuration_utils import NGIConfig as Config
-            config = Config("dep_user_info", CONFIG_PATH, True)
-            test_results[idx] = config.content == valid_config.content
-
-        for i in range(10):
-            Thread(target=_open_config, args=(i,), daemon=True).start()
-        while not len(test_results.keys()) == 10:
-            sleep(0.5)
-        self.assertTrue(all(test_results.values()))
-
-    def test_new_ngi_config(self):
-        config = NGIConfig("temp_conf", CONFIG_PATH)
-        self.assertIsInstance(config.content, dict)
-        os.remove(os.path.join(CONFIG_PATH, "temp_conf.yml"))
-
     def test_is_neon_core(self):
         self.assertIsInstance(is_neon_core(), bool)
 
@@ -703,6 +760,21 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(ngi_auth_vars["alpha_vantage"], {"api_key": find_neon_alpha_vantage_key(auth_path)})
         self.assertEqual(ngi_auth_vars["owm"], {"api_key": find_neon_owm_key(auth_path)})
         os.remove(ngi_auth_vars.file_path)
+
+    def test_get_neon_auth_config_unwritable(self):
+        real_auth_config = join(get_config_dir(), "ngi_auth_vars.yml")
+        bak_auth_config = join(get_config_dir(), "ngi_auth.bak")
+        if isfile(real_auth_config):
+            shutil.copy(real_auth_config, bak_auth_config)
+        os.environ["NEON_CONFIG_PATH"] = os.path.join(ROOT_DIR, "configuration", "unwritable_path")
+        ngi_auth_vars = get_neon_auth_config()
+        with open(join(os.environ["NEON_CONFIG_PATH"], "ngi_auth_vars.yml")) as f:
+            contents = safe_load(f)
+        self.assertEqual(contents, ngi_auth_vars.content)
+        self.assertNotEqual(ngi_auth_vars.path, os.environ["NEON_CONFIG_PATH"])
+
+        if isfile(bak_auth_config):
+            shutil.move(bak_auth_config, real_auth_config)
 
     def test_write_mycroft_compatible_config(self):
         test_path = os.path.join(CONFIG_PATH, "test.conf")
