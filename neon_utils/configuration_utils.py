@@ -1075,8 +1075,10 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     local_conf["skills"]["neon_token"] = os.environ.get("GITHUB_TOKEN")
     local_conf["tts"]["module"] = os.environ.get("ttsModule", local_conf["tts"]["module"])
     local_conf["stt"]["module"] = os.environ.get("sttModule", local_conf["stt"]["module"])
-    local_conf["language"]["translation_module"] = os.environ.get("translateModule", local_conf["language"]["translation_module"])
-    local_conf["language"]["detection_module"] = os.environ.get("detectionModule", local_conf["language"]["detection_module"])
+    local_conf["language"]["translation_module"] = os.environ.get("translateModule",
+                                                                  local_conf["language"]["translation_module"])
+    local_conf["language"]["detection_module"] = os.environ.get("detectionModule",
+                                                                local_conf["language"]["detection_module"])
 
     if os.environ.get("installServer", "false") == "true":
         local_conf["devVars"]["devType"] = "server"
@@ -1094,7 +1096,7 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
         local_conf["dirVars"]["diagsDir"] = os.path.join(root_path, "Diagnostics")
         local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
         local_conf["skills"]["default_skills"] = \
-            "https://raw.githubusercontent.com/NeonGeckoCom/neon-skills-submodules/dev/.utilities/DEFAULT-SKILLS-DEV"
+            "https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/master/skill_lists/DEFAULT-SKILLS-DEV"
     else:
         local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
 
