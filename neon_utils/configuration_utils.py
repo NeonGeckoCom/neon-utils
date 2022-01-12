@@ -941,21 +941,25 @@ def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
     return auth_config
 
 
-def _populate_read_only_config(path: Optional[str], config_filename: str, loaded_config: NGIConfig):
+def _populate_read_only_config(path: Optional[str], config_filename: str,
+                               loaded_config: NGIConfig) -> bool:
     """
     Check if a requested config file wasn't loaded due to insufficient write
     permissions and duplicate its contents into the loaded config object.
     :param path: Optional requested config path to load from
     :param config_filename: basename of the requested and loaded config file
     :param loaded_config: Loaded config object to populate with RO config
+    :return: True if RO config was copied to new location, else False
     """
     # Handle reading unwritable config contents
-    requested_file = join(path or os.getenv("NEON_CONFIG_PATH", ""), config_filename)
+    requested_file = os.path.abspath(join(path or os.getenv("NEON_CONFIG_PATH", ""), config_filename))
     if os.path.isfile(requested_file) and loaded_config.file_path != requested_file:
         LOG.warning(f"Loading requested file contents into {loaded_config.file_path}")
         with loaded_config.lock:
             shutil.copy(requested_file, loaded_config.file_path)
         loaded_config.check_for_updates()
+        return True
+    return False
 
 
 def get_neon_device_type() -> str:
