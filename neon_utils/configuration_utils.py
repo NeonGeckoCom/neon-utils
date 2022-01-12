@@ -1072,17 +1072,27 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     """
     local_conf = get_neon_local_config(path)
     pref_flags = local_conf["prefFlags"]
-    local_conf["prefFlags"]["devMode"] = os.environ.get("devMode", str(pref_flags["devMode"])).lower() == "true"
-    local_conf["prefFlags"]["autoStart"] = os.environ.get("autoStart", str(pref_flags["autoStart"])).lower() == "true"
-    local_conf["prefFlags"]["autoUpdate"] = os.environ.get("autoUpdate",
-                                                           str(pref_flags["autoUpdate"])).lower() == "true"
+    local_conf["prefFlags"]["devMode"] = \
+        os.environ.get("devMode",
+                       str(pref_flags["devMode"])).lower() == "true"
+    local_conf["prefFlags"]["autoStart"] = \
+        os.environ.get("autoStart",
+                       str(pref_flags["autoStart"])).lower() == "true"
+    local_conf["prefFlags"]["autoUpdate"] = \
+        os.environ.get("autoUpdate",
+                       str(pref_flags["autoUpdate"])).lower() == "true"
+    local_conf["skills"]["auto_update"] = local_conf["prefFlags"]["autoUpdate"]
     local_conf["skills"]["neon_token"] = os.environ.get("GITHUB_TOKEN")
-    local_conf["tts"]["module"] = os.environ.get("ttsModule", local_conf["tts"]["module"])
-    local_conf["stt"]["module"] = os.environ.get("sttModule", local_conf["stt"]["module"])
-    local_conf["language"]["translation_module"] = os.environ.get("translateModule",
-                                                                  local_conf["language"]["translation_module"])
-    local_conf["language"]["detection_module"] = os.environ.get("detectionModule",
-                                                                local_conf["language"]["detection_module"])
+    local_conf["tts"]["module"] = os.environ.get("ttsModule",
+                                                 local_conf["tts"]["module"])
+    local_conf["stt"]["module"] = os.environ.get("sttModule",
+                                                 local_conf["stt"]["module"])
+    local_conf["language"]["translation_module"] = \
+        os.environ.get("translateModule",
+                       local_conf["language"]["translation_module"])
+    local_conf["language"]["detection_module"] = \
+        os.environ.get("detectionModule",
+                       local_conf["language"]["detection_module"])
 
     if os.environ.get("installServer", "false") == "true":
         local_conf["devVars"]["devType"] = "server"
