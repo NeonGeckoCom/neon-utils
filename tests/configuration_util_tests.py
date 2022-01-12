@@ -844,6 +844,26 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.rmtree("/tmp/neon/test")
         # TODO: Test any other default values
 
+    def test_populate_read_only_config(self):
+        from neon_utils.configuration_utils import _populate_read_only_config
+        test_dir = os.path.join(ROOT_DIR, "configuration", "populate_tests")
+        ro_dir = os.path.join(test_dir, "test_ro_dir")
+        test_conf = get_neon_local_config(test_dir)
+        test_filename = basename(test_conf.file_path)
+
+        self.assertFalse(_populate_read_only_config(test_dir,
+                                                    test_filename, test_conf))
+
+        os.chdir(test_dir)
+        self.assertFalse(_populate_read_only_config("./",
+                                                    test_filename, test_conf))
+        self.assertFalse(_populate_read_only_config(None,
+                                                    test_filename, test_conf))
+
+        self.assertTrue(_populate_read_only_config(ro_dir,
+                                                   test_filename, test_conf))
+
+        os.remove(test_conf.file_path)
 
 if __name__ == '__main__':
     unittest.main()
