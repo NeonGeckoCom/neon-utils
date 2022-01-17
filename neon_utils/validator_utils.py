@@ -27,11 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from neon_utils import LOG
-try:
-    from lingua_nostra import parse, set_default_lang
-except ImportError as e:
-    LOG.error(e)
-    from lingua_franca import parse, set_default_lang
+from lingua_franca import parse, set_default_lang
 
 from mycroft.skills.core import MycroftSkill
 
