@@ -41,22 +41,26 @@ class SkillGUI(_SkillGUI):
 
     @property
     def remote_url(self):
-        return self.file_server_address
+        if self.serving_http:
+            return self.file_server_address
+        return super().remote_url
 
     def _pages2uri(self, page_names):
         # Convert pages to full reference
         page_urls = []
         for name in page_names:
             if name.startswith("SYSTEM"):
-                page = resolve_neon_resource_file(join('ui', name))
+                if self.serving_http:
+                    page = f"{self.file_server_address}/system/ui/{name}"
+                else:
+                    page = resolve_neon_resource_file(join('ui', name))
             else:
                 page = self.skill.find_resource(name, 'ui')
+                if self.serving_http:
+                    page = page.replace(self.base_skill_dir,
+                                        self.remote_url)
             if page:
-                if self.serving_http and not name.startswith("SYSTEM"):
-                    # TODO: Handle system gui resources
-                    page_urls.append(page.replace(self.base_skill_dir,
-                                                  self.remote_url))
-                elif not self.serving_http and self.remote_url:
+                if self.remote_url and not self.serving_http:
                     page_urls.append(self.remote_url + "/" + page)
                 elif page.startswith("file://"):
                     page_urls.append(page)
