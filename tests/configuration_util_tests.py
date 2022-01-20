@@ -463,6 +463,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["route"], str)
         self.assertIsInstance(config["ssl"], bool)
         self.assertIsInstance(config["resource_root"], str)
+        self.assertIn("file_server", config.keys())
 
         self.assertEqual(config["port"], config["base_port"])
 

@@ -62,7 +62,7 @@ class SkillGUI(_SkillGUI):
             if page:
                 if self.remote_url and not self.serving_http:
                     page_urls.append(self.remote_url + "/" + page)
-                elif page.startswith("file://"):
+                elif "://" in page:
                     page_urls.append(page)
                 else:
                     page_urls.append("file://" + page)
