@@ -38,6 +38,7 @@ from typing import Optional
 from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message
 
+from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.skill_override_functions import wait_while_speaking
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message
@@ -79,6 +80,7 @@ class PatchedMycroftSkill(MycroftSkill):
                 os.rmdir(self.file_system.path)
             self.file_system.path = fs_path
         self.config_core = get_mycroft_compatible_config()
+        self.gui = SkillGUI(self)
 
     def _init_settings(self):
         self.settings_write_path = self.file_system.path

@@ -72,7 +72,7 @@ gui:
   port: 18181
   route: /gui
   ssl: false
-  resource_root: https://0000.us/klatchat/app/files/neon_qml
+  file_server:
 
 hotwords:
   Hey Neon: { module: ovos-ww-plugin-pocketsphinx,
@@ -107,6 +107,7 @@ skills:
   install_default: True
   wait_for_internet: True
   debug: True
+  run_gui_file_server: False
   blacklist: []
   priority: [
     "skill-about.neongeckocom",
