@@ -37,7 +37,6 @@ class SkillGUI(_SkillGUI):
         self.base_skill_dir = skill.config_core["skills"]["directory"]
         self.serving_http = skill.config_core["skills"].get(
             "run_gui_file_server", False)
-        self.file_server_address = skill.config_core.get("remote-server")
 
     def _pages2uri(self, page_names):
         # Convert pages to full reference
@@ -45,7 +44,7 @@ class SkillGUI(_SkillGUI):
         for name in page_names:
             if name.startswith("SYSTEM"):
                 if self.serving_http:
-                    page = f"{self.file_server_address}/system/ui/{name}"
+                    page = f"{self.remote_url}/system/ui/{name}"
                 else:
                     page = resolve_neon_resource_file(join('ui', name))
             else:
