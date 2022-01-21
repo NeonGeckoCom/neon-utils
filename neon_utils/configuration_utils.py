@@ -455,7 +455,8 @@ def get_config_dir():
             os.makedirs(config_path)
             return config_path
         else:
-            LOG.error(f"NEON_CONFIG_PATH is not valid and will be ignored: {config_path}")
+            LOG.warning(f"NEON_CONFIG_PATH is not valid and will be ignored: "
+                        f"{config_path}")
 
     # TODO: Update modules to set NEON_CONFIG_PATH and log a deprecation warning here DM
     # Check for legacy path spec
@@ -951,9 +952,11 @@ def _populate_read_only_config(path: Optional[str], config_filename: str,
     :param loaded_config: Loaded config object to populate with RO config
     :return: True if RO config was copied to new location, else False
     """
-    # Handle reading unwritable config contents
+    # Handle reading unwritable config contents into new empty config
     requested_file = os.path.abspath(join(path or expanduser(os.getenv("NEON_CONFIG_PATH", "")), config_filename))
-    if os.path.isfile(requested_file) and loaded_config.file_path != requested_file:
+    if os.path.isfile(requested_file) and \
+            loaded_config.file_path != requested_file and \
+            loaded_config.content == dict():
         LOG.warning(f"Loading requested file contents ({requested_file}) into {loaded_config.file_path}")
         with loaded_config.lock:
             shutil.copy(requested_file, loaded_config.file_path)
