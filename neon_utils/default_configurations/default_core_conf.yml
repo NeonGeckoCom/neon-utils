@@ -73,6 +73,8 @@ gui:
   route: /gui
   ssl: false
   resource_root: https://0000.us/klatchat/app/files/neon_qml
+  # resource_root is deprecated; use file_server to specify network QML files
+  file_server:
 
 hotwords:
   Hey Neon: { module: ovos-ww-plugin-pocketsphinx,
@@ -107,6 +109,7 @@ skills:
   install_default: True
   wait_for_internet: True
   debug: True
+  run_gui_file_server: False
   blacklist: []
   priority: [
     "skill-about.neongeckocom",

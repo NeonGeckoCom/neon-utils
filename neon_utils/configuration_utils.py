@@ -946,15 +946,15 @@ def _populate_read_only_config(path: Optional[str], config_filename: str,
     """
     Check if a requested config file wasn't loaded due to insufficient write
     permissions and duplicate its contents into the loaded config object.
-    :param path: Optional requested config path to load from
+    :param path: Optional requested RO config path
     :param config_filename: basename of the requested and loaded config file
     :param loaded_config: Loaded config object to populate with RO config
     :return: True if RO config was copied to new location, else False
     """
     # Handle reading unwritable config contents
-    requested_file = os.path.abspath(join(path or os.getenv("NEON_CONFIG_PATH", ""), config_filename))
+    requested_file = os.path.abspath(join(path or expanduser(os.getenv("NEON_CONFIG_PATH", "")), config_filename))
     if os.path.isfile(requested_file) and loaded_config.file_path != requested_file:
-        LOG.warning(f"Loading requested file contents into {loaded_config.file_path}")
+        LOG.warning(f"Loading requested file contents ({requested_file}) into {loaded_config.file_path}")
         with loaded_config.lock:
             shutil.copy(requested_file, loaded_config.file_path)
         loaded_config.check_for_updates()
@@ -1042,6 +1042,7 @@ def get_mycroft_compatible_config(mycroft_only=False):
     default_config["Audio"] = get_neon_audio_config()
     default_config["disable_xdg"] = False
     default_config["ipc_path"] = local["dirVars"]["ipcDir"]
+    default_config["remote-server"] = local["gui"]["file_server"]
     # TODO: Location config
     # default_config["Display"]
 
