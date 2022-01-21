@@ -58,7 +58,7 @@ class SkillGUI(_SkillGUI):
                 page = self.skill.find_resource(name, 'ui')
                 if self.serving_http:
                     page = page.replace(self.base_skill_dir,
-                                        self.remote_url)
+                                        join(self.remote_url, "skills"))
             if page:
                 if self.remote_url and not self.serving_http:
                     page_urls.append(self.remote_url + "/" + page)
