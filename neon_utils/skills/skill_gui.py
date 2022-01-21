@@ -36,8 +36,8 @@ class SkillGUI(_SkillGUI):
         super().__init__(skill)
         self.base_skill_dir = skill.config_core["skills"]["directory"]
         self.serving_http = skill.config_core["skills"].get(
-            "run_gui_file_server")
-        self.file_server_address = skill.config_core["gui_file_server"]
+            "run_gui_file_server", False)
+        self.file_server_address = skill.config_core.get("remote-server")
 
     @property
     def remote_url(self):

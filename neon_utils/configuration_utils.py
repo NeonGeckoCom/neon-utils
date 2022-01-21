@@ -1042,7 +1042,7 @@ def get_mycroft_compatible_config(mycroft_only=False):
     default_config["Audio"] = get_neon_audio_config()
     default_config["disable_xdg"] = False
     default_config["ipc_path"] = local["dirVars"]["ipcDir"]
-    default_config["gui_file_server"] = local["gui"]["file_server"]
+    default_config["remote-server"] = local["gui"]["file_server"]
     # TODO: Location config
     # default_config["Display"]
 
