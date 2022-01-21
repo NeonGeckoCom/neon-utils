@@ -800,7 +800,7 @@ def get_neon_gui_config() -> dict:
         dict of config params used for the Neon gui module
     """
     local_config = get_neon_local_config()
-    gui_config = local_config["gui"]
+    gui_config = dict(local_config["gui"])
     gui_config["base_port"] = gui_config["port"]
     return gui_config
 
@@ -954,6 +954,7 @@ def _populate_read_only_config(path: Optional[str], config_filename: str,
     # Handle reading unwritable config contents
     requested_file = os.path.abspath(join(path or expanduser(os.getenv("NEON_CONFIG_PATH", "")), config_filename))
     if os.path.isfile(requested_file) and loaded_config.file_path != requested_file:
+        # TODO: This is only valid 1x DM
         LOG.warning(f"Loading requested file contents ({requested_file}) into {loaded_config.file_path}")
         with loaded_config.lock:
             shutil.copy(requested_file, loaded_config.file_path)
