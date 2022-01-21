@@ -39,12 +39,6 @@ class SkillGUI(_SkillGUI):
             "run_gui_file_server", False)
         self.file_server_address = skill.config_core.get("remote-server")
 
-    @property
-    def remote_url(self):
-        if self.serving_http:
-            return self.file_server_address
-        return super().remote_url
-
     def _pages2uri(self, page_names):
         # Convert pages to full reference
         page_urls = []
