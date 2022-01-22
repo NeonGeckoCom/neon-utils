@@ -800,7 +800,7 @@ def get_neon_gui_config() -> dict:
         dict of config params used for the Neon gui module
     """
     local_config = get_neon_local_config()
-    gui_config = local_config["gui"]
+    gui_config = dict(local_config["gui"])
     gui_config["base_port"] = gui_config["port"]
     return gui_config
 
