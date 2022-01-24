@@ -855,7 +855,18 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.rmtree("/tmp/neon/test")
         # TODO: Test any other default values
 
-    def test_populate_read_only_config(self):
+    def test_populate_read_only_config_simple(self):
+        from neon_utils.configuration_utils import _populate_read_only_config
+        test_dir = os.path.join(ROOT_DIR, "configuration", "populate_tests")
+        ro_dir = os.path.join(test_dir, "test_ro_dir")
+        test_conf = NGIConfig("ngi_local_conf", test_dir, True)
+        test_filename = basename(test_conf.file_path)
+
+        self.assertTrue(_populate_read_only_config(ro_dir,
+                                                   test_filename, test_conf))
+        os.remove(test_conf.file_path)
+
+    def test_populate_read_only_config_no_overwrite(self):
         from neon_utils.configuration_utils import _populate_read_only_config
         test_dir = os.path.join(ROOT_DIR, "configuration", "populate_tests")
         ro_dir = os.path.join(test_dir, "test_ro_dir")
@@ -871,12 +882,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertFalse(_populate_read_only_config(None,
                                                     test_filename, test_conf))
         self.assertFalse(_populate_read_only_config(ro_dir,
-                                                   test_filename, test_conf))
-        os.remove(test_conf.file_path)
-        test_conf.check_for_updates()
-
-        self.assertTrue(_populate_read_only_config(ro_dir,
-                                                   test_filename, test_conf))
+                                                    test_filename, test_conf))
         os.remove(test_conf.file_path)
 
 
