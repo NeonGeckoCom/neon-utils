@@ -92,7 +92,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Sound Library
-        run: sudo apt-get install libsndfile1
+        run: |
+          sudo apt-get update
+          sudo apt-get install libsndfile1
       - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
