@@ -1,0 +1,3 @@
+# Python Commented Line
+Some valid text
+//Java commented line
