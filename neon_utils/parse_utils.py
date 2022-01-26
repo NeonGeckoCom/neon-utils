@@ -184,3 +184,42 @@ def normalize_string_to_speak(to_speak: str) -> str:
     if any(to_speak.endswith(x) for x in valid_punctuation):
         return to_speak
     return f"{to_speak}."
+
+
+def transliteration(transcription, text, lang):
+    '''
+    Transliterates string from transcription provided by stt plugins
+    Transliterates string if transcribed string length equals filename text length
+    returns transliterated or transcribed string
+    '''
+    transliterated = []
+    translit_dict = {}
+    if lang == 'pl':
+        translit_dict = {'a': ['ą'], 'c': ['ć'], 'e': ['ę'], 'n': ['ń'], 'o': ['ó'], 's': ['ś'], 'z': ['ź', 'ż']}
+    if lang == 'fr':
+        translit_dict = {'c': ['ç'], 'e': ['é', 'ê', 'è', 'ë'], 'a': ['â', 'à'], 'i': ['î', 'ì', 'ï'],
+                         'o': ['ô', 'ò'], 'u': ['û', 'ù', 'ü']}
+    if lang == 'es':
+        translit_dict = {'a': ['á'], 'i': ['í'], 'e': ['é'], 'n': ['ñ'], 'o': ['ó'], 'u': ['ú', 'ü']}
+    if lang == 'de':
+        translit_dict = {'a': ['ä'], 's': ['ß'], 'o': ['ö'], 'u': ['ü']}
+    transcription = re.sub("`|'|-", "", transcription)
+    text = re.sub("`|'|-", "", text)
+    if len(transcription.strip()) == len(text.strip()):
+        for ind, letter in enumerate(transcription):
+            if letter in translit_dict.keys():
+                if letter != text[ind]:
+                    for l in translit_dict[letter]:
+                        if l == text[ind]:
+                                transliterated.append(l)
+                else:
+                        transliterated.append(letter)
+            else:
+                    transliterated.append(letter)
+        translit_str = ''.join(transliterated)
+        if translit_str != '':
+            return translit_str, text
+        else:
+            return transcription, text
+    else:
+        return transcription, text
