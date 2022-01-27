@@ -444,10 +444,10 @@ def init_config_dir() -> bool:
     Performs one-time initialization of the configuration directory.
     :returns: True if configuration was relocated
     """
-    with create_lock("init_config"):
-        env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
-        valid_dir = get_config_dir()
-        if env_spec and valid_dir != env_spec:
+    env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
+    valid_dir = get_config_dir()
+    if env_spec and valid_dir != env_spec:
+        with create_lock("init_config"):
             for file in glob(f"{env_spec}/*.yml"):
                 if not isfile(join(valid_dir, basename(file))):
                     shutil.copyfile(file, valid_dir)
@@ -457,8 +457,8 @@ def init_config_dir() -> bool:
             os.environ["NEON_CONFIG_PATH"] = valid_dir
             LOG.warning(f"Config files moved and"
                         f" NEON_CONFIG_PATH set to {valid_dir}")
-            return True
-        return False
+        return True
+    return False
 
 
 def get_config_dir():
