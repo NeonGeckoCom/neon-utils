@@ -452,8 +452,10 @@ def init_config_dir() -> bool:
     if env_spec and valid_dir != env_spec:
         with create_lock("init_config"):
             for file in glob(f"{env_spec}/*.yml"):
-                if not isfile(join(valid_dir, basename(file))):
-                    shutil.copyfile(file, join(valid_dir, basename(file)))
+                filename = basename(file)
+                if not isfile(join(valid_dir, filename)):
+                    LOG.info(f"Copying {filename} to {valid_dir}")
+                    shutil.copyfile(file, join(valid_dir, filename))
                 else:
                     LOG.warning(f"Skipping overwrite of existing file: "
                                 f"{basename(file)}")
