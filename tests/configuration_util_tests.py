@@ -423,6 +423,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["route"], str)
         self.assertTrue(config["route"].startswith('/'))
         self.assertIsInstance(config["ssl"], bool)
+        self.assertIsInstance(config["shared_connection"], bool)
 
     def test_get_api_config(self):
         config = get_neon_api_config()
