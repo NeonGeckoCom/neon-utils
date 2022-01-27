@@ -454,9 +454,9 @@ def get_config_dir():
             LOG.info(f"Creating requested config path: {config_path}")
             os.makedirs(config_path)
             return config_path
-        # else:
-        #     LOG.warning(f"NEON_CONFIG_PATH is not valid and will be ignored: "
-        #                 f"{config_path}")
+        else:
+            LOG.warning(f"NEON_CONFIG_PATH is not valid and will be ignored: "
+                        f"{config_path}")
 
     # TODO: Update modules to set NEON_CONFIG_PATH and log a deprecation warning here DM
     # Check for legacy path spec
