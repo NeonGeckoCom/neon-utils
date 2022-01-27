@@ -59,6 +59,8 @@ websocket:
   port: 8181
   route: "/core"
   ssl: false
+  shared_connection: true
+  # If false, one object per client
   allow_self_signed: true
   ssl_cert:
   ssl_key:
