@@ -442,6 +442,9 @@ def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
 def init_config_dir() -> bool:
     """
     Performs one-time initialization of the configuration directory.
+    NOTE: This method is intended to be called once at module init, before any
+    configuration is loaded. Repeated calls or calls after configuration is
+    loaded may lead to inconsistent behavior.
     :returns: True if configuration was relocated
     """
     env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
