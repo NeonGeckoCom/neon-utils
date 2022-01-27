@@ -889,8 +889,7 @@ class ConfigurationUtilTests(unittest.TestCase):
 
     def test_init_config_dir(self):
         from neon_utils.configuration_utils import init_config_dir
-        test_dir = os.path.join(ROOT_DIR, "configuration", "populate_tests")
-        ro_dir = os.path.join(test_dir, "test_ro_dir")
+        ro_dir = os.path.join(ROOT_DIR, "configuration", "unwritable_path")
         os.environ["NEON_CONFIG_PATH"] = ro_dir
         self.assertTrue(init_config_dir())
 
