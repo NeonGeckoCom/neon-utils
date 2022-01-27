@@ -461,6 +461,7 @@ def init_config_dir() -> bool:
             LOG.warning(f"Config files moved and"
                         f" NEON_CONFIG_PATH set to {valid_dir}")
         return True
+    LOG.debug(f"NEON_CONFIG_PATH={env_spec}")
     return False
 
 
@@ -968,7 +969,7 @@ def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
         auth_config._content = {"_loaded": True}
         auth_config.write_changes()
 
-    LOG.info(f"Loaded auth config from {auth_config.file_path}")
+    # LOG.info(f"Loaded auth config from {auth_config.file_path}")
     return auth_config
 
 
