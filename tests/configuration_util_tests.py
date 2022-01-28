@@ -325,6 +325,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsNotNone(os.getenv("NEON_CONFIG_PATH"))
         config_path = get_config_dir()
         self.assertEqual(config_path, os.path.expanduser("~/"))
+        self.assertTrue(os.path.isdir(config_path))
         os.environ.pop("NEON_CONFIG_PATH")
         self.assertIsNone(os.getenv("NEON_CONFIG_PATH"))
 
