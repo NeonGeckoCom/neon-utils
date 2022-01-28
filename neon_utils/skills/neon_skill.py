@@ -80,6 +80,9 @@ class NeonSkill(MycroftSkill):
         super(NeonSkill, self).__init__(name, bus, use_settings)
         self.cache_loc = os.path.expanduser(self.local_config.get('dirVars', {}).get('cacheDir') or
                                             "~/.local/share/neon/cache")
+        if not os.path.isdir(self.cache_loc):
+            LOG.debug(f"Creating cache directory: {self.cache_loc}")
+            os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
 
         # TODO: Depreciate these references, signal use is discouraged DM
