@@ -42,12 +42,15 @@ def module_property(func):
             f"module '{module.__name__}' has no attribute '{name}'")
 
     old_getattr = getattr(module, '__getattr__', base_getattr)
+    old_get_attribute = getattr(module, '__getattribute__', base_getattr)
 
     def new_getattr(name):
         if f'_{name}' == func.__name__:
             return func()
-        else:
+        elif old_getattr(name):
             return old_getattr(name)
+        else:
+            return old_get_attribute(name)
 
     module.__getattr__ = new_getattr
     return func
