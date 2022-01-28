@@ -37,20 +37,16 @@ def module_property(func):
     """
     module = sys.modules[func.__module__]
 
-    def base_getattr(name):
+    def fallback_getattr(name):
         raise AttributeError(
             f"module '{module.__name__}' has no attribute '{name}'")
 
-    old_getattr = getattr(module, '__getattr__', base_getattr)
-    old_get_attribute = getattr(module, '__getattribute__', base_getattr)
+    default_getattr = getattr(module, '__getattr__', fallback_getattr)
 
-    def new_getattr(name):
+    def patched_getattr(name):
         if f'_{name}' == func.__name__:
             return func()
-        elif old_getattr(name):
-            return old_getattr(name)
-        else:
-            return old_get_attribute(name)
+        return default_getattr(name)
 
-    module.__getattr__ = new_getattr
+    module.__getattr__ = patched_getattr
     return func

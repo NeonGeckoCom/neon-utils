@@ -27,6 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import sys
 import logging
 
 from datetime import datetime, timedelta
@@ -50,11 +51,15 @@ def _get_log_dir():
     return _log_dir
 
 
-@module_property
-def _LOG_DIR():
-    # TODO: Deprecate in v1.0.0
-    print("This reference is deprecated. Read from config directly")
-    return _get_log_dir()
+# Below patches LOG_DIR global param
+if float('.'.join(sys.version.split('.', 2)[:2])) > 3.6:
+    @module_property
+    def _LOG_DIR():
+        # TODO: Deprecate in v1.0.0
+        print("This reference is deprecated. Read from config directly")
+        return _get_log_dir()
+else:
+    LOG_DIR = _get_log_dir()
 
 
 class ServiceLog(Enum):

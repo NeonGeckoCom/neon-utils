@@ -27,6 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import sys
 import time
 from typing import Optional
 
@@ -48,11 +49,15 @@ def _get_ipc_dir():
     return _ipc_dir
 
 
-@module_property
-def _IPC_DIR():
-    # TODO: Deprecate in v1.0.0
-    LOG.warning("This reference is deprecated. Read from config directly")
-    return _get_ipc_dir()
+# Below patches LOG_DIR global param
+if float('.'.join(sys.version.split('.', 2)[:2])) > 3.6:
+    @module_property
+    def _IPC_DIR():
+        # TODO: Deprecate in v1.0.0
+        LOG.warning("This reference is deprecated. Read from config directly")
+        return _get_ipc_dir()
+else:
+    IPC_DIR = _get_ipc_dir()
 
 
 def check_for_signal(signal_name: str, sec_lifetime: int = 0) -> bool:
