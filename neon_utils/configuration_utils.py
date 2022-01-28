@@ -469,6 +469,8 @@ def get_config_dir():
         return legacy_path
 
     default_path = expanduser("~/.local/share/neon")
+    if not isdir(legacy_path):
+        os.makedirs(legacy_path)
     # LOG.info(f"System packaged core found! Using default configuration at {default_path}")
     return default_path
 
