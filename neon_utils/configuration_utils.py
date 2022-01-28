@@ -451,7 +451,7 @@ def init_config_dir() -> bool:
     valid_dir = get_config_dir()
     if env_spec and valid_dir != env_spec:
         with create_lock("init_config"):
-            for file in glob(f"{env_spec}/*.yml"):
+            for file in glob(f"{env_spec}/ngi_*.yml"):
                 filename = basename(file)
                 if not isfile(join(valid_dir, filename)):
                     LOG.info(f"Copying {filename} to {valid_dir}")
