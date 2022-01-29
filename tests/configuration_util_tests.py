@@ -887,6 +887,16 @@ class ConfigurationUtilTests(unittest.TestCase):
                                                     test_filename, test_conf))
         os.remove(test_conf.file_path)
 
+    def test_init_config_dir(self):
+        from neon_utils.configuration_utils import init_config_dir
+        ro_dir = os.path.join(ROOT_DIR, "configuration", "unwritable_path")
+        os.environ["NEON_CONFIG_PATH"] = ro_dir
+        self.assertTrue(init_config_dir())
+
+        self.assertFalse(init_config_dir())
+        os.environ.pop("NEON_CONFIG_PATH")
+        self.assertFalse(init_config_dir())
+
 
 if __name__ == '__main__':
     unittest.main()

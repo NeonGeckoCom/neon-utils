@@ -439,6 +439,34 @@ def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
     return None
 
 
+def init_config_dir() -> bool:
+    """
+    Performs one-time initialization of the configuration directory.
+    NOTE: This method is intended to be called once at module init, before any
+    configuration is loaded. Repeated calls or calls after configuration is
+    loaded may lead to inconsistent behavior.
+    :returns: True if configuration was relocated
+    """
+    env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
+    valid_dir = get_config_dir()
+    if env_spec and valid_dir != env_spec:
+        with create_lock("init_config"):
+            for file in glob(f"{env_spec}/ngi_*.yml"):
+                filename = basename(file)
+                if not isfile(join(valid_dir, filename)):
+                    LOG.info(f"Copying {filename} to {valid_dir}")
+                    shutil.copyfile(file, join(valid_dir, filename))
+                else:
+                    LOG.warning(f"Skipping overwrite of existing file: "
+                                f"{basename(file)}")
+            os.environ["NEON_CONFIG_PATH"] = valid_dir
+            LOG.warning(f"Config files moved and"
+                        f" NEON_CONFIG_PATH set to {valid_dir}")
+        return True
+    LOG.debug(f"NEON_CONFIG_PATH={env_spec}")
+    return False
+
+
 def get_config_dir():
     """
     Get a default directory in which to find configuration files,
@@ -762,7 +790,7 @@ def get_neon_skills_config() -> dict:
             neon_skills["neon_token"] = find_neon_git_token()  # TODO: GetPrivateKeys
             populate_github_token_config(neon_skills["neon_token"])
         except FileNotFoundError:
-            LOG.warning(f"No Github token found; skills may fail to install!")
+            LOG.debug(f"No Github token found; skills may fail to install")
     skills_config = {**mycroft_config.get("skills", {}), **neon_skills}
     return skills_config
 
@@ -943,7 +971,7 @@ def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
         auth_config._content = {"_loaded": True}
         auth_config.write_changes()
 
-    LOG.info(f"Loaded auth config from {auth_config.file_path}")
+    # LOG.info(f"Loaded auth config from {auth_config.file_path}")
     return auth_config
 
 
