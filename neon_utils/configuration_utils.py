@@ -441,7 +441,8 @@ def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
 
 def get_config_dir():
     """
-    Get a default directory in which to find configuration files
+    Get a default directory in which to find configuration files,
+    creating it if it doesn't exist.
     Returns: Path to configuration or else default
     """
     # Check envvar spec path
@@ -462,10 +463,14 @@ def get_config_dir():
     # Check for legacy path spec
     legacy_path = _get_legacy_config_dir()
     if legacy_path:
+        if not isdir(legacy_path):
+            os.makedirs(legacy_path)
         # LOG.warning(f"Legacy Config Path Found: {legacy_path}")
         return legacy_path
 
     default_path = expanduser("~/.local/share/neon")
+    if not isdir(default_path):
+        os.makedirs(default_path)
     # LOG.info(f"System packaged core found! Using default configuration at {default_path}")
     return default_path
 
