@@ -186,22 +186,23 @@ def normalize_string_to_speak(to_speak: str) -> str:
     return f"{to_speak}."
 
 
-def transliteration(transcription, text, lang):
+def transliteration(transcription: str, text: str, lang: str) -> (str, str):
     '''
     Transliterates string from transcription provided by stt plugins
     Transliterates string if transcribed string length equals filename text length
-    returns transliterated or transcribed string
+    :param transcription: input text to transliterate
+    :return: transliterated or transcribed string
     '''
     transliterated = []
     translit_dict = {}
     if lang == 'pl':
         translit_dict = {'a': ['ą'], 'c': ['ć'], 'e': ['ę'], 'n': ['ń'], 'o': ['ó'], 's': ['ś'], 'z': ['ź', 'ż']}
-    if lang == 'fr':
+    elif lang == 'fr':
         translit_dict = {'c': ['ç'], 'e': ['é', 'ê', 'è', 'ë'], 'a': ['â', 'à'], 'i': ['î', 'ì', 'ï'],
                          'o': ['ô', 'ò'], 'u': ['û', 'ù', 'ü']}
-    if lang == 'es':
+    elif lang == 'es':
         translit_dict = {'a': ['á'], 'i': ['í'], 'e': ['é'], 'n': ['ñ'], 'o': ['ó'], 'u': ['ú', 'ü']}
-    if lang == 'de':
+    elif lang == 'de':
         translit_dict = {'a': ['ä'], 's': ['ß'], 'o': ['ö'], 'u': ['ü']}
     transcription = re.sub("`|'|-", "", transcription)
     text = re.sub("`|'|-", "", text)
