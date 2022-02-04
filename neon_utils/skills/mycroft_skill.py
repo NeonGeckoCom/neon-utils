@@ -74,13 +74,14 @@ class PatchedMycroftSkill(MycroftSkill):
         fs_path = deepcopy(self.file_system.path)
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         try:
-            if self.file_system.path != fs_path:
-                if os.listdir(self.file_system.path):
-                    LOG.warning(f"Files found in unused path: {self.file_system.path}")
-                else:
-                    LOG.debug(f"Removing Mycroft-created file_system")
-                    os.rmdir(self.file_system.path)
-                self.file_system.path = fs_path
+            if not hasattr(super(), "_startup"):
+                if self.file_system.path != fs_path:
+                    if os.listdir(self.file_system.path):
+                        LOG.warning(f"Files found in unused path: {self.file_system.path}")
+                    else:
+                        LOG.debug(f"Removing Mycroft-created file_system")
+                        os.rmdir(self.file_system.path)
+                    self.file_system.path = fs_path
         except Exception as e:
             # TODO: Update when upstream implements some specific error
             LOG.error(e)
