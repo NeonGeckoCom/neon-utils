@@ -73,6 +73,24 @@ class PatchedMycroftSkill(MycroftSkill):
                     os.makedirs(self.file_system.path)
         fs_path = deepcopy(self.file_system.path)
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
+        try:
+            if self.file_system.path != fs_path:
+                if os.listdir(self.file_system.path):
+                    LOG.warning(f"Files found in unused path: {self.file_system.path}")
+                else:
+                    LOG.debug(f"Removing Mycroft-created file_system")
+                    os.rmdir(self.file_system.path)
+                self.file_system.path = fs_path
+        except Exception as e:
+            # TODO: Update when upstream implements some specific error
+            LOG.error(e)
+        self.config_core = get_mycroft_compatible_config()
+        self.gui = SkillGUI(self)
+
+    def _startup(self, *args, **kwargs):
+        if hasattr(super(), "_startup"):
+            super()._startup(*args, **kwargs)
+        fs_path = deepcopy(self.file_system.path)
         if self.file_system.path != fs_path:
             if os.listdir(self.file_system.path):
                 LOG.warning(f"Files found in unused path: {self.file_system.path}")
@@ -80,8 +98,6 @@ class PatchedMycroftSkill(MycroftSkill):
                 LOG.debug(f"Removing Mycroft-created file_system")
                 os.rmdir(self.file_system.path)
             self.file_system.path = fs_path
-        self.config_core = get_mycroft_compatible_config()
-        self.gui = SkillGUI(self)
 
     def _init_settings(self):
         self.settings_write_path = self.file_system.path

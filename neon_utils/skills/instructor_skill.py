@@ -29,7 +29,7 @@
 from abc import abstractmethod
 
 from neon_utils.skills.neon_skill import NeonSkill
-
+from abc import abstractmethod
 
 class InstructorSkill(NeonSkill):
     """This skill acts as an interface for other instruction-oriented skills"""
