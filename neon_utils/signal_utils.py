@@ -46,7 +46,7 @@ def create_signal(*args, **kwargs):
     if not _create_signal:
         LOG.warning("create_signal called before signal manager init")
         init_signal_handlers()
-    _create_signal(*args, **kwargs)
+    return _create_signal(*args, **kwargs)
 
 
 def check_for_signal(*args, **kwargs):
@@ -54,7 +54,7 @@ def check_for_signal(*args, **kwargs):
     if not _check_for_signal:
         LOG.warning("check_for_signal called before signal manager init")
         init_signal_handlers()
-    _check_for_signal(*args, **kwargs)
+    return _check_for_signal(*args, **kwargs)
 
 
 def wait_for_signal_clear(*args, **kwargs):
@@ -62,7 +62,7 @@ def wait_for_signal_clear(*args, **kwargs):
     if not _wait_for_signal_clear:
         LOG.warning("wait_for_signal_clear called before signal manager init")
         init_signal_handlers()
-    _wait_for_signal_clear(*args, **kwargs)
+    return _wait_for_signal_clear(*args, **kwargs)
 
 
 def wait_for_signal_create(*args, **kwargs):
@@ -70,7 +70,7 @@ def wait_for_signal_create(*args, **kwargs):
     if not _wait_for_signal_create:
         LOG.warning("wait_for_signal_create called before signal manager init")
         init_signal_handlers()
-    _wait_for_signal_create(*args, **kwargs)
+    return _wait_for_signal_create(*args, **kwargs)
 
 
 def init_signal_bus(bus: MessageBusClient):
