@@ -35,6 +35,43 @@ from neon_utils.logger import LOG
 _BUS: MessageBusClient = None
 _MAX_TIMEOUT: int = None
 
+_create_signal = None
+_check_for_signal = None
+_wait_for_signal_clear = None
+_wait_for_signal_create = None
+
+
+def create_signal(*args, **kwargs):
+    global _create_signal
+    if not _create_signal:
+        LOG.warning("create_signal called before signal manager init")
+        init_signal_handlers()
+    _create_signal(*args, **kwargs)
+
+
+def check_for_signal(*args, **kwargs):
+    global _check_for_signal
+    if not _check_for_signal:
+        LOG.warning("check_for_signal called before signal manager init")
+        init_signal_handlers()
+    _check_for_signal(*args, **kwargs)
+
+
+def wait_for_signal_clear(*args, **kwargs):
+    global _wait_for_signal_clear
+    if not _wait_for_signal_clear:
+        LOG.warning("wait_for_signal_clear called before signal manager init")
+        init_signal_handlers()
+    _wait_for_signal_clear(*args, **kwargs)
+
+
+def wait_for_signal_create(*args, **kwargs):
+    global _wait_for_signal_create
+    if not _wait_for_signal_create:
+        LOG.warning("wait_for_signal_create called before signal manager init")
+        init_signal_handlers()
+    _wait_for_signal_create(*args, **kwargs)
+
 
 def init_signal_bus(bus: MessageBusClient):
     """
@@ -54,30 +91,30 @@ def init_signal_handlers():
     i.e. `from neon_utils.signal_utils import check_for_signal`, `check_for_signal` is not changed,
          `import neon_utils.signal_utils`, `neon_utils.signal_utils.check_for_signal` is changed.
     """
-    global create_signal
-    global check_for_signal
-    global wait_for_signal_clear
-    global wait_for_signal_create
+    global _create_signal
+    global _check_for_signal
+    global _wait_for_signal_clear
+    global _wait_for_signal_create
     global _MAX_TIMEOUT
     from neon_utils.configuration_utils import get_neon_local_config
     _MAX_TIMEOUT = int(get_neon_local_config()["signal"].get("max_wait_seconds")) or 300
     if check_signal_manager_available():
         LOG.info("Signal Manager Available")
-        create_signal = _manager_create_signal
-        check_for_signal = _manager_check_for_signal
-        wait_for_signal_clear = _manager_wait_for_signal_clear
-        wait_for_signal_create = _manager_wait_for_signal_create
+        _create_signal = _manager_create_signal
+        _check_for_signal = _manager_check_for_signal
+        _wait_for_signal_clear = _manager_wait_for_signal_clear
+        _wait_for_signal_create = _manager_wait_for_signal_create
     else:
         LOG.warning("No signal manager available; falling back to FS signals")
-        create_signal = ovos_utils.signal.create_signal
-        check_for_signal = ovos_utils.signal.check_for_signal
-        wait_for_signal_clear = _fs_wait_for_signal_clear
-        wait_for_signal_create = _fs_wait_for_signal_create
+        _create_signal = ovos_utils.signal.create_signal
+        _check_for_signal = ovos_utils.signal.check_for_signal
+        _wait_for_signal_clear = _fs_wait_for_signal_clear
+        _wait_for_signal_create = _fs_wait_for_signal_create
 
     try:
         import mycroft.util.signal
-        mycroft.util.signal.create_signal = create_signal
-        mycroft.util.signal.check_for_signal = check_for_signal
+        mycroft.util.signal.create_signal = _create_signal
+        mycroft.util.signal.check_for_signal = _check_for_signal
         LOG.info(f"Overrode mycroft.util.signal methods")
     except ImportError:
         pass
@@ -172,9 +209,3 @@ def _fs_wait_for_signal_clear(signal_name: str, timeout: int = 30):
     while check_for_signal(signal_name, -1) and time() < expiration:
         sleep(0.1)
     return check_for_signal(signal_name, -1)
-
-
-create_signal = ovos_utils.signal.create_signal
-check_for_signal = ovos_utils.signal.check_for_signal
-wait_for_signal_clear = _fs_wait_for_signal_clear
-wait_for_signal_create = _fs_wait_for_signal_create
