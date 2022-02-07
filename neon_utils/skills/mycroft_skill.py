@@ -38,6 +38,7 @@ from typing import Optional
 from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message
 
+from neon_utils.skill_override_functions import wait_while_speaking
 from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
