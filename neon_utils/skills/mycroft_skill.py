@@ -38,8 +38,9 @@ from typing import Optional
 from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message
 
-from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.skill_override_functions import wait_while_speaking
+from neon_utils.signal_utils import wait_for_signal_clear
+from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message
 from neon_utils.configuration_utils import dict_update_keys, parse_skill_default_settings, \
@@ -172,7 +173,7 @@ class PatchedMycroftSkill(MycroftSkill):
             LOG.warning(f"{self.name} | message={message}")
 
         if wait:
-            wait_while_speaking()
+            wait_for_signal_clear('isSpeaking')
 
     def speak_dialog(self, key, data=None, expect_response=False, wait=False,
                      message=None, private=False, speaker=None):
@@ -331,7 +332,7 @@ class PatchedMycroftSkill(MycroftSkill):
         converse.response = None
         default_converse = self.converse
         self.converse = converse
-        wait_while_speaking()
+        wait_for_signal_clear("isSpeaking")
         event.wait(15)  # 10 for listener, 5 for STT, then timeout
         self.converse = default_converse
         return converse.response
