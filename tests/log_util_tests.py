@@ -31,10 +31,12 @@ import os
 import sys
 import shutil
 import unittest
+
+from os.path import basename
 from time import time, sleep
+from datetime import timedelta
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from neon_utils.log_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 LOG_PATH = os.path.join(ROOT_DIR, "tests", "log_files")
@@ -43,13 +45,22 @@ LOG_PATH = os.path.join(ROOT_DIR, "tests", "log_files")
 class LogUtilTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        from neon_utils.configuration_utils import get_neon_local_config
+        cls.test_config_path = os.path.join(ROOT_DIR, "test_config")
+        os.environ["NEON_CONFIG_PATH"] = cls.test_config_path
+        conf = get_neon_local_config()
+        conf["dirVars"]["logsDir"] = LOG_PATH
+        conf.write_changes()
         os.makedirs(LOG_PATH, exist_ok=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
         shutil.rmtree(LOG_PATH)
+        if os.path.exists(cls.test_config_path):
+            shutil.rmtree(cls.test_config_path)
 
     def test_get_log_file(self):
+        from neon_utils.log_utils import get_logger
         log = get_logger("test", LOG_PATH)
         test_msg = "This should be in test.log"
         log.debug(test_msg)
@@ -58,6 +69,7 @@ class LogUtilTests(unittest.TestCase):
         self.assertTrue(contents.endswith(f"{test_msg}\n"))
 
     def test_get_log_file_with_stdout(self):
+        from neon_utils.log_utils import get_logger
         normal_stdout = sys.stdout
         captured_out = io.StringIO()
         sys.stdout = captured_out
@@ -72,6 +84,7 @@ class LogUtilTests(unittest.TestCase):
         self.assertEqual(logged, contents.split("\n")[-2])
 
     def test_get_log_no_file(self):
+        from neon_utils.log_utils import get_logger
         logs = os.listdir(LOG_PATH)
         normal_stdout = sys.stdout
         captured_out = io.StringIO()
@@ -85,6 +98,7 @@ class LogUtilTests(unittest.TestCase):
         self.assertEqual(logs, os.listdir(LOG_PATH))
 
     def test_archive_logs_default(self):
+        from neon_utils.log_utils import archive_logs
         os.makedirs(LOG_PATH, exist_ok=True)
         test_log = os.path.join(LOG_PATH, "to_backup.log")
         with open(test_log, "w+") as f:
@@ -97,6 +111,7 @@ class LogUtilTests(unittest.TestCase):
         self.assertTrue(False)
 
     def test_archive_logs_specific(self):
+        from neon_utils.log_utils import archive_logs
         os.makedirs(LOG_PATH, exist_ok=True)
         test_log = os.path.join(LOG_PATH, "to_backup.log")
         with open(test_log, "w+") as f:
@@ -106,6 +121,8 @@ class LogUtilTests(unittest.TestCase):
         self.assertTrue(os.path.isfile(os.path.join(LOG_PATH, path, "to_backup.log")))
 
     def test_remove_old_logs(self):
+        from neon_utils.log_utils import archive_logs, remove_old_logs, init_log_for_module
+        init_log_for_module(std_out=True)
         os.makedirs(LOG_PATH, exist_ok=True)
         test_log = os.path.join(LOG_PATH, "to_be_removed.log")
         with open(test_log, "w+") as f:
@@ -127,6 +144,7 @@ class LogUtilTests(unittest.TestCase):
                 return
 
     def test_get_log_file_for_module(self):
+        from neon_utils.log_utils import get_log_file_for_module
         self.assertEqual("voice.log", os.path.basename(get_log_file_for_module("neon_speech_client")))
         self.assertEqual("voice.log", os.path.basename(get_log_file_for_module("neon_speech")))
         self.assertEqual("bus.log", os.path.basename(get_log_file_for_module(["python3", "-m",
@@ -140,6 +158,24 @@ class LogUtilTests(unittest.TestCase):
 
         self.assertEqual("extras.log", os.path.basename(get_log_file_for_module("NGI.gui")))
         self.assertEqual("extras.log", os.path.basename(get_log_file_for_module("nothing")))
+
+    def test_init_log_for_module(self):
+        from neon_utils.log_utils import init_log_for_module, ServiceLog, LOG
+        init_log_for_module(ServiceLog.SPEECH)
+        self.assertEqual(basename(LOG.base_path), ServiceLog.SPEECH.value)
+        init_log_for_module(ServiceLog.AUDIO, True)
+        self.assertEqual(LOG.base_path, "stdout")
+        init_log_for_module(ServiceLog.AUDIO)
+        self.assertEqual(basename(LOG.base_path), ServiceLog.AUDIO.value)
+
+        from neon_utils.logger import LOG as neon_log
+        from ovos_utils.log import LOG as ovos_log
+        self.assertEqual(neon_log, ovos_log)
+        self.assertEqual(neon_log, LOG)
+
+    def test_log_dir(self):
+        from neon_utils.log_utils import LOG_DIR
+        self.assertIsInstance(LOG_DIR, str)
 
 
 if __name__ == '__main__':

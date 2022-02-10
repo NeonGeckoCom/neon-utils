@@ -172,7 +172,7 @@ class FileUtilTests(unittest.TestCase):
         self.assertEqual(wav_data.getsampwidth(), 2)
 
     def test_get_file_as_wav_change_width(self):
-        wav_data = get_file_as_wav(os.path.join(AUDIO_PATH, "testing 1 2 3 (sr4).wav"), 44100)
+        wav_data = get_file_as_wav(os.path.join(AUDIO_PATH, "testing 1 2 3 (sw4).wav"), 44100)
         self.assertEqual(wav_data.getframerate(), 44100)
         self.assertEqual(wav_data.getsampwidth(), 2)
 
@@ -249,6 +249,32 @@ class FileUtilTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             parse_skill_readme_file("")
+
+    def test_check_path_permissions(self):
+        with self.assertRaises(FileNotFoundError):
+            check_path_permissions("/test/fnf")
+        self.assertEqual(check_path_permissions("/opt"), (True, False, True))
+        self.assertEqual(check_path_permissions("/tmp"), (True, True, True))
+        self.assertEqual(check_path_permissions("~/"), (True, True, True))
+
+    def test_check_path_is_writable(self):
+        self.assertFalse(path_is_read_writable("/test/fnf"))
+        self.assertFalse(path_is_read_writable("/opt"))
+        self.assertFalse(path_is_read_writable("/opt/dne_test_dir"))
+        self.assertTrue(path_is_read_writable("/tmp"))
+        self.assertTrue(path_is_read_writable("~/"))
+        self.assertTrue(path_is_read_writable("~/.dne_test_dir"))
+        self.assertFalse(path_is_read_writable('/'))
+        unwritable_path = os.path.join(ROOT_DIR, "tests", "configuration", "unwritable_path")
+        self.assertFalse(path_is_read_writable(unwritable_path))
+
+    def test_create_file(self):
+        valid_file = os.path.expanduser("~/test_pass")
+        with self.assertRaises(PermissionError):
+            create_file("/test_fail")
+        create_file("~/test_pass")
+        self.assertTrue(os.path.isfile(valid_file))
+        os.remove(valid_file)
 
 
 if __name__ == '__main__':

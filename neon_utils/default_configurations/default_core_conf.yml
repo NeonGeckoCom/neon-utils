@@ -59,6 +59,8 @@ websocket:
   port: 8181
   route: "/core"
   ssl: false
+  shared_connection: true
+  # If false, one object per client
   allow_self_signed: true
   ssl_cert:
   ssl_key:
@@ -73,6 +75,8 @@ gui:
   route: /gui
   ssl: false
   resource_root: https://0000.us/klatchat/app/files/neon_qml
+  # resource_root is deprecated; use file_server to specify network QML files
+  file_server:
 
 hotwords:
   Hey Neon: { module: ovos-ww-plugin-pocketsphinx,
@@ -107,6 +111,7 @@ skills:
   install_default: True
   wait_for_internet: True
   debug: True
+  run_gui_file_server: False
   blacklist: []
   priority: [
     "skill-about.neongeckocom",
@@ -124,7 +129,7 @@ skills:
   auto_update_interval: 24.0
   # time between automatic skill updates in hours
   msm_ver: False
-  repo_url: "https://github.com/MycroftAI/mycroft-skills"
+  repo_url: "https://github.com/NeonGeckoCom/neon_skills"
   repo_branch: "18.08"
   data_dir: "~/.neon/msm"
   neon_token:

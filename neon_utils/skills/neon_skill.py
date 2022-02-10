@@ -40,7 +40,7 @@ from mycroft_bus_client.message import Message
 from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
-from neon_utils import create_signal, check_for_signal
+from neon_utils.signal_utils import create_signal, check_for_signal
 from neon_utils.configuration_utils import NGIConfig, is_neon_core, \
     get_neon_lang_config, get_neon_user_config, get_neon_local_config
 from neon_utils.location_utils import to_system_time
@@ -80,6 +80,9 @@ class NeonSkill(MycroftSkill):
         super(NeonSkill, self).__init__(name, bus, use_settings)
         self.cache_loc = os.path.expanduser(self.local_config.get('dirVars', {}).get('cacheDir') or
                                             "~/.local/share/neon/cache")
+        if not os.path.isdir(self.cache_loc):
+            LOG.debug(f"Creating cache directory: {self.cache_loc}")
+            os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
 
         # TODO: Depreciate these references, signal use is discouraged DM

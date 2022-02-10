@@ -64,7 +64,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Sound Library
-        run: sudo apt-get install libsndfile1
+        run: |
+          sudo apt-get update
+          sudo apt-get install libsndfile1
       - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -92,7 +94,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install Sound Library
-        run: sudo apt-get install libsndfile1
+        run: |
+          sudo apt-get update
+          sudo apt-get install libsndfile1
       - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -102,7 +106,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements/requirements.txt
           pip install -r requirements/test_requirements.txt
-
+      - name: Change Test File Permissions
+        run: |
+          sudo chown -R nobody:nogroup tests/configuration/unwritable_path
       - name: Test Skill Patcher
         run: |
           pytest tests/skill_patch_tests.py --doctest-modules --junitxml=tests/skill-patch-test-results.xml
@@ -273,6 +279,15 @@ jobs:
         with:
           name: signal-util-test-results
           path: tests/signal-util-test-results.xml
+
+      - name: Test Messagebus Utils
+        run: |
+          pytest tests/messagebus_util_tests.py --doctest-modules --junitxml=tests/messagebus-util-test-results.xml
+      - name: Upload messagebus utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: messagebus-util-test-results
+          path: tests/messagebus-util-test-results.xml
 
       - name: Test Deprecated Compat
         run: |
