@@ -191,12 +191,15 @@ def transliteration(transcription: str, text: str, lang: str) -> (str, str):
     Transliterates string from transcription provided by stt plugins
     Transliterates string if transcribed string length equals filename text length
     :param transcription: input text to transliterate
+    :param text: input text from audio filename
+    :param lang: language of input audio -> ISO-639-1 code
     :return: transliterated or transcribed string
     '''
     transliterated = []
     translit_dict = {}
     if lang == 'pl':
-        translit_dict = {'a': ['ą'], 'c': ['ć'], 'e': ['ę'], 'n': ['ń'], 'o': ['ó'], 's': ['ś'], 'z': ['ź', 'ż']}
+        translit_dict = {'a': ['ą'], 'c': ['ć'], 'e': ['ę'], 'n': ['ń'],
+                         'o': ['ó'], 's': ['ś'], 'z': ['ź', 'ż'], 'l': ['ł']}
     elif lang == 'fr':
         translit_dict = {'c': ['ç'], 'e': ['é', 'ê', 'è', 'ë'], 'a': ['â', 'à'], 'i': ['î', 'ì', 'ï'],
                          'o': ['ô', 'ò'], 'u': ['û', 'ù', 'ü']}
