@@ -4,9 +4,7 @@ requests_cache~=0.6
 beautifulsoup4~=4.9
 lxml~=4.5
 combo-lock~=0.2
-# filelock~=3.2
 pendulum~=2.1
-geopy~=2.1
 timezonefinder~=5.2
 netifaces~=0.10
 nltk~=3.5
@@ -17,3 +15,7 @@ ovos_utils~=0.0.6
 neon_mq_connector~=0.2
 soundfile~=0.10
 librosa~=0.8
+
+# TODO: Below should be looser
+filelock~=3.2.0
+geopy~=2.1.0
