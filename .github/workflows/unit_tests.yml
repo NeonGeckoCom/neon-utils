@@ -74,8 +74,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           sudo apt install gcc libfann-dev
-          pip install -r requirements/requirements.txt
-          pip install -r requirements/test_requirements.txt
+          pip install . -r requirements/test_requirements.txt
 
       - name: Test Skills Objects
         run: |
@@ -103,8 +102,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements/requirements.txt
-          pip install -r requirements/test_requirements.txt
+          pip install . -r requirements/test_requirements.txt
       - name: Change Test File Permissions
         run: |
           sudo chown -R nobody:nogroup tests/configuration/unwritable_path
