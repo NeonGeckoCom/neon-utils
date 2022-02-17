@@ -3,3 +3,4 @@
 /dist/
 /.pytest_cache/
 tests/test-results.xml
+*.egg-info/
