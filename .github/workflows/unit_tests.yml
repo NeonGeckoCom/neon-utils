@@ -35,9 +35,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements/requirements.txt
-          pip install -r requirements/test_requirements.txt
+          python -m pip install --upgrade pip~=21.0
+          pip install . -r requirements/test_requirements.txt
       - name: Export credentials
         run: |
           mkdir -p ~/.local/share/neon
@@ -75,8 +74,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           sudo apt install gcc libfann-dev
-          pip install -r requirements/requirements.txt
-          pip install -r requirements/test_requirements.txt
+          pip install . -r requirements/test_requirements.txt
 
       - name: Test Skills Objects
         run: |
@@ -104,8 +102,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements/requirements.txt
-          pip install -r requirements/test_requirements.txt
+          pip install . -r requirements/test_requirements.txt
       - name: Change Test File Permissions
         run: |
           sudo chown -R nobody:nogroup tests/configuration/unwritable_path
