@@ -36,8 +36,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements/requirements.txt
-          pip install -r requirements/test_requirements.txt
+          pip install -r requirements/requirements.txt -r requirements/test_requirements.txt
       - name: Export credentials
         run: |
           mkdir -p ~/.local/share/neon
