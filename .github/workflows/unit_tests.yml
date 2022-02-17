@@ -35,7 +35,8 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
-          pip install -r requirements/requirements.txt -r requirements/test_requirements.txt --debug
+          python -m pip install --upgrade pip~=21.0
+          pip install . -r requirements/test_requirements.txt
       - name: Export credentials
         run: |
           mkdir -p ~/.local/share/neon
