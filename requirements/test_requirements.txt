@@ -2,4 +2,4 @@ pytest
 pytest-timeout
 pytest-cov
 mock
-ovos-core[skills]~=0.0.1
+ovos-core[skills_minimal]~=0.0.1
