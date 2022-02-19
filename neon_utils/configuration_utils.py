@@ -1093,9 +1093,11 @@ def write_mycroft_compatible_config(file_to_write: str = "~/.mycroft/mycroft.con
     """
     configuration = get_mycroft_compatible_config()
     file_path = os.path.expanduser(file_to_write)
-    # with NamedLock(file_path): TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
-    with open(file_path, 'w') as f:
-        json.dump(configuration, f, indent=4)
+    if not isdir(dirname(file_path)):
+        os.makedirs(dirname(file_path))
+    with create_lock(file_path):
+        with open(file_path, 'w') as f:
+            json.dump(configuration, f, indent=4)
     return file_path
 
 
