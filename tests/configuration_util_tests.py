@@ -796,6 +796,11 @@ class ConfigurationUtilTests(unittest.TestCase):
         with open(test_path) as f:
             from_disk = json.load(f)
         self.assertEqual(from_disk, config)
+        write_mycroft_compatible_config(test_path)
+        with open(test_path) as f:
+            from_disk_2 = json.load(f)
+        self.assertEqual(from_disk_2, config)
+        self.assertIsNone(config["Audio"].get("Audio"))
         os.remove(test_path)
 
     def test_config_no_permissions(self):
