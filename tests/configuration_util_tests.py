@@ -791,7 +791,7 @@ class ConfigurationUtilTests(unittest.TestCase):
 
     def test_write_mycroft_compatible_config(self):
         test_path = os.path.join(CONFIG_PATH, "test.conf")
-        config = get_mycroft_compatible_config()
+        config = get_mycrof,t_compatible_config()
         write_mycroft_compatible_config(test_path)
         with open(test_path) as f:
             from_disk = json.load(f)
