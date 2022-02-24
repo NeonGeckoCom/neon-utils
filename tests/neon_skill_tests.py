@@ -154,6 +154,11 @@ class SkillObjectTests(unittest.TestCase):
         self.assertEqual(skill.file_system.path, skill.settings_write_path)
         self.assertNotEqual(os.path.basename(skill.file_system.path), skill.name)
 
+    def test_instructor_skill_init(self):
+        skill = TestInstructorSkill()
+        self.assertIsInstance(skill, MycroftSkill)
+        self.assertEqual(skill.name, "Test Instructor Skill")
+
 
 class PatchedMycroftSkillTests(unittest.TestCase):
     def test_get_response_simple(self):
