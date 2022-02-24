@@ -139,6 +139,9 @@ skills:
 audio_parsers:
   blacklist: ["gender"]
 
+text_parsers:
+  blacklist: []
+
 session:
   ttl: 180
 tts:
@@ -166,6 +169,7 @@ language:
 
 logs:
   blacklist: ["enclosure.mouth.viseme", "enclosure.mouth.display"]
+  log_level: INFO
 
 device:
   mac: 00:00:00:00:00:00
