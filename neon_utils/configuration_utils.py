@@ -45,7 +45,7 @@ from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_lock
 from neon_utils.file_utils import path_is_read_writable, create_file
-from neon_utils.packaging_utils import get_package_version_spec, parse_version_string
+from neon_utils.packaging_utils import get_package_version_spec
 
 
 class NGIConfig:
@@ -1086,7 +1086,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
             "code": location["tz"],
             "name": location["tz"],  # TODO: Util to parse this
             "offset": float(location["utc"]) * 3600000,
-            "dstOffset": 3600000  # TODO: Validate this?
+            "dstOffset": 3600000
         }
     }
     return location
