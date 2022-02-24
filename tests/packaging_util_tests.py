@@ -71,9 +71,6 @@ class PackagingUtilTests(unittest.TestCase):
         ver = get_package_version_spec("ovos_utils")
         self.assertIsInstance(ver, str)
 
-        ver = get_package_version_spec("ovos-core")
-        self.assertIsInstance(ver, str)
-
         with self.assertRaises(ModuleNotFoundError):
             get_package_version_spec("neon-stt-fake-test-package")
 
