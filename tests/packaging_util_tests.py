@@ -67,6 +67,41 @@ class PackagingUtilTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 get_mycroft_core_root()
 
+    def test_get_package_version_spec(self):
+        ver = get_package_version_spec("ovos_utils")
+        self.assertIsInstance(ver, str)
+
+        with self.assertRaises(ModuleNotFoundError):
+            get_package_version_spec("neon-stt-fake-test-package")
+
+        with self.assertRaises(ModuleNotFoundError):
+            get_package_version_spec("mycroft")
+
+    def test_parse_version_string(self):
+        major, minor, patch, alpha = parse_version_string("21.5")
+        self.assertEqual(major, 21)
+        self.assertEqual(minor, 5)
+        self.assertEqual(patch, 0)
+        self.assertEqual(alpha, None)
+
+        major, minor, patch, alpha = parse_version_string("21.5.1")
+        self.assertEqual(major, 21)
+        self.assertEqual(minor, 5)
+        self.assertEqual(patch, 1)
+        self.assertEqual(alpha, None)
+
+        major, minor, patch, alpha = parse_version_string("21.5.1a0")
+        self.assertEqual(major, 21)
+        self.assertEqual(minor, 5)
+        self.assertEqual(patch, 1)
+        self.assertEqual(alpha, 0)
+
+        major, minor, patch, alpha = parse_version_string("21.5.2post2")
+        self.assertEqual(major, 21)
+        self.assertEqual(minor, 5)
+        self.assertEqual(patch, 2)
+        self.assertEqual(alpha, 2)
+
     def test_get_packaged_core_version(self):
         try:
             ver = get_packaged_core_version()

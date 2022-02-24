@@ -133,6 +133,8 @@ skills:
   repo_branch: "18.08"
   data_dir: "~/.neon/msm"
   neon_token:
+  extra_directories:
+    - /skills
 
 audio_parsers:
   blacklist: ["gender"]

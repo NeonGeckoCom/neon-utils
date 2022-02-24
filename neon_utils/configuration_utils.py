@@ -45,6 +45,7 @@ from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_lock
 from neon_utils.file_utils import path_is_read_writable, create_file
+from neon_utils.packaging_utils import get_package_version_spec, parse_version_string
 
 
 class NGIConfig:
@@ -770,7 +771,17 @@ def get_neon_skills_config() -> dict:
     mycroft_config = _safe_mycroft_config()
     neon_skills = deepcopy(core_config.get("skills", {}))
     neon_skills["directory"] = os.path.expanduser(core_config["dirVars"].get("skillsDir"))
-    neon_skills["directory_override"] = neon_skills["directory"]
+
+    try:
+        ovos_core_version = get_package_version_spec("ovos-core")
+        if ovos_core_version.startswith("0.0.1"):
+            # ovos-core 0.0.1 uses directory_override param
+            LOG.debug("Adding `directory_override` setting for ovos-core")
+            neon_skills["directory_override"] = neon_skills["directory"]
+    except ModuleNotFoundError:
+        LOG.warning("ovos-core not installed")
+        neon_skills["directory_override"] = neon_skills["directory"]
+
     neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
     if not isinstance(neon_skills["auto_update_interval"], float):
         try:

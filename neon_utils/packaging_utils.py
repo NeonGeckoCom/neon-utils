@@ -29,11 +29,45 @@
 import sys
 import re
 import importlib.util
+from typing import Tuple, Optional
+
 import pkg_resources
 import sysconfig
 
 from os.path import exists, join
 from neon_utils.logger import LOG
+
+
+def parse_version_string(ver: str) -> Tuple[int, int, int, Optional[int]]:
+    """
+    Parse a semver string into its component versions as ints
+    :param ver: Version string to parse
+    :returns: Tuple major, minor, patch, Optional(revision)
+    """
+    parts = ver.split('.')
+    major = int(parts[0])
+    minor = int(parts[1]) if len(parts) > 1 else 0
+    patch = parts[2] if len(parts) > 2 else '0'
+    if not patch.isnumeric():
+        patch, alpha = re.split(r"\D+", patch, 1)
+        alpha = int(alpha)
+    else:
+        alpha = None
+    patch = int(patch)
+    return major, minor, patch, alpha
+
+
+def get_package_version_spec(pkg: str):
+    """
+    Locate an installed package and return its reported version
+    :param pkg: string package name to locate
+    :returns: Version string as reported by pkg_resources
+    :raises: ModuleNotFoundError if requested package isn't installed
+    """
+    try:
+        return pkg_resources.get_distribution(pkg).version
+    except pkg_resources.DistributionNotFound:
+        raise ModuleNotFoundError(f"{pkg} not found")
 
 
 def get_packaged_core_version() -> str:
@@ -43,11 +77,11 @@ def get_packaged_core_version() -> str:
         Version of the installed core package
     """
     if importlib.util.find_spec("neon-core"):
-        return pkg_resources.get_distribution("neon-core")
+        return get_package_version_spec("neon-core")
     elif importlib.util.find_spec("mycroft-core"):
-        return pkg_resources.get_distribution("mycroft-core")
+        return get_package_version_spec("mycroft-core")
     elif importlib.util.find_spec("mycroft-lib"):
-        return pkg_resources.get_distribution("mycroft-lib")
+        return get_package_version_spec("mycroft-lib")
     raise ImportError("No Core Package Found")
 
 
