@@ -102,6 +102,7 @@ class PatchedMycroftSkill(MycroftSkill):
 
     def _init_settings(self):
         self.settings_write_path = self.file_system.path
+        super()._init_settings()
         skill_settings = get_local_settings(self.settings_write_path, self.name)
         settings_from_disk = dict(skill_settings)
         self.settings = dict_update_keys(skill_settings, self._read_default_settings())
