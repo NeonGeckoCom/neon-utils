@@ -902,6 +902,44 @@ class ConfigurationUtilTests(unittest.TestCase):
         os.environ.pop("NEON_CONFIG_PATH")
         self.assertFalse(init_config_dir())
 
+    def test_get_mycroft_compatible_location(self):
+        from neon_utils.configuration_utils import \
+            get_mycroft_compatible_location
+
+        old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
+        ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
+        shutil.copy(ngi_user_info, old_user_info)
+
+        user_config = get_neon_user_config(CONFIG_PATH)
+
+        with self.assertRaises(KeyError):
+            get_mycroft_compatible_location(user_config.content)
+
+        location = get_mycroft_compatible_location(user_config["location"])
+        self.assertEqual(location["city"]["name"], user_config["location"]["city"])
+        self.assertEqual(location["city"]["code"], user_config["location"]["city"])
+        self.assertEqual(location["city"]["state"]["name"],
+                         user_config["location"]["state"])
+        self.assertIsInstance(location["city"]["state"]["code"], str)
+        self.assertEqual(location["city"]["state"]["country"]["name"],
+                         user_config["location"]["country"])
+        self.assertEqual(location["city"]["state"]["country"]["code"], "us")
+
+        self.assertIsInstance(location["coordinate"]["latitude"], float)
+        self.assertEqual(str(location["coordinate"]["latitude"]),
+                         user_config["location"]["lat"])
+        self.assertIsInstance(location["coordinate"]["longitude"], float)
+        self.assertEqual(str(location["coordinate"]["longitude"]),
+                         user_config["location"]["lng"])
+
+        self.assertEqual(location["timezone"]["code"],
+                         user_config["location"]["tz"])
+        self.assertIsInstance(location["timezone"]["name"], str)
+        self.assertIsInstance(location["timezone"]["offset"], float)
+        self.assertEqual(location["timezone"]["dstOffset"], 3600000)
+
+        shutil.move(old_user_info, ngi_user_info)
+
 
 if __name__ == '__main__':
     unittest.main()

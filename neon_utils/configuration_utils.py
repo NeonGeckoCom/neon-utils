@@ -41,11 +41,13 @@ from ovos_utils.json_helper import load_commented_json
 from ovos_utils.configuration import read_mycroft_config, LocalConf
 from ruamel.yaml import YAML
 from typing import Optional
+
+from neon_utils.location_utils import get_full_location
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_lock
 from neon_utils.file_utils import path_is_read_writable, create_file
-from neon_utils.packaging_utils import get_package_version_spec, parse_version_string
+from neon_utils.packaging_utils import get_package_version_spec
 
 
 class NGIConfig:
@@ -464,7 +466,11 @@ def init_config_dir() -> bool:
             LOG.warning(f"Config files moved and"
                         f" NEON_CONFIG_PATH set to {valid_dir}")
         return True
-    LOG.debug(f"NEON_CONFIG_PATH={env_spec}")
+    if not env_spec:
+        LOG.info(f"Set NEON_CONFIG_PATH={valid_dir}")
+        os.environ["NEON_CONFIG_PATH"] = valid_dir
+    else:
+        LOG.debug(f"NEON_CONFIG_PATH={env_spec}")
     return False
 
 
@@ -783,6 +789,9 @@ def get_neon_skills_config() -> dict:
         neon_skills["directory_override"] = neon_skills["directory"]
 
     neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
+    neon_skills["priority_skills"] = neon_skills["priority"]
+    neon_skills["blacklisted_skills"] = neon_skills["blacklist"]
+
     if not isinstance(neon_skills["auto_update_interval"], float):
         try:
             neon_skills["auto_update_interval"] = float(neon_skills["auto_update_interval"])
@@ -1052,8 +1061,47 @@ def is_neon_core() -> bool:
     return False
 
 
-def get_mycroft_compatible_config(mycroft_only=False):
-    # TODO: This is kinda slow, should probably be depreciated DM
+def get_mycroft_compatible_location(location: dict) -> dict:
+    """
+    Translates a user config location to a Mycroft-compatible config dict
+    :param location: dict location parsed from user config
+    :returns: dict formatted to match mycroft.conf spec
+    """
+    parsed_location = get_full_location((location['lat'], location['lng']))
+    location = {
+        "city": {
+            "code": location["city"],
+            "name": location["city"],
+            "state": {
+                "code": location["state"],  # TODO: Util to parse this
+                "name": location["state"],
+                "country": {
+                    "code": parsed_location["address"]["country_code"],
+                    "name": location["country"]
+                }
+            }
+        },
+        "coordinate": {
+            "latitude": float(location["lat"]),
+            "longitude": float(location["lng"])
+        },
+        "timezone": {
+            "code": location["tz"],
+            "name": location["tz"],  # TODO: Util to parse this
+            "offset": float(location["utc"]) * 3600000,
+            "dstOffset": 3600000
+        }
+    }
+    return location
+
+
+def get_mycroft_compatible_config(mycroft_only=False) -> dict:
+    """
+    Get a configuration compatible with mycroft.conf/ovos.conf
+    NOTE: This method should only be called at startup to write a .conf file
+    :param mycroft_only: if True, ignore Neon configuration files
+    :returns: dict config compatible with mycroft.conf structure
+    """
     default_config = _safe_mycroft_config()
     if mycroft_only or not is_neon_core():
         return default_config
@@ -1062,35 +1110,62 @@ def get_mycroft_compatible_config(mycroft_only=False):
     local = get_neon_local_config()
 
     default_config["lang"] = "en-us"
-    default_config["language"] = get_neon_lang_config()
-    default_config["keys"] = get_neon_auth_config().content
-    # default_config["text_parsers"]  TODO
-    default_config["audio_parsers"] = speech["audio_parsers"]
     default_config["system_unit"] = user["units"]["measure"]
-    default_config["time_format"] = "half" if user["units"]["time"] == 12 else "full"
+    default_config["time_format"] = \
+        "half" if user["units"]["time"] == 12 else "full"
     default_config["date_format"] = user["units"]["date"]
     default_config["opt_in"] = local["prefFlags"]["metrics"]
-    default_config["confirm_listening"] = local["interface"]["confirm_listening"]
-    default_config["sounds"] = {**default_config.get("sounds", {}), **local.get("sounds", {})}
+    default_config["confirm_listening"] = \
+        local["interface"]["confirm_listening"]
+    default_config["sounds"] = {**default_config.get("sounds", {}),
+                                **local.get("sounds", {})}
+
+    # default_config["play_wav_cmdline"]
+    # default_config["play_mp3_cmdline"]
+    # default_config["play_ogg_cmdline"]
+
+    default_config["location"] = \
+        get_mycroft_compatible_location(user["location"])
+
     default_config["data_dir"] = local["dirVars"]["rootDir"]
+    default_config["cache_path"] = local["dirVars"]["cacheDir"]
+    # default_config["ready_settings"]
     default_config["skills"] = get_neon_skills_config()
+    # default_config["converse"]
+    # default_config["system"]
     default_config["server"] = get_neon_api_config()
     default_config["websocket"] = get_neon_bus_config()
-    default_config["gui_websocket"] = {**default_config.get("gui_websocket", {}), **local["gui"]}
+    default_config["gui_websocket"] = {**default_config.get("gui_websocket",
+                                                            {}),
+                                       **local["gui"]}
     default_config["gui_websocket"]["base_port"] = \
-        default_config["gui_websocket"].get("base_port") or default_config["gui_websocket"].get("port")
+        default_config["gui_websocket"].get("base_port") or \
+        default_config["gui_websocket"].get("port")
+
+    # default_config["network_tests"]
     default_config["listener"] = speech["listener"]
     # default_config["precise"]
     default_config["hotwords"] = speech["hotwords"]
+    # default_config["enclosure"]
+    default_config["log_level"] = local["logs"]["log_level"]
     # default_config["ignore_logs"]
     default_config["session"] = local["session"]
     default_config["stt"] = speech["stt"]
     default_config["tts"] = local["tts"]
+    default_config["padatious"] = {**default_config.get("padatious", {}),
+                                   **local["padatious"]}
     default_config["Audio"] = get_neon_audio_config()["Audio"]
+    default_config["debug"] = local["prefFlags"]["devMode"]
+
+    default_config["language"] = get_neon_lang_config()
+    default_config["keys"] = get_neon_auth_config().content
+    default_config["text_parsers"] = {**default_config.get("text_parsers",
+                                                           {}),
+                                      **local.get("text_parsers", {})}
+    default_config["audio_parsers"] = speech["audio_parsers"]
     default_config["disable_xdg"] = False
     default_config["ipc_path"] = local["dirVars"]["ipcDir"]
     default_config["remote-server"] = local["gui"]["file_server"]
-    # TODO: Location config
     # default_config["Display"]
 
     return default_config
