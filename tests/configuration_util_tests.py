@@ -923,8 +923,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(location["city"]["state"]["code"], str)
         self.assertEqual(location["city"]["state"]["country"]["name"],
                          user_config["location"]["country"])
-        self.assertIsInstance(location["city"]["state"]["country"]["code"],
-                              str)
+        self.assertEqual(location["city"]["state"]["country"]["code"], "us")
 
         self.assertIsInstance(location["coordinate"]["latitude"], float)
         self.assertEqual(str(location["coordinate"]["latitude"]),

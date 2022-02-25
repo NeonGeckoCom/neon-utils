@@ -41,6 +41,8 @@ from ovos_utils.json_helper import load_commented_json
 from ovos_utils.configuration import read_mycroft_config, LocalConf
 from ruamel.yaml import YAML
 from typing import Optional
+
+from neon_utils.location_utils import get_full_location
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_lock
@@ -1065,6 +1067,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     :param location: dict location parsed from user config
     :returns: dict formatted to match mycroft.conf spec
     """
+    parsed_location = get_full_location((location['lat'], location['lon']))
     location = {
         "city": {
             "code": location["city"],
@@ -1073,7 +1076,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
                 "code": location["state"],  # TODO: Util to parse this
                 "name": location["state"],
                 "country": {
-                    "code": location["country"],  # TODO: Util to parse this
+                    "code": parsed_location["country_code"],
                     "name": location["country"]
                 }
             }
