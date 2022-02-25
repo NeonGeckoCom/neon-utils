@@ -89,6 +89,37 @@ class LocationUtilTests(unittest.TestCase):
         self.assertEqual(system_dt.tzinfo, tzlocal())
         self.assertEqual(tz_naiive_dt.timestamp(), system_dt.timestamp())
 
+    def test_get_full_location(self):
+        location_en = get_full_location("Seattle, Washington")
+        self.assertIsInstance(location_en, dict)
+        self.assertIsInstance(location_en['lat'], str)
+        self.assertIsInstance(location_en['lon'], str)
+        self.assertIsInstance(location_en['address'], dict)
+        self.assertEqual(location_en['address']['city'], "Seattle")
+        self.assertEqual(location_en['address']['state'], "Washington")
+        self.assertEqual(location_en['address']['country'], "United States")
+        self.assertEqual(location_en['address']['country_code'], "us")
+
+        location_es = get_full_location("Seattle, Washington", "es")
+        self.assertEqual(location_es['lat'], location_en['lat'])
+        self.assertEqual(location_es['lon'], location_en['lon'])
+        self.assertEqual(location_es['address']['country'],
+                         "Estados Unidos de América")
+        self.assertEqual(location_en['address']['country_code'], "us")
+
+        location_from_coords = get_full_location((location_en['lat'],
+                                                  location_en['lon']))
+        self.assertAlmostEqual(float(location_from_coords['lat']),
+                               float(location_en['lat']), 3)
+        self.assertAlmostEqual(float(location_from_coords['lon']),
+                               float(location_en['lon']), 3)
+        self.assertEqual(location_from_coords['address']['city'], "Seattle")
+        self.assertEqual(location_from_coords['address']['state'],
+                         "Washington")
+        self.assertEqual(location_from_coords['address']['country'],
+                         "United States")
+        self.assertEqual(location_from_coords['address']['country_code'], "us")
+
 
 if __name__ == '__main__':
     unittest.main()
