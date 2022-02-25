@@ -1076,7 +1076,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
                 "code": location["state"],  # TODO: Util to parse this
                 "name": location["state"],
                 "country": {
-                    "code": parsed_location["country_code"],
+                    "code": parsed_location["address"]["country_code"],
                     "name": location["country"]
                 }
             }
