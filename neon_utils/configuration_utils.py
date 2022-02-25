@@ -1171,12 +1171,14 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     return default_config
 
 
-def write_mycroft_compatible_config(file_to_write: str = "~/.mycroft/mycroft.conf") -> str:
+def write_mycroft_compatible_config(file_to_write: str = None) -> str:
     """
-    Generates a mycroft-compatible configuration and writes it to the specified file
+    Generates a mycroft-like configuration and writes it to the specified file
+    NOTE: This is potentially destructive and will overwrite existing config
     :param file_to_write: config file to write out
     :return: path to written config file
     """
+    file_to_write = file_to_write or "~/.mycroft/mycroft.conf"
     configuration = get_mycroft_compatible_config()
     file_path = os.path.expanduser(file_to_write)
 
