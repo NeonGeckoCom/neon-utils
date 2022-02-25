@@ -1179,8 +1179,17 @@ def write_mycroft_compatible_config(file_to_write: str = "~/.mycroft/mycroft.con
     """
     configuration = get_mycroft_compatible_config()
     file_path = os.path.expanduser(file_to_write)
-    if not isdir(dirname(file_path)):
+
+    if isfile(file_path):
+        with open(file_path, 'r') as f:
+            disk_config = json.load(f)
+        if disk_config == configuration:
+            LOG.debug(f"Configuration already up to date")
+            return file_path
+        LOG.warning(f"File exists and will be overwritten: {file_to_write}")
+    elif not isdir(dirname(file_path)):
         os.makedirs(dirname(file_path))
+
     with create_lock(file_path):
         with open(file_path, 'w') as f:
             json.dump(configuration, f, indent=4)
