@@ -1067,7 +1067,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     :param location: dict location parsed from user config
     :returns: dict formatted to match mycroft.conf spec
     """
-    parsed_location = get_full_location((location['lat'], location['lon']))
+    parsed_location = get_full_location((location['lat'], location['lng']))
     location = {
         "city": {
             "code": location["city"],
