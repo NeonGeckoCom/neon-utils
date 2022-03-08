@@ -2,4 +2,4 @@ pytest
 pytest-timeout
 pytest-cov
 mock
-ovos-core[skills_lgpl]
+ovos-core[skills,skills_lgpl]
