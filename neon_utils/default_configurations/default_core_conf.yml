@@ -262,6 +262,18 @@ sttSpokenOpts: {Afrikaans: af-ZA, Amharic: am-ET, Armenian: hy-AM, Azerbaijani: 
                 Korean: ko-KR, Taiwanese: zh-TW, 'Chinese, Cantonese': yue-Hant-HK, Japanese: ja-JP,
                 'Chinese, Mandarin': zh}
 
+ready_settings:
+  # pairing -> device is paired
+  # internet -> device is connected to the internet - NOT IMPLEMENTED
+  # skills -> skills reported ready
+  # speech -> stt reported ready
+  # audio -> audio playback reported ready
+  # gui -> gui websocket reported ready - NOT IMPLEMENTED
+  # enclosure -> enclosure/HAL reported ready - NOT IMPLEMENTED
+  - skills
+  - speech
+  - audio
+
 signal:
   use_signal_files: True
   max_wait_seconds: 300

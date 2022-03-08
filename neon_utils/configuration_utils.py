@@ -1166,6 +1166,7 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     default_config["disable_xdg"] = False
     default_config["ipc_path"] = local["dirVars"]["ipcDir"]
     default_config["remote-server"] = local["gui"]["file_server"]
+    default_config["ready_settings"] = local["ready_settings"]
     # default_config["Display"]
 
     return default_config
