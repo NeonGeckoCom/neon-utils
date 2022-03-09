@@ -30,6 +30,7 @@ import os
 import sys
 import json
 import unittest
+import pytest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.service_apis import request_neon_api, NeonAPI
@@ -142,16 +143,6 @@ class WolframAlphaTests(unittest.TestCase):
         self.assertIsInstance(result["content"].decode(result["encoding"]), str)
         self.assertIsInstance(result["cached"], bool)
 
-    def test_query_cached(self):
-        result = query_wolfram_alpha_api(WolframAlphaTests.RECOGNIZE_QUERY)
-        self.assertIsInstance(result, dict)
-        self.assertIsInstance(result["content"].decode(result["encoding"]), str)
-        self.assertIsInstance(result["cached"], bool)
-
-        cached = query_wolfram_alpha_api(WolframAlphaTests.RECOGNIZE_QUERY)
-        self.assertEqual(result["content"], cached["content"])
-        self.assertTrue(cached["cached"])
-
     def test_get_wolfram_alpha_response_spec_api_key(self):
         resp = get_wolfram_alpha_response("Convert 42 mi to km", QueryApi.SPOKEN, app_id="DEMO")
         self.assertIsInstance(resp, str)
@@ -221,6 +212,7 @@ class AlphaVantageTests(unittest.TestCase):
             self.assertEqual(match["region"], "United States")
         self.assertEqual(matches[0]["symbol"], "GOOGL")
 
+    @pytest.mark.skip
     def test_get_stock_symbol_invalid_key(self):
         matches = search_stock_by_name("alphabet", api_key="demo")
         self.assertIsInstance(matches, list)
@@ -271,28 +263,11 @@ class AlphaVantageTests(unittest.TestCase):
             self.assertEqual(match["region"], "United States")
         self.assertEqual(matches[0]["symbol"], "TCEHY")
 
-# TODO: Add FMP unit tests
-
 
 class OpenWeatherMapTests(unittest.TestCase):
-    from neon_utils.authentication_utils import find_neon_owm_key
-    API_KEY = find_neon_owm_key()
-    FORECAST_QUERY = f"http://api.openweathermap.org/data/2.5/onecall?lat={VALID_LAT}&lon={VALID_LNG}" \
-                     f"&units=imperial&appid={API_KEY}"
-
-    def test_query_owm_api(self):
-        resp = query_owm_api(OpenWeatherMapTests.FORECAST_QUERY)
-        self.assertIsInstance(resp, dict)
-        self.assertEqual(resp["status_code"], 200)
-        data = json.loads(resp["content"])
-        self.assertIsInstance(data, dict)
-        self.assertIsInstance(data["current"], dict)
-        self.assertIsInstance(data["minutely"], list)
-        self.assertIsInstance(data["hourly"], list)
-        self.assertIsInstance(data["daily"], list)
 
     def test_get_forecast_valid_str(self):
-        data = get_forecast(VALID_LAT, VALID_LNG, api_key=OpenWeatherMapTests.API_KEY)
+        data = get_forecast(VALID_LAT, VALID_LNG)
         self.assertIsInstance(data, dict)
         self.assertIsInstance(data["current"], dict)
         self.assertIsInstance(data["minutely"], list)
@@ -300,7 +275,7 @@ class OpenWeatherMapTests(unittest.TestCase):
         self.assertIsInstance(data["daily"], list)
 
     def test_get_forecast_valid_float(self):
-        data = get_forecast(float(VALID_LAT), float(VALID_LNG), api_key=OpenWeatherMapTests.API_KEY)
+        data = get_forecast(float(VALID_LAT), float(VALID_LNG))
         self.assertIsInstance(data, dict)
         self.assertIsInstance(data["current"], dict)
         self.assertIsInstance(data["minutely"], list)
@@ -323,11 +298,13 @@ class OpenWeatherMapTests(unittest.TestCase):
 
         self.assertIsInstance(data["main"], dict)
 
+    @pytest.mark.skip
     def test_get_forecast_invalid_location(self):
-        data = get_forecast("lat", "lon", api_key=OpenWeatherMapTests.API_KEY)
+        data = get_forecast("lat", "lon")
         self.assertIsInstance(data, dict)
         self.assertEqual(data['cod'], '400')
 
+    @pytest.mark.skip
     def test_get_forecast_invalid_key(self):
         data = get_forecast(VALID_LAT, VALID_LNG, api_key="test")
         self.assertIsInstance(data, dict)
