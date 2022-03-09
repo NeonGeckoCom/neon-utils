@@ -48,13 +48,21 @@ from neon_utils.configuration_utils import dict_update_keys, \
 
 from mycroft.skills import MycroftSkill
 from mycroft.skills.settings import get_local_settings
-# from mycroft.filesystem import FileSystemAccess
 
 
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         self.gui = SkillGUI(self)
+        if not hasattr(super(), "_startup"):
+            import sys
+            from mycroft.filesystem import FileSystemAccess
+            skill_id = os.path.basename(os.path.dirname(
+                os.path.abspath(sys.modules[self.__module__].__file__)))
+            self.file_system = FileSystemAccess(os.path.join('skills',
+                                                             skill_id))
+            LOG.warning(f"overriding self.file_system to: "
+                        f"{self.file_system.path}")
 
     @property
     def _settings_path(self):
