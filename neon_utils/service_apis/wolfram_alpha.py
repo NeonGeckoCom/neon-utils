@@ -31,7 +31,7 @@ import requests
 from neon_utils.log_utils import LOG
 
 from neon_api_proxy.client.wolfram_alpha import get_wolfram_alpha_response, \
-    api_to_url, get_geolocation_params
+    api_to_url, get_geolocation_params, QueryApi
 LOG.warning("This reference is deprecated, use neon_api_proxy.client directly")
 
 

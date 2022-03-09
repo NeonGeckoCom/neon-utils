@@ -255,3 +255,28 @@ jobs:
       - name: Test Deprecated Compat
         run: |
           pytest tests/deprecated_compat_tests.py --doctest-modules --junitxml=tests/deprecated-compat-test-results.xml
+
+  backwards_compat_tests:
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          sudo apt install gcc libfann-dev
+          python -m pip install --upgrade pip~=21.0
+          pip install . -r requirements/test_requirements.txt
+      - name: Test Service API Compat
+        run: |
+          pytest tests/_compat_service_api_tests.py --doctest-modules --junitxml=tests/service-api-test-results.xml
+      - name: Upload service API test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: service-api-test-results
+          path: tests/service-api-test-results.xml

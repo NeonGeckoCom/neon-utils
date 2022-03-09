@@ -28,9 +28,11 @@
 
 import os
 import sys
+import json
 import unittest
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from neon_utils.service_apis import request_neon_api, NeonAPI
 from neon_utils.service_apis.wolfram_alpha import *
 from neon_utils.service_apis.alpha_vantage import *
 from neon_utils.service_apis.open_weather_map import *
