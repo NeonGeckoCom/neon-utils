@@ -91,14 +91,6 @@ class NeonSkill(MycroftSkill):
         self.gui_enabled = self.local_config.get("prefFlags",
                                                  {}).get("guiEvents", False)
 
-        # if use_settings:
-        #     self.settings = {}
-        #     self._initial_settings = None
-        #     self.init_settings()
-        # else:
-        #     LOG.error(f"{name} Skill requested no settings!")
-        #     self.settings = None
-
         self.scheduled_repeats = []
 
         # Server-specific imports and timeout setting
@@ -135,11 +127,13 @@ class NeonSkill(MycroftSkill):
 
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
-        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
+        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET,
+                            name="neon.load_cache_on_disk")
 
     @property
     def user_info_available(self):
-        LOG.warning("This reference is deprecated, use self.preference_x methods for user preferences")
+        LOG.warning("This reference is deprecated, "
+                    "use self.preference_x methods for user preferences")
         return self.user_config.content
 
     @property

@@ -52,11 +52,16 @@ from mycroft.skills.settings import get_local_settings
 
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
-        self.gui = SkillGUI(self)
         if not hasattr(super(), "_startup"):
             import sys
             from mycroft.filesystem import FileSystemAccess
+            self.name = name or self.__class__.__name__
+            skill_id = os.path.basename(os.path.dirname(
+                os.path.abspath(sys.modules[self.__module__].__file__)))
+            self.file_system = FileSystemAccess(os.path.join('skills', skill_id))
+        super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
+        self.gui = SkillGUI(self)
+        if not hasattr(super(), "_startup"):
             skill_id = os.path.basename(os.path.dirname(
                 os.path.abspath(sys.modules[self.__module__].__file__)))
             self.file_system = FileSystemAccess(os.path.join('skills',
