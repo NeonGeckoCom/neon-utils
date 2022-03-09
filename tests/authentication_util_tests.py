@@ -195,6 +195,15 @@ class AuthUtilTests(unittest.TestCase):
             self.assertIsInstance(config[key], dict)
             self.assertTrue(config[key])
 
+        config = build_new_auth_config("/empty_dir")
+        self.assertIsInstance(config, dict)
+        for key in config.keys():
+            if config[key] is not None:
+                self.assertIsInstance(config[key], dict)
+                for k, v in config[key].items():
+                    self.assertIsInstance(k, str)
+                    self.assertIsInstance(v, str)
+
 
 if __name__ == '__main__':
     unittest.main()
