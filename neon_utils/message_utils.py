@@ -32,6 +32,7 @@ import inspect
 from typing import Optional
 from mycroft_bus_client import Message
 
+from neon_utils.logger import LOG
 
 class EncodingError(ValueError):
     """Exception to indicate an invalid Encoding"""
@@ -123,3 +124,23 @@ def dig_for_message(max_records: int = 10) -> Optional[Message]:
                 if isinstance(args.locals[arg], Message):
                     return args.locals[arg]
     return None
+
+
+def insert_message(function):
+    """
+    Decorator to try and fill an optional `message` kwarg
+    """
+    def wrapper(*args, **kwargs):
+        params = inspect.signature(function).parameters
+        if not any([param in params for param in ("message", "kwargs")]):
+            LOG.warning("Decorated function does not expect a `message`")
+            return function(*args, **kwargs)
+
+        if not kwargs.get("message") and not any([arg for arg in args if
+                                                  isinstance(arg, Message)]):
+            LOG.info("Digging for requested message arg")
+            message = dig_for_message(50)
+            kwargs["message"] = message
+        return function(*args, **kwargs)
+
+    return wrapper

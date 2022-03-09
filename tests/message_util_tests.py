@@ -145,6 +145,45 @@ class MessageUtilTests(unittest.TestCase):
         message = Message("test message", {"test": "data"}, {"time": time()})
         self.assertIsNone(dig_for_message())
 
+    def test_insert_message(self):
+        def wrapper_method(message, function: callable,
+                           fn_args: list = None, fn_kwargs: dict = None):
+            fn_args = fn_args or list()
+            fn_kwargs = fn_kwargs or dict()
+            function(*fn_args, **fn_kwargs)
+
+        @insert_message
+        def get_message_simple(message=None):
+            self.assertIsInstance(message, Message)
+            self.assertEqual(message, test_message)
+
+        @insert_message
+        def get_message_invalid_args(test=None):
+            self.assertNotIsInstance(test, Message)
+
+        @insert_message
+        def get_message_kwargs(*args, **kwargs):
+            if args:
+                self.assertIn(test_message, args)
+            else:
+                self.assertIsInstance(kwargs["message"], Message)
+                self.assertEqual(kwargs["message"], test_message)
+
+        test_message = Message("test", {"data": "val"}, {"context": False})
+        wrapper_method(test_message, get_message_simple)
+        wrapper_method(test_message, get_message_simple, [test_message])
+        wrapper_method(test_message, get_message_simple,
+                       fn_kwargs={"message": test_message})
+
+        wrapper_method(test_message, get_message_invalid_args)
+        wrapper_method(test_message, get_message_invalid_args, ["test"])
+
+        wrapper_method(test_message, get_message_kwargs)
+        wrapper_method(test_message, get_message_kwargs,
+                       fn_kwargs={"message": test_message})
+        wrapper_method(test_message, get_message_kwargs,
+                       fn_args=[test_message])
+
 
 if __name__ == '__main__':
     unittest.main()
