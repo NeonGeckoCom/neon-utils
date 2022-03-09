@@ -26,12 +26,10 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# import sys
 import json
 import time
 import os.path
 
-# from copy import deepcopy
 from threading import Event
 from typing import Optional
 
