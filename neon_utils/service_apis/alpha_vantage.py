@@ -26,9 +26,8 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import requests_cache as requests
+import requests
 
-from requests.adapters import HTTPAdapter
 from neon_utils.logger import LOG
 from neon_api_proxy.client.alpha_vantage import search_stock_by_name, get_stock_quote
 
@@ -41,20 +40,9 @@ def query_alpha_vantage_api(url: str) -> dict:
     :param url: Alpha Vantage API URL to query
     :return: dict status_code, content, encoding
     """
-    SESSION = requests.CachedSession(backend='memory',
-                                     cache_name="alpha_vantage")
-    SESSION.mount('http://', HTTPAdapter(max_retries=8))
-    SESSION.mount('https://', HTTPAdapter(max_retries=8))
-    if "global_quote" in url.lower():
-        expiration = 5*60  # Cache quotes for 5 minutes
-    elif "symbol_search" in url.lower():
-        expiration = None
-    else:
-        LOG.warning(f"Unknown URL request; caching for 15 minutes: {url}")
-        expiration = 15*60
-    result = SESSION.get(url, expire_after=expiration)
+    result = requests.get(url)
 
     return {"status_code": result.status_code,
             "content": result.content,
             "encoding": result.encoding,
-            "cached": result.from_cache}
+            "cached": False}

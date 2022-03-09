@@ -26,10 +26,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import requests_cache as requests
+import requests
 
 from neon_utils.logger import LOG
-from requests.adapters import HTTPAdapter
 from neon_api_proxy.client.financial_modeling_prep import \
     search_stock_by_name, get_stock_quote
 
@@ -42,21 +41,9 @@ def query_fmp_api(url: str) -> dict:
     :param url: Alpha Vantage API URL to query
     :return: dict status_code, content, encoding
     """
-    SESSION = requests.CachedSession(backend='memory',
-                                     cache_name="financial_modeling_prep")
-    SESSION.mount('http://', HTTPAdapter(max_retries=8))
-    SESSION.mount('https://', HTTPAdapter(max_retries=8))
-
-    if "/company/profile" in url.lower():
-        expiration = 5*60  # Cache quotes for 5 minutes
-    elif "/search" in url.lower():
-        expiration = None
-    else:
-        LOG.warning(f"Unknown URL request; caching for 15 minutes: {url}")
-        expiration = 15*60
-    result = SESSION.get(url, expire_after=expiration)
+    result = requests.get(url)
 
     return {"status_code": result.status_code,
             "content": result.content,
             "encoding": result.encoding,
-            "cached": result.from_cache}
+            "cached": False}

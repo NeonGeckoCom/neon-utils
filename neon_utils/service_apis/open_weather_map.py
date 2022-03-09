@@ -26,10 +26,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import requests_cache as requests
+import requests
 
 from neon_utils.logger import LOG
-from requests.adapters import HTTPAdapter
 from neon_api_proxy.client.open_weather_map import \
     get_current_weather, get_forecast
 
@@ -42,14 +41,8 @@ def query_owm_api(url: str) -> dict:
     :param url: Open Weather Map API URL to query
     :return: dict status_code, content, encoding
     """
-    SESSION = requests.CachedSession(backend='memory',
-                                     cache_name="open_weather_map",
-                                     allowable_codes=(200, 400),
-                                     expire_after=3 * 60)
-    SESSION.mount('http://', HTTPAdapter(max_retries=8))
-    SESSION.mount('https://', HTTPAdapter(max_retries=8))
-    result = SESSION.get(url)
+    result = requests.get(url)
     return {"status_code": result.status_code,
             "content": result.content,
             "encoding": result.encoding,
-            "cached": result.from_cache}
+            "cached": False}

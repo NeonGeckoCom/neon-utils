@@ -26,9 +26,8 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import requests_cache as requests
+import requests
 
-from requests.adapters import HTTPAdapter
 from neon_utils.log_utils import LOG
 
 from neon_api_proxy.client.wolfram_alpha import get_wolfram_alpha_response, \
@@ -42,15 +41,9 @@ def query_wolfram_alpha_api(url: str) -> dict:
     :param url: Wolfram|Alpha API URL to query
     :return: dict status_code, content, encoding
     """
-    SESSION = requests.CachedSession(backend='memory',
-                                     cache_name="wolfram_alpha",
-                                     allowable_codes=(200, 501),
-                                     expire_after=15 * 60)
-    SESSION.mount('http://', HTTPAdapter(max_retries=8))
-    SESSION.mount('https://', HTTPAdapter(max_retries=8))
-    result = SESSION.get(url)
+    result = requests.get(url)
 
     return {"status_code": result.status_code,
             "content": result.content,
             "encoding": result.encoding,
-            "cached": result.from_cache}
+            "cached": False}
