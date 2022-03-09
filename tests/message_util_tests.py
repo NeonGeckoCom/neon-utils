@@ -152,16 +152,16 @@ class MessageUtilTests(unittest.TestCase):
             fn_kwargs = fn_kwargs or dict()
             function(*fn_args, **fn_kwargs)
 
-        @insert_message
+        @resolve_message
         def get_message_simple(message=None):
             self.assertIsInstance(message, Message)
             self.assertEqual(message, test_message)
 
-        @insert_message
+        @resolve_message
         def get_message_invalid_args(test=None):
             self.assertNotIsInstance(test, Message)
 
-        @insert_message
+        @resolve_message
         def get_message_kwargs(*args, **kwargs):
             if args:
                 self.assertIn(test_message, args)

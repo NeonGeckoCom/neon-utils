@@ -126,7 +126,7 @@ def dig_for_message(max_records: int = 10) -> Optional[Message]:
     return None
 
 
-def insert_message(function):
+def resolve_message(function):
     """
     Decorator to try and fill an optional `message` kwarg
     """
