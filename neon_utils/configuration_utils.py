@@ -797,7 +797,7 @@ def get_neon_skills_config() -> dict:
 
     neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
     neon_skills["priority_skills"] = neon_skills["priority"]
-    neon_skills["blacklisted_skills"] = neon_skills["blacklist"]
+    neon_skills["blacklisted_skills"] = neon_skills["blacklist"] or []
 
     if not isinstance(neon_skills["auto_update_interval"], float):
         try:
