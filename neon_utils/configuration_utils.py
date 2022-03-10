@@ -778,6 +778,13 @@ def get_neon_skills_config() -> dict:
     neon_skills = deepcopy(core_config.get("skills", {}))
     neon_skills["directory"] = os.path.expanduser(core_config["dirVars"].get("skillsDir"))
 
+    # Patch msm config for skills backwards-compat.
+    neon_skills["msm"] = {"directory": neon_skills["directory"],
+                          "versioned": False,
+                          "repo": {"branch": "",
+                                   "cache": "",
+                                   "url": ""}}
+
     try:
         ovos_core_version = get_package_version_spec("ovos-core")
         if ovos_core_version.startswith("0.0.1"):
