@@ -40,7 +40,7 @@ from mycroft_bus_client.message import Message
 from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
-from neon_utils.message_utils import get_message_user, dig_for_message
+from neon_utils.message_utils import get_message_user, dig_for_message, resolve_message
 from neon_utils.configuration_utils import dict_update_keys, \
     parse_skill_default_settings
 
@@ -68,6 +68,41 @@ class PatchedMycroftSkill(MycroftSkill):
                                                              skill_id))
             LOG.warning(f"overriding self.file_system to: "
                         f"{self.file_system.path}")
+
+    @property
+    def settings(self):
+        message = dig_for_message()
+        # TODO: Apply user-specific settings here
+        if self._settings is not None:
+            return self._settings
+        else:
+            LOG.error('Skill not fully initialized.  Only default values can '
+                      'be set, no settings can be  read or changed. Move code '
+                      'from  __init__() to initialize() to correct this.')
+            return self._initial_settings
+
+    @settings.setter
+    def settings(self, val):
+        assert isinstance(val, dict)
+        message = dig_for_message()
+        # TODO: Apply user-specific settings here
+        if self._settings is None:
+            self._initial_settings = val
+            return
+        self._settings.clear()
+        self._settings.merge(val)
+
+    @property
+    def location(self):
+        message = dig_for_message()
+        # TODO: parse config from message
+        return super().location
+
+    @property
+    def _secondary_langs(self):
+        message = dig_for_message()
+        # TODO: parse config from message
+        return super()._secondary_langs
 
     @property
     def _settings_path(self):
@@ -107,6 +142,7 @@ class PatchedMycroftSkill(MycroftSkill):
             return dict()
         return parse_skill_default_settings(self.settings_meta)
 
+    @resolve_message
     def speak(self, utterance, expect_response=False, wait=False, meta=None, message=None, private=False, speaker=None):
         """
         Speak an utterance.
@@ -127,11 +163,8 @@ class PatchedMycroftSkill(MycroftSkill):
         self.enclosure.register(self.name)
         if utterance:
             if not message:
-                # Find the associated message
                 LOG.debug('message is None.')
-                message = dig_for_message()
-                if not message:
-                    message = Message("speak")
+                message = Message("speak")
             if not speaker:
                 speaker = message.data.get("speaker", None)
 
@@ -177,6 +210,7 @@ class PatchedMycroftSkill(MycroftSkill):
             # TODO: Refactor to wait for event emit
             wait_for_signal_clear('isSpeaking')
 
+    @resolve_message
     def speak_dialog(self, key, data=None, expect_response=False, wait=False,
                      message=None, private=False, speaker=None):
         """ Speak a random sentence from a dialog file.
@@ -203,6 +237,7 @@ class PatchedMycroftSkill(MycroftSkill):
                    speaker=speaker, wait=wait, meta={'dialog': key,
                                                      'data': data})
 
+    @resolve_message
     def get_response(self, dialog: str = '', data: Optional[dict] = None,
                      validator=None, on_fail=None, num_retries: int = -1,
                      message: Optional[Message] = None) -> Optional[str]:
@@ -230,7 +265,6 @@ class PatchedMycroftSkill(MycroftSkill):
         Returns:
             str: User's reply or None if timed out or canceled
         """
-        message = message or dig_for_message()
         user = get_message_user(message) or "local" if message else "local"
         data = data or {}
 

@@ -51,6 +51,7 @@ from neon_utils.cache_utils import LRUCache
 from neon_utils.mq_utils import send_mq_request
 from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
+from neon_utils.user_utils import get_user_prefs
 
 try:
     from ovos_plugin_manager.language import OVOSLangDetectionFactory, OVOSLangTranslationFactory
@@ -151,157 +152,45 @@ class NeonSkill(MycroftSkill):
                   "Use self.preference_skill for per-user skill settings")
         return self.preference_skill()
 
-    @property
-    def location_timezone(self) -> str:
-        """Get the timezone code, such as 'America/Los_Angeles'"""
-        LOG.warning("This method does not support user-specific location and will use device default")
-        return self.preference_location()["tz"]
-
-    def preference_brands(self, message=None) -> dict:
+    @staticmethod
+    def preference_brands(message=None) -> dict:
         """
         Returns a brands dictionary for the user
         Equivalent to self.user_config["speech"] for non-server use
         """
-        try:
-            nick = get_message_user(message) if message else None
-            if self.server:
-                if not message or not nick:
-                    LOG.warning("No message given!")
-                    return self.user_config['brands']
+        return get_user_prefs(message)["brands"]
 
-                if message.context.get("nick_profiles"):
-                    return message.context["nick_profiles"][nick]["brands"]
-                else:
-                    LOG.error(f"Unable to get user settings! message={message.data}")
-            else:
-                return self.user_config['brands']
-        except Exception as x:
-            LOG.error(x)
-        return {'ignored_brands': {},
-                'favorite_brands': {},
-                'specially_requested': {}}
-
-    def preference_user(self, message=None) -> dict:
+    @staticmethod
+    def preference_user(message=None) -> dict:
         """
         Returns the user dictionary with name, email
         Equivalent to self.user_config["user"] for non-server use
         """
-        try:
-            nick = get_message_user(message) if message else None
-            if self.server:
-                if not message or not nick:
-                    LOG.warning("No message given!")
-                    return self.user_config['user']
-                if message.context.get("nick_profiles"):
-                    return message.context["nick_profiles"][nick]["user"]
-                else:
-                    LOG.error(f"Unable to get user settings! message={message.data}")
-            else:
-                return self.user_config['user']
-        except Exception as x:
-            LOG.error(x)
-        return {'first_name': '',
-                'middle_name': '',
-                'last_name': '',
-                'preferred_name': '',
-                'full_name': '',
-                'dob': 'YYYY/MM/DD',
-                'age': '',
-                'email': '',
-                'username': '',
-                'password': '',
-                'picture': '',
-                'about': '',
-                'phone': '',
-                'email_verified': False,
-                'phone_verified': False
-                }
+        return get_user_prefs(message)["user"]
 
-    def preference_location(self, message=None) -> dict:
+    @staticmethod
+    def preference_location(message=None) -> dict:
         """
         Get the JSON data structure holding location information.
         Equivalent to self.user_config["location"] for non-server use
         """
-        try:
-            nick = get_message_user(message) if message else None
-            if self.server:
-                if not message or not nick:
-                    LOG.warning("No message given!")
-                    return self.user_config['location']
-                if message.context.get("nick_profiles"):
-                    return message.context["nick_profiles"][nick]["location"]
-                else:
-                    LOG.error(f"Unable to get user settings! message={message.data}")
-            else:
-                return self.user_config['location']
-        except Exception as x:
-            LOG.error(x)
-        return {'lat': 47.4799078,
-                'lng': -122.2034496,
-                'city': 'Renton',
-                'state': 'Washington',
-                'country': 'USA',
-                'tz': 'America/Los_Angeles',
-                'utc': -8.0
-                }
+        return get_user_prefs(message)["location"]
 
-    def preference_unit(self, message=None) -> dict:
+    @staticmethod
+    def preference_unit(message=None) -> dict:
         """
         Returns the units dictionary that contains time, date, measure formatting preferences
         Equivalent to self.user_config["units"] for non-server use
         """
-        try:
-            nick = get_message_user(message) if message else None
-            if self.server:
-                if not message or not nick:
-                    LOG.warning("No message given!")
-                    return self.user_config['units']
+        return get_user_prefs(message)["unit"]
 
-                if message.context.get("nick_profiles"):
-                    return message.context["nick_profiles"][nick]["units"]
-                else:
-                    LOG.error(f"Unable to get user settings! message={message.data}")
-            else:
-                return self.user_config['units']
-        except Exception as x:
-            LOG.error(x)
-        return {'time': 12,
-                'date': 'MDY',
-                'measure': 'imperial'
-                }
-
-    def preference_speech(self, message=None) -> dict:
+    @staticmethod
+    def preference_speech(message=None) -> dict:
         """
         Returns the speech dictionary that contains language and spoken response preferences
         Equivalent to self.user_config["speech"] for non-server use
         """
-        try:
-            nick = get_message_user(message) if message else None
-            if self.server:
-                if not message or not nick:
-                    LOG.warning("No message given!")
-                    return self.user_config['speech']
-
-                if message.context.get("nick_profiles"):
-                    return message.context["nick_profiles"][nick]["speech"]
-                else:
-                    LOG.error(f"Unable to get user settings! message={message.data}")
-            else:
-                return self.user_config['speech']
-        except Exception as x:
-            LOG.error(x)
-        return {'stt_language': 'en',
-                'stt_region': 'US',
-                'alt_languages': ['en'],
-                'tts_language': "en-us",
-                'tts_gender': 'female',
-                'neon_voice': 'Joanna',
-                'secondary_tts_language': '',
-                'secondary_tts_gender': '',
-                'secondary_neon_voice': '',
-                'speed_multiplier': 1.0,
-                'synonyms': {}
-                }
+        return get_user_prefs(message)["speech"]
 
     def preference_skill(self, message=None) -> dict:
         """

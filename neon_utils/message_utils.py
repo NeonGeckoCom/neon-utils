@@ -34,6 +34,7 @@ from mycroft_bus_client import Message
 
 from neon_utils.logger import LOG
 
+
 class EncodingError(ValueError):
     """Exception to indicate an invalid Encoding"""
 
