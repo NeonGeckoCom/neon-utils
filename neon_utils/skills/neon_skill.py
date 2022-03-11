@@ -182,7 +182,7 @@ class NeonSkill(MycroftSkill):
         Returns the units dictionary that contains time, date, measure formatting preferences
         Equivalent to self.user_config["units"] for non-server use
         """
-        return get_user_prefs(message)["unit"]
+        return get_user_prefs(message)["units"]
 
     @staticmethod
     def preference_speech(message=None) -> dict:
