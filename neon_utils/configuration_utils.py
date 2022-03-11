@@ -778,6 +778,13 @@ def get_neon_skills_config() -> dict:
     neon_skills = deepcopy(core_config.get("skills", {}))
     neon_skills["directory"] = os.path.expanduser(core_config["dirVars"].get("skillsDir"))
 
+    # Patch msm config for skills backwards-compat.
+    neon_skills["msm"] = {"directory": neon_skills["directory"],
+                          "versioned": False,
+                          "repo": {"branch": "",
+                                   "cache": "",
+                                   "url": ""}}
+
     try:
         ovos_core_version = get_package_version_spec("ovos-core")
         if ovos_core_version.startswith("0.0.1"):
@@ -789,8 +796,8 @@ def get_neon_skills_config() -> dict:
         neon_skills["directory_override"] = neon_skills["directory"]
 
     neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
-    neon_skills["priority_skills"] = neon_skills["priority"]
-    neon_skills["blacklisted_skills"] = neon_skills["blacklist"]
+    neon_skills["priority_skills"] = neon_skills["priority"] or []
+    neon_skills["blacklisted_skills"] = neon_skills["blacklist"] or []
 
     if not isinstance(neon_skills["auto_update_interval"], float):
         try:
