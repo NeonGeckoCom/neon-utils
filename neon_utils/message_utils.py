@@ -136,6 +136,17 @@ def resolve_message(function):
             LOG.warning("Decorated function does not expect a `message`")
             return function(*args, **kwargs)
 
+        if "message" in params.keys() and len(args):
+            i = 0
+            for param in params:
+                args = list(args)
+                # Check if 'message' is filled by an arg
+                if param == "message" and i < len(args):
+                    if not args[i]:
+                        args[i] = dig_for_message(50)
+                        return function(*args, **kwargs)
+                i += 1
+
         if not kwargs.get("message") and not any([arg for arg in args if
                                                   isinstance(arg, Message)]):
             LOG.info("Digging for requested message arg")
