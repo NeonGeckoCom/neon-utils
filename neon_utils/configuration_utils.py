@@ -796,7 +796,7 @@ def get_neon_skills_config() -> dict:
         neon_skills["directory_override"] = neon_skills["directory"]
 
     neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
-    neon_skills["priority_skills"] = neon_skills["priority"]
+    neon_skills["priority_skills"] = neon_skills["priority"] or []
     neon_skills["blacklisted_skills"] = neon_skills["blacklist"] or []
 
     if not isinstance(neon_skills["auto_update_interval"], float):
