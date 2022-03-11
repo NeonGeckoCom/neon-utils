@@ -58,6 +58,8 @@ class PatchedMycroftSkill(MycroftSkill):
             skill_id = os.path.basename(os.path.dirname(
                 os.path.abspath(sys.modules[self.__module__].__file__)))
             self.file_system = FileSystemAccess(os.path.join('skills', skill_id))
+            self._settings = None
+
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         self.gui = SkillGUI(self)
         if not hasattr(super(), "_startup"):
@@ -68,7 +70,6 @@ class PatchedMycroftSkill(MycroftSkill):
                                                              skill_id))
             LOG.warning(f"overriding self.file_system to: "
                         f"{self.file_system.path}")
-            self._settings = None
 
     @property
     def settings(self):
