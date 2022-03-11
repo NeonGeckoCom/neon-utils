@@ -30,15 +30,11 @@ import unittest
 import sys
 import os
 
-import pytest
-from urllib3.exceptions import ReadTimeoutError
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.web_utils import *
 
 
 class WebUtilTests(unittest.TestCase):
-    @pytest.mark.xfail(reason="neon.ai site down")
     def test_scrape_page_for_links(self):
         try:
             links = scrape_page_for_links("neon.ai")
