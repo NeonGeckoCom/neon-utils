@@ -83,7 +83,9 @@ class PatchedMycroftSkill(MycroftSkill):
 
     @settings.setter
     def settings(self, val):
-        assert isinstance(val, dict)
+        if not isinstance(val, dict):
+            LOG.error(f"Ignoring request to set settings to: {val}")
+            return
         message = dig_for_message()
         # TODO: Apply user-specific settings here
         if self._settings is None:
