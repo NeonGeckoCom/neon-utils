@@ -21,8 +21,7 @@ brands:
   specially_requested: {}
 
 speech:
-  stt_language: en
-  stt_region: US
+  stt_language: en-us
   alt_languages: ['en']
   tts_language: en-us
   tts_gender: female

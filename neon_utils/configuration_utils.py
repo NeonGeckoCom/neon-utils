@@ -909,13 +909,53 @@ def _safe_mycroft_config() -> dict:
     try:
         mycroft = read_mycroft_config()
     except FileNotFoundError:
-        mycroft = LocalConf(os.path.join(os.path.dirname(__file__), "default_configurations", "mycroft.conf"))
+        mycroft = LocalConf(os.path.join(os.path.dirname(__file__),
+                                         "default_configurations",
+                                         "mycroft.conf"))
     return dict(mycroft)
+
+
+def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
+    """
+    Populates user_config with values from mycroft.conf
+    :returns: dict modified or created user config
+    """
+    user_config = user_config or \
+        deepcopy(NGIConfig("default_user_conf",
+                           os.path.join(os.path.dirname(__file__),
+                                        "default_configurations")).content)
+    mycroft_config = _safe_mycroft_config()
+    user_config["speech"]["stt_language"] = mycroft_config.get("lang", "en-us")
+    user_config["speech"]["tts_language"] = mycroft_config.get("lang", "en-us")
+    user_config["units"]["time"] = \
+        12 if mycroft_config.get("time_format", "half") == "half" else 24
+    user_config["units"]["date"] = mycroft_config.get("date_format") or "MDY"
+    user_config["units"]["measure"] = \
+        "metric" if mycroft_config.get("system_unit") == "metric" \
+        else "imperial"
+
+    user_config["location"] = {"lat": str(mycroft_config["location"]["coordinate"]
+                               ["latitude"]),
+                               "lng": str(mycroft_config["location"]["coordinate"]
+                               ["longitude"]),
+                               "city": mycroft_config["location"]["city"]
+                               ["name"],
+                               "state": mycroft_config["location"]["city"]
+                               ["state"]["name"],
+                               "country": mycroft_config["location"]["city"]
+                               ["state"]["country"]["name"],
+                               "tz": mycroft_config["location"]["timezone"]
+                               ["code"],
+                               "utc": str(round(mycroft_config["location"]
+                                                ["timezone"]["offset"]/3600000,
+                                                1))}
+    return user_config
 
 
 def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     """
-    Returns a dict user configuration and handles any migration of configuration values to local config from user config
+    Returns a dict user configuration and handles any migration of
+    configuration values to local config from user config
     Args:
         path: optional path to yml configuration files
     Returns:
@@ -926,20 +966,23 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     except PermissionError:
         LOG.error(f"Insufficient Permissions for path: {path}")
         user_config = NGIConfig("ngi_user_info")
-    _populate_read_only_config(path, basename(user_config.file_path), user_config)
+    _populate_read_only_config(path, basename(user_config.file_path),
+                               user_config)
     default_user_config = NGIConfig("default_user_conf",
-                                    os.path.join(os.path.dirname(__file__), "default_configurations"))
+                                    os.path.join(os.path.dirname(__file__),
+                                                 "default_configurations"))
     if len(user_config.content) == 0:
         LOG.info("Created Empty User Config!")
         user_config.populate(default_user_config.content)
-        # TODO: Update from Mycroft config DM
+        get_user_config_from_mycroft_conf(user_config.content)
+        LOG.debug("Updated user config from mycroft.conf")
+        user_config.write_changes()
 
     if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
         local_config = NGIConfig("ngi_local_conf", path)
         _move_config_sections(user_config, local_config)
 
     user_config.make_equal_by_keys(default_user_config.content)
-    # LOG.info(f"Loaded user config from {user_config.file_path}")
     return user_config
 
 
@@ -957,9 +1000,11 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     except PermissionError:
         LOG.error(f"Insufficient Permissions for path: {path}")
         local_config = NGIConfig("ngi_local_conf")
-    _populate_read_only_config(path, basename(local_config.file_path), local_config)
+    _populate_read_only_config(path, basename(local_config.file_path),
+                               *local_config)
     default_local_config = NGIConfig("default_core_conf",
-                                     os.path.join(os.path.dirname(__file__), "default_configurations"))
+                                     os.path.join(os.path.dirname(__file__),
+                                                  "default_configurations"))
     if len(local_config.content) == 0:
         LOG.info(f"Created Empty Local Config at {local_config.path}")
         local_config.populate(default_local_config.content)

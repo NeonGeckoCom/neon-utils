@@ -158,6 +158,8 @@ class NeonSkill(MycroftSkill):
         Returns a brands dictionary for the user
         Equivalent to self.user_config["speech"] for non-server use
         """
+        LOG.warning("This reference is deprecated."
+                    "Use neon_utils.user_utils.get_user_prefs directly")
         return get_user_prefs(message)["brands"]
 
     @staticmethod
@@ -166,6 +168,8 @@ class NeonSkill(MycroftSkill):
         Returns the user dictionary with name, email
         Equivalent to self.user_config["user"] for non-server use
         """
+        LOG.warning("This reference is deprecated."
+                    "Use neon_utils.user_utils.get_user_prefs directly")
         return get_user_prefs(message)["user"]
 
     @staticmethod
@@ -174,6 +178,8 @@ class NeonSkill(MycroftSkill):
         Get the JSON data structure holding location information.
         Equivalent to self.user_config["location"] for non-server use
         """
+        LOG.warning("This reference is deprecated."
+                    "Use neon_utils.user_utils.get_user_prefs directly")
         return get_user_prefs(message)["location"]
 
     @staticmethod
@@ -182,6 +188,8 @@ class NeonSkill(MycroftSkill):
         Returns the units dictionary that contains time, date, measure formatting preferences
         Equivalent to self.user_config["units"] for non-server use
         """
+        LOG.warning("This reference is deprecated."
+                    "Use neon_utils.user_utils.get_user_prefs directly")
         return get_user_prefs(message)["units"]
 
     @staticmethod
@@ -190,6 +198,8 @@ class NeonSkill(MycroftSkill):
         Returns the speech dictionary that contains language and spoken response preferences
         Equivalent to self.user_config["speech"] for non-server use
         """
+        LOG.warning("This reference is deprecated."
+                    "Use neon_utils.user_utils.get_user_prefs directly")
         return get_user_prefs(message)["speech"]
 
     def preference_skill(self, message=None) -> dict:

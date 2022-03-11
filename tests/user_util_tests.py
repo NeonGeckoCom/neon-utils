@@ -67,6 +67,28 @@ class UserUtilTests(unittest.TestCase):
         wrapper(test_message_1, user_1)
         wrapper(test_message_2, user_2)
 
+    def test_get_default_user_config_from_mycroft_conf(self):
+        test_config_dir = os.path.join(os.path.dirname(__file__),
+                                       "user_util_test_config")
+        os.environ["NEON_CONFIG_PATH"] = test_config_dir
+        os.environ["XDG_CONFIG_HOME"] = test_config_dir
+        from neon_utils.user_utils import get_default_user_config
+        user_config = get_default_user_config()
+        self.assertFalse(os.path.isfile(os.path.join(test_config_dir,
+                                                     "ngi_user_info.yml")))
+        self.assertIsInstance(user_config, dict)
+        self.assertEqual(user_config["location"],
+                         {"lat": '38.971669',
+                          "lng": '-95.23525',
+                          "tz": 'America/Chicago',
+                          "utc": '-6.0',
+                          "city": 'Kirkland',
+                          "state": 'Washington',
+                          "country": "United States"})
+
+        os.environ.pop("NEON_CONFIG_PATH")
+        os.environ.pop("XDG_CONFIG_HOME")
+
 
 if __name__ == '__main__':
     unittest.main()

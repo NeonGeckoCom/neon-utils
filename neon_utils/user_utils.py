@@ -26,25 +26,29 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from os.path import isfile, join
 from mycroft_bus_client import Message
 
 from neon_utils.message_utils import resolve_message, get_message_user
 from neon_utils.configuration_utils import get_neon_user_config, \
-    dict_make_equal_keys
+    dict_make_equal_keys, get_config_dir, get_user_config_from_mycroft_conf
 from neon_utils.logger import LOG
 
 _DEFAULT_USER_CONFIG = None
 
 
-def get_default_user_config():
+def get_default_user_config() -> dict:
     """
-    Get the default user configuration from global yml config
-    :returns: default user config from NGIConfig
+    Get the default user configuration from global yml and Mycroft config
+    :returns: default user config from existing ngi_user_info or mycroft.conf
     """
     global _DEFAULT_USER_CONFIG
     if not _DEFAULT_USER_CONFIG:
-        _DEFAULT_USER_CONFIG = get_neon_user_config()
-    return _DEFAULT_USER_CONFIG.content
+        if isfile(join(get_config_dir(), "ngi_user_info.yml")):
+            _DEFAULT_USER_CONFIG = get_neon_user_config().content
+        else:
+            _DEFAULT_USER_CONFIG = get_user_config_from_mycroft_conf()
+    return _DEFAULT_USER_CONFIG
 
 
 @resolve_message
