@@ -270,25 +270,25 @@ class OpenWeatherMapTests(unittest.TestCase):
         data = get_forecast(VALID_LAT, VALID_LNG)
         self.assertIsInstance(data, dict)
         self.assertIsInstance(data["current"], dict)
-        self.assertIsInstance(data["minutely"], list)
-        self.assertIsInstance(data["hourly"], list)
-        self.assertIsInstance(data["daily"], list)
+        # self.assertIsInstance(data["minutely"], list)
+        # self.assertIsInstance(data["hourly"], list)
+        # self.assertIsInstance(data["daily"], list)
 
     def test_get_forecast_valid_float(self):
         data = get_forecast(float(VALID_LAT), float(VALID_LNG))
         self.assertIsInstance(data, dict)
         self.assertIsInstance(data["current"], dict)
-        self.assertIsInstance(data["minutely"], list)
-        self.assertIsInstance(data["hourly"], list)
-        self.assertIsInstance(data["daily"], list)
+        # self.assertIsInstance(data["minutely"], list)
+        # self.assertIsInstance(data["hourly"], list)
+        # self.assertIsInstance(data["daily"], list)
 
     def test_get_forecast_default_api_key(self):
         data = get_forecast(VALID_LAT, VALID_LNG)
         self.assertIsInstance(data, dict)
         self.assertIsInstance(data["current"], dict)
-        self.assertIsInstance(data["minutely"], list)
-        self.assertIsInstance(data["hourly"], list)
-        self.assertIsInstance(data["daily"], list)
+        # self.assertIsInstance(data["minutely"], list)
+        # self.assertIsInstance(data["hourly"], list)
+        # self.assertIsInstance(data["daily"], list)
 
     def test_get_current_weather(self):
         data = get_current_weather(VALID_LAT, VALID_LNG)
@@ -314,9 +314,9 @@ class OpenWeatherMapTests(unittest.TestCase):
         data = get_forecast(VALID_LAT, VALID_LNG, api_key=None)
         self.assertIsInstance(data, dict)
         self.assertIsInstance(data["current"], dict)
-        self.assertIsInstance(data["minutely"], list)
-        self.assertIsInstance(data["hourly"], list)
-        self.assertIsInstance(data["daily"], list)
+        # self.assertIsInstance(data["minutely"], list)
+        # self.assertIsInstance(data["hourly"], list)
+        # self.assertIsInstance(data["daily"], list)
 
 
 if __name__ == '__main__':
