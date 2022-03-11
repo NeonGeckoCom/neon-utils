@@ -1001,7 +1001,7 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
         LOG.error(f"Insufficient Permissions for path: {path}")
         local_config = NGIConfig("ngi_local_conf")
     _populate_read_only_config(path, basename(local_config.file_path),
-                               *local_config)
+                               local_config)
     default_local_config = NGIConfig("default_core_conf",
                                      os.path.join(os.path.dirname(__file__),
                                                   "default_configurations"))
