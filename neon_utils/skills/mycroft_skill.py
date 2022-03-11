@@ -68,6 +68,7 @@ class PatchedMycroftSkill(MycroftSkill):
                                                              skill_id))
             LOG.warning(f"overriding self.file_system to: "
                         f"{self.file_system.path}")
+            self._settings = None
 
     @property
     def settings(self):
