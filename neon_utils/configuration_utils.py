@@ -927,6 +927,8 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
     mycroft_config = _safe_mycroft_config()
     user_config["speech"]["stt_language"] = mycroft_config.get("lang", "en-us")
     user_config["speech"]["tts_language"] = mycroft_config.get("lang", "en-us")
+    user_config["speech"]["alt_languages"] = \
+        mycroft_config.get("secondary_langs", [])
     user_config["units"]["time"] = \
         12 if mycroft_config.get("time_format", "half") == "half" else 24
     user_config["units"]["date"] = mycroft_config.get("date_format") or "MDY"

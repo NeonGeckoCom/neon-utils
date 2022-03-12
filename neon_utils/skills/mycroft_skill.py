@@ -42,10 +42,12 @@ from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message, resolve_message
 from neon_utils.configuration_utils import dict_update_keys, \
-    parse_skill_default_settings
+    parse_skill_default_settings, get_mycroft_compatible_location
 
 from mycroft.skills import MycroftSkill
 from mycroft.skills.settings import get_local_settings
+
+from neon_utils.user_utils import get_user_prefs
 
 
 class PatchedMycroftSkill(MycroftSkill):
@@ -98,15 +100,11 @@ class PatchedMycroftSkill(MycroftSkill):
 
     @property
     def location(self):
-        message = dig_for_message()
-        # TODO: parse config from message
-        return super().location
+        return get_mycroft_compatible_location(get_user_prefs())
 
     @property
     def _secondary_langs(self):
-        message = dig_for_message()
-        # TODO: parse config from message
-        return super()._secondary_langs
+        return get_user_prefs()["speech"]["alt_languages"]
 
     @property
     def _settings_path(self):
