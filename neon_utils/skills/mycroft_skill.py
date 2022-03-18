@@ -100,7 +100,7 @@ class PatchedMycroftSkill(MycroftSkill):
 
     @property
     def location(self):
-        return get_mycroft_compatible_location(get_user_prefs())
+        return get_mycroft_compatible_location(get_user_prefs()["location"])
 
     @property
     def _secondary_langs(self):
