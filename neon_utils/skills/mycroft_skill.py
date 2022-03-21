@@ -122,8 +122,7 @@ class PatchedMycroftSkill(MycroftSkill):
             if isinstance(self.settings, JsonStorage):
                 self.settings.store()
             else:
-                with open(os.path.join(self._settings_path,
-                                       'settings.json'), "w+") as f:
+                with open(self._settings_path, "w+") as f:
                     json.dump(self.settings, f, indent=4)
         self._initial_settings = dict(self.settings)
 

@@ -624,7 +624,7 @@ class NeonSkillTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         from skills.test_skill import TestSkill
         bus = FakeBus()
-        cls.skill = TestSkill(bus=bus)
+        cls.skill = TestSkill()
         # Mock the skill_loader process
         if hasattr(cls.skill, "_startup"):
             cls.skill._startup(bus)
