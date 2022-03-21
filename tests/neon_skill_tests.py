@@ -128,7 +128,6 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.lru_cache, LRUCache)
         self.assertIsInstance(skill.sys_tz, datetime.tzinfo)
         self.assertIsInstance(skill.gui_enabled, bool)
-        self.assertIsInstance(skill.scheduled_repeats, list)  # TODO: What is this param for?
         self.assertIsInstance(skill.server, bool)
         self.assertIsInstance(skill.default_intent_timeout, int)
         self.assertIsInstance(skill.neon_core, bool)
@@ -137,7 +136,6 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.skill_mode, str)
         self.assertIsInstance(skill.extension_time, int)
 
-        # self.assertIsInstance(skill.language_config, dict)
         if skill.lang_detector:
             from ovos_plugin_manager.templates.language import LanguageDetector
             self.assertIsInstance(skill.lang_detector, LanguageDetector)
@@ -674,6 +672,7 @@ class NeonSkillTests(unittest.TestCase):
         pass
 
     def test_neon_must_respond(self):
+        self.skill.server = True
         self.assertFalse(self.skill.neon_must_respond())
         private_message_solo = Message("", {},
                                        {"klat_data": {

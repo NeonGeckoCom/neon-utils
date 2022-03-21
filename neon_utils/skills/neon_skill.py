@@ -457,7 +457,7 @@ class NeonSkill(MycroftSkill):
         if self.server:
             title = message.context.get("klat_data", {}).get("title", "")
             LOG.debug(message.data.get("utterance"))
-            if message.data.get("utterance").startswith("Welcome to your private conversation"):
+            if message.data.get("utterance", "").startswith("Welcome to your private conversation"):
                 return False
             if title.startswith("!PRIVATE:"):
                 if ',' in title:
@@ -468,7 +468,7 @@ class NeonSkill(MycroftSkill):
                         # Private with Neon
                         # LOG.debug("DM: Private Conversation with Neon")
                         return True
-                    elif message.data.get("utterance").lower().startsWith("neon"):
+                    elif message.data.get("utterance", "").lower().startswith("neon"):
                         # Message starts with "neon", must respond
                         return True
                 else:
