@@ -26,40 +26,19 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from neon_utils.configuration_utils import get_neon_lang_config
-from neon_utils import LOG
+from neon_utils.logger import LOG
 
 try:
-    from neon_core.language import TranslatorFactory, DetectorFactory, get_language_dir
+    from neon_core.language import get_language_dir
 except ImportError:
     LOG.error("neon_core not found; language utils are not fully supported on this platform.")
 
+try:
+    from ovos_plugin_manager.language import OVOSLangTranslationFactory as TranslatorFactory
+    from ovos_plugin_manager.language import OVOSLangDetectionFactory as DetectorFactory
+    from ovos_plugin_manager.templates.language import LanguageDetector, LanguageTranslator
+except ImportError:
+    LOG.error("ovos_plugin_manager not found; language utils not available")
 
-LOG.warning(f"neon_utils.language_utils has been deprecated! Please import from neon_core.language")
-
-
-class LanguageDetector:
-    def __init__(self):
-        self.config = get_neon_lang_config()
-        self.default_language = self.config["user"].split("-")[0]
-        # hint_language: str  E.g., 'ITALIAN' or 'it' boosts Italian
-        self.hint_language = self.config["user"].split("-")[0]
-        self.boost = self.config.get("boost")
-
-    def detect(self, text):
-        # assume default language
-        return self.default_language
-
-    def detect_probs(self, text):
-        return {self.detect(text): 1}
-
-
-class LanguageTranslator:
-    def __init__(self):
-        self.config = get_neon_lang_config()
-        self.boost = self.config["boost"]
-        self.default_language = self.config["user"].split("-")[0]
-        self.internal_language = self.config["internal"]
-
-    def translate(self, text, target=None, source=None):
-        return text
+# TODO: Deprecate in v1.0.0
+LOG.warning(f"neon_utils.language_utils has been deprecated! Please import from ovos_plugin_manager")
