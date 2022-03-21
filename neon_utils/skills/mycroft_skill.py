@@ -75,8 +75,6 @@ class PatchedMycroftSkill(MycroftSkill):
 
     @property
     def settings(self):
-        message = dig_for_message()
-        # TODO: Apply user-specific settings here
         if self._settings is not None:
             return self._settings
         else:
@@ -90,8 +88,6 @@ class PatchedMycroftSkill(MycroftSkill):
         if not isinstance(val, dict):
             LOG.error(f"Ignoring request to set settings to: {val}")
             return
-        message = dig_for_message()
-        # TODO: Apply user-specific settings here
         if self._settings is None:
             self._initial_settings = val
             return

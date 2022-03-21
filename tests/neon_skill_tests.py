@@ -41,7 +41,6 @@ from mock import Mock
 from mycroft.skills.fallback_skill import FallbackSkill
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-# from neon_utils.language_utils import LanguageDetector, LanguageTranslator
 from neon_utils.cache_utils import LRUCache
 from neon_utils.configuration_utils import NGIConfig
 from neon_utils.signal_utils import check_for_signal, create_signal
@@ -623,14 +622,110 @@ class PatchedMycroftSkillTests(unittest.TestCase):
 
 
 class NeonSkillTests(unittest.TestCase):
-    def test_send_email_valid(self):
+    @classmethod
+    def setUpClass(cls) -> None:
+        from skills.test_skill import TestSkill
+        bus = FakeBus()
+        cls.skill = TestSkill(bus=bus)
+        # Mock the skill_loader process
+        if hasattr(cls.skill, "_startup"):
+            cls.skill._startup(bus)
+        else:
+            cls.skill.bind(bus)
+            cls.skill.load_data_files()
+            cls.skill.initialize()
+
+    def test_00_skill_init(self):
+        self.assertIsInstance(self.skill.cache_loc, str)
+        self.assertTrue(os.path.isdir(self.skill.cache_loc))
+        self.assertIsNotNone(self.skill.lru_cache)
+        self.assertIsInstance(self.skill.sys_tz, datetime.tzinfo)
+        self.assertIsInstance(self.skill.server, bool)
+        self.assertIsInstance(self.skill.default_intent_timeout, int)
+        self.assertIsInstance(self.skill.neon_core, bool)
+        self.assertIsInstance(self.skill.skill_mode, str)
+        self.assertIsInstance(self.skill.extension_time, int)
+        # TODO: Refactor after Neon Plugins all import from OPM
+        self.assertIsNotNone(self.skill.lang_detector)
+        self.assertIsNotNone(self.skill.translator)
+
+    def test_properties(self):
+        self.assertIsInstance(self.skill.gui_enabled, bool)
+        self.assertIsInstance(self.skill.user_config, NGIConfig)
+        self.assertIsInstance(self.skill.local_config, NGIConfig)
+        self.assertIsInstance(self.skill.user_info_available, dict)
+        self.assertIsInstance(self.skill.configuration_available, dict)
+        self.assertIsInstance(self.skill.ngi_settings, dict)
+        self.assertEqual(self.skill.ngi_settings, self.skill.settings)
+
+    def test_preference_skill(self):
+        pass
+
+    def test_update_profile(self):
+        pass
+
+    def test_update_skill_settings(self):
+        pass
+
+    def test_build_message(self):
+        pass
+
+    def test_send_with_audio(self):
+        pass
+
+    def test_neon_must_respond(self):
+        self.assertFalse(self.skill.neon_must_respond())
+        private_message_solo = Message("", {},
+                                       {"klat_data": {
+                                           "title": "!PRIVATE:user"}})
+        private_message_neon = Message("", {},
+                                       {"klat_data": {
+                                           "title": "!PRIVATE:user,Neon"}})
+        private_message_neon_plus = Message("", {},
+                                            {"klat_data": {
+                                      "title": "!PRIVATE:user,Neon,user1"}})
+        public_message = Message("", {},
+                                 {"klat_data": {
+                                     "title": "Test Conversation"}})
+        first_message = Message("",
+                                {"utterance": "Welcome to your private conversation with Neon"},
+                                {"klat_data": {
+                                    "title": "!PRIVATE:user"}})
+        self.assertFalse(self.skill.neon_must_respond())
+        self.assertTrue(self.skill.neon_must_respond(private_message_solo))
+        self.assertTrue(self.skill.neon_must_respond(private_message_neon))
+        self.assertFalse(self.skill.neon_must_respond(private_message_neon_plus))
+        self.assertFalse(self.skill.neon_must_respond(public_message))
+        self.assertFalse(self.skill.neon_must_respond(first_message))
+
+    def test_neon_in_request(self):
+        pass
+
+    def test_report_metric(self):
+        pass
+
+    def test_send_email(self):
         skill = get_test_neon_skill(dict())
         self.assertTrue(skill.send_email("Test Message",
                                          "This is a test\n"
                                          "called from neon_skill_tests.py "
                                          "in neon-utils",
                                          email_addr="test@neongecko.com"))
-# TODO: NeonSkill Tests
+
+    def test_make_active(self):
+        pass
+
+    def test_request_check_timeout(self):
+        pass
+
+    def test_update_cached_data(self):
+        pass
+
+    def test_get_cached_data(self):
+        pass
+
+    def test_decorate_api_call_use_lru(self):
+        pass
 
 
 if __name__ == '__main__':

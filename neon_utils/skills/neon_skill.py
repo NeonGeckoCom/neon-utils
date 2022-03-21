@@ -71,8 +71,9 @@ CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 class NeonSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         super(NeonSkill, self).__init__(name, bus, use_settings)
-        self.user_config = get_neon_user_config()
-        self.local_config = get_neon_local_config()
+        self._user_config = None
+        self._local_config = None
+        # TODO: Move caches to skill.file_system
         self.cache_loc = os.path.expanduser(
             self.local_config.get('dirVars', {}).get('cacheDir') or
             "~/.local/share/neon/cache")
@@ -81,15 +82,7 @@ class NeonSkill(MycroftSkill):
             os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
 
-        # TODO: Depreciate these references, signal use is discouraged DM
-        self.create_signal = create_signal
-        self.check_for_signal = check_for_signal
-
         self.sys_tz = gettz()
-        self.gui_enabled = self.local_config.get("prefFlags",
-                                                 {}).get("guiEvents", False)
-
-        self.scheduled_repeats = []
 
         # Server-specific imports and timeout setting
         # A server is a device that hosts the core and skills to serve clients,
@@ -136,21 +129,58 @@ class NeonSkill(MycroftSkill):
                             name="neon.load_cache_on_disk")
 
     @property
-    def user_info_available(self):
+    def gui_enabled(self) -> bool:
+        """
+        If True, skill should display GUI pages
+        """
+        return self.local_config.get("prefFlags",
+                                     {}).get("guiEvents", True) or \
+            is_gui_running()
+
+    @property
+    def user_config(self):
         LOG.warning("This reference is deprecated, "
-                    "use self.preference_x methods for user preferences")
+                    "use neon_utils.user_utils.get_user_prefs directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
+        if not self._user_config:
+            self._user_config = get_neon_user_config()
+        return self._user_config
+
+    @property
+    def local_config(self):
+        LOG.warning("This reference is deprecated, use self.config_core")
+        # TODO: Backwards-compat. deprecate in v1.0.0
+        if not self._local_config:
+            self._local_config = get_neon_local_config()
+        return self._local_config
+
+    @property
+    def user_info_available(self):
+        # TODO: Backwards-compat. deprecate in v1.0.0
         return self.user_config.content
 
     @property
     def configuration_available(self):
-        LOG.warning("This reference is deprecated, use self.local_config directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         return self.local_config.content
 
     @property
     def ngi_settings(self):
-        LOG.error("This reference is depreciated. "
-                  "Use self.preference_skill for per-user skill settings")
         return self.preference_skill()
+
+    @staticmethod
+    def create_signal(*args, **kwargs):
+        LOG.warning("This reference is deprecated. "
+                    "Import from neon_utils.signal_utils directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
+        create_signal(*args, **kwargs)
+
+    @staticmethod
+    def check_for_signal(*args, **kwargs):
+        LOG.warning("This reference is deprecated. "
+                    "Import from neon_utils.signal_utils directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
+        check_for_signal(*args, **kwargs)
 
     @staticmethod
     def preference_brands(message=None) -> dict:
@@ -160,6 +190,7 @@ class NeonSkill(MycroftSkill):
         """
         LOG.warning("This reference is deprecated."
                     "Use neon_utils.user_utils.get_user_prefs directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["brands"]
 
     @staticmethod
@@ -170,6 +201,7 @@ class NeonSkill(MycroftSkill):
         """
         LOG.warning("This reference is deprecated."
                     "Use neon_utils.user_utils.get_user_prefs directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["user"]
 
     @staticmethod
@@ -180,22 +212,26 @@ class NeonSkill(MycroftSkill):
         """
         LOG.warning("This reference is deprecated."
                     "Use neon_utils.user_utils.get_user_prefs directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["location"]
 
     @staticmethod
     def preference_unit(message=None) -> dict:
         """
-        Returns the units dictionary that contains time, date, measure formatting preferences
+        Returns the units dictionary that contains
+        time, date, measure formatting preferences
         Equivalent to self.user_config["units"] for non-server use
         """
         LOG.warning("This reference is deprecated."
                     "Use neon_utils.user_utils.get_user_prefs directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["units"]
 
     @staticmethod
     def preference_speech(message=None) -> dict:
         """
-        Returns the speech dictionary that contains language and spoken response preferences
+        Returns the speech dictionary that contains
+        language and spoken response preferences
         Equivalent to self.user_config["speech"] for non-server use
         """
         LOG.warning("This reference is deprecated."
@@ -231,8 +267,12 @@ class NeonSkill(MycroftSkill):
         Used to build a dictionary for server profile updates
         :param message: Message associate with request
         """
-        merged_dict = {**self.preference_speech(message), **self.preference_user(message),
-                       **self.preference_brands(message), **self.preference_location(message),
+        LOG.warning("This method is being deprecated")
+        # TODO: Backwards-compat. deprecate in v1.0.0
+        merged_dict = {**self.preference_speech(message),
+                       **self.preference_user(message),
+                       **self.preference_brands(message),
+                       **self.preference_location(message),
                        **self.preference_unit(message)}
         for key, value in merged_dict.items():
             if value == "":
@@ -240,8 +280,8 @@ class NeonSkill(MycroftSkill):
         return merged_dict
 
     def build_combined_skill_object(self, message=None) -> list:
-        # TODO: Depreciated? DM
         LOG.error(f"This method is depreciated!")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         user = self.get_utterance_user(message)
         skill_dict = message.context["nick_profiles"][user]["skills"]
         skill_list = list(skill_dict.values())
@@ -250,7 +290,8 @@ class NeonSkill(MycroftSkill):
     def update_profile(self, new_preferences: dict, message: Message = None):
         """
         Updates a user profile with the passed new_preferences
-        :param new_preferences: dict of updated preference values. Should follow {section: {key: val}} format
+        :param new_preferences: dict of updated preference values.
+        Should follow {section: {key: val}} format
         :param message: Message associated with request
         """
         if self.server:
@@ -290,8 +331,6 @@ class NeonSkill(MycroftSkill):
             self.update_profile({"skills": {self.skill_id: new_preferences}},
                                 message)
         else:
-            for key, val in new_preferences.items():
-                self.settings[key] = val
             if isinstance(self.settings, JsonStorage):
                 self.settings.store()
             else:
@@ -306,6 +345,7 @@ class NeonSkill(MycroftSkill):
         :param speaker: speaker data dictionary
         :return: Message object
         """
+        # TODO: Move this to message_utils DM
         LOG.debug(speaker)
 
         default_speech = self.preference_speech(message)
@@ -362,6 +402,8 @@ class NeonSkill(MycroftSkill):
         :param arguments: dict of key/value arguments to pass with action
         :param message: Message associated with request
         """
+        LOG.warning(f"This method is depreciated!")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         fmt_args = ""
         for key, value in arguments:
             fmt_args += f"&{key}={value}"
@@ -372,6 +414,8 @@ class NeonSkill(MycroftSkill):
             LOG.warning("Mobile intents are not supported on this device yet.")
 
     def socket_emit_to_server(self, event: str, data: list):
+        LOG.warning(f"This method is depreciated!")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         LOG.debug(f"Emit event={event}, data={data}")
         self.bus.emit(Message("css.emit", {"event": event, "data": data}))
 
@@ -385,6 +429,7 @@ class NeonSkill(MycroftSkill):
         :param private: (bool) Whether or not shout is private to the user
         :param speaker: (dict) Message sender data
         """
+        # TODO: Update 'speak' to handle audio files
         # from shutil import copyfile
         if not speaker:
             speaker = {"name": "Neon", "language": None, "gender": None, "voice": None}
@@ -400,12 +445,15 @@ class NeonSkill(MycroftSkill):
         LOG.info(f"sending klat.response with responses={responses} | speaker={speaker}")
         self.bus.emit(message.forward("klat.response", {"responses": responses, "speaker": speaker}))
 
-    def neon_must_respond(self, message):
+    @resolve_message
+    def neon_must_respond(self, message: Message = None) -> bool:
         """
         Checks if Neon must respond to an utterance (i.e. a server request)
-        @param message:
-        @return:
+        :param message: message associated with user request
+        :returns: True if Neon must provide a response to this request
         """
+        if not message:
+            return False
         if self.server:
             title = message.context.get("klat_data", {}).get("title", "")
             LOG.debug(message.data.get("utterance"))
@@ -433,7 +481,7 @@ class NeonSkill(MycroftSkill):
         try:
             return super().voc_match(utt, voc_filename, lang, exact)
         except FileNotFoundError:
-            LOG.info(f"`{voc_filename}` not found, checking in neon_core")
+            LOG.warning(f"`{voc_filename}` not found, checking in neon_core")
             from mycroft.skills.skill_data import read_vocab_file
             from neon_utils.packaging_utils import get_core_root
             from itertools import chain
@@ -457,9 +505,10 @@ class NeonSkill(MycroftSkill):
         else:
             return False
 
-    def neon_in_request(self, message):
+    def neon_in_request(self, message: Message) -> bool:
         """
-        Checks if the utterance is intended for Neon. Server utilizes current conversation, otherwise wake-word status
+        Checks if the utterance is intended for Neon.
+        Server utilizes current conversation, otherwise wake-word status
         and message "Neon" parameter used
         """
         if not is_neon_core():
@@ -471,18 +520,6 @@ class NeonSkill(MycroftSkill):
                                                    True)
         return request_for_neon(message, "neon", self.voc_match, ww_enabled)
 
-    def show_settings_gui(self):
-        """
-        Function to update and
-        :return:
-        """
-        try:
-            # TODO: Conditionalize register, only needs to happen once but only after skill init DM
-            self.gui.register_settings()
-            self.gui.show_settings()
-        except Exception as e:
-            LOG.error(e)
-
     def check_yes_no_response(self, message):
         """
         Used in converse methods to check if a response confirms or declines an action. Differs from ask_yesno in that
@@ -490,6 +527,9 @@ class NeonSkill(MycroftSkill):
         :param message: incoming message object to evaluate
         :return: False if declined, numbers if confirmed numerically, True if confirmed with no numbers
         """
+        LOG.warning(f"This method is depreciated. Use self.ask_yesno")
+        # TODO: Backwards-compat. deprecate in v1.0.0
+
         utterance = message.data.get("utterances")[0]
         if self.voc_match(utterance, "no"):
             LOG.info("User Declined")
@@ -519,8 +559,10 @@ class NeonSkill(MycroftSkill):
 
     def send_email(self, title, body, message=None, email_addr=None, attachments=None):
         """
-        Send an email to the registered user's email. Method here for backwards compatibility with Mycroft skills.
-        Email address priority: email_addr, user prefs from message, fallback to DeviceApi for Mycroft method
+        Send an email to the registered user's email.
+        Method here for backwards compatibility with Mycroft skills.
+        Email address priority: email_addr, user prefs from message,
+         fallback to DeviceApi for Mycroft method
 
         Arguments:
             title (str): Title of email
@@ -540,7 +582,8 @@ class NeonSkill(MycroftSkill):
                             "subject": title,
                             "body": body,
                             "attachments": attachments}
-            data = send_mq_request("/neon_emails", request_data, "neon_emails_input")
+            data = send_mq_request("/neon_emails", request_data,
+                                   "neon_emails_input")
             return data.get("success")
         else:
             LOG.warning("Attempting to send email via Mycroft Backend")
@@ -551,7 +594,8 @@ class NeonSkill(MycroftSkill):
 
         This enables converse method to be called even without skill being
         used in last 5 minutes.
-        :param duration_minutes: duration in minutes for skill to remain active (-1 for infinite)
+        :param duration_minutes: duration in minutes for skill to remain active
+         (-1 for infinite)
         """
         self.bus.emit(Message("active_skill_request",
                               {"skill_id": self.skill_id,
@@ -561,6 +605,8 @@ class NeonSkill(MycroftSkill):
         """
         Accessor method
         """
+        LOG.warning(f"This method is depreciated!")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         self._register_decorated()
 
     def schedule_event(self, handler, when, data=None, name=None, context=None):
@@ -571,7 +617,13 @@ class NeonSkill(MycroftSkill):
             LOG.info(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
-    def request_check_timeout(self, time_wait, intent_to_check):
+    def request_check_timeout(self, time_wait: int,
+                              intent_to_check: List[str]):
+        """
+        Set the specified intent to be disabled after the specified time
+        :param time_wait: Time in seconds to wait before deactivating intent
+        :param intent_to_check: list of intents to disable
+        """
         LOG.info("request received")
         LOG.info(time_wait)
         LOG.info(len(intent_to_check))
@@ -582,7 +634,7 @@ class NeonSkill(MycroftSkill):
             for intent in intent_to_check:
                 data = {'time_out': time_wait,
                         'intent_to_check': f"{self.skill_id}:{intent}"}
-                LOG.debug(f"DM: Set Timeout: {data}")
+                LOG.debug(f"Set Timeout: {data}")
                 self.bus.emit(Message("set_timeout", data))
         except Exception as x:
             LOG.error(x)
@@ -596,6 +648,8 @@ class NeonSkill(MycroftSkill):
                        handled in skill's converse method
         :param timeout: duration to wait in seconds before removing the action from the list
         """
+        LOG.warning(f"This method is depreciated! use self.get_response")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         from datetime import datetime as dt, timedelta
         self.reload_skill = False
         if isinstance(actions, str):
@@ -607,8 +661,10 @@ class NeonSkill(MycroftSkill):
 
         self.cancel_scheduled_event(user)
         time.sleep(1)
-        self.schedule_event(self._confirmation_timeout, to_system_time(expiration), data={"user": user,
-                                                                                          "action": actions},
+        self.schedule_event(self._confirmation_timeout,
+                            to_system_time(expiration),
+                            data={"user": user,
+                                  "action": actions},
                             name=user)
         LOG.debug(f"Scheduled {user}")
 
@@ -629,24 +685,30 @@ class NeonSkill(MycroftSkill):
         Called by a skill to clear its gui display after the specified timeout
         :param timeout_seconds: seconds to wait before clearing gui display
         """
+        LOG.warning(f"This method is depreciated!")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         from datetime import datetime as dt, timedelta
         expiration = dt.now(self.sys_tz) + timedelta(seconds=timeout_seconds)
-        self.schedule_event(self._clear_gui_timeout, to_system_time(expiration))
+        self.schedule_event(self._clear_gui_timeout,
+                            to_system_time(expiration))
 
     def _clear_gui_timeout(self):
         """
         Handler for clear_gui_timeout function
         """
+        # TODO: Backwards-compat. deprecate in v1.0.0
         LOG.info("Reset GUI!")
         self.gui.clear()
 
     def clear_signals(self, prefix: str):
         """
-        Clears all signals that begin with the passed prefix. Used with skill prefix for a skill to clear any signals it
+        Clears all signals that begin with the passed prefix.
+        Used with skill prefix for a skill to clear any signals it
         may have set
         :param prefix: prefix to match
         """
         LOG.warning(f"Signal use is being depreciated. Transition to internal variables.")
+        # TODO: Backwards-compat. deprecate in v1.0.0
         os.makedirs(f"{self.local_config['dirVars']['ipcDir']}/signal", exist_ok=True)
         for signal in os.listdir(self.local_config['dirVars']['ipcDir'] + '/signal'):
             if str(signal).startswith(prefix) or f"_{prefix}_" in str(signal):
@@ -654,16 +716,17 @@ class NeonSkill(MycroftSkill):
                 # os.remove(self.configuration_available['dirVars']['ipcDir'] + '/signal/' + signal)
                 self.check_for_signal(signal)
 
-    def update_cached_data(self, filename, new_element):
+    def update_cached_data(self, filename: str, new_element: Any):
         """
         Updates cache file of skill responses to translated responses when non-english responses are requested.
-        :param filename: (str) filename of cache object to update (relative to cacheDir)
-        :param new_element: (any) object to cache at passed location
+        :param filename: filename of cache object to update (relative to cacheDir)
+        :param new_element: object to cache at passed location
         """
         with open(os.path.join(self.cache_loc, filename), 'wb+') as file_to_update:
             pickle.dump(new_element, file_to_update, protocol=pickle.HIGHEST_PROTOCOL)
 
-    def get_cached_data(self, filename, file_loc=None):
+    def get_cached_data(self, filename: str,
+                        file_loc: Optional[str] = None) -> dict:
         """
         Retrieves cache data from a file created/updated with update_cached_data
         :param filename: (str) filename of cache object to update
@@ -688,33 +751,31 @@ class NeonSkill(MycroftSkill):
         Returns:
             Username associated with the message or a default value of 'local' or 'server'.
         """
-        if self.server:
-            default_user = "server"
-        else:
-            default_user = self.preference_user(message).get("username", "local")
-        if not message:
-            return default_user
-
-        try:
-            return get_message_user(message) or default_user
-        except Exception as e:
-            LOG.error(e)
-            # TODO: Depreciate this and fix underlying error DM
-            return default_user
+        # TODO: Backwards-compat. deprecate in v1.0.0
+        LOG.warning("This method is deprecated, use message_utils.get_message_user")
+        from neon_utils.user_utils import get_default_user_config
+        return get_message_user(message) or \
+            get_default_user_config()["user"]["username"]
 
     @staticmethod
     def newest_file_in_dir(path, ext=None):
-        LOG.warning("This method is depreciated, use file_utils.get_most_recent_file_in_dir() directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
+        LOG.warning("This method is depreciated, "
+                    "use file_utils.get_most_recent_file_in_dir() directly")
         return get_most_recent_file_in_dir(path, ext)
 
     @staticmethod
     def request_from_mobile(message):
-        LOG.warning("This method is depreciated, use message_utils.request_from_mobile() directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
+        LOG.warning("This method is depreciated, "
+                    "use message_utils.request_from_mobile() directly")
         return request_from_mobile(message)
 
     @staticmethod
     def to_system_time(dt):
-        LOG.warning("This method is depreciated, use location_utils.to_system_time() directly")
+        # TODO: Backwards-compat. deprecate in v1.0.0
+        LOG.warning("This method is depreciated, "
+                    "use location_utils.to_system_time() directly")
         return to_system_time(dt)
 
     def decorate_api_call_use_lru(self, func):
