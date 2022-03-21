@@ -52,12 +52,6 @@ from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
 
 try:
-    from neon_core.language import DetectorFactory, TranslatorFactory
-except ImportError:
-    LOG.error(f"neon_core package not found, language detection/translation will be disabled.")
-    DetectorFactory, TranslatorFactory = None, None
-
-try:
     from ovos_plugin_manager.language import OVOSLangDetectionFactory, OVOSLangTranslationFactory
 except ImportError as e:
     OVOSLangDetectionFactory, OVOSLangTranslationFactory = None, None
