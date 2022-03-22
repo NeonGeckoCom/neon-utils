@@ -34,11 +34,15 @@ import unittest
 from multiprocessing import Event
 from threading import Thread
 from time import sleep
+from unittest.mock import patch
+
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 from mock import Mock
 
 from mycroft.skills.fallback_skill import FallbackSkill
+
+import neon_utils.configuration_utils
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
@@ -624,6 +628,8 @@ class NeonSkillTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         from skills.test_skill import TestSkill
         bus = FakeBus()
+        os.environ['NEON_CONFIG_PATH'] = \
+            os.path.join(os.path.dirname(__file__), "skills")
         cls.skill = TestSkill()
         # Mock the skill_loader process
         if hasattr(cls.skill, "_startup"):
@@ -657,19 +663,54 @@ class NeonSkillTests(unittest.TestCase):
         self.assertEqual(self.skill.ngi_settings, self.skill.settings)
 
     def test_preference_skill(self):
-        pass
+        self.assertIsInstance(self.skill.preference_skill(), dict)
+        self.assertEqual(self.skill.preference_skill()["boolean_type"], False)
+        self.assertEqual(self.skill.preference_skill()["number_type"], 2.0)
+        self.assertEqual(self.skill.preference_skill()["text_type"], "8")
+        self.skill.settings['text_type'] = 'test'
+        self.assertEqual(self.skill.preference_skill()["text_type"], "test")
+        self.skill.settings['new_setting'] = 'test'
+        self.assertEqual(self.skill.preference_skill()["new_setting"], "test")
 
     def test_update_profile(self):
-        pass
+        from neon_utils.configuration_utils import get_neon_user_config
+        test_config_path = os.path.dirname(__file__)
+        profile_settings = get_neon_user_config(test_config_path)
+        test_username = "tester"
+        profile_settings['user']['username'] = test_username
+        test_message_old = Message("", {},
+                                   {'username': test_username,
+                                    'nick_profiles': {
+                                        test_username: profile_settings.content}})
+        test_message_new = Message("", {},
+                                   {'username': test_username,
+                                    'user_profiles': [profile_settings.content]})
+        new_email = "new@email.test"
+        self.skill.update_profile({'user': {'email': new_email}},
+                                  test_message_old)
+        self.assertEqual(test_message_old.context['nick_profiles']
+                         [test_username]['user']['email'], new_email)
+
+        self.skill.update_profile({'user': {'email': new_email}},
+                                  test_message_new)
+        self.assertEqual(test_message_new.context['user_profiles']
+                         [0]['user']['email'], new_email)
+        os.remove(profile_settings.file_path)
+        # TODO: Define and test persistent data
 
     def test_update_skill_settings(self):
-        pass
+        settings = self.skill.settings
+        self.skill.update_skill_settings({"boolean_type": settings.get("boolean_type")})
+        self.assertEqual(settings, self.skill.settings)
 
-    def test_build_message(self):
-        pass
+        test_val = "updated value test"
+        self.skill.update_skill_settings({"text_type": test_val})
+        self.assertEqual(self.skill.settings['text_type'], test_val)
 
-    def test_send_with_audio(self):
-        pass
+        self.skill.update_skill_settings({"text_type": test_val,
+                                          "new_pref": True})
+        self.assertTrue(self.skill.settings['new_pref'])
+        # TODO: Define and test for user-specific settings
 
     def test_neon_must_respond(self):
         self.skill.server = True
@@ -697,8 +738,33 @@ class NeonSkillTests(unittest.TestCase):
         self.assertFalse(self.skill.neon_must_respond(public_message))
         self.assertFalse(self.skill.neon_must_respond(first_message))
 
-    def test_neon_in_request(self):
-        pass
+    @patch('neon_utils.configuration_utils.is_neon_core')
+    def test_neon_in_request(self, is_neon_core):
+        # Test non-Neon core
+        is_neon_core.return_value = False
+        self.assertTrue(self.skill.neon_in_request(Message("test")))
+        is_neon_core.return_value = True
+
+        neon_should_respond = Message("test_neon_should_respond", {},
+                                      {'neon_should_respond': True})
+        self.assertTrue(self.skill.neon_in_request(neon_should_respond))
+
+        neon_in_data = Message("test_neon_should_respond", {'neon': "Neon"},
+                               {'neon_should_respond': False})
+        self.assertTrue(self.skill.neon_in_request(neon_in_data))
+
+        # Test Config WW state
+        self.skill.server = False
+        self.skill.local_config['interface']['wake_word_enabled'] = False
+        self.assertFalse(self.skill.neon_in_request(Message('test')))
+        self.skill.local_config['interface']['wake_word_enabled'] = True
+        self.assertTrue(self.skill.neon_in_request(Message('test')))
+
+        # Test vocab match
+        neon_in_utterance = Message("test_neon_in_utterance",
+                                    {'utterance': "hello Neon"},
+                                    {"neon_should_respond": False})
+        self.assertTrue(self.skill.neon_in_request(neon_in_utterance))
 
     def test_report_metric(self):
         pass

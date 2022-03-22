@@ -5,7 +5,7 @@ skillMetadata:
         - name: boolean_type
           type: checkbox
           label: Test Bool
-          value: "false"
+          value: false
         - name: number_type
           type: number
           label: Test Float
@@ -13,4 +13,4 @@ skillMetadata:
         - name: text_type
           type: text
           label: Test String
-          value: 8
+          value: '8'

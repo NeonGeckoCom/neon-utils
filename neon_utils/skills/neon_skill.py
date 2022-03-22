@@ -238,6 +238,7 @@ class NeonSkill(MycroftSkill):
                     "Use neon_utils.user_utils.get_user_prefs directly")
         return get_user_prefs(message)["speech"]
 
+    @resolve_message
     def preference_skill(self, message=None) -> dict:
         """
         Returns the skill settings configuration
@@ -294,8 +295,22 @@ class NeonSkill(MycroftSkill):
         Should follow {section: {key: val}} format
         :param message: Message associated with request
         """
+        nick = get_message_user(message) if message else None
+
+        if nick and 'nick_profiles' in message.context:
+            LOG.warning("nick_profiles found and will be updated")
+            old_preferences = message.context["nick_profiles"][nick]
+            message.context["nick_profiles"][nick] = {**old_preferences,
+                                                      **new_preferences}
+        elif nick and 'user_profiles' in message.context:
+            LOG.debug("updating user_profiles")
+            for i, profile in enumerate(message.context['user_profiles']):
+                if profile['user']['username'] == nick:
+                    profile = {**profile, **new_preferences}
+                    message.context['user_profiles'][i] = profile
+                    break
+        # TODO: Update below to handle MQ clients and PyKlat
         if self.server:
-            nick = get_message_user(message) if message else None
             new_skills_prefs = new_preferences.pop("skills")
             old_skills_prefs = message.context["nick_profiles"][nick]["skills"]
             combined_skill_prefs = {**old_skills_prefs, **new_skills_prefs}
@@ -308,8 +323,6 @@ class NeonSkill(MycroftSkill):
             self.socket_emit_to_server("update profile", ["skill", combined_changes,
                                                           message.context["klat_data"]["request_id"]])
             self.bus.emit(Message("neon.remove_cache_entry", {"nick": nick}))
-            old_preferences = message.context["nick_profiles"][nick]
-            message.context["nick_profiles"][nick] = {**old_preferences, **new_preferences}
         else:
             for section, settings in new_preferences.items():
                 # section in user, brands, units, etc.
@@ -317,6 +330,7 @@ class NeonSkill(MycroftSkill):
                     self.user_config[section][key] = val
             self.user_config.write_changes()
 
+    @resolve_message
     def update_skill_settings(self, new_preferences: dict,
                               message: Message = None, skill_global=False):
         """
@@ -325,12 +339,15 @@ class NeonSkill(MycroftSkill):
         :param message: Message associated with request
         :param skill_global: Boolean to indicate these are global/non-user-specific variables
         """
+        # TODO: Spec how to handle global vs per-user settings
         LOG.debug(f"Update skill settings with new: {new_preferences}")
+        new_settings = {**self.preference_skill(message), **new_preferences}
         if self.server and not skill_global:
             new_preferences["skill_id"] = self.skill_id
-            self.update_profile({"skills": {self.skill_id: new_preferences}},
+            self.update_profile({"skills": {self.skill_id: new_settings}},
                                 message)
         else:
+            self.settings = new_settings
             if isinstance(self.settings, JsonStorage):
                 self.settings.store()
             else:
