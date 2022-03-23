@@ -738,33 +738,33 @@ class NeonSkillTests(unittest.TestCase):
         self.assertFalse(self.skill.neon_must_respond(public_message))
         self.assertFalse(self.skill.neon_must_respond(first_message))
 
-    @patch('neon_utils.configuration_utils.is_neon_core')
-    def test_neon_in_request(self, is_neon_core):
-        # Test non-Neon core
-        is_neon_core.return_value = False
-        self.assertTrue(self.skill.neon_in_request(Message("test")))
-        is_neon_core.return_value = True
+    def test_neon_in_request(self):
+        # TODO: Mock `is_neon_core` and test `skill.neon_in_request` directly
+        from neon_utils.message_utils import request_for_neon
 
+        # Test message context/vocab
         neon_should_respond = Message("test_neon_should_respond", {},
                                       {'neon_should_respond': True})
-        self.assertTrue(self.skill.neon_in_request(neon_should_respond))
+        self.assertTrue(request_for_neon(neon_should_respond, "neon",
+                                         self.skill.voc_match, False))
 
         neon_in_data = Message("test_neon_should_respond", {'neon': "Neon"},
                                {'neon_should_respond': False})
-        self.assertTrue(self.skill.neon_in_request(neon_in_data))
+        self.assertTrue(request_for_neon(neon_in_data, "neon",
+                                         self.skill.voc_match, False))
 
         # Test Config WW state
-        self.skill.server = False
-        self.skill.local_config['interface']['wake_word_enabled'] = False
-        self.assertFalse(self.skill.neon_in_request(Message('test')))
-        self.skill.local_config['interface']['wake_word_enabled'] = True
-        self.assertTrue(self.skill.neon_in_request(Message('test')))
+        self.assertFalse(request_for_neon(Message("test"), "neon",
+                                          self.skill.voc_match, False))
+        self.assertTrue(request_for_neon(Message("test"), "neon",
+                                         self.skill.voc_match, True))
 
         # Test vocab match
         neon_in_utterance = Message("test_neon_in_utterance",
                                     {'utterance': "hello Neon"},
                                     {"neon_should_respond": False})
-        self.assertTrue(self.skill.neon_in_request(neon_in_utterance))
+        self.assertTrue(request_for_neon(neon_in_utterance, "neon",
+                                         self.skill.voc_match, False))
 
     def test_report_metric(self):
         pass
