@@ -769,29 +769,49 @@ class NeonSkillTests(unittest.TestCase):
                                          self.skill.voc_match, False))
 
     def test_report_metric(self):
-        pass
+        metric_handler = Mock()
+        self.skill.bus.on("neon.metric", metric_handler)
+        self.skill.report_metric("test metric", {"name": "invalid name",
+                                                 "param": "value",
+                                                 "test": True})
+        metric_handler.assert_called_once()
+        message = metric_handler.call_args[0][0]
+        self.assertEqual(message.msg_type, "neon.metric")
+        self.assertEqual(message.data, {"name": "test metric",
+                                        "param": "value",
+                                        "test": True})
 
     def test_send_email(self):
-        skill = get_test_neon_skill(dict())
-        self.assertTrue(skill.send_email("Test Message",
-                                         "This is a test\n"
-                                         "called from neon_skill_tests.py "
-                                         "in neon-utils",
-                                         email_addr="test@neongecko.com"))
+        self.assertTrue(self.skill.send_email(
+            "Test Message",
+            "This is a test\ncalled from neon_skill_tests.py in neon-utils",
+            email_addr="test@neongecko.com"))
 
     def test_make_active(self):
-        pass
+        active_request = Mock()
+        self.skill.bus.on("active_skill_request", active_request)
+        self.skill.make_active(15)
+        active_request.assert_called_once()
+        message = active_request.call_args[0][0]
+        self.assertEqual(message.msg_type, "active_skill_request")
+        self.assertEqual(message.data, {"skill_id": self.skill.skill_id,
+                                        "timeout": 15})
 
     def test_request_check_timeout(self):
-        pass
+        set_timeout = Mock()
+        self.skill.bus.on("set_timeout", set_timeout)
 
-    def test_update_cached_data(self):
-        pass
-
-    def test_get_cached_data(self):
-        pass
+        self.skill.request_check_timeout(10, "timeout.intent")
+        set_timeout.assert_called_once()
+        message = set_timeout.call_args[0][0]
+        self.assertEqual(message.msg_type, "set_timeout")
+        self.assertEqual(message.data, {"time_out": 10,
+                                        "intent_to_check": "timeout.intent"})
+        self.skill.request_check_timeout(30, ["test_intent_1", "test_intent"])
+        self.assertEqual(set_timeout.call_count, 2)
 
     def test_decorate_api_call_use_lru(self):
+        # TODO
         pass
 
 

@@ -582,9 +582,9 @@ class NeonSkill(MycroftSkill):
             name (str): Name of metric. Must use only letters and hyphens
             data (dict): JSON dictionary to report. Must be valid JSON
         """
-        combinded = deepcopy(data)
-        combinded["name"] = name
-        self.bus.emit(Message("neon.metric", combinded))
+        combined = deepcopy(data)
+        combined["name"] = name
+        self.bus.emit(Message("neon.metric", combined))
 
     def send_email(self, title, body, message=None, email_addr=None, attachments=None):
         """
@@ -653,20 +653,17 @@ class NeonSkill(MycroftSkill):
         :param time_wait: Time in seconds to wait before deactivating intent
         :param intent_to_check: list of intents to disable
         """
-        LOG.info("request received")
-        LOG.info(time_wait)
-        LOG.info(len(intent_to_check))
-        try:
-            if isinstance(intent_to_check, str):
-                intent_to_check = [intent_to_check]
+        LOG.debug(time_wait)
+        LOG.debug(intent_to_check)
+        if isinstance(intent_to_check, str):
+            LOG.warning(f"Casting string to list: {intent_to_check}")
+            intent_to_check = [intent_to_check]
 
-            for intent in intent_to_check:
-                data = {'time_out': time_wait,
-                        'intent_to_check': f"{self.skill_id}:{intent}"}
-                LOG.debug(f"Set Timeout: {data}")
-                self.bus.emit(Message("set_timeout", data))
-        except Exception as x:
-            LOG.error(x)
+        for intent in intent_to_check:
+            data = {'time_out': time_wait,
+                    'intent_to_check': f"{self.skill_id}:{intent}"}
+            LOG.debug(f"Set Timeout: {data}")
+            self.bus.emit(Message("set_timeout", data))
 
     def await_confirmation(self, user, actions, timeout=None):
         """
@@ -747,10 +744,11 @@ class NeonSkill(MycroftSkill):
 
     def update_cached_data(self, filename: str, new_element: Any):
         """
-        Updates cache file of skill responses to translated responses when non-english responses are requested.
+        Updates a generic cache file
         :param filename: filename of cache object to update (relative to cacheDir)
         :param new_element: object to cache at passed location
         """
+        # TODO: Move to static function with XDG compat.
         with open(os.path.join(self.cache_loc, filename), 'wb+') as file_to_update:
             pickle.dump(new_element, file_to_update, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -762,6 +760,7 @@ class NeonSkill(MycroftSkill):
         :param file_loc: (str) path to directory containing filename (defaults to cache dir)
         :return: (dict) cache data
         """
+        # TODO: Move to static function with XDG compat.
         if not file_loc:
             file_loc = self.cache_loc
         cached_location = os.path.join(file_loc, filename)
