@@ -805,9 +805,13 @@ class NeonSkillTests(unittest.TestCase):
         set_timeout.assert_called_once()
         message = set_timeout.call_args[0][0]
         self.assertEqual(message.msg_type, "set_timeout")
-        self.assertEqual(message.data, {"time_out": 10,
-                                        "intent_to_check": "timeout.intent"})
-        self.skill.request_check_timeout(30, ["test_intent_1", "test_intent"])
+        self.assertEqual(message.data,
+                         {"time_out": 10,
+                          "intent_to_check":
+                              f"{self.skill.skill_id}:timeout.intent"})
+
+        set_timeout.reset_mock()
+        self.skill.request_check_timeout(30, ["test_intent_1", f"test_intent"])
         self.assertEqual(set_timeout.call_count, 2)
 
     def test_decorate_api_call_use_lru(self):
