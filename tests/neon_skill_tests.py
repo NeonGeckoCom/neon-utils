@@ -699,8 +699,10 @@ class NeonSkillTests(unittest.TestCase):
         # TODO: Define and test persistent data
 
     def test_update_skill_settings(self):
+        self.skill.server = False
         settings = self.skill.settings
-        self.skill.update_skill_settings({"boolean_type": settings.get("boolean_type")})
+        self.skill.update_skill_settings(
+            {"boolean_type": settings.get("boolean_type")})
         self.assertEqual(settings, self.skill.settings)
 
         test_val = "updated value test"
