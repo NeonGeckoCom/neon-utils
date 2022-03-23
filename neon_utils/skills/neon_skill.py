@@ -295,8 +295,20 @@ class NeonSkill(MycroftSkill):
         Should follow {section: {key: val}} format
         :param message: Message associated with request
         """
-        nick = get_message_user(message) if message else None
 
+        def _write_yml_changes():
+            for section, settings in new_preferences.items():
+                # section in user, brands, units, etc.
+                for key, val in settings.items():
+                    self.user_config[section][key] = val
+            self.user_config.write_changes()
+
+        if not message:
+            LOG.warning("No message associated with profile update")
+            _write_yml_changes()
+            return
+
+        nick = get_message_user(message) if message else None
         if nick and 'nick_profiles' in message.context:
             LOG.warning("nick_profiles found and will be updated")
             old_preferences = message.context["nick_profiles"][nick]
@@ -310,25 +322,25 @@ class NeonSkill(MycroftSkill):
                     message.context['user_profiles'][i] = profile
                     break
         # TODO: Update below to handle MQ clients and PyKlat
-        if self.server:
+        if message.context.get('klat_data', {}).get('request_id'):
             new_skills_prefs = new_preferences.pop("skills")
             old_skills_prefs = message.context["nick_profiles"][nick]["skills"]
             combined_skill_prefs = {**old_skills_prefs, **new_skills_prefs}
-            combined_changes = {k: v for dic in new_preferences.values() for k, v in dic.items()}
+            combined_changes = {k: v for dic in new_preferences.values()
+                                for k, v in dic.items()}
             if new_skills_prefs:
-                combined_changes["skill_settings"] = json.dumps(list(combined_skill_prefs.values()))
+                combined_changes["skill_settings"] = \
+                    json.dumps(list(combined_skill_prefs.values()))
                 new_preferences["skills"] = combined_skill_prefs
                 LOG.debug(f"combined_skill_prefs={combined_skill_prefs}")
             combined_changes["username"] = nick
-            self.socket_emit_to_server("update profile", ["skill", combined_changes,
-                                                          message.context["klat_data"]["request_id"]])
+            self.socket_emit_to_server("update profile",
+                                       ["skill", combined_changes,
+                                        message.context["klat_data"]
+                                        ["request_id"]])
             self.bus.emit(Message("neon.remove_cache_entry", {"nick": nick}))
         else:
-            for section, settings in new_preferences.items():
-                # section in user, brands, units, etc.
-                for key, val in settings.items():
-                    self.user_config[section][key] = val
-            self.user_config.write_changes()
+            _write_yml_changes()
 
     @resolve_message
     def update_skill_settings(self, new_preferences: dict,
