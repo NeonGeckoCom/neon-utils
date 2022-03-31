@@ -82,7 +82,7 @@ def get_package_dependencies(pkg: str):
         constraints_spec = [str(c) for c in constraints]
         LOG.debug(constraints_spec)
         return constraints_spec
-    except pkg_resources.DistributionNotFound:
+    except KeyError:
         raise ModuleNotFoundError(f"{pkg} not found")
 
 
