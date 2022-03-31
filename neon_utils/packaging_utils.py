@@ -70,6 +70,22 @@ def get_package_version_spec(pkg: str):
         raise ModuleNotFoundError(f"{pkg} not found")
 
 
+def get_package_dependencies(pkg: str):
+    """
+    Get the dependencies for an installed package
+    :param pkg: string package name to evaluate
+    :returns: list of string dependencies (equivalent to requirements.txt)
+    :raises ModuleNotFoundError if requested package isn't installed
+    """
+    try:
+        constraints = pkg_resources.working_set.by_key[pkg].requires()
+        constraints_spec = [str(c) for c in constraints]
+        LOG.debug(constraints_spec)
+        return constraints_spec
+    except KeyError:
+        raise ModuleNotFoundError(f"{pkg} not found")
+
+
 def get_packaged_core_version() -> str:
     """
     Get the version of the packaged core in use. Supports Neon, Mycroft, and OVOS default packages.

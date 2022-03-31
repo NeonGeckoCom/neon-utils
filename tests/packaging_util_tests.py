@@ -120,6 +120,18 @@ class PackagingUtilTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 get_version_from_file()
 
+    def test_get_package_dependencies(self):
+        self_deps = get_package_dependencies("neon-utils")
+        requirements_file = join(os.path.dirname(os.path.dirname(__file__)),
+                                 "requirements", "requirements.txt")
+        with open(requirements_file) as f:
+            spec_requirements = f.read().split('\n')
+        # Version specs aren't order-dependent, so they can't be compared
+        self.assertEqual(len(self_deps), len(spec_requirements))
+
+        with self.assertRaises(ModuleNotFoundError):
+            get_package_dependencies("fakeneongeckopackage")
+
     # TODO: Actually validate exception cases? DM
 
 
