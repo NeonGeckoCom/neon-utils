@@ -40,7 +40,7 @@ from glob import glob
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.configuration import read_mycroft_config, LocalConf
 from ruamel.yaml import YAML
-from typing import Optional
+from typing import Optional, List
 
 from neon_utils.location_utils import get_full_location
 from neon_utils.logger import LOG
@@ -411,6 +411,72 @@ class NGIConfig:
             raise TypeError("__sub__ expects an argument other than None")
         if not self.write_changes():
             LOG.error("Disk contents are newer than this config object, changes were not written.")
+
+
+class KlatConfig:
+    """Pyklatchat compatible configs, TODO: merge it with neon common config practice (Kirill) """
+
+    db_controllers = dict()
+
+    def __init__(self, from_files: List[str]):
+        self._config_data = dict()
+        for source_file in [file for file in list(set(from_files)) if file]:
+            self.add_new_config_properties(self.extract_config_from_path(source_file))
+
+    @staticmethod
+    def extract_config_from_path(file_path: str) -> dict:
+        """
+            Extracts configuration dictionary from desired file path
+
+            :param file_path: desired file path
+
+            :returns dictionary containing configs from target file, empty dict otherwise
+        """
+        try:
+            with open(os.path.expanduser(file_path)) as input_file:
+                extraction_result = json.load(input_file)
+        except Exception as ex:
+            LOG.error(f'Exception occurred while extracting data from {file_path}: {ex}')
+            extraction_result = dict()
+        # LOG.info(f'Extracted config: {extraction_result}')
+        return extraction_result
+
+    def add_new_config_properties(self, new_config_dict: dict, at_key: str = None):
+        """
+            Adds new configuration properties to existing configuration dict
+
+            :param new_config_dict: dictionary containing new configuration
+            :param at_key: the key at which to append new dictionary
+                            (optional but setting that will reduce possible future key conflicts)
+        """
+        if at_key:
+            self.config_data[at_key] = new_config_dict
+        else:
+            # merge existing config with new dictionary (python 3.5+ syntax)
+            self.config_data = {**self.config_data, **new_config_dict}
+
+    @property
+    def config_data(self) -> dict:
+        if not self._config_data:
+            self._config_data = dict()
+        return self._config_data
+
+    @config_data.setter
+    def config_data(self, value):
+        if not isinstance(value, dict):
+            raise TypeError(f'Type: {type(value)} not supported')
+        self._config_data = value
+
+    def get(self, item, default_value=None):
+        """Gets value contained under some item"""
+        res = self.__getitem__(item)
+        return res or default_value
+
+    def __getitem__(self, item):
+        return self.config_data.get(item, None)
+
+    def __str__(self):
+        return str(self.config_data)
 
 
 def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:

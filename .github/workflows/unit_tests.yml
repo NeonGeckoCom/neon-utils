@@ -78,6 +78,18 @@ jobs:
         with:
           name: skill-patch-test-results
           path: tests/skill-patch-test-results.xml
+      - name: Get Klat Testing Credentials
+        run: |
+          mkdir -p ~/.local/share/neon
+          echo $KLAT_UTILS_CREDENTIALS > ~/.local/share/neon/credentials.json
+      - name: Test Database Utils
+        run: |
+          pytest tests/database_util_tests.py --doctest-modules --junitxml=tests/database-util-test-results.xml
+      - name: Upload database utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: database-util-test-results
+          path: tests/database-util-test-results.xml
 
       - name: Test Parse Utils
         run: |
