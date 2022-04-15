@@ -26,7 +26,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from neon_utils.skills import *
+from neon_utils.skills import CommonMessageSkill, CommonPlaySkill,\
+    CommonQuerySkill, NeonFallbackSkill, NeonSkill, PatchedMycroftSkill,\
+    InstructorSkill
 
 
 class TestCMS(CommonMessageSkill):
@@ -78,3 +80,17 @@ class TestNeonSkill(NeonSkill):
 class TestPatchedSkill(PatchedMycroftSkill):
     def __init__(self):
         super(TestPatchedSkill, self).__init__(name="Test Mycroft Skill")
+
+
+class TestInstructorSkill(InstructorSkill):
+    def __init__(self):
+        super(TestInstructorSkill, self).__init__(name="Test Instructor Skill")
+
+    def _access_data_source(self, *args, **kwargs):
+        pass
+
+    def _search_in_data_source(self, *args, **kwargs):
+        pass
+
+    def _get_instructions(self, *args, **kwargs):
+        pass

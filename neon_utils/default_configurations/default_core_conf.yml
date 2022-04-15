@@ -59,6 +59,8 @@ websocket:
   port: 8181
   route: "/core"
   ssl: false
+  shared_connection: true
+  # If false, one object per client
   allow_self_signed: true
   ssl_cert:
   ssl_key:
@@ -73,6 +75,8 @@ gui:
   route: /gui
   ssl: false
   resource_root: https://0000.us/klatchat/app/files/neon_qml
+  # resource_root is deprecated; use file_server to specify network QML files
+  file_server:
 
 hotwords:
   Hey Neon: { module: ovos-ww-plugin-pocketsphinx,
@@ -107,6 +111,7 @@ skills:
   install_default: True
   wait_for_internet: True
   debug: True
+  run_gui_file_server: False
   blacklist: []
   priority: [
     "skill-about.neongeckocom",
@@ -124,13 +129,18 @@ skills:
   auto_update_interval: 24.0
   # time between automatic skill updates in hours
   msm_ver: False
-  repo_url: "https://github.com/MycroftAI/mycroft-skills"
+  repo_url: "https://github.com/NeonGeckoCom/neon_skills"
   repo_branch: "18.08"
   data_dir: "~/.neon/msm"
   neon_token:
+  extra_directories:
+    - /skills
 
 audio_parsers:
   blacklist: ["gender"]
+
+text_parsers:
+  blacklist: []
 
 session:
   ttl: 180
@@ -159,6 +169,7 @@ language:
 
 logs:
   blacklist: ["enclosure.mouth.viseme", "enclosure.mouth.display"]
+  log_level: INFO
 
 device:
   mac: 00:00:00:00:00:00
@@ -251,12 +262,25 @@ sttSpokenOpts: {Afrikaans: af-ZA, Amharic: am-ET, Armenian: hy-AM, Azerbaijani: 
                 Korean: ko-KR, Taiwanese: zh-TW, 'Chinese, Cantonese': yue-Hant-HK, Japanese: ja-JP,
                 'Chinese, Mandarin': zh}
 
+ready_settings:
+  # pairing -> device is paired
+  # internet -> device is connected to the internet - NOT IMPLEMENTED
+  # skills -> skills reported ready
+  # speech -> stt reported ready
+  # audio -> audio playback reported ready
+  # gui -> gui websocket reported ready - NOT IMPLEMENTED
+  # enclosure -> enclosure/HAL reported ready - NOT IMPLEMENTED
+  - skills
+  - speech
+  - audio
+
 signal:
   use_signal_files: True
   max_wait_seconds: 300
 
 MQ:
   server: api.neon.ai
+  port: 5672
   users:
     mq_handler:
       user: 'neon_api_utils'

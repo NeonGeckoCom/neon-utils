@@ -26,68 +26,70 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sys
 import json
 import time
 import os.path
 
-from copy import deepcopy
 from threading import Event
 from typing import Optional
 
+from json_database import JsonStorage
 from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message
 
-from neon_utils.skill_override_functions import wait_while_speaking
+from neon_utils.signal_utils import wait_for_signal_clear
+from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message
-from neon_utils.configuration_utils import dict_update_keys, parse_skill_default_settings, \
-    is_neon_core, get_neon_local_config, get_mycroft_compatible_config
+from neon_utils.configuration_utils import dict_update_keys, \
+    parse_skill_default_settings
 
 from mycroft.skills import MycroftSkill
 from mycroft.skills.settings import get_local_settings
-from mycroft.filesystem import FileSystemAccess
 
 
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        self.name = name or self.__class__.__name__
-        skill_id = os.path.basename(os.path.dirname(os.path.abspath(sys.modules[self.__module__].__file__)))
-
-        # TODO: Use XDG spec to read config path from config DM
-
-        self.file_system = FileSystemAccess(os.path.join('skills', skill_id))
-        if is_neon_core():
-            neon_conf_path = os.path.join(os.path.expanduser(get_neon_local_config()["dirVars"].get("confDir")
-                                                             or "~/.config/neon"), "skills", skill_id)
-            if neon_conf_path != self.file_system.path:
-                LOG.info("Patching skill file system path")
-                if os.listdir(self.file_system.path):
-                    LOG.warning(f"Files found in unused path: {self.file_system.path}")
-                else:
-                    os.rmdir(self.file_system.path)
-                self.file_system.path = neon_conf_path
-                if not os.path.isdir(self.file_system.path):
-                    os.makedirs(self.file_system.path)
-        fs_path = deepcopy(self.file_system.path)
+        if not hasattr(super(), "_startup"):
+            import sys
+            from mycroft.filesystem import FileSystemAccess
+            self.name = name or self.__class__.__name__
+            skill_id = os.path.basename(os.path.dirname(
+                os.path.abspath(sys.modules[self.__module__].__file__)))
+            self.file_system = FileSystemAccess(os.path.join('skills', skill_id))
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
-        if self.file_system.path != fs_path:
-            if os.listdir(self.file_system.path):
-                LOG.warning(f"Files found in unused path: {self.file_system.path}")
-            else:
-                LOG.debug(f"Removing Mycroft-created file_system")
-                os.rmdir(self.file_system.path)
-            self.file_system.path = fs_path
-        self.config_core = get_mycroft_compatible_config()
+        self.gui = SkillGUI(self)
+        if not hasattr(super(), "_startup"):
+            skill_id = os.path.basename(os.path.dirname(
+                os.path.abspath(sys.modules[self.__module__].__file__)))
+            self.file_system = FileSystemAccess(os.path.join('skills',
+                                                             skill_id))
+            LOG.warning(f"overriding self.file_system to: "
+                        f"{self.file_system.path}")
+
+    @property
+    def _settings_path(self):
+        if not hasattr(super(), "_settings_path"):
+            return os.path.join(self.file_system.path, 'settings.json')
+        return super()._settings_path
 
     def _init_settings(self):
-        self.settings_write_path = self.file_system.path
-        skill_settings = get_local_settings(self.settings_write_path, self.name)
+        """
+        Extends the default method to handle settingsmeta defaults locally
+        """
+        super()._init_settings()
+        skill_settings = get_local_settings(self._settings_path,
+                                            self.name)
         settings_from_disk = dict(skill_settings)
-        self.settings = dict_update_keys(skill_settings, self._read_default_settings())
+        self.settings = dict_update_keys(skill_settings,
+                                         self._read_default_settings())
         if self.settings != settings_from_disk:
-            with open(os.path.join(self.settings_write_path, 'settings.json'), "w+") as f:
-                json.dump(self.settings, f, indent=4)
+            if isinstance(self.settings, JsonStorage):
+                self.settings.store()
+            else:
+                with open(os.path.join(self._settings_path,
+                                       'settings.json'), "w+") as f:
+                    json.dump(self.settings, f, indent=4)
         self._initial_settings = dict(self.settings)
 
     def _read_default_settings(self):
@@ -170,7 +172,7 @@ class PatchedMycroftSkill(MycroftSkill):
             LOG.warning(f"{self.name} | message={message}")
 
         if wait:
-            wait_while_speaking()
+            wait_for_signal_clear('isSpeaking')
 
     def speak_dialog(self, key, data=None, expect_response=False, wait=False,
                      message=None, private=False, speaker=None):
@@ -329,7 +331,7 @@ class PatchedMycroftSkill(MycroftSkill):
         converse.response = None
         default_converse = self.converse
         self.converse = converse
-        wait_while_speaking()
+        wait_for_signal_clear("isSpeaking")
         event.wait(15)  # 10 for listener, 5 for STT, then timeout
         self.converse = default_converse
         return converse.response

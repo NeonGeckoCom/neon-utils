@@ -356,3 +356,70 @@ def parse_skill_readme_file(readme_path: str) -> dict:
         parsed_data["credits"] = parsed_data["credits"][0].split(' ')
 
     return parsed_data
+
+
+def check_path_permissions(path: str) -> tuple:
+    """
+    Check current access permissions for the specified path
+    :param path: file or directory path to check
+    :return: tuple (read, write, execute)
+    """
+    path = os.path.expanduser(path)
+    if not os.access(path, os.F_OK):
+        raise FileNotFoundError(f"{path} does not exist")
+    stat = (os.access(path, os.R_OK), os.access(path, os.W_OK), os.access(path, os.X_OK))
+    return stat
+
+
+def path_is_read_writable(path: str) -> bool:
+    """
+    Check if the specified path is readable and writable by the current user.
+    :param path: str file path to check
+    :return: True if path exists and is read/writable
+    """
+    if not path:
+        return False
+    try:
+        path = os.path.expanduser(path)
+        while path and not os.path.exists(path):
+            path = os.path.dirname(path)
+        stat = check_path_permissions(path)
+        return all(stat[:2])
+    except FileNotFoundError:
+        return False
+
+
+def create_file(filename: str):
+    """
+    Create the file filename and create any directories needed
+    :param filename: Path to the file to be created
+    """
+    filename = os.path.expanduser(filename)
+    if not path_is_read_writable(os.path.dirname(filename)):
+        raise PermissionError(f"Insufficient permissions to create {filename}")
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
+    # with NamedLock(filename): # TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
+    with open(filename, 'w') as f:
+        f.write('')
+
+
+def load_commented_file(filename: str, comment_prefix: str = '#') -> str:
+    """
+    Load a text file removing commented lines and trailing newlines
+    :param filename: Path to the file to be created
+    :param comment_prefix: Prefix characters to count as comments
+    """
+    # Check passed path
+    if not filename:
+        raise ValueError("Null path")
+    filename = os.path.expanduser(filename)
+    if not os.path.isfile(filename):
+        raise FileNotFoundError(f"{filename} is not a valid file")
+
+    with open(filename) as f:
+        lines = f.readlines()
+
+    valid_lines = [line for line in lines if not
+                   line.strip().startswith(comment_prefix)]
+
+    return "".join(valid_lines).rstrip('\n')

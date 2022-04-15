@@ -35,12 +35,12 @@ import os
 from copy import deepcopy
 from functools import wraps
 
+from json_database import JsonStorage
 from mycroft.skills.settings import save_settings
 from mycroft_bus_client.message import Message
-from ruamel.yaml.comments import CommentedMap
 from typing import Optional
 from dateutil.tz import gettz
-from neon_utils import create_signal, check_for_signal
+from neon_utils.signal_utils import create_signal, check_for_signal
 from neon_utils.configuration_utils import NGIConfig, is_neon_core, \
     get_neon_lang_config, get_neon_user_config, get_neon_local_config
 from neon_utils.location_utils import to_system_time
@@ -72,14 +72,15 @@ CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 class NeonSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
+        super(NeonSkill, self).__init__(name, bus, use_settings)
         self.user_config = get_neon_user_config()
         self.local_config = get_neon_local_config()
-
-        self._ngi_settings: Optional[NGIConfig] = None
-
-        super(NeonSkill, self).__init__(name, bus, use_settings)
-        self.cache_loc = os.path.expanduser(self.local_config.get('dirVars', {}).get('cacheDir') or
-                                            "~/.local/share/neon/cache")
+        self.cache_loc = os.path.expanduser(
+            self.local_config.get('dirVars', {}).get('cacheDir') or
+            "~/.local/share/neon/cache")
+        if not os.path.isdir(self.cache_loc):
+            LOG.debug(f"Creating cache directory: {self.cache_loc}")
+            os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
 
         # TODO: Depreciate these references, signal use is discouraged DM
@@ -87,15 +88,8 @@ class NeonSkill(MycroftSkill):
         self.check_for_signal = check_for_signal
 
         self.sys_tz = gettz()
-        self.gui_enabled = self.local_config.get("prefFlags", {}).get("guiEvents", False)
-
-        # if use_settings:
-        #     self.settings = {}
-        #     self._initial_settings = None
-        #     self.init_settings()
-        # else:
-        #     LOG.error(f"{name} Skill requested no settings!")
-        #     self.settings = None
+        self.gui_enabled = self.local_config.get("prefFlags",
+                                                 {}).get("guiEvents", False)
 
         self.scheduled_repeats = []
 
@@ -103,7 +97,8 @@ class NeonSkill(MycroftSkill):
         # A server is a device that hosts the core and skills to serve clients,
         # but that a user will not interact with directly.
         # A server will likely serve multiple users and devices concurrently.
-        if self.local_config.get("devVars", {}).get("devType", "generic") == "server":
+        if self.local_config.get("devVars", {}).get("devType",
+                                                    "generic") == "server":
             self.server = True
             self.default_intent_timeout = 90
         else:
@@ -118,7 +113,8 @@ class NeonSkill(MycroftSkill):
 
         self.actions_to_confirm = dict()
 
-        self.skill_mode = self.user_config.content.get('response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
+        self.skill_mode = self.user_config.content.get(
+            'response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
         self.extension_time = SPEED_MODE_EXTENSION_TIME.get(self.skill_mode)
 
         self.language_config = get_neon_lang_config()
@@ -131,11 +127,13 @@ class NeonSkill(MycroftSkill):
 
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
-        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
+        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET,
+                            name="neon.load_cache_on_disk")
 
     @property
     def user_info_available(self):
-        LOG.warning("This reference is deprecated, use self.preference_x methods for user preferences")
+        LOG.warning("This reference is deprecated, "
+                    "use self.preference_x methods for user preferences")
         return self.user_config.content
 
     @property
@@ -145,58 +143,9 @@ class NeonSkill(MycroftSkill):
 
     @property
     def ngi_settings(self):
-        LOG.warning("This reference is depreciated, use self.preference_skill for per-user skill settings")
-        return self._ngi_settings
-
-    def _init_settings(self):
-        """
-        Initializes yml-based skill config settings, updating from default dict as necessary for added parameters
-        """
-        # TODO: This should just use the underlying Mycroft methods DM
-        super()._init_settings()
-        if os.path.isfile(os.path.join(self.root_dir, "settingsmeta.yml")):
-            skill_meta = NGIConfig("settingsmeta", self.root_dir).content
-        elif os.path.isfile(os.path.join(self.root_dir, "settingsmeta.json")):
-            with open(os.path.join(self.root_dir, "settingsmeta.json")) as f:
-                skill_meta = json.load(f)
-        else:
-            skill_meta = None
-
-        # Load defaults from settingsmeta
-        default = {}
-        if skill_meta:
-            # LOG.info(skill_meta)
-            LOG.info(skill_meta["skillMetadata"]["sections"])
-            for section in skill_meta["skillMetadata"]["sections"]:
-                for pref in section.get("fields", []):
-                    if not pref.get("name"):
-                        LOG.debug(f"non-data skill meta: {pref}")
-                    else:
-                        if pref.get("value") == "true":
-                            value = True
-                        elif pref.get("value") == "false":
-                            value = False
-                        elif isinstance(pref.get("value"), CommentedMap):
-                            value = dict(pref.get("value"))
-                        else:
-                            value = pref.get("value")
-                        default[pref["name"]] = value
-
-        # Load or init configuration
-        self._ngi_settings = NGIConfig(self.name, self.settings_write_path)
-
-        # Load any new or updated keys
-        try:
-            LOG.debug(self._ngi_settings.content)
-            LOG.debug(default)
-            if self._ngi_settings.content and len(self._ngi_settings.content.keys()) > 0 and len(default.keys()) > 0:
-                self._ngi_settings.make_equal_by_keys(default, recursive=False)
-            elif len(default.keys()) > 0:
-                LOG.info("No settings to load, use default")
-                self._ngi_settings.populate(default)
-        except Exception as e:
-            LOG.error(e)
-            self._ngi_settings.populate(default)
+        LOG.error("This reference is depreciated. "
+                  "Use self.preference_skill for per-user skill settings")
+        return self.preference_skill()
 
     @property
     def location_timezone(self) -> str:
@@ -424,7 +373,8 @@ class NeonSkill(MycroftSkill):
                     self.user_config[section][key] = val
             self.user_config.write_changes()
 
-    def update_skill_settings(self, new_preferences: dict, message: Message = None, skill_global=False):
+    def update_skill_settings(self, new_preferences: dict,
+                              message: Message = None, skill_global=False):
         """
         Updates skill settings with the passed new_preferences
         :param new_preferences: dict of updated preference values. {key: val}
@@ -434,13 +384,15 @@ class NeonSkill(MycroftSkill):
         LOG.debug(f"Update skill settings with new: {new_preferences}")
         if self.server and not skill_global:
             new_preferences["skill_id"] = self.skill_id
-            self.update_profile({"skills": {self.skill_id: new_preferences}}, message)
+            self.update_profile({"skills": {self.skill_id: new_preferences}},
+                                message)
         else:
             for key, val in new_preferences.items():
                 self.settings[key] = val
-                self._ngi_settings[key] = val
-            save_settings(self.settings_write_path, self.settings)
-            self._ngi_settings.write_changes()
+            if isinstance(self.settings, JsonStorage):
+                self.settings.store()
+            else:
+                save_settings(self.file_system.path, self.settings)
 
     def build_message(self, kind, utt, message, speaker=None):
         """

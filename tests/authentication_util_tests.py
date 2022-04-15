@@ -56,28 +56,36 @@ class AuthUtilTests(unittest.TestCase):
             token = find_neon_git_token("/tmp")
             self.assertIsInstance(token, str)
         except Exception as e:
-            self.assertIsInstance(e, FileNotFoundError)
+            self.assertIsInstance(e, CredentialNotFoundError)
 
         token = find_neon_git_token(CRED_PATH)
         self.assertEqual(token, "github token goes here")
+
+        os.environ["GITHUB_TOKEN"] = "test_gh_token"
+        self.assertEqual(find_neon_git_token(), "test_gh_token")
 
     def test_get_aws_credentials(self):
         try:
             keys = find_neon_aws_keys("/tmp")
             self.assertEqual(list(keys.keys()), ["aws_access_key_id", "aws_secret_access_key"])
         except Exception as e:
-            self.assertIsInstance(e, FileNotFoundError)
+            self.assertIsInstance(e, CredentialNotFoundError)
 
         keys = find_neon_aws_keys(CRED_PATH)
         self.assertEqual(keys, {"aws_access_key_id": "FAKE_KEY_ID",
                                 "aws_secret_access_key": "FAKE_SECRET/"})
+
+        os.environ["AWS_ACCESS_KEY_ID"] = "test_aws_id"
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "test_aws_secret"
+        self.assertEqual(find_neon_aws_keys(), {"aws_access_key_id": "test_aws_id",
+                                                "aws_secret_access_key": "test_aws_secret"})
 
     def test_get_google_credentials(self):
         try:
             creds = find_neon_google_keys("/tmp")
             self.assertIsInstance(creds, dict)
         except Exception as e:
-            self.assertIsInstance(e, FileNotFoundError)
+            self.assertIsInstance(e, CredentialNotFoundError)
 
         creds = find_neon_google_keys(CRED_PATH)
         self.assertEqual(list(creds.keys()), ["type", "project_id", "private_key_id", "private_key", "client_email",
@@ -85,6 +93,9 @@ class AuthUtilTests(unittest.TestCase):
                                               "client_x509_cert_url"])
         self.assertEqual(creds["private_key"],
                          "-----BEGIN PRIVATE KEY-----\nREDACTED\nREDACTED\nREDACTED\n-----END PRIVATE KEY-----\n")
+
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(CRED_PATH, "google.json")
+        self.assertEqual(find_neon_google_keys(), creds)
 
     def test_get_wolfram_key(self):
         try:
@@ -96,6 +107,9 @@ class AuthUtilTests(unittest.TestCase):
         key = find_neon_wolfram_key(CRED_PATH)
         self.assertEqual(key, "RED-ACTED")
 
+        os.environ["WOLFRAM_APP_ID"] = "test_wa_id"
+        self.assertEqual(find_neon_wolfram_key(), "test_wa_id")
+
     def test_get_alpha_vantage_key(self):
         try:
             key = find_neon_alpha_vantage_key("/tmp")
@@ -106,6 +120,9 @@ class AuthUtilTests(unittest.TestCase):
         key = find_neon_alpha_vantage_key(CRED_PATH)
         self.assertEqual(key, "Alpha-Vantage")
 
+        os.environ["ALPHA_VANTAGE_KEY"] = "test_av_key"
+        self.assertEqual(find_neon_alpha_vantage_key(), "test_av_key")
+
     def test_get_owm_key(self):
         try:
             key = find_neon_owm_key("/tmp")
@@ -115,6 +132,9 @@ class AuthUtilTests(unittest.TestCase):
 
         key = find_neon_owm_key(CRED_PATH)
         self.assertEqual(key, "OpenWeatherMap")
+
+        os.environ["OWM_KEY"] = "test_owm_key"
+        self.assertEqual(find_neon_owm_key(), "test_owm_key")
 
     def test_write_github_token(self):
         config_path = os.path.join(ROOT_DIR, "configuration")
@@ -174,6 +194,15 @@ class AuthUtilTests(unittest.TestCase):
         for key in config.keys():
             self.assertIsInstance(config[key], dict)
             self.assertTrue(config[key])
+
+        config = build_new_auth_config("/empty_dir")
+        self.assertIsInstance(config, dict)
+        for key in config.keys():
+            if config[key] is not None:
+                self.assertIsInstance(config[key], dict)
+                for k, v in config[key].items():
+                    self.assertIsInstance(k, str)
+                    self.assertIsInstance(v, str)
 
 
 if __name__ == '__main__':

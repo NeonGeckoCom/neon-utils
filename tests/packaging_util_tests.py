@@ -67,6 +67,41 @@ class PackagingUtilTests(unittest.TestCase):
             with self.assertRaises(FileNotFoundError):
                 get_mycroft_core_root()
 
+    def test_get_package_version_spec(self):
+        ver = get_package_version_spec("ovos_utils")
+        self.assertIsInstance(ver, str)
+
+        with self.assertRaises(ModuleNotFoundError):
+            get_package_version_spec("neon-stt-fake-test-package")
+
+        with self.assertRaises(ModuleNotFoundError):
+            get_package_version_spec("mycroft")
+
+    def test_parse_version_string(self):
+        major, minor, patch, alpha = parse_version_string("21.5")
+        self.assertEqual(major, 21)
+        self.assertEqual(minor, 5)
+        self.assertEqual(patch, 0)
+        self.assertEqual(alpha, None)
+
+        major, minor, patch, alpha = parse_version_string("21.5.1")
+        self.assertEqual(major, 21)
+        self.assertEqual(minor, 5)
+        self.assertEqual(patch, 1)
+        self.assertEqual(alpha, None)
+
+        major, minor, patch, alpha = parse_version_string("21.5.1a0")
+        self.assertEqual(major, 21)
+        self.assertEqual(minor, 5)
+        self.assertEqual(patch, 1)
+        self.assertEqual(alpha, 0)
+
+        major, minor, patch, alpha = parse_version_string("21.5.2post2")
+        self.assertEqual(major, 21)
+        self.assertEqual(minor, 5)
+        self.assertEqual(patch, 2)
+        self.assertEqual(alpha, 2)
+
     def test_get_packaged_core_version(self):
         try:
             ver = get_packaged_core_version()
@@ -84,6 +119,18 @@ class PackagingUtilTests(unittest.TestCase):
         except FileNotFoundError:
             with self.assertRaises(FileNotFoundError):
                 get_version_from_file()
+
+    def test_get_package_dependencies(self):
+        self_deps = get_package_dependencies("neon-utils")
+        requirements_file = join(os.path.dirname(os.path.dirname(__file__)),
+                                 "requirements", "requirements.txt")
+        with open(requirements_file) as f:
+            spec_requirements = f.read().split('\n')
+        # Version specs aren't order-dependent, so they can't be compared
+        self.assertEqual(len(self_deps), len(spec_requirements))
+
+        with self.assertRaises(ModuleNotFoundError):
+            get_package_dependencies("fakeneongeckopackage")
 
     # TODO: Actually validate exception cases? DM
 
