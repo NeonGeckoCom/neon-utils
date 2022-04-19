@@ -390,10 +390,9 @@ def path_is_read_writable(path: str) -> bool:
 
 
 def create_file(filename: str):
-    """ Create the file filename and create any directories needed
-
-        Args:
-            filename: Path to the file to be created
+    """
+    Create the file filename and create any directories needed
+    :param filename: Path to the file to be created
     """
     filename = os.path.expanduser(filename)
     if not path_is_read_writable(os.path.dirname(filename)):
@@ -402,3 +401,25 @@ def create_file(filename: str):
     # with NamedLock(filename): # TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
     with open(filename, 'w') as f:
         f.write('')
+
+
+def load_commented_file(filename: str, comment_prefix: str = '#') -> str:
+    """
+    Load a text file removing commented lines and trailing newlines
+    :param filename: Path to the file to be created
+    :param comment_prefix: Prefix characters to count as comments
+    """
+    # Check passed path
+    if not filename:
+        raise ValueError("Null path")
+    filename = os.path.expanduser(filename)
+    if not os.path.isfile(filename):
+        raise FileNotFoundError(f"{filename} is not a valid file")
+
+    with open(filename) as f:
+        lines = f.readlines()
+
+    valid_lines = [line for line in lines if not
+                   line.strip().startswith(comment_prefix)]
+
+    return "".join(valid_lines).rstrip('\n')

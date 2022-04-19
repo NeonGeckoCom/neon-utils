@@ -30,6 +30,8 @@ import unittest
 import sys
 import os
 
+from ovos_utils.messagebus import FakeBus
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.validator_utils import *
 
@@ -74,6 +76,9 @@ class ValidatorUtilTests(unittest.TestCase):
     def test_voc_confirmation_validator_valid(self):
         sys.path.append(os.path.dirname(__file__))
         from valid_skill import ValidNeonSkill
+        skill = ValidNeonSkill()
+        if hasattr(skill, "_startup"):
+            skill._startup(FakeBus())
         validator = voc_confirmation_validator("test", ValidNeonSkill())
         self.assertTrue(validator("test"))
         self.assertTrue(validator("something"))

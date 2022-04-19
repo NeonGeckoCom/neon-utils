@@ -27,14 +27,34 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from datetime import datetime
+from typing import Optional, Union
 
 import pendulum
+
 from dateutil.tz import tzlocal, gettz
 
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 
 from neon_utils.logger import LOG
+
+
+def get_full_location(address: Union[str, tuple],
+                      lang: Optional[str] = None) -> dict:
+    """
+    Get full location details for the specified address in the specified lang
+    :param address: string address or tuple (latitude, longitude)
+    :param lang: optional language to format results (else system default)
+    :returns: dict containing at minimum `place_id`, `lat`, `lon`, `address`
+    """
+    nominatim = Nominatim(user_agent="neon-ai")
+    if isinstance(address, str):
+        location = nominatim.geocode(address, addressdetails=True,
+                                     language=lang)
+    else:
+        location = nominatim.reverse(address, addressdetails=True,
+                                     language=lang)
+    return location.raw
 
 
 def get_coordinates(gps_loc: dict) -> (float, float):

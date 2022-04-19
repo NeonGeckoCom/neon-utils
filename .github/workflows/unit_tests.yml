@@ -2,7 +2,7 @@
 
 name: Run Unit Tests
 on:
-  push:
+  pull_request:
   workflow_dispatch:
 
 jobs:
@@ -10,8 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{ github.head_ref }}
       - name: Setup Python
         uses: actions/setup-python@v1
         with:
@@ -22,40 +20,6 @@ jobs:
       - name: Build Distribution Packages
         run: |
           python setup.py bdist_wheel
-  service_api_tests:
-    strategy:
-      matrix:
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements/requirements.txt
-          pip install -r requirements/test_requirements.txt
-      - name: Export credentials
-        run: |
-          mkdir -p ~/.local/share/neon
-          echo ${WOLFRAM_ID} > ~/.local/share/neon/wolfram.txt
-          echo ${AV_API_KEY} > ~/.local/share/neon/alpha_vantage.txt
-          echo ${OWM_KEY} > ~/.local/share/neon/owm.txt
-        env:
-          WOLFRAM_ID: ${{secrets.wolfram_id}}
-          AV_API_KEY: ${{secrets.alpha_vantage_key}}
-          OWM_KEY: ${{secrets.open_weather_map_key}}
-      - name: Test Service APIs
-        run: |
-          pytest tests/service_api_tests.py --doctest-modules --junitxml=tests/service-api-test-results.xml
-      - name: Upload service API test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: service-api-test-results
-          path: tests/service-api-test-results.xml
   skill_object_tests:
     strategy:
       matrix:
@@ -63,10 +27,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Install Sound Library
-        run: |
-          sudo apt-get update
-          sudo apt-get install libsndfile1
       - name: Set up python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -74,9 +34,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          sudo apt install gcc libfann-dev
-          pip install -r requirements/requirements.txt
-          pip install -r requirements/test_requirements.txt
+          sudo apt update
+          sudo apt install gcc libfann-dev libsndfile1
+          pip install . -r requirements/test_requirements.txt
 
       - name: Test Skills Objects
         run: |
@@ -103,9 +63,10 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Install dependencies
         run: |
+          sudo apt update
+          sudo apt install gcc libfann-dev
           python -m pip install --upgrade pip
-          pip install -r requirements/requirements.txt
-          pip install -r requirements/test_requirements.txt
+          pip install . -r requirements/test_requirements.txt
       - name: Change Test File Permissions
         run: |
           sudo chown -R nobody:nogroup tests/configuration/unwritable_path
@@ -292,3 +253,28 @@ jobs:
       - name: Test Deprecated Compat
         run: |
           pytest tests/deprecated_compat_tests.py --doctest-modules --junitxml=tests/deprecated-compat-test-results.xml
+
+  backwards_compat_tests:
+    strategy:
+      matrix:
+        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          sudo apt install gcc libfann-dev
+          python -m pip install --upgrade pip~=21.0
+          pip install . -r requirements/test_requirements.txt
+      - name: Test Service API Compat
+        run: |
+          pytest tests/_compat_service_api_tests.py --doctest-modules --junitxml=tests/service-api-test-results.xml
+      - name: Upload service API test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: service-api-test-results
+          path: tests/service-api-test-results.xml

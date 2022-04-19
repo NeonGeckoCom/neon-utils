@@ -2,4 +2,4 @@ pytest
 pytest-timeout
 pytest-cov
 mock
-holmesv[skills_minimal]
+ovos-core[skills,skills_lgpl]

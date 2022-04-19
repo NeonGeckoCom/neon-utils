@@ -620,6 +620,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(mycroft_config["gui_websocket"], dict)
         self.assertIsInstance(mycroft_config["gui_websocket"]["host"], str)
         self.assertIsInstance(mycroft_config["gui_websocket"]["base_port"], int)
+        self.assertIsInstance(mycroft_config["ready_settings"], list)
         # self.assertIsInstance(mycroft_config["keys"], dict)
         # self.assertEqual(mycroft_config["skills"]["directory"], mycroft_config["skills"]["directory_override"])
         # self.assertIsInstance(mycroft_config["language"], dict)
@@ -796,6 +797,11 @@ class ConfigurationUtilTests(unittest.TestCase):
         with open(test_path) as f:
             from_disk = json.load(f)
         self.assertEqual(from_disk, config)
+        write_mycroft_compatible_config(test_path)
+        with open(test_path) as f:
+            from_disk_2 = json.load(f)
+        self.assertEqual(from_disk_2, config)
+        self.assertIsNone(config["Audio"].get("Audio"))
         os.remove(test_path)
 
     def test_config_no_permissions(self):
@@ -896,6 +902,44 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertFalse(init_config_dir())
         os.environ.pop("NEON_CONFIG_PATH")
         self.assertFalse(init_config_dir())
+
+    def test_get_mycroft_compatible_location(self):
+        from neon_utils.configuration_utils import \
+            get_mycroft_compatible_location
+
+        old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
+        ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")
+        shutil.copy(ngi_user_info, old_user_info)
+
+        user_config = get_neon_user_config(CONFIG_PATH)
+
+        with self.assertRaises(KeyError):
+            get_mycroft_compatible_location(user_config.content)
+
+        location = get_mycroft_compatible_location(user_config["location"])
+        self.assertEqual(location["city"]["name"], user_config["location"]["city"])
+        self.assertEqual(location["city"]["code"], user_config["location"]["city"])
+        self.assertEqual(location["city"]["state"]["name"],
+                         user_config["location"]["state"])
+        self.assertIsInstance(location["city"]["state"]["code"], str)
+        self.assertEqual(location["city"]["state"]["country"]["name"],
+                         user_config["location"]["country"])
+        self.assertEqual(location["city"]["state"]["country"]["code"], "us")
+
+        self.assertIsInstance(location["coordinate"]["latitude"], float)
+        self.assertEqual(str(location["coordinate"]["latitude"]),
+                         user_config["location"]["lat"])
+        self.assertIsInstance(location["coordinate"]["longitude"], float)
+        self.assertEqual(str(location["coordinate"]["longitude"]),
+                         user_config["location"]["lng"])
+
+        self.assertEqual(location["timezone"]["code"],
+                         user_config["location"]["tz"])
+        self.assertIsInstance(location["timezone"]["name"], str)
+        self.assertIsInstance(location["timezone"]["offset"], float)
+        self.assertEqual(location["timezone"]["dstOffset"], 3600000)
+
+        shutil.move(old_user_info, ngi_user_info)
 
 
 if __name__ == '__main__':

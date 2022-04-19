@@ -276,6 +276,23 @@ class FileUtilTests(unittest.TestCase):
         self.assertTrue(os.path.isfile(valid_file))
         os.remove(valid_file)
 
+    def test_load_commented_file(self):
+        test_dir = os.path.join(os.path.dirname(__file__), "commented_files")
+        test_file = os.path.join(test_dir, "test_commented_file.txt")
+
+        contents = load_commented_file(test_file)
+        self.assertEqual(contents, "Some valid text\n//Java commented line")
+
+        contents = load_commented_file(test_file, '//')
+        self.assertEqual(contents, "# Python Commented Line\nSome valid text")
+
+        contents = load_commented_file(test_file, '/')
+        self.assertEqual(contents, "# Python Commented Line\nSome valid text")
+
+        contents = load_commented_file(test_file, '/**')
+        self.assertEqual(contents, "# Python Commented Line\nSome valid text\n"
+                                   "//Java commented line")
+
 
 if __name__ == '__main__':
     unittest.main()
