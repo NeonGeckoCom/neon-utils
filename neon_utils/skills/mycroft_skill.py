@@ -154,9 +154,10 @@ class PatchedMycroftSkill(MycroftSkill):
                 msg_to_emit = message.reply("skills:execute.response", data)
             else:
                 message.context.get("timing", {})["speech_start"] = time.time()
-                msg_to_emit = message.reply("speak", data, message.context)
+                msg_to_emit = message.forward("speak", data)
+                msg_to_emit.context['source'] = ['skills']
+                msg_to_emit.context['destination'] = ['audio']
                 LOG.debug(f"Skill speak! {data}")
-
             LOG.debug(msg_to_emit.msg_type)
             self.bus.emit(msg_to_emit)
         else:
