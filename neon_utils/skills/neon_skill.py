@@ -52,13 +52,9 @@ from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 from neon_utils.file_utils import get_most_recent_file_in_dir, resolve_neon_resource_file
 
 try:
-    from neon_core.language import DetectorFactory, TranslatorFactory
-except ImportError:
-    LOG.error(f"neon_core package not found, language detection/translation will be disabled.")
-    DetectorFactory, TranslatorFactory = None, None
-
-LOG.name = "neon_skill"
-
+    from ovos_plugin_manager.language import OVOSLangDetectionFactory, OVOSLangTranslationFactory
+except ImportError as e:
+    OVOSLangDetectionFactory, OVOSLangTranslationFactory = None, None
 
 # TODO if accepted, make changes to QASkill and WikipediaSkill
 # Available_modes are 1) quick; 2) thoughtful.
@@ -117,12 +113,19 @@ class NeonSkill(MycroftSkill):
             'response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
         self.extension_time = SPEED_MODE_EXTENSION_TIME.get(self.skill_mode)
 
-        self.language_config = get_neon_lang_config()
-        if DetectorFactory and TranslatorFactory:
-            # Lang support
-            self.lang_detector = DetectorFactory.create()
-            self.translator = TranslatorFactory.create()
-        else:
+        # TODO: Consider moving to properties to avoid unused init? DM
+        try:
+            if not OVOSLangDetectionFactory:
+                LOG.info("OPM not available, skipping language plugin load")
+                self.lang_detector, self.translator = None, None
+            else:
+                language_config = get_neon_lang_config()
+                self.lang_detector = \
+                    OVOSLangDetectionFactory.create(language_config)
+                self.translator = \
+                    OVOSLangTranslationFactory.create(language_config)
+        except ValueError as e:
+            LOG.error(f"Configured lang plugins not available: {e}")
             self.lang_detector, self.translator = None, None
 
     def initialize(self):
