@@ -51,6 +51,7 @@ from mycroft.skills.settings import get_local_settings
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         if not hasattr(super(), "_startup"):
+            # TODO: Backwards-compat. deprecate in v1.0.0
             import sys
             from mycroft.filesystem import FileSystemAccess
             self.name = name or self.__class__.__name__
@@ -60,6 +61,7 @@ class PatchedMycroftSkill(MycroftSkill):
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         self.gui = SkillGUI(self)
         if not hasattr(super(), "_startup"):
+            # TODO: Backwards-compat. deprecate in v1.0.0
             skill_id = os.path.basename(os.path.dirname(
                 os.path.abspath(sys.modules[self.__module__].__file__)))
             self.file_system = FileSystemAccess(os.path.join('skills',

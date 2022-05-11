@@ -34,18 +34,19 @@ import os
 
 from copy import deepcopy
 from functools import wraps
-
 from json_database import JsonStorage
 from mycroft.skills.settings import save_settings
 from mycroft_bus_client.message import Message
-from typing import Optional
+from typing import Optional, List, Any
 from dateutil.tz import gettz
+from ovos_utils.gui import is_gui_running
+
 from neon_utils.signal_utils import create_signal, check_for_signal
-from neon_utils.configuration_utils import NGIConfig, is_neon_core, \
+from neon_utils.configuration_utils import is_neon_core, \
     get_neon_lang_config, get_neon_user_config, get_neon_local_config
 from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
-from neon_utils.message_utils import request_from_mobile, get_message_user, dig_for_message
+from neon_utils.message_utils import request_from_mobile, get_message_user, dig_for_message, resolve_message
 from neon_utils.cache_utils import LRUCache
 from neon_utils.mq_utils import send_mq_request
 from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
@@ -564,25 +565,12 @@ class NeonSkill(MycroftSkill):
         """
         if not is_neon_core():
             return True
-        if message.context.get("neon_should_respond", False):
-            return True
-        elif message.data.get("Neon") or message.data.get("neon"):
-            return True
-        elif not self.server and self.local_config.get("interface", {}).get("wake_word_enabled", True):
-            return True
-        elif self.server and message.context.get("klat_data", {}).get("title").startswith("!PRIVATE"):
-            return True
-        else:
-            try:
-                voc_match = self.voc_match(message.data.get("utterance"), "neon")
-                if voc_match:
-                    return True
-            except FileNotFoundError:
-                LOG.error(f"No neon vocab found!")
-                if "neon" in message.data.get("utterance").lower():
-                    return True
-            LOG.debug("No Neon")
-            return False
+
+        from neon_utils.message_utils import request_for_neon
+        ww_enabled = self.local_config.get("interface",
+                                           {}).get("wake_word_enabled",
+                                                   True)
+        return request_for_neon(message, "neon", self.voc_match, ww_enabled)
 
     def show_settings_gui(self):
         """

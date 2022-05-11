@@ -136,6 +136,17 @@ def resolve_message(function):
             LOG.warning("Decorated function does not expect a `message`")
             return function(*args, **kwargs)
 
+        if "message" in params.keys() and len(args):
+            i = 0
+            for param in params:
+                args = list(args)
+                # Check if 'message' is filled by an arg
+                if param == "message" and i < len(args):
+                    if not args[i]:
+                        args[i] = dig_for_message(50)
+                        return function(*args, **kwargs)
+                i += 1
+
         if not kwargs.get("message") and not any([arg for arg in args if
                                                   isinstance(arg, Message)]):
             LOG.info("Digging for requested message arg")
@@ -144,3 +155,46 @@ def resolve_message(function):
         return function(*args, **kwargs)
 
     return wrapper
+
+
+@resolve_message
+def request_for_neon(message: Message = None,
+                     activation_voc: Optional[str] = "neon",
+                     voc_match: Optional[callable] = None,
+                     ww_enabled: bool = True) -> bool:
+    """
+    Check if a wake word or activation word is present in a request
+    :param message: Message to evaluate
+    :param activation_voc: vocab of activation word for the assistant
+    :param voc_match: `skill.voc_match` method to check for `activation_voc`
+    :param ww_enabled: True if WW is required for STT system-wide
+    :returns: True if the message contains an activation word
+    """
+    if not message:
+        raise ValueError("message not provided and not resolvable")
+    if message.context.get('neon_should_respond'):
+        return True
+    if activation_voc in message.data:
+        return True
+
+    server_request = message.context.get('klat_data')
+
+    if ww_enabled and not server_request:
+        # TODO: WW should add to message context instead DM
+        return True
+
+    # Check Klat conversation context
+    if server_request and \
+            server_request.get('title', '').startswith("!PRIVATE"):
+        return True
+
+    # Check for voc_match if method provided
+    try:
+        if voc_match and voc_match(message.data.get('utterance', '').lower(),
+                                   activation_voc):
+            return True
+    except FileNotFoundError as e:
+        LOG.error(e)
+
+    return False
+
