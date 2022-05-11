@@ -27,6 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import io
+import logging
 import os
 import sys
 import shutil
@@ -62,6 +63,7 @@ class LogUtilTests(unittest.TestCase):
     def test_get_log_file(self):
         from neon_utils.log_utils import get_logger
         log = get_logger("test", LOG_PATH)
+        log.level = logging.DEBUG
         test_msg = "This should be in test.log"
         log.debug(test_msg)
         with open(os.path.join(LOG_PATH, "test.log")) as log:
@@ -74,6 +76,7 @@ class LogUtilTests(unittest.TestCase):
         captured_out = io.StringIO()
         sys.stdout = captured_out
         log = get_logger("test_stdout", LOG_PATH, True)
+        log.level = logging.DEBUG
         test_msg = "This should be in test.log and stdout"
         log.debug(test_msg)
         with open(os.path.join(LOG_PATH, "test_stdout.log")) as log:
@@ -90,6 +93,7 @@ class LogUtilTests(unittest.TestCase):
         captured_out = io.StringIO()
         sys.stdout = captured_out
         log = get_logger("terminal_only", "stdout")
+        log.level = logging.DEBUG
         test_msg = "This should be in stdout ONLY"
         log.debug(test_msg)
         logged = captured_out.getvalue().strip("\n")
