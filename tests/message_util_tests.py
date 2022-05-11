@@ -195,6 +195,34 @@ class MessageUtilTests(unittest.TestCase):
 
         wrapper_method(test_message, nested_get_message)
 
+    def test_request_for_neon(self):
+        from neon_utils.message_utils import request_for_neon
+
+        minimal_message = Message("test")
+        self.assertTrue(request_for_neon(minimal_message))
+        self.assertFalse(request_for_neon(minimal_message, ww_enabled=False))
+
+        neon_should_respond = Message("test", {},
+                                      {"neon_should_respond": True})
+        self.assertTrue(request_for_neon(neon_should_respond))
+        self.assertTrue(request_for_neon(neon_should_respond,
+                                         ww_enabled=False))
+
+        neon_voc = Message("test", {"neon": "nyan"},
+                           {"neon_shoud_respond": False})
+        self.assertTrue(request_for_neon(neon_voc, ww_enabled=False))
+        self.assertFalse(request_for_neon(neon_voc, "mycroft",
+                                          ww_enabled=False))
+
+        server_request_public = Message("test", {},
+                                        {"klat_data": {"title": "title"}})
+        self.assertFalse(request_for_neon(server_request_public))
+
+        server_request_private = Message("test", {},
+                                         {"klat_data": {
+                                             "title": "!PRIVATE:user"}})
+        self.assertTrue(request_for_neon(server_request_private))
+
 
 if __name__ == '__main__':
     unittest.main()
