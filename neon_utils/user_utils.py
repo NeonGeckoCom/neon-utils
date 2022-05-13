@@ -31,7 +31,7 @@ from mycroft_bus_client import Message, MessageBusClient
 
 from neon_utils.message_utils import resolve_message, get_message_user
 from neon_utils.configuration_utils import get_neon_user_config, \
-    dict_make_equal_keys, get_config_dir, get_user_config_from_mycroft_conf, dict_merge
+    dict_make_equal_keys, get_config_dir, get_user_config_from_mycroft_conf
 from neon_utils.logger import LOG
 
 _DEFAULT_USER_CONFIG = None
@@ -89,7 +89,10 @@ def get_user_prefs(message: Message = None) -> dict:
 def update_user_profile(new_preferences: dict, message: Message = None,
                         bus: MessageBusClient = None):
     """
-    Update a
+    Update a user profile and emit an event for database updates.
+    :param new_preferences: dict of updated profile values
+    :param message: Message associated with request
+    :param bus: Optional MessageBusClient to use to emit update event
     """
     if not message:
         raise ValueError("No message associated with profile update.")
@@ -100,13 +103,13 @@ def update_user_profile(new_preferences: dict, message: Message = None,
     if username and 'nick_profiles' in message.context:
         LOG.warning("nick_profiles found and will be updated")
         old_preferences = message.context["nick_profiles"][username]
-        user_profile = dict_merge(old_preferences, new_preferences)
+        user_profile = dict_make_equal_keys(new_preferences, old_preferences)
         message.context["nick_profiles"][username] = user_profile
     elif username and 'user_profiles' in message.context:
         LOG.debug("updating user_profiles")
         for i, profile in enumerate(message.context['user_profiles']):
             if profile['user']['username'] == username:
-                user_profile = dict_merge(profile, new_preferences)
+                user_profile = dict_make_equal_keys(new_preferences, profile)
                 message.context['user_profiles'][i] = user_profile
                 break
 

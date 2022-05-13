@@ -29,6 +29,7 @@
 import sys
 import os
 import unittest
+from copy import deepcopy
 from threading import Event
 
 from mycroft_bus_client import Message
@@ -127,6 +128,16 @@ class UserUtilTests(unittest.TestCase):
         self.assertEqual(test_message.context["user_profiles"][0],
                          update_message.data)
         self.assertEqual(update_message.data["user"]["username"], "test_user")
+
+        valid_profile = deepcopy(update_message.data)
+        updated.clear()
+        update_user_profile({"invalid_key": {},
+                             "user": {"invalid_key": "val"}},
+                            test_message, bus)
+        self.assertEqual(test_message.context["user_profiles"][0],
+                         valid_profile)
+        updated.wait(5)
+        self.assertEqual(update_message.data, valid_profile)
 
 
 if __name__ == '__main__':
