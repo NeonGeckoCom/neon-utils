@@ -288,13 +288,15 @@ class NeonSkill(MycroftSkill):
         skill_list = list(skill_dict.values())
         return skill_list
 
+    @resolve_message
     def update_profile(self, new_preferences: dict, message: Message = None):
         """
         Updates a user profile with the passed new_preferences
         :param new_preferences: dict of updated preference values.
-        Should follow {section: {key: val}} format
+            Should follow {section: {key: val}} format
         :param message: Message associated with request
         """
+        from neon_utils.user_utils import update_user_profile
 
         def _write_yml_changes():
             for section, settings in new_preferences.items():
@@ -303,28 +305,19 @@ class NeonSkill(MycroftSkill):
                     self.user_config[section][key] = val
             self.user_config.write_changes()
 
-        if not message:
-            LOG.warning("No message associated with profile update")
+        try:
+            update_user_profile(new_preferences, message, self.bus)
+        except Exception as x:
+            LOG.error(x)
+            LOG.warning("Updating global YML config")
             _write_yml_changes()
-            return
 
-        nick = get_message_user(message) if message else None
-        if nick and 'nick_profiles' in message.context:
-            LOG.warning("nick_profiles found and will be updated")
-            old_preferences = message.context["nick_profiles"][nick]
-            message.context["nick_profiles"][nick] = {**old_preferences,
-                                                      **new_preferences}
-        elif nick and 'user_profiles' in message.context:
-            LOG.debug("updating user_profiles")
-            for i, profile in enumerate(message.context['user_profiles']):
-                if profile['user']['username'] == nick:
-                    profile = {**profile, **new_preferences}
-                    message.context['user_profiles'][i] = profile
-                    break
-        # TODO: Update below to handle MQ clients and PyKlat
+        # TODO: Deprecate below
+        # Klat server legacy support
+        username = get_message_user(message)
         if message.context.get('klat_data', {}).get('request_id'):
             new_skills_prefs = new_preferences.pop("skills")
-            old_skills_prefs = message.context["nick_profiles"][nick]["skills"]
+            old_skills_prefs = message.context["nick_profiles"][username]["skills"]
             combined_skill_prefs = {**old_skills_prefs, **new_skills_prefs}
             combined_changes = {k: v for dic in new_preferences.values()
                                 for k, v in dic.items()}
@@ -333,14 +326,12 @@ class NeonSkill(MycroftSkill):
                     json.dumps(list(combined_skill_prefs.values()))
                 new_preferences["skills"] = combined_skill_prefs
                 LOG.debug(f"combined_skill_prefs={combined_skill_prefs}")
-            combined_changes["username"] = nick
+            combined_changes["username"] = username
             self.socket_emit_to_server("update profile",
                                        ["skill", combined_changes,
                                         message.context["klat_data"]
                                         ["request_id"]])
-            self.bus.emit(Message("neon.remove_cache_entry", {"nick": nick}))
-        else:
-            _write_yml_changes()
+            self.bus.emit(Message("neon.remove_cache_entry", {"nick": username}))
 
     @resolve_message
     def update_skill_settings(self, new_preferences: dict,

@@ -29,6 +29,7 @@
 import sys
 import os
 import unittest
+from threading import Event
 
 from mycroft_bus_client import Message
 
@@ -88,6 +89,44 @@ class UserUtilTests(unittest.TestCase):
 
         os.environ.pop("NEON_CONFIG_PATH")
         os.environ.pop("XDG_CONFIG_HOME")
+
+    def test_update_user_profile(self):
+        from neon_utils.user_utils import update_user_profile
+        from ovos_utils.messagebus import FakeBus
+
+        test_config_dir = os.path.join(os.path.dirname(__file__),
+                                       "user_util_test_config")
+        os.environ["NEON_CONFIG_PATH"] = test_config_dir
+        os.environ["XDG_CONFIG_HOME"] = test_config_dir
+        from neon_utils.user_utils import get_default_user_config
+        user_config = get_default_user_config()
+        user_config["user"]["username"] = "test_user"
+        username = user_config["user"]["username"]
+        self.assertIsInstance(user_config, dict)
+        new_email = "developers@neon.ai"
+
+        test_message = Message("test", {}, {"user_profiles": [user_config],
+                                            "username": username})
+        update_message = None
+        updated = Event()
+        bus = FakeBus()
+
+        def _handle_update(message):
+            nonlocal update_message
+            update_message = message
+            updated.set()
+        bus.on("neon.profile_update", _handle_update)
+
+        updated.clear()
+        update_user_profile({"user": {"email": new_email}}, test_message, bus)
+        self.assertEqual(
+            test_message.context["user_profiles"][0]["user"]["email"],
+            new_email)
+        updated.wait(5)
+        self.assertIsInstance(update_message, Message)
+        self.assertEqual(test_message.context["user_profiles"][0],
+                         update_message.data)
+        self.assertEqual(update_message.data["user"]["username"], "test_user")
 
 
 if __name__ == '__main__':

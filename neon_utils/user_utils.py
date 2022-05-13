@@ -27,11 +27,11 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from os.path import isfile, join
-from mycroft_bus_client import Message
+from mycroft_bus_client import Message, MessageBusClient
 
 from neon_utils.message_utils import resolve_message, get_message_user
 from neon_utils.configuration_utils import get_neon_user_config, \
-    dict_make_equal_keys, get_config_dir, get_user_config_from_mycroft_conf
+    dict_make_equal_keys, get_config_dir, get_user_config_from_mycroft_conf, dict_merge
 from neon_utils.logger import LOG
 
 _DEFAULT_USER_CONFIG = None
@@ -83,3 +83,37 @@ def get_user_prefs(message: Message = None) -> dict:
             return dict(dict_make_equal_keys(profile, default_user_config))
     LOG.warning(f"No preferences found for {username} in {message.context}")
     return default_user_config
+
+
+@resolve_message
+def update_user_profile(new_preferences: dict, message: Message = None,
+                        bus: MessageBusClient = None):
+    """
+    Update a
+    """
+    if not message:
+        raise ValueError("No message associated with profile update.")
+
+    # Update current message object and get updated profile
+    username = get_message_user(message)
+    user_profile = None
+    if username and 'nick_profiles' in message.context:
+        LOG.warning("nick_profiles found and will be updated")
+        old_preferences = message.context["nick_profiles"][username]
+        user_profile = dict_merge(old_preferences, new_preferences)
+        message.context["nick_profiles"][username] = user_profile
+    elif username and 'user_profiles' in message.context:
+        LOG.debug("updating user_profiles")
+        for i, profile in enumerate(message.context['user_profiles']):
+            if profile['user']['username'] == username:
+                user_profile = dict_merge(profile, new_preferences)
+                message.context['user_profiles'][i] = user_profile
+                break
+
+    if not user_profile:
+        raise RuntimeError(f"No profile found for user: {username}.")
+
+    # Notify connector modules of update
+    bus = bus or MessageBusClient()
+    update_message = message.forward("neon.profile_update", dict(user_profile))
+    bus.emit(update_message)
