@@ -118,5 +118,6 @@ def update_user_profile(new_preferences: dict, message: Message = None,
 
     # Notify connector modules of update
     bus = bus or MessageBusClient()
-    update_message = message.forward("neon.profile_update", dict(user_profile))
+    update_message = message.forward("neon.profile_update",
+                                     {"profile": user_profile})
     bus.emit(update_message)

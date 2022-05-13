@@ -126,10 +126,11 @@ class UserUtilTests(unittest.TestCase):
         updated.wait(5)
         self.assertIsInstance(update_message, Message)
         self.assertEqual(test_message.context["user_profiles"][0],
-                         update_message.data)
-        self.assertEqual(update_message.data["user"]["username"], "test_user")
+                         update_message.data["profile"])
+        self.assertEqual(update_message.data["profile"]["user"]["username"],
+                         "test_user")
 
-        valid_profile = deepcopy(update_message.data)
+        valid_profile = deepcopy(update_message.data["profile"])
         updated.clear()
         update_user_profile({"invalid_key": {},
                              "user": {"invalid_key": "val"}},
@@ -137,7 +138,7 @@ class UserUtilTests(unittest.TestCase):
         self.assertEqual(test_message.context["user_profiles"][0],
                          valid_profile)
         updated.wait(5)
-        self.assertEqual(update_message.data, valid_profile)
+        self.assertEqual(update_message.data["profile"], valid_profile)
 
 
 if __name__ == '__main__':
