@@ -371,9 +371,9 @@ class NeonSkill(MycroftSkill):
             old_preferences = message.context["nick_profiles"][nick]
             message.context["nick_profiles"][nick] = {**old_preferences, **new_preferences}
         else:
-            for section, settings in new_preferences:
+            for section, settings in new_preferences.items():
                 # section in user, brands, units, etc.
-                for key, val in settings:
+                for key, val in settings.items():
                     self.user_config[section][key] = val
             self.user_config.write_changes()
 
