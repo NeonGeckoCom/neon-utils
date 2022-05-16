@@ -30,7 +30,7 @@ import json
 import time
 import os.path
 
-from threading import Event
+from threading import Event, Thread
 from typing import Optional
 
 from json_database import JsonStorage
@@ -332,16 +332,10 @@ class PatchedMycroftSkill(MycroftSkill):
         event = Event()
         finished_speaking = Event()
 
-        def mic_listening(_):
+        def _wait_while_speaking():
+            if wait_for_signal_clear("isSpeaking", 30):
+                LOG.error("Still speaking after 30s")
             finished_speaking.set()
-
-        def remote_response(msg):
-            if get_message_user(msg) == user:
-                finished_speaking.set()
-
-        # Handlers to detect when audio playback is done
-        self.add_event("mycroft.mic.listen", mic_listening)
-        self.add_event("klat.response", remote_response)
 
         def converse(message):
             nonlocal converse_response
@@ -351,6 +345,7 @@ class PatchedMycroftSkill(MycroftSkill):
                 utterances = message.data.get("utterances")
                 converse_response = utterances[0] if utterances else None
                 event.set()
+                finished_speaking.set()
                 LOG.info(f"Got response: {converse_response}")
                 return True
             else:
@@ -363,8 +358,11 @@ class PatchedMycroftSkill(MycroftSkill):
         default_converse = self.converse
         self.converse = converse
 
-        if wait_for_signal_clear("isSpeaking", 30):
-            LOG.error("Still speaking after 30s")
+        t = Thread(target=_wait_while_speaking, daemon=True)
+        t.start()
+
+        finished_speaking.wait(30)
+        t.join(0)
         if not event.wait(15):  # 10 for listener, 5 for STT, then timeout
             LOG.warning("Timed out waiting for user response")
         self.converse = default_converse

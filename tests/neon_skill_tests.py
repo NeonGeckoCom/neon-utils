@@ -44,7 +44,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 # from neon_utils.language_utils import LanguageDetector, LanguageTranslator
 from neon_utils.cache_utils import LRUCache
 from neon_utils.configuration_utils import NGIConfig
-from neon_utils.signal_utils import check_for_signal
+from neon_utils.signal_utils import check_for_signal, create_signal
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from skills import *
@@ -190,18 +190,46 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         test_results = dict()
         spoken = Event()
         test_dialog = "testing get response."
-        message = Message("recognizer_loop:utterance", {"utterances": ["testing one", "testing 1", "resting one"]},
+        message = Message("recognizer_loop:utterance",
+                          {"utterances": ["testing one", "testing 1",
+                                          "resting one"]},
                           {"timing": {},
                            "username": "local"})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
-        t = Thread(target=skill_response_thread, args=(skill, message.context["username"]), daemon=True)
+        t = Thread(target=skill_response_thread,
+                   args=(skill, message.context["username"]), daemon=True)
         t.start()
         spoken.wait(30)
         sleep(1)
         skill.converse(message)
         t.join(5)
-        self.assertEqual(test_results[message.context["username"]], message.data["utterances"][0])
+        self.assertEqual(test_results[message.context["username"]],
+                         message.data["utterances"][0])
+
+    def test_get_response_interrupt_prompt(self):
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            resp = s.get_response(test_dialog)
+            test_results[idx] = resp
+
+        test_results = dict()
+        spoken = Event()
+        test_dialog = "testing get response."
+        message = Message("recognizer_loop:utterance",
+                          {"utterances": ["testing one", "testing 1",
+                                          "resting one"]},
+                          {"timing": {},
+                           "username": "local"})
+
+        skill = get_test_mycroft_skill({})
+        t = Thread(target=skill_response_thread,
+                   args=(skill, message.context["username"]), daemon=True)
+        t.start()
+        sleep(1)
+        skill.converse(message)
+        t.join(5)
+        self.assertEqual(test_results[message.context["username"]],
+                         message.data["utterances"][0])
 
     def test_get_response_no_username(self):
         def handle_speak(_):
@@ -215,11 +243,14 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         test_results = dict()
         spoken = Event()
         test_dialog = "testing get response."
-        message = Message("recognizer_loop:utterance", {"utterances": ["testing one", "testing 1", "resting one"]},
+        message = Message("recognizer_loop:utterance",
+                          {"utterances": ["testing one", "testing 1",
+                                          "resting one"]},
                           {"timing": {}})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
-        t = Thread(target=skill_response_thread, args=(skill, "0"), daemon=True)
+        t = Thread(target=skill_response_thread, args=(skill, "0"),
+                   daemon=True)
         t.start()
         spoken.wait(30)
         sleep(1)
@@ -233,15 +264,16 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             spoken.set()
 
         def skill_response_thread(s: MycroftSkill, idx: str):
-            resp = s.get_response(test_dialog, message=Message("converse_message", {},
-                                                               {"username": "valid_converse_user"}))
+            resp = s.get_response(test_dialog, message=Message(
+                "converse_message", {}, {"username": "valid_converse_user"}))
             test_results[idx] = resp
 
         test_results = dict()
         spoken = Event()
         test_dialog = "testing get response multi user."
         valid_message = Message("recognizer_loop:utterance",
-                                {"utterances": ["testing one", "testing 1", "resting one"]},
+                                {"utterances": ["testing one",
+                                                "testing 1", "resting one"]},
                                 {"timing": {},
                                  "username": "valid_converse_user"})
         invalid_message = Message("recognizer_loop:utterance",
@@ -250,7 +282,9 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                                    "username": "invalid_converse_user"})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
-        t = Thread(target=skill_response_thread, args=(skill, valid_message.context["username"]), daemon=True)
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
         t.start()
         spoken.wait(30)
         sleep(1)
@@ -258,7 +292,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         skill.converse(valid_message)
         skill.converse(invalid_message)
         t.join(5)
-        self.assertEqual(test_results[valid_message.context["username"]], valid_message.data["utterances"][0])
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_message.data["utterances"][0])
 
     def test_get_response_dig_for_message(self):
         def handle_speak(_):
