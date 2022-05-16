@@ -223,6 +223,7 @@ class PatchedMycroftSkill(MycroftSkill):
         Returns:
             str: User's reply or None if timed out or canceled
         """
+        LOG.info(f">>>GET_RESPONSE<<<")
         message = message or dig_for_message()
         user = get_message_user(message) or "local" if message else "local"
         data = data or {}
