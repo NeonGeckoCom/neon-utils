@@ -320,20 +320,23 @@ class PatchedMycroftSkill(MycroftSkill):
         event = Event()
 
         def converse(message):
+            nonlocal converse_response
             resp_user = get_message_user(message) or "local"
+            LOG.info(f"Check response from {resp_user}")
             if resp_user == user:
                 utterances = message.data.get("utterances")
-                converse.response = utterances[0] if utterances else None
+                converse_response = utterances[0] if utterances else None
                 event.set()
+                LOG.info(f"Got response: {converse_response}")
                 return True
             return False
 
         # install a temporary conversation handler
         self.make_active()
-        converse.response = None
+        converse_response = None
         default_converse = self.converse
         self.converse = converse
         wait_for_signal_clear("isSpeaking")
         event.wait(15)  # 10 for listener, 5 for STT, then timeout
         self.converse = default_converse
-        return converse.response
+        return converse_response
