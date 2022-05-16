@@ -37,7 +37,7 @@ from json_database import JsonStorage
 from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message
 
-from neon_utils.signal_utils import wait_for_signal_clear
+from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message
@@ -363,9 +363,8 @@ class PatchedMycroftSkill(MycroftSkill):
         default_converse = self.converse
         self.converse = converse
 
-        if not finished_speaking.wait(30):
-            LOG.warning("Timed out waiting for prompt to be spoken")
-
+        if wait_for_signal_clear("isSpeaking", 30):
+            LOG.error("Still speaking after 30s")
         if not event.wait(15):  # 10 for listener, 5 for STT, then timeout
             LOG.warning("Timed out waiting for user response")
         self.converse = default_converse
