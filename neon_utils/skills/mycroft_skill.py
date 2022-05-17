@@ -342,21 +342,20 @@ class PatchedMycroftSkill(MycroftSkill):
             finished_speaking.set()
 
         def converse(message):
-            nonlocal converse_response
             resp_user = get_message_user(message) or "local"
             if resp_user == user:
                 utterances = message.data.get("utterances")
-                converse_response = utterances[0] if utterances else None
+                converse.response = utterances[0] if utterances else None
                 event.set()
                 finished_speaking.set()
-                LOG.info(f"Got response: {converse_response}")
+                LOG.info(f"Got response: {converse.response}")
                 return True
             LOG.debug(f"Ignoring input from: {resp_user}")
             return False
 
         # install a temporary conversation handler
         self.make_active()
-        converse_response = None
+        converse.response = None
         default_converse = self.converse
         self.converse = converse
 
@@ -368,4 +367,4 @@ class PatchedMycroftSkill(MycroftSkill):
         if not event.wait(15):  # 10 for listener, 5 for STT, then timeout
             LOG.warning("Timed out waiting for user response")
         self.converse = default_converse
-        return converse_response
+        return converse.response
