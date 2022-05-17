@@ -28,6 +28,7 @@
 
 import datetime
 import os
+import shutil
 import sys
 import unittest
 
@@ -89,6 +90,15 @@ def create_skill(skill):
 
 
 class SkillObjectTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.environ["NEON_CONFIG_PATH"] = \
+            os.path.join(os.path.dirname(__file__), "test_config")
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        shutil.rmtree(os.environ.pop("NEON_CONFIG_PATH"))
+
     def test_common_message_skill_init(self):
         skill = create_skill(TestCMS)
         self.assertIsInstance(skill, MycroftSkill)
@@ -178,6 +188,15 @@ class SkillObjectTests(unittest.TestCase):
 
 
 class PatchedMycroftSkillTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.environ["NEON_CONFIG_PATH"] = \
+            os.path.join(os.path.dirname(__file__), "test_config")
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        shutil.rmtree(os.environ.pop("NEON_CONFIG_PATH"))
+
     def test_get_response_simple(self):
         def handle_speak(_):
             check_for_signal("isSpeaking")
@@ -557,6 +576,15 @@ class PatchedMycroftSkillTests(unittest.TestCase):
 
 
 class NeonSkillTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        os.environ["NEON_CONFIG_PATH"] = \
+            os.path.join(os.path.dirname(__file__), "test_config")
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        shutil.rmtree(os.environ.pop("NEON_CONFIG_PATH"))
+
     def test_send_email_valid(self):
         skill = get_test_neon_skill(dict())
         self.assertTrue(skill.send_email("Test Message",
