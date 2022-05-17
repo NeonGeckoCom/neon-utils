@@ -32,6 +32,8 @@ import unittest
 
 from threading import Event
 from os.path import join, dirname
+
+import ovos_utils.signal
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 
@@ -129,6 +131,11 @@ class SignalUtilsTests(unittest.TestCase):
                          neon_utils.signal_utils._manager_wait_for_signal_clear)
         self.assertEqual(neon_utils.signal_utils._wait_for_signal_create,
                          neon_utils.signal_utils._manager_wait_for_signal_create)
+
+        self.assertEqual(ovos_utils.signal.check_for_signal,
+                         neon_utils.signal_utils._manager_check_for_signal)
+        self.assertEqual(ovos_utils.signal.create_signal,
+                         neon_utils.signal_utils._manager_create_signal)
 
     def test_signal_utils_manager_unavailable(self):
         import ovos_utils.signal
