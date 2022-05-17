@@ -304,13 +304,15 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             def intent_handler(message):
                 resp = s.get_response(test_dialog)
                 test_results[idx] = resp
-            intent_handler(Message("converse_message", {}, {"username": "valid_converse_user"}))
+            intent_handler(Message("converse_message",
+                                   {}, {"username": "valid_converse_user"}))
 
         test_results = dict()
         spoken = Event()
         test_dialog = "testing get response multi user."
         valid_message = Message("recognizer_loop:utterance",
-                                {"utterances": ["testing one", "testing 1", "resting one"]},
+                                {"utterances": ["testing one", "testing 1",
+                                                "resting one"]},
                                 {"timing": {},
                                  "username": "valid_converse_user"})
         invalid_message = Message("recognizer_loop:utterance",
@@ -319,7 +321,9 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                                    "username": "invalid_converse_user"})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
-        t = Thread(target=skill_response_thread, args=(skill, valid_message.context["username"]), daemon=True)
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
         t.start()
         spoken.wait(30)
         sleep(1)
@@ -327,7 +331,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         skill.converse(valid_message)
         skill.converse(invalid_message)
         t.join(5)
-        self.assertEqual(test_results[valid_message.context["username"]], valid_message.data["utterances"][0])
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_message.data["utterances"][0])
 
     def test_get_response_no_response(self):
         def handle_speak(_):
@@ -335,15 +340,16 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             spoken.set()
 
         def skill_response_thread(s: MycroftSkill, idx: str):
-            resp = s.get_response(test_dialog, message=Message("converse_message", {},
-                                                               {"username": "valid_converse_user"}))
+            resp = s.get_response(test_dialog, num_retries=0, message=Message(
+                "converse_message", {}, {"username": "valid_converse_user"}))
             test_results[idx] = resp
 
         test_results = dict()
         spoken = Event()
         test_dialog = "testing get response multi user."
         valid_message = Message("recognizer_loop:utterance",
-                                {"utterances": ["testing one", "testing 1", "resting one"]},
+                                {"utterances": ["testing one", "testing 1",
+                                                "resting one"]},
                                 {"timing": {},
                                  "username": "valid_converse_user"})
         invalid_message = Message("recognizer_loop:utterance",
@@ -352,9 +358,11 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                                    "username": "invalid_converse_user"})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
-        t = Thread(target=skill_response_thread, args=(skill, valid_message.context["username"]), daemon=True)
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
         t.start()
-        spoken.wait(30)
+        self.assertTrue(spoken.wait(30))
         sleep(1)
         skill.converse(invalid_message)
         t.join(30)
@@ -370,27 +378,33 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             return True
 
         def skill_response_thread(s: MycroftSkill, idx: str):
-            resp = s.get_response(test_dialog, validator=is_valid, message=Message("converse_message", {},
-                                                                                   {"username": "valid_converse_user"}))
+            resp = s.get_response(test_dialog, validator=is_valid,
+                                  message=Message(
+                                      "converse_message", {},
+                                      {"username": "valid_converse_user"}))
             test_results[idx] = resp
 
         test_results = dict()
         spoken = Event()
         test_dialog = "testing get response multi user."
         valid_message = Message("recognizer_loop:utterance",
-                                {"utterances": ["testing one", "testing 1", "resting one"]},
+                                {"utterances": ["testing one", "testing 1",
+                                                "resting one"]},
                                 {"timing": {},
                                  "username": "valid_converse_user"})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
-        t = Thread(target=skill_response_thread, args=(skill, valid_message.context["username"]), daemon=True)
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
         t.start()
         spoken.wait(30)
         sleep(1)
         skill.converse(valid_message)
         t.join(30)
         self.assertTrue(test_results["validator"])
-        self.assertEqual(test_results[valid_message.context["username"]], valid_message.data["utterances"][0])
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_message.data["utterances"][0])
 
     def test_get_response_validator_fail(self):
         def handle_speak(_):
@@ -404,21 +418,25 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         on_fail = Mock()
 
         def skill_response_thread(s: MycroftSkill, idx: str):
-            resp = s.get_response(test_dialog, validator=is_valid, on_fail=on_fail,
-                                  message=Message("converse_message", {},
-                                                  {"username": "valid_converse_user"}))
+            resp = s.get_response(test_dialog, validator=is_valid,
+                                  on_fail=on_fail, message=Message(
+                    "converse_message", {},
+                    {"username": "valid_converse_user"}))
             test_results[idx] = resp
 
         test_results = dict()
         spoken = Event()
         test_dialog = "testing get response multi user."
         valid_message = Message("recognizer_loop:utterance",
-                                {"utterances": ["testing one", "testing 1", "resting one"]},
+                                {"utterances": ["testing one", "testing 1",
+                                                "resting one"]},
                                 {"timing": {},
                                  "username": "valid_converse_user"})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
-        t = Thread(target=skill_response_thread, args=(skill, valid_message.context["username"]), daemon=True)
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
         t.start()
         spoken.wait(30)
         sleep(1)
@@ -458,10 +476,11 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["speaker"], speaker)
 
     def test_speak_simple_with_message_valid(self):
-        message = Message("date-time.neon:handle_query_time", {'intent_type': 'date-time.neon:handle_query_time',
-                                                               'target': None,
-                                                               'confidence': 0.6666666666666666,
-                                                               'utterance': 'what time is it neon'},
+        message = Message("date-time.neon:handle_query_time",
+                          {'intent_type': 'date-time.neon:handle_query_time',
+                           'target': None,
+                           'confidence': 0.6666666666666666,
+                           'utterance': 'what time is it neon'},
                           {'client_name': 'mycroft_cli',
                            'source': ['skills'],
                            'destination': 'debug_cli',
@@ -483,17 +502,20 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertIsNone(msg.data["speaker"])
-        self.assertEqual(message.context.pop("source"), msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"), msg.context.pop("source"))
+        self.assertEqual(message.context.pop("source"),
+                         msg.context.pop("destination"))
+        self.assertEqual(message.context.pop("destination"),
+                         msg.context.pop("source"))
         self.assertEqual(message.context, msg.context)
 
     def test_speak_speaker_with_message_override_valid(self):
-        message = Message("date-time.neon:handle_query_time", {'intent_type': 'date-time.neon:handle_query_time',
-                                                               'target': None,
-                                                               'confidence': 0.6666666666666666,
-                                                               'utterance': 'what time is it neon',
-                                                               'speaker': {"speaker": "invalid speaker",
-                                                                           "language": "es-es"}},
+        message = Message("date-time.neon:handle_query_time",
+                          {'intent_type': 'date-time.neon:handle_query_time',
+                           'target': None,
+                           'confidence': 0.6666666666666666,
+                           'utterance': 'what time is it neon',
+                           'speaker': {"speaker": "invalid speaker",
+                                       "language": "es-es"}},
                           {'client_name': 'mycroft_cli',
                            'source': ['skills'],
                            'destination': 'debug_cli',
@@ -518,19 +540,22 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertEqual(msg.data["speaker"], speaker)
-        self.assertEqual(message.context.pop("source"), msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"), msg.context.pop("source"))
+        self.assertEqual(message.context.pop("source"),
+                         msg.context.pop("destination"))
+        self.assertEqual(message.context.pop("destination"),
+                         msg.context.pop("source"))
         self.assertEqual(message.context, msg.context)
 
     def test_speak_speaker_with_message_valid(self):
         speaker = {"speaker": "Test Speaker",
                    "language": "en-au",
                    "gender": "female"}
-        message = Message("date-time.neon:handle_query_time", {'intent_type': 'date-time.neon:handle_query_time',
-                                                               'target': None,
-                                                               'confidence': 0.6666666666666666,
-                                                               'utterance': 'what time is it neon',
-                                                               'speaker': speaker},
+        message = Message("date-time.neon:handle_query_time",
+                          {'intent_type': 'date-time.neon:handle_query_time',
+                           'target': None,
+                           'confidence': 0.6666666666666666,
+                           'utterance': 'what time is it neon',
+                           'speaker': speaker},
                           {'client_name': 'mycroft_cli',
                            'source': ['skills'],
                            'destination': 'debug_cli',
@@ -553,15 +578,18 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertEqual(msg.data["speaker"], speaker)
-        self.assertEqual(message.context.pop("source"), msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"), msg.context.pop("source"))
+        self.assertEqual(message.context.pop("source"),
+                         msg.context.pop("destination"))
+        self.assertEqual(message.context.pop("destination"),
+                         msg.context.pop("source"))
         self.assertEqual(message.context, msg.context)
 
     def test_speak_emit_response_valid(self):
-        message = Message("date-time.neon:handle_query_time", {'intent_type': 'date-time.neon:handle_query_time',
-                                                               'target': None,
-                                                               'confidence': 0.6666666666666666,
-                                                               'utterance': 'what time is it neon'},
+        message = Message("date-time.neon:handle_query_time",
+                          {'intent_type': 'date-time.neon:handle_query_time',
+                           'target': None,
+                           'confidence': 0.6666666666666666,
+                           'utterance': 'what time is it neon'},
                           {'client_name': 'mycroft_cli',
                            'source': ['skills'],
                            'destination': 'debug_cli',
@@ -576,7 +604,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         handle_execute_response = Mock()
         utterance = "test to speak"
 
-        skill = get_test_mycroft_skill({"skills:execute.response": handle_execute_response})
+        skill = get_test_mycroft_skill(
+            {"skills:execute.response": handle_execute_response})
         skill.speak(utterance, message=message)
         handle_execute_response.assert_called_once()
         msg = handle_execute_response.call_args.args[0]
@@ -584,8 +613,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["utterance"], utterance)
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
-        self.assertEqual(message.context.pop("source"), msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"), msg.context.pop("source"))
+        self.assertEqual(message.context.pop("source"),
+                         msg.context.pop("destination"))
+        self.assertEqual(message.context.pop("destination"),
+                         msg.context.pop("source"))
         self.assertEqual(message.context, msg.context)
 
     # TODO: Test settings load
@@ -595,7 +626,9 @@ class NeonSkillTests(unittest.TestCase):
     def test_send_email_valid(self):
         skill = get_test_neon_skill(dict())
         self.assertTrue(skill.send_email("Test Message",
-                                         "This is a test\ncalled from neon_skill_tests.py in neon-utils",
+                                         "This is a test\n"
+                                         "called from neon_skill_tests.py "
+                                         "in neon-utils",
                                          email_addr="test@neongecko.com"))
 # TODO: NeonSkill Tests
 
