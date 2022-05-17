@@ -44,7 +44,7 @@ from mycroft.skills.fallback_skill import FallbackSkill
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 # from neon_utils.language_utils import LanguageDetector, LanguageTranslator
 from neon_utils.cache_utils import LRUCache
-from neon_utils.configuration_utils import NGIConfig
+from neon_utils.configuration_utils import NGIConfig, get_neon_local_config
 from neon_utils.signal_utils import check_for_signal
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
@@ -94,6 +94,10 @@ class SkillObjectTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         os.environ["NEON_CONFIG_PATH"] = \
             os.path.join(os.path.dirname(__file__), "test_config")
+        config = get_neon_local_config()
+        config["MQ"]["server"] = "mq.2022.us"
+        config["MQ"]["port"] = 25672
+        config.write_changes()
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -192,6 +196,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         os.environ["NEON_CONFIG_PATH"] = \
             os.path.join(os.path.dirname(__file__), "test_config")
+        config = get_neon_local_config()
+        config["MQ"]["server"] = "mq.2022.us"
+        config["MQ"]["port"] = 25672
+        config.write_changes()
 
     @classmethod
     def tearDownClass(cls) -> None:
@@ -580,6 +588,10 @@ class NeonSkillTests(unittest.TestCase):
     def setUpClass(cls) -> None:
         os.environ["NEON_CONFIG_PATH"] = \
             os.path.join(os.path.dirname(__file__), "test_config")
+        config = get_neon_local_config()
+        config["MQ"]["server"] = "mq.2022.us"
+        config["MQ"]["port"] = 25672
+        config.write_changes()
 
     @classmethod
     def tearDownClass(cls) -> None:
