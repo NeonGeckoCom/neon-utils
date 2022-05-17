@@ -30,14 +30,14 @@ import json
 import time
 import os.path
 
-from threading import Event
+from threading import Event, Thread
 from typing import Optional
 
 from json_database import JsonStorage
 from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message
 
-from neon_utils.signal_utils import wait_for_signal_clear
+from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message
@@ -174,6 +174,7 @@ class PatchedMycroftSkill(MycroftSkill):
             LOG.warning(f"{self.name} | message={message}")
 
         if wait:
+            # TODO: Refactor to wait for event emit
             wait_for_signal_clear('isSpeaking')
 
     def speak_dialog(self, key, data=None, expect_response=False, wait=False,
@@ -181,9 +182,11 @@ class PatchedMycroftSkill(MycroftSkill):
         """ Speak a random sentence from a dialog file.
 
         Arguments:
-            :param key: dialog file key (e.g. "hello" to speak from the file "locale/en-us/hello.dialog")
+            :param key: dialog file key (e.g. "hello" to speak from the file
+                "locale/en-us/hello.dialog")
             :param data: information used to populate key
-            :param expect_response: set to True if Mycroft should listen for a response immediately after speaking.
+            :param expect_response: set to True if Mycroft should listen for a
+                response immediately after speaking.
             :param wait: set to True to block while the text is being spoken.
             :param message: associated message from request
             :param private: private flag (server use only)
@@ -197,14 +200,18 @@ class PatchedMycroftSkill(MycroftSkill):
             to_speak = key
         self.speak(to_speak,
                    expect_response, message=message, private=private,
-                   speaker=speaker, wait=wait, meta={'dialog': key, 'data': data})
+                   speaker=speaker, wait=wait, meta={'dialog': key,
+                                                     'data': data})
 
-    def get_response(self, dialog: str = '', data: Optional[dict] = None, validator=None,
-                     on_fail=None, num_retries: int = -1, message: Optional[Message] = None) -> Optional[str]:
+    def get_response(self, dialog: str = '', data: Optional[dict] = None,
+                     validator=None, on_fail=None, num_retries: int = -1,
+                     message: Optional[Message] = None) -> Optional[str]:
         """
-        Gets a response from a user. Speaks the passed dialog file or string and then optionally plays a listening
-        confirmation sound and starts listening if in wake words mode.
-        Wraps the default Mycroft method to add support for multiple users and running without a wake word.
+        Gets a response from a user. Speaks the passed dialog file or string
+        and then optionally plays a listening confirmation sound and
+        starts listening if in wake words mode.
+        Wraps the default Mycroft method to add support for multiple users and
+        running without a wake word.
 
         Arguments:
             dialog (str): Optional dialog to speak to the user
@@ -256,18 +263,20 @@ class PatchedMycroftSkill(MycroftSkill):
             LOG.warning(f"Could not locate message associated with request!")
             message = Message("get_response")
 
-        # If skill has dialog, render the input in case it is referencing a dialog file
+        # If skill has dialog, render the input
         if self.dialog_renderer:
             dialog = self.dialog_renderer.render(dialog, data)
 
         if dialog:
-            self.speak(dialog, expect_response=True, wait=False, message=message)
+            self.speak(dialog, expect_response=True, wait=False,
+                       message=message)
         else:
             self.bus.emit(message.forward('mycroft.mic.listen'))
         return self._wait_response(is_cancel, validator, on_fail_fn,
                                    num_retries, message, user)
 
-    def _wait_response(self, is_cancel, validator, on_fail, num_retries, message=None, user: str = None):
+    def _wait_response(self, is_cancel, validator, on_fail, num_retries,
+                       message=None, user: str = None):
         """
         Loop until a valid response is received from the user or the retry
         limit is reached.
@@ -287,6 +296,7 @@ class PatchedMycroftSkill(MycroftSkill):
                 # if nothing said, prompt one more time
                 num_none_fails = 1 if num_retries < 0 else num_retries
                 if num_fails >= num_none_fails:
+                    LOG.info("No user response")
                     return None
             else:
                 if validator(response):
@@ -304,8 +314,9 @@ class PatchedMycroftSkill(MycroftSkill):
             if line:
                 self.speak(line, expect_response=True)
             else:
-                msg = message.reply('mycroft.mic.listen') or Message('mycroft.mic.listen',
-                                                                     context={"skill_id": self.skill_id})
+                msg = message.reply('mycroft.mic.listen') or \
+                      Message('mycroft.mic.listen',
+                              context={"skill_id": self.skill_id})
                 self.bus.emit(msg)
 
     def __get_response(self, user="local"):
@@ -318,6 +329,17 @@ class PatchedMycroftSkill(MycroftSkill):
             str: user's response or None on a timeout
         """
         event = Event()
+        finished_speaking = Event()
+
+        # TODO: get_response should be event-based instead of signals
+        def _wait_while_speaking():
+            if wait_for_signal_clear("isSpeaking", 30):
+                LOG.error("Still speaking after 30s")
+            else:
+                # Handle a second prompt after ended speech
+                time.sleep(0.5)
+                wait_for_signal_clear("isSpeaking", 30)
+            finished_speaking.set()
 
         def converse(message):
             resp_user = get_message_user(message) or "local"
@@ -325,7 +347,10 @@ class PatchedMycroftSkill(MycroftSkill):
                 utterances = message.data.get("utterances")
                 converse.response = utterances[0] if utterances else None
                 event.set()
+                finished_speaking.set()
+                LOG.info(f"Got response: {converse.response}")
                 return True
+            LOG.debug(f"Ignoring input from: {resp_user}")
             return False
 
         # install a temporary conversation handler
@@ -333,7 +358,13 @@ class PatchedMycroftSkill(MycroftSkill):
         converse.response = None
         default_converse = self.converse
         self.converse = converse
-        wait_for_signal_clear("isSpeaking")
-        event.wait(15)  # 10 for listener, 5 for STT, then timeout
+
+        t = Thread(target=_wait_while_speaking, daemon=True)
+        t.start()
+
+        finished_speaking.wait(30)
+        t.join(0)
+        if not event.wait(15):  # 10 for listener, 5 for STT, then timeout
+            LOG.warning("Timed out waiting for user response")
         self.converse = default_converse
         return converse.response
