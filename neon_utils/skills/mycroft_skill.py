@@ -230,7 +230,6 @@ class PatchedMycroftSkill(MycroftSkill):
         Returns:
             str: User's reply or None if timed out or canceled
         """
-        LOG.info(f">>>GET_RESPONSE<<<")
         message = message or dig_for_message()
         user = get_message_user(message) or "local" if message else "local"
         data = data or {}
@@ -332,15 +331,19 @@ class PatchedMycroftSkill(MycroftSkill):
         event = Event()
         finished_speaking = Event()
 
+        # TODO: get_response should be event-based instead of signals
         def _wait_while_speaking():
             if wait_for_signal_clear("isSpeaking", 30):
                 LOG.error("Still speaking after 30s")
+            else:
+                # Handle a second prompt after ended speech
+                time.sleep(0.5)
+                wait_for_signal_clear("isSpeaking", 30)
             finished_speaking.set()
 
         def converse(message):
             nonlocal converse_response
             resp_user = get_message_user(message) or "local"
-            LOG.info(f"Check response from {resp_user}")
             if resp_user == user:
                 utterances = message.data.get("utterances")
                 converse_response = utterances[0] if utterances else None
@@ -348,8 +351,7 @@ class PatchedMycroftSkill(MycroftSkill):
                 finished_speaking.set()
                 LOG.info(f"Got response: {converse_response}")
                 return True
-            else:
-                LOG.debug(f"Ignoring input from: {resp_user}")
+            LOG.debug(f"Ignoring input from: {resp_user}")
             return False
 
         # install a temporary conversation handler
@@ -366,6 +368,4 @@ class PatchedMycroftSkill(MycroftSkill):
         if not event.wait(15):  # 10 for listener, 5 for STT, then timeout
             LOG.warning("Timed out waiting for user response")
         self.converse = default_converse
-        self.remove_event("mycroft.mic.listen")
-        self.remove_event("klat.response")
         return converse_response
