@@ -51,6 +51,7 @@ location:
 response_mode:
   speed_mode: quick
   hesitation: False
+  limit_dialog: False
 
 privacy:
   save_audio: True
