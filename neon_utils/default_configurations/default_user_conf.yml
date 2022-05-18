@@ -53,3 +53,4 @@ response_mode:
 
 privacy:
   save_audio: True
+  save_text: True
