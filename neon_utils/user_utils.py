@@ -30,7 +30,7 @@ from os.path import isfile, join
 from mycroft_bus_client import Message, MessageBusClient
 
 from neon_utils.message_utils import resolve_message, get_message_user
-from neon_utils.configuration_utils import get_neon_user_config, \
+from neon_utils.configuration_utils import NGIConfig, get_neon_user_config, \
     dict_make_equal_keys, get_config_dir, get_user_config_from_mycroft_conf
 from neon_utils.logger import LOG
 
@@ -49,6 +49,20 @@ def get_default_user_config() -> dict:
         else:
             _DEFAULT_USER_CONFIG = get_user_config_from_mycroft_conf()
     return _DEFAULT_USER_CONFIG
+
+
+def apply_user_profile_updates(updated_profile: dict, user_config: NGIConfig):
+    """
+    Apply an updated profile to a local user_config object (with write to disk)
+    :param updated_profile: new profile values to write
+    :param user_config: configuration object to update
+    """
+    for section, settings in updated_profile.items():
+        # section in user, brands, units, etc.
+        for key, val in settings.items():
+            user_config[section][key] = val
+    user_config.write_changes()
+    LOG.info(f"Updated YML Profile at {user_config.file_path}")
 
 
 @resolve_message
