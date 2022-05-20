@@ -947,7 +947,7 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
             ["country"]["name"],
             "tz": mycroft_config["location"]["timezone"]["code"],
             "utc": str(round(mycroft_config["location"]["timezone"]["offset"]
-                             /3600000,1))}
+                             / 3600000, 1))}
     return user_config
 
 

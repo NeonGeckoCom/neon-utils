@@ -73,26 +73,7 @@ class PatchedMycroftSkill(MycroftSkill):
             LOG.warning(f"overriding self.file_system to: "
                         f"{self.file_system.path}")
 
-    @property
-    def settings(self):
-        if self._settings is not None:
-            return self._settings
-        else:
-            LOG.error('Skill not fully initialized.  Only default values can '
-                      'be set, no settings can be  read or changed. Move code '
-                      'from  __init__() to initialize() to correct this.')
-            return self._initial_settings
-
-    @settings.setter
-    def settings(self, val):
-        if not isinstance(val, dict):
-            LOG.error(f"Ignoring request to set settings to: {val}")
-            return
-        if self._settings is None:
-            self._initial_settings = val
-            return
-        self._settings.clear()
-        self._settings.merge(val)
+    # TODO: Override settings property and setter for multi-user compat
 
     @property
     def location(self):
