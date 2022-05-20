@@ -40,12 +40,14 @@ from mycroft_bus_client.message import Message
 from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
-from neon_utils.message_utils import get_message_user, dig_for_message
+from neon_utils.message_utils import get_message_user, dig_for_message, resolve_message
 from neon_utils.configuration_utils import dict_update_keys, \
-    parse_skill_default_settings
+    parse_skill_default_settings, get_mycroft_compatible_location
 
 from mycroft.skills import MycroftSkill
 from mycroft.skills.settings import get_local_settings
+
+from neon_utils.user_utils import get_user_prefs
 
 
 class PatchedMycroftSkill(MycroftSkill):
@@ -58,6 +60,8 @@ class PatchedMycroftSkill(MycroftSkill):
             skill_id = os.path.basename(os.path.dirname(
                 os.path.abspath(sys.modules[self.__module__].__file__)))
             self.file_system = FileSystemAccess(os.path.join('skills', skill_id))
+            self._settings = None
+
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         self.gui = SkillGUI(self)
         if not hasattr(super(), "_startup"):
@@ -68,6 +72,16 @@ class PatchedMycroftSkill(MycroftSkill):
                                                              skill_id))
             LOG.warning(f"overriding self.file_system to: "
                         f"{self.file_system.path}")
+
+    # TODO: Override settings property and setter for multi-user compat
+
+    @property
+    def location(self):
+        return get_mycroft_compatible_location(get_user_prefs()["location"])
+
+    @property
+    def _secondary_langs(self):
+        return get_user_prefs()["speech"]["alt_languages"]
 
     @property
     def _settings_path(self):
@@ -89,8 +103,7 @@ class PatchedMycroftSkill(MycroftSkill):
             if isinstance(self.settings, JsonStorage):
                 self.settings.store()
             else:
-                with open(os.path.join(self._settings_path,
-                                       'settings.json'), "w+") as f:
+                with open(self._settings_path, "w+") as f:
                     json.dump(self.settings, f, indent=4)
         self._initial_settings = dict(self.settings)
 
@@ -107,6 +120,7 @@ class PatchedMycroftSkill(MycroftSkill):
             return dict()
         return parse_skill_default_settings(self.settings_meta)
 
+    @resolve_message
     def speak(self, utterance, expect_response=False, wait=False, meta=None, message=None, private=False, speaker=None):
         """
         Speak an utterance.
@@ -127,11 +141,8 @@ class PatchedMycroftSkill(MycroftSkill):
         self.enclosure.register(self.name)
         if utterance:
             if not message:
-                # Find the associated message
                 LOG.debug('message is None.')
-                message = dig_for_message()
-                if not message:
-                    message = Message("speak")
+                message = Message("speak")
             if not speaker:
                 speaker = message.data.get("speaker", None)
 
@@ -177,6 +188,7 @@ class PatchedMycroftSkill(MycroftSkill):
             # TODO: Refactor to wait for event emit
             wait_for_signal_clear('isSpeaking')
 
+    @resolve_message
     def speak_dialog(self, key, data=None, expect_response=False, wait=False,
                      message=None, private=False, speaker=None):
         """ Speak a random sentence from a dialog file.
@@ -203,6 +215,7 @@ class PatchedMycroftSkill(MycroftSkill):
                    speaker=speaker, wait=wait, meta={'dialog': key,
                                                      'data': data})
 
+    @resolve_message
     def get_response(self, dialog: str = '', data: Optional[dict] = None,
                      validator=None, on_fail=None, num_retries: int = -1,
                      message: Optional[Message] = None) -> Optional[str]:
@@ -230,7 +243,6 @@ class PatchedMycroftSkill(MycroftSkill):
         Returns:
             str: User's reply or None if timed out or canceled
         """
-        message = message or dig_for_message()
         user = get_message_user(message) or "local" if message else "local"
         data = data or {}
 

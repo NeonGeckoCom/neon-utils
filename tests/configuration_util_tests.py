@@ -941,6 +941,13 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         shutil.move(old_user_info, ngi_user_info)
 
+    def test_get_user_config_from_mycroft_conf(self):
+        from neon_utils.configuration_utils import \
+            get_user_config_from_mycroft_conf
+        config = get_user_config_from_mycroft_conf()
+        self.assertIsInstance(config, dict)
+        # TODO: Better tests of config load
+
 
 if __name__ == '__main__':
     unittest.main()
