@@ -920,11 +920,12 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
     Populates user_config with values from mycroft.conf
     :returns: dict modified or created user config
     """
+    from ovos_utils.configuration import MycroftUserConfig
     user_config = user_config or \
         deepcopy(NGIConfig("default_user_conf",
                            os.path.join(os.path.dirname(__file__),
                                         "default_configurations")).content)
-    mycroft_config = _safe_mycroft_config()
+    mycroft_config = MycroftUserConfig()
     user_config["speech"]["stt_language"] = mycroft_config.get("lang", "en-us")
     user_config["speech"]["tts_language"] = mycroft_config.get("lang", "en-us")
     user_config["speech"]["alt_languages"] = \
@@ -936,21 +937,17 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
         "metric" if mycroft_config.get("system_unit") == "metric" \
         else "imperial"
 
-    user_config["location"] = {"lat": str(mycroft_config["location"]["coordinate"]
-                               ["latitude"]),
-                               "lng": str(mycroft_config["location"]["coordinate"]
-                               ["longitude"]),
-                               "city": mycroft_config["location"]["city"]
-                               ["name"],
-                               "state": mycroft_config["location"]["city"]
-                               ["state"]["name"],
-                               "country": mycroft_config["location"]["city"]
-                               ["state"]["country"]["name"],
-                               "tz": mycroft_config["location"]["timezone"]
-                               ["code"],
-                               "utc": str(round(mycroft_config["location"]
-                                                ["timezone"]["offset"]/3600000,
-                                                1))}
+    if mycroft_config.get("location"):
+        user_config["location"] = {
+            "lat": str(mycroft_config["location"]["coordinate"]["latitude"]),
+            "lng": str(mycroft_config["location"]["coordinate"]["longitude"]),
+            "city": mycroft_config["location"]["city"]["name"],
+            "state": mycroft_config["location"]["city"]["state"]["name"],
+            "country": mycroft_config["location"]["city"]["state"]
+            ["country"]["name"],
+            "tz": mycroft_config["location"]["timezone"]["code"],
+            "utc": str(round(mycroft_config["location"]["timezone"]["offset"]
+                             /3600000,1))}
     return user_config
 
 
