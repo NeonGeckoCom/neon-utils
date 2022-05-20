@@ -51,7 +51,8 @@ def get_default_user_config() -> dict:
     return _DEFAULT_USER_CONFIG
 
 
-def apply_user_profile_updates(updated_profile: dict, user_config: NGIConfig):
+def apply_local_user_profile_updates(updated_profile: dict,
+                                     user_config: NGIConfig):
     """
     Apply an updated profile to a local user_config object (with write to disk)
     :param updated_profile: new profile values to write

@@ -141,14 +141,14 @@ class UserUtilTests(unittest.TestCase):
         self.assertEqual(update_message.data["profile"], valid_profile)
 
     def test_apply_user_profile_updates(self):
-        from neon_utils.user_utils import apply_user_profile_updates
+        from neon_utils.user_utils import apply_local_user_profile_updates
         from neon_utils.configuration_utils import NGIConfig
         config_object = NGIConfig("test_config", os.path.dirname(__file__))
         config_object["test"] = {"updated": "",
                                  "unchanged": True
                                  }
 
-        apply_user_profile_updates({"test": {"updated": "yes",
+        apply_local_user_profile_updates({"test": {"updated": "yes",
                                              "added": 1}}, config_object)
         self.assertEqual(dict(config_object.content),
                          {"test": {"updated": "yes",
