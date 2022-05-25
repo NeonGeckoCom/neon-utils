@@ -278,4 +278,5 @@ def build_skill_spec(skill_dir: str) -> dict:
     readme_data["license"] = get_skill_license()
     readme_data["branch"] = "master"
     skill_data = dict_merge(default_skill, skill_data)
+    skill_data["requirements"]["python"].sort()
     return dict(dict_merge(skill_data, readme_data))
