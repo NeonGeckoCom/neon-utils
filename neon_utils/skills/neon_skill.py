@@ -312,36 +312,6 @@ class NeonSkill(MycroftSkill):
             LOG.warning("Updating global YML config")
             _write_yml_changes()
 
-        # TODO: Deprecate below
-        # Klat server legacy support
-        try:
-            username = get_message_user(message)
-            if message.context.get('klat_data', {}).get('request_id'):
-                if "skills" in new_preferences:
-                    new_skills_prefs = new_preferences.pop("skills")
-                else:
-                    new_skills_prefs = dict()
-                old_skills_prefs = \
-                    message.context["nick_profiles"][username].get(
-                        "skills") or dict()
-                combined_skill_prefs = {**old_skills_prefs, **new_skills_prefs}
-                combined_changes = {k: v for dic in new_preferences.values()
-                                    for k, v in dic.items()}
-                if new_skills_prefs:
-                    combined_changes["skill_settings"] = \
-                        json.dumps(list(combined_skill_prefs.values()))
-                    new_preferences["skills"] = combined_skill_prefs
-                    LOG.debug(f"combined_skill_prefs={combined_skill_prefs}")
-                combined_changes["username"] = username
-                self.socket_emit_to_server("update profile",
-                                           ["skill", combined_changes,
-                                            message.context["klat_data"]
-                                            ["request_id"]])
-                self.bus.emit(Message("neon.remove_cache_entry",
-                                      {"nick": username}))
-        except Exception as e:
-            LOG.error(e)
-
     @resolve_message
     def update_skill_settings(self, new_preferences: dict,
                               message: Message = None, skill_global=False):
