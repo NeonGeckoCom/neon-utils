@@ -644,6 +644,7 @@ class NeonSkill(MycroftSkill):
         :param time_wait: Time in seconds to wait before deactivating intent
         :param intent_to_check: list of intents to disable
         """
+        # TODO: Consider unit tests or deprecation of this method DM
         LOG.debug(time_wait)
         LOG.debug(intent_to_check)
         if isinstance(intent_to_check, str):

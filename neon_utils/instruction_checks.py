@@ -30,6 +30,9 @@ from word2number import w2n
 from neon_utils.logger import LOG
 import re
 
+LOG.warning("This module will be deprecated in neon_utils 1.0.0")
+
+
 class Check:
     """
 
