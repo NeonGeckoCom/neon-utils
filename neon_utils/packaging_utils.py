@@ -34,7 +34,7 @@ from typing import Tuple, Optional
 import pkg_resources
 import sysconfig
 
-from os.path import exists, join
+from os.path import exists, join, expanduser, isdir
 from neon_utils.logger import LOG
 
 
@@ -88,7 +88,8 @@ def get_package_dependencies(pkg: str):
 
 def get_packaged_core_version() -> str:
     """
-    Get the version of the packaged core in use. Supports Neon, Mycroft, and OVOS default packages.
+    Get the version of the packaged core in use.
+    Supports Neon, Mycroft, and OVOS default packages.
     Returns:
         Version of the installed core package
     """
@@ -110,9 +111,9 @@ def get_version_from_file() -> str:
     import glob
     import os
     from neon_utils.configuration_utils import get_neon_local_config
-    release_files = glob.glob(
-        f'{get_neon_local_config().get("dirVars", {}).get("ngiDir") or os.path.expanduser("~/.neon")}'
-        f'/*.release')
+    path = get_neon_local_config().get("dirVars", {}).get("ngiDir") or \
+        os.path.expanduser("~/.neon")
+    release_files = glob.glob(f'{path}/*.release')
     if len(release_files):
         return os.path.splitext(os.path.basename(release_files[0]))[0]
     raise FileNotFoundError("No Version File Found")
@@ -122,7 +123,8 @@ def get_neon_core_version() -> str:
     """
     Gets the current version of the installed Neon Core.
     Returns:
-        Version of the available/active Neon Core or 0.0 if no release info is found
+        Version of the available/active Neon Core or
+        0.0 if no release info is found
     """
     try:
         return get_packaged_core_version()
@@ -142,13 +144,15 @@ def get_core_root():
     Depreciated 2020.09.01
     :return:
     """
-    LOG.warning(f"This method is depreciated, please update to use get_neon_core_root()")
+    LOG.warning(f"This method is depreciated, "
+                f"please update to use get_neon_core_root()")
     return get_mycroft_core_root()
 
 
 def get_neon_core_root():
     """
-    Determines the root of the available/active Neon Core. Should be the immediate parent directory of 'neon_core' dir
+    Determines the root of the available/active Neon Core.
+    Should be the immediate parent directory of 'neon_core' dir
     Returns:
         Path to the core directory containing 'neon_core'
     """
@@ -169,7 +173,8 @@ def get_neon_core_root():
 
 def get_mycroft_core_root():
     """
-    Determines the root of the available/active Neon Core. Should be the immediate parent directory of 'mycroft' dir
+    Determines the root of the available/active Neon Core.
+    Should be the immediate parent directory of 'mycroft' dir
     Returns:
         Path to the core directory containing 'mycroft'
     """
@@ -187,3 +192,90 @@ def get_mycroft_core_root():
             elif exists(join(p, "mycroft")):
                 return p
     raise FileNotFoundError("Could not determine core directory")
+
+
+def build_skill_spec(skill_dir: str) -> dict:
+    """
+    Build dict contents of a skill.json file.
+    :param skill_dir: path to skill directory to parse
+    :returns: dict skill.json spec
+    """
+    import shutil
+    from ovos_skills_manager.local_skill import get_skill_data_from_directory
+    from neon_utils.file_utils import parse_skill_readme_file
+    from neon_utils.configuration_utils import dict_merge
+
+    def get_skill_license():  # TODO: Implement OSM version of this
+        try:
+            with open(join(skill_dir, "LICENSE.md")) as f:
+                contents = f.read()
+        except FileNotFoundError:
+            return "Unknown"
+        except Exception as e:
+            LOG.error(e)
+            return "Unknown"
+        if "BSD-3" in contents:
+            return "BSD-3-Clause"
+        if "Apache License" in contents:
+            return "Apache 2.0"
+        if "Neon AI Non-commercial Friendly License 2.0" in contents:
+            return "Neon 2.0"
+        if "Neon AI Non-commercial Friendly License" in contents:
+            return "Neon 1.0"
+
+    _invalid_skill_data_keys = ("appstore", "appstore_url", "credits",
+                                "skill_id")
+    _invalid_readme_keys = ("contact support", "details")
+    default_skill = {"title": "",
+                     "url": "",
+                     "summary": "",
+                     "short_description": "",
+                     "description": "",
+                     "examples": [],
+                     "desktopFile": False,
+                     "warning": "",
+                     "systemDeps": False,
+                     "requirements": {
+                         "python": [],
+                         "system": {},
+                         "skill": []
+                     },
+                     "incompatible_skills": [],
+                     "platforms": ["i386",
+                                   "x86_64",
+                                   "ia64",
+                                   "arm64",
+                                   "arm"],
+                     "branch": "master",
+                     "license": "",
+                     "icon": "",
+                     "category": "",
+                     "categories": [],
+                     "tags": [],
+                     "credits": [],
+                     "skillname": "",
+                     "authorname": "",
+                     "foldername": None}
+
+    skill_dir = expanduser(skill_dir)
+    if not isdir(skill_dir):
+        raise FileNotFoundError(f"Not a Directory: {skill_dir}")
+    LOG.debug(f"skill_dir={skill_dir}")
+    skill_json = join(skill_dir, "skill.json")
+    backup = join(skill_dir, "skill_json.bak")
+    shutil.move(skill_json, backup)
+    skill_data = get_skill_data_from_directory(skill_dir)
+    shutil.move(backup, skill_json)
+    skill_data['foldername'] = None
+    for key in _invalid_skill_data_keys:
+        if key in skill_data:
+            skill_data.pop(key)
+    readme_data = parse_skill_readme_file(join(skill_dir, "README.md"))
+    for key in _invalid_readme_keys:
+        if key in readme_data:
+            readme_data.pop(key)
+    readme_data["short_description"] = readme_data.get("summary")
+    readme_data["license"] = get_skill_license()
+    readme_data["branch"] = "master"
+    skill_data = dict_merge(default_skill, skill_data)
+    return dict(dict_merge(skill_data, readme_data))
