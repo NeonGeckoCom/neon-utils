@@ -150,7 +150,8 @@ class PatchedMycroftSkill(MycroftSkill):
 
             if private and message.context.get("klat_data"):
                 LOG.debug("Private Message")
-                title = message.context["klat_data"]["title"]
+                title = message.context["klat_data"].get("title") or \
+                    "!PRIVATE:Neon"
                 need_at_sign = True
                 if title.startswith("!PRIVATE"):
                     users = title.split(':')[1].split(',')
