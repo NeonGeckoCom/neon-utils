@@ -25,20 +25,10 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from neon_utils.skills import NeonSkill
 
-from neon_utils.logger import LOG
 
-try:
-    from neon_core.language import get_language_dir
-except ImportError:
-    LOG.error("neon_core not found; language utils are not fully supported on this platform.")
+class TestSkill(NeonSkill):
+    def __init__(self, bus=None):
+        super(TestSkill, self).__init__(name="Test Skill", bus=bus)
 
-try:
-    from ovos_plugin_manager.language import OVOSLangTranslationFactory as TranslatorFactory
-    from ovos_plugin_manager.language import OVOSLangDetectionFactory as DetectorFactory
-    from ovos_plugin_manager.templates.language import LanguageDetector, LanguageTranslator
-except ImportError:
-    LOG.error("ovos_plugin_manager not found; language utils not available")
-
-# TODO: Deprecate in v1.0.0
-LOG.warning(f"neon_utils.language_utils has been deprecated! Please import from ovos_plugin_manager")

@@ -145,12 +145,16 @@ class MessageUtilTests(unittest.TestCase):
         message = Message("test message", {"test": "data"}, {"time": time()})
         self.assertIsNone(dig_for_message())
 
-    def test_insert_message(self):
+    def test_resolve_message(self):
         def wrapper_method(message, function: callable,
                            fn_args: list = None, fn_kwargs: dict = None):
             fn_args = fn_args or list()
             fn_kwargs = fn_kwargs or dict()
             function(*fn_args, **fn_kwargs)
+
+        def nested_get_message(message=None):
+            get_message_simple(message)
+            get_message_multi_args("test", message)
 
         @resolve_message
         def get_message_simple(message=None):
@@ -169,6 +173,11 @@ class MessageUtilTests(unittest.TestCase):
                 self.assertIsInstance(kwargs["message"], Message)
                 self.assertEqual(kwargs["message"], test_message)
 
+        @resolve_message
+        def get_message_multi_args(test, message=None):
+            self.assertEqual(test, "test")
+            self.assertEqual(message, test_message)
+
         test_message = Message("test", {"data": "val"}, {"context": False})
         wrapper_method(test_message, get_message_simple)
         wrapper_method(test_message, get_message_simple, [test_message])
@@ -183,6 +192,36 @@ class MessageUtilTests(unittest.TestCase):
                        fn_kwargs={"message": test_message})
         wrapper_method(test_message, get_message_kwargs,
                        fn_args=[test_message])
+
+        wrapper_method(test_message, nested_get_message)
+
+    def test_request_for_neon(self):
+        from neon_utils.message_utils import request_for_neon
+
+        minimal_message = Message("test")
+        self.assertTrue(request_for_neon(minimal_message))
+        self.assertFalse(request_for_neon(minimal_message, ww_enabled=False))
+
+        neon_should_respond = Message("test", {},
+                                      {"neon_should_respond": True})
+        self.assertTrue(request_for_neon(neon_should_respond))
+        self.assertTrue(request_for_neon(neon_should_respond,
+                                         ww_enabled=False))
+
+        neon_voc = Message("test", {"neon": "nyan"},
+                           {"neon_shoud_respond": False})
+        self.assertTrue(request_for_neon(neon_voc, ww_enabled=False))
+        self.assertFalse(request_for_neon(neon_voc, "mycroft",
+                                          ww_enabled=False))
+
+        server_request_public = Message("test", {},
+                                        {"klat_data": {"title": "title"}})
+        self.assertFalse(request_for_neon(server_request_public))
+
+        server_request_private = Message("test", {},
+                                         {"klat_data": {
+                                             "title": "!PRIVATE:user"}})
+        self.assertTrue(request_for_neon(server_request_private))
 
 
 if __name__ == '__main__':

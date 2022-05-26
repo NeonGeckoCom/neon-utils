@@ -21,8 +21,7 @@ brands:
   specially_requested: {}
 
 speech:
-  stt_language: en
-  stt_region: US
+  stt_language: en-us
   alt_languages: ['en']
   tts_language: en-us
   tts_gender: female
@@ -51,6 +50,9 @@ location:
 
 response_mode:
   speed_mode: quick
+  hesitation: False
+  limit_dialog: False
 
 privacy:
   save_audio: True
+  save_text: True

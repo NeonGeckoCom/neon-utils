@@ -104,6 +104,10 @@ def init_signal_handlers():
         _check_for_signal = _manager_check_for_signal
         _wait_for_signal_clear = _manager_wait_for_signal_clear
         _wait_for_signal_create = _manager_wait_for_signal_create
+
+        ovos_utils.signal.check_for_signal = _check_for_signal
+        ovos_utils.signal.create_signal = _create_signal
+
     else:
         LOG.warning("No signal manager available; falling back to FS signals")
         _create_signal = ovos_utils.signal.create_signal

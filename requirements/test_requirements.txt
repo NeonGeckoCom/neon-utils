@@ -3,3 +3,5 @@ pytest-timeout
 pytest-cov
 mock
 ovos-core[skills,skills_lgpl]
+ovos-plugin-manager~=0.0.17
+ovos-skills-manager

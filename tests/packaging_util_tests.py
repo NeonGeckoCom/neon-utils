@@ -132,6 +132,26 @@ class PackagingUtilTests(unittest.TestCase):
         with self.assertRaises(ModuleNotFoundError):
             get_package_dependencies("fakeneongeckopackage")
 
+    def test_build_skill_spec(self):
+        import json
+        from neon_utils.packaging_utils import build_skill_spec
+        test_dir = os.path.join(os.path.dirname(__file__), "test_skill_json")
+
+        with self.assertRaises(FileNotFoundError):
+            build_skill_spec(os.path.join(test_dir, "notADirectory"))
+        with self.assertRaises(FileNotFoundError):
+            build_skill_spec(__file__)
+
+        skill_spec = build_skill_spec(test_dir)
+        self.assertIsInstance(skill_spec, dict)
+        # Patch params otherwise read from .git directory
+        skill_spec["authorname"] = "NeonGeckoCom"
+        skill_spec["skillname"] = "skill-alerts"
+        skill_spec["url"] = "https://github.com/NeonGeckoCom/skill-alerts"
+        with open(join(test_dir, "skill.json")) as f:
+            valid_spec = json.load(f)
+        self.assertEqual(valid_spec, skill_spec)
+
     # TODO: Actually validate exception cases? DM
 
 
