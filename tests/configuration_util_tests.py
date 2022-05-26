@@ -917,8 +917,10 @@ class ConfigurationUtilTests(unittest.TestCase):
             get_mycroft_compatible_location(user_config.content)
 
         location = get_mycroft_compatible_location(user_config["location"])
-        self.assertEqual(location["city"]["name"], user_config["location"]["city"])
-        self.assertEqual(location["city"]["code"], user_config["location"]["city"])
+        self.assertEqual(location["city"]["name"],
+                         user_config["location"]["city"])
+        self.assertEqual(location["city"]["code"],
+                         user_config["location"]["city"])
         self.assertEqual(location["city"]["state"]["name"],
                          user_config["location"]["state"])
         self.assertIsInstance(location["city"]["state"]["code"], str)
@@ -938,6 +940,16 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(location["timezone"]["name"], str)
         self.assertIsInstance(location["timezone"]["offset"], float)
         self.assertEqual(location["timezone"]["dstOffset"], 3600000)
+
+        user_config["location"]["lat"] = f'"{user_config["location"]["lat"]}"'
+        user_config["location"]["lng"] = f'"{user_config["location"]["lng"]}"'
+        location = get_mycroft_compatible_location(user_config["location"])
+        self.assertEqual(location["city"]["state"]["country"]["name"],
+                         user_config["location"]["country"])
+        self.assertEqual(location["city"]["state"]["country"]["code"], "us")
+
+        self.assertIsInstance(location["coordinate"]["latitude"], float)
+        self.assertIsInstance(location["coordinate"]["longitude"], float)
 
         shutil.move(old_user_info, ngi_user_info)
 
