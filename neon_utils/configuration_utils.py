@@ -1118,7 +1118,18 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     :param location: dict location parsed from user config
     :returns: dict formatted to match mycroft.conf spec
     """
-    parsed_location = get_full_location((location['lat'], location['lng']))
+    from neon_utils.parse_utils import clean_quotes
+    try:
+        lat = clean_quotes(location['lat'])
+        lng = clean_quotes(location['lng'])
+    except (TypeError, ValueError):
+        lat = location['lat']
+        lng = location['lng']
+    try:
+        parsed_location = get_full_location((lat, lng))
+    except ValueError as e:
+        LOG.exception(e)
+        parsed_location = None
     location = {
         "city": {
             "code": location["city"],
@@ -1127,19 +1138,20 @@ def get_mycroft_compatible_location(location: dict) -> dict:
                 "code": location["state"],  # TODO: Util to parse this
                 "name": location["state"],
                 "country": {
-                    "code": parsed_location["address"]["country_code"],
+                    "code": parsed_location["address"]["country_code"] if
+                    parsed_location else "",
                     "name": location["country"]
                 }
             }
         },
         "coordinate": {
-            "latitude": float(location["lat"]),
-            "longitude": float(location["lng"])
+            "latitude": float(lat),
+            "longitude": float(lng)
         },
         "timezone": {
             "code": location["tz"],
             "name": location["tz"],  # TODO: Util to parse this
-            "offset": float(location["utc"]) * 3600000,
+            "offset": float(clean_quotes(location["utc"])) * 3600000,
             "dstOffset": 3600000
         }
     }
