@@ -154,7 +154,7 @@ def resolve_message(function):
             module = inspect.getmodule(call.frame)
             name = module.__name__ if module else call.filename
             LOG.debug(f"Digging for requested message arg - "
-                     f"{name}:{call.lineno}")
+                      f"{name}:{call.lineno}")
             message = dig_for_message(50)
             kwargs["message"] = message
         return function(*args, **kwargs)
