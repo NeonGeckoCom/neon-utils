@@ -222,8 +222,13 @@ class NeonSkill(MycroftSkill):
         time, date, measure formatting preferences
         Equivalent to self.user_config["units"] for non-server use
         """
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated."
-                    "Use neon_utils.user_utils.get_user_prefs directly")
+                    "Use neon_utils.user_utils.get_user_prefs directly - "
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["units"]
 
@@ -752,7 +757,12 @@ class NeonSkill(MycroftSkill):
             Username associated with the message or a default value of 'local' or 'server'.
         """
         # TODO: Backwards-compat. deprecate in v1.0.0
-        LOG.warning("This method is deprecated, use message_utils.get_message_user")
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
+        LOG.warning(f"This method is deprecated, use get_message_user - "
+                    f"{name}:{call.lineno}")
         from neon_utils.user_utils import get_default_user_config
         return get_message_user(message) or \
             get_default_user_config()["user"]["username"]
