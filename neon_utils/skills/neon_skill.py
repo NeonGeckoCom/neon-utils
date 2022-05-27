@@ -139,8 +139,13 @@ class NeonSkill(MycroftSkill):
 
     @property
     def user_config(self):
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated, "
-                    "use neon_utils.user_utils.get_user_prefs directly")
+                    "use neon_utils.user_utils.get_user_prefs directly"
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         if not self._user_config:
             self._user_config = get_neon_user_config()
@@ -148,7 +153,12 @@ class NeonSkill(MycroftSkill):
 
     @property
     def local_config(self):
-        LOG.warning("This reference is deprecated, use self.config_core")
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
+        LOG.warning("This reference is deprecated, use self.config_core"
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         if not self._local_config:
             self._local_config = get_neon_local_config()
@@ -210,8 +220,13 @@ class NeonSkill(MycroftSkill):
         Get the JSON data structure holding location information.
         Equivalent to self.user_config["location"] for non-server use
         """
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated."
-                    "Use neon_utils.user_utils.get_user_prefs directly")
+                    "Use neon_utils.user_utils.get_user_prefs directly"
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["location"]
 
