@@ -1130,6 +1130,14 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     except ValueError as e:
         LOG.exception(e)
         parsed_location = None
+
+    try:
+        offset = float(clean_quotes(location["utc"]))
+    except TypeError:
+        offset = float(location["utc"])
+    except ValueError:
+        offset = 0.0
+
     location = {
         "city": {
             "code": location["city"],
@@ -1151,7 +1159,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
         "timezone": {
             "code": location["tz"],
             "name": location["tz"],  # TODO: Util to parse this
-            "offset": float(clean_quotes(location["utc"])) * 3600000,
+            "offset": offset * 3600000,
             "dstOffset": 3600000
         }
     }
