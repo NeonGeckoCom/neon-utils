@@ -1130,6 +1130,8 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     except ValueError as e:
         LOG.exception(e)
         parsed_location = None
+    except Exception as e:
+        LOG.error(e)
 
     try:
         offset = float(clean_quotes(location["utc"]))
