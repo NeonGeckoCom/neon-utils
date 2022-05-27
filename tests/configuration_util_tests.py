@@ -943,6 +943,7 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         user_config["location"]["lat"] = f'"{user_config["location"]["lat"]}"'
         user_config["location"]["lng"] = f'"{user_config["location"]["lng"]}"'
+        user_config["location"]["utc"] = '-8.0'
         location = get_mycroft_compatible_location(user_config["location"])
         self.assertEqual(location["city"]["state"]["country"]["name"],
                          user_config["location"]["country"])
@@ -950,6 +951,19 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         self.assertIsInstance(location["coordinate"]["latitude"], float)
         self.assertIsInstance(location["coordinate"]["longitude"], float)
+        self.assertIsInstance(location["timezone"]["offset"], float)
+
+        user_config["location"]["utc"] = '"-8.0"'
+        location = get_mycroft_compatible_location(user_config["location"])
+        self.assertIsInstance(location["timezone"]["offset"], float)
+
+        user_config["location"]["utc"] = 8.0
+        location = get_mycroft_compatible_location(user_config["location"])
+        self.assertIsInstance(location["timezone"]["offset"], float)
+
+        user_config["location"]["utc"] = ''
+        location = get_mycroft_compatible_location(user_config["location"])
+        self.assertIsInstance(location["timezone"]["offset"], float)
 
         shutil.move(old_user_info, ngi_user_info)
 
