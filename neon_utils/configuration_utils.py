@@ -1136,7 +1136,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     except TypeError:
         offset = float(location["utc"])
     except ValueError:
-        offset = 0
+        offset = 0.0
 
     location = {
         "city": {
