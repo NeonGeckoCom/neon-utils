@@ -1138,6 +1138,12 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     except ValueError:
         offset = 0.0
 
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except Exception as e:
+        LOG.exception(e)
+
     location = {
         "city": {
             "code": location["city"],
@@ -1153,8 +1159,8 @@ def get_mycroft_compatible_location(location: dict) -> dict:
             }
         },
         "coordinate": {
-            "latitude": float(lat),
-            "longitude": float(lng)
+            "latitude": lat,
+            "longitude": lng
         },
         "timezone": {
             "code": location["tz"],

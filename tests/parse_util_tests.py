@@ -48,6 +48,10 @@ class ParseUtilTests(unittest.TestCase):
         output = clean_quotes(raw_str)
         self.assertEqual(raw_str, output)
 
+        raw_str = "'this is a single-quoted string'"
+        output = clean_quotes(raw_str)
+        self.assertEqual(output, "this is a single-quoted string")
+
     def test_clean_quotes_foreign(self):
         raw_str = '「this has Japanese quotes」'
         output = clean_quotes(raw_str)
