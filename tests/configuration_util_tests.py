@@ -941,18 +941,28 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(location["timezone"]["offset"], float)
         self.assertEqual(location["timezone"]["dstOffset"], 3600000)
 
-        user_config["location"]["lat"] = f'"{user_config["location"]["lat"]}"'
-        user_config["location"]["lng"] = f'"{user_config["location"]["lng"]}"'
+        real_lat = user_config["location"]["lat"]
+        real_lon = user_config["location"]["lng"]
+
+        user_config["location"]["lat"] = f'"{real_lat}"'
+        user_config["location"]["lng"] = f'"{real_lon}"'
         user_config["location"]["utc"] = '-8.0'
         location = get_mycroft_compatible_location(user_config["location"])
         self.assertEqual(location["city"]["state"]["country"]["name"],
                          user_config["location"]["country"])
+        self.assertEqual(location["coordinate"]["latitude"], float(real_lat))
+        self.assertEqual(location["coordinate"]["longitude"], float(real_lon))
         self.assertEqual(location["city"]["state"]["country"]["code"], "us")
 
         self.assertIsInstance(location["coordinate"]["latitude"], float)
         self.assertIsInstance(location["coordinate"]["longitude"], float)
         self.assertIsInstance(location["timezone"]["offset"], float)
 
+        user_config["location"]["lat"] = f"'{real_lat}'"
+        user_config["location"]["lng"] = f"'{real_lon}'"
+        location = get_mycroft_compatible_location(user_config["location"])
+        self.assertIsInstance(location["coordinate"]["latitude"], float)
+        self.assertIsInstance(location["coordinate"]["longitude"], float)
         user_config["location"]["utc"] = '"-8.0"'
         location = get_mycroft_compatible_location(user_config["location"])
         self.assertIsInstance(location["timezone"]["offset"], float)

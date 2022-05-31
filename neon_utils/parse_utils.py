@@ -43,7 +43,12 @@ def clean_quotes(raw_utt: str) -> str:
         raise ValueError("Expected a string and got None")
     if not isinstance(raw_utt, str):
         raise TypeError(f"{raw_utt} is not a string!")
-    chars_to_remove = ['“', '"', '«', u'\u201d', u'\u00bb', u'\u201e', '「', '」', u'u\xa0', u'\u00a0']
+
+    leading_quotes = ['“', '"', '«', '「', "'", u'\u201d', u'\u00bb',
+                      u'\u201e', u'u\xa0', u'\u00a0']
+    trailing_quotes = ['“', '"', '»', '」', "'", u'\u201d', u'\u00bb',
+                       u'\u201e', u'u\xa0', u'\u00a0']
+    chars_to_remove = {*leading_quotes, *trailing_quotes}
     raw_utt = raw_utt.strip()
     utt = raw_utt
     trailing_punctuation = False
@@ -53,12 +58,8 @@ def clean_quotes(raw_utt: str) -> str:
     quotes_cleaned = False
     try:
         # Checks if utterance starts AND ends with some form of quotations and removes them accordingly
-        while (utt.startswith('“') or utt.startswith(u'\u201d') or utt.startswith('"') or utt.startswith('«')
-               or utt.startswith(u'\u00bb') or utt.startswith(u'\u201e') or utt.startswith('「') or
-               utt.startswith(u'u\xa0') or utt.startswith(u'\u00a0')) and \
-                (utt.endswith('“') or utt.endswith(u'\u201d') or utt.endswith('"') or utt.endswith(u'\u00bb') or
-                 utt.endswith(u'\u201e') or utt.endswith('」') or utt.endswith(u'u\xa0') or
-                 utt.endswith(u'\u00a0') or utt.endswith('»')):
+        while any((utt.startswith(lq) for lq in leading_quotes)) and \
+                any((utt.endswith(tq) for tq in trailing_quotes)):
             quotes_cleaned = True
             removed_left, removed_right = False, False
             for c in chars_to_remove:
