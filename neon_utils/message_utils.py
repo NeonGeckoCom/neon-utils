@@ -150,7 +150,11 @@ def resolve_message(function):
 
         if not kwargs.get("message") and not any([arg for arg in args if
                                                   isinstance(arg, Message)]):
-            LOG.info("Digging for requested message arg")
+            call = inspect.stack()[1]
+            module = inspect.getmodule(call.frame)
+            name = module.__name__ if module else call.filename
+            LOG.debug(f"Digging for requested message arg - "
+                      f"{name}:{call.lineno}")
             message = dig_for_message(50)
             kwargs["message"] = message
         return function(*args, **kwargs)

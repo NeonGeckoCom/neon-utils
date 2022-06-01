@@ -139,8 +139,13 @@ class NeonSkill(MycroftSkill):
 
     @property
     def user_config(self):
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated, "
-                    "use neon_utils.user_utils.get_user_prefs directly")
+                    "use neon_utils.user_utils.get_user_prefs directly - "
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         if not self._user_config:
             self._user_config = get_neon_user_config()
@@ -148,7 +153,12 @@ class NeonSkill(MycroftSkill):
 
     @property
     def local_config(self):
-        LOG.warning("This reference is deprecated, use self.config_core")
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
+        LOG.warning("This reference is deprecated, use self.config_core - "
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         if not self._local_config:
             self._local_config = get_neon_local_config()
@@ -170,15 +180,25 @@ class NeonSkill(MycroftSkill):
 
     @staticmethod
     def create_signal(*args, **kwargs):
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated. "
-                    "Import from neon_utils.signal_utils directly")
+                    "Import from neon_utils.signal_utils directly - "
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         create_signal(*args, **kwargs)
 
     @staticmethod
     def check_for_signal(*args, **kwargs):
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated. "
-                    "Import from neon_utils.signal_utils directly")
+                    "Import from neon_utils.signal_utils directly - "
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         check_for_signal(*args, **kwargs)
 
@@ -186,10 +206,15 @@ class NeonSkill(MycroftSkill):
     def preference_brands(message=None) -> dict:
         """
         Returns a brands dictionary for the user
-        Equivalent to self.user_config["speech"] for non-server use
+        Equivalent to self.user_config["brands"] for non-server use
         """
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated."
-                    "Use neon_utils.user_utils.get_user_prefs directly")
+                    "Use neon_utils.user_utils.get_user_prefs directly - "
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["brands"]
 
@@ -199,8 +224,13 @@ class NeonSkill(MycroftSkill):
         Returns the user dictionary with name, email
         Equivalent to self.user_config["user"] for non-server use
         """
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated."
-                    "Use neon_utils.user_utils.get_user_prefs directly")
+                    "Use neon_utils.user_utils.get_user_prefs directly - "
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["user"]
 
@@ -210,8 +240,13 @@ class NeonSkill(MycroftSkill):
         Get the JSON data structure holding location information.
         Equivalent to self.user_config["location"] for non-server use
         """
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated."
-                    "Use neon_utils.user_utils.get_user_prefs directly")
+                    "Use neon_utils.user_utils.get_user_prefs directly - "
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["location"]
 
@@ -222,8 +257,13 @@ class NeonSkill(MycroftSkill):
         time, date, measure formatting preferences
         Equivalent to self.user_config["units"] for non-server use
         """
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated."
-                    "Use neon_utils.user_utils.get_user_prefs directly")
+                    "Use neon_utils.user_utils.get_user_prefs directly - "
+                    f"{name}:{call.lineno}")
         # TODO: Backwards-compat. deprecate in v1.0.0
         return get_user_prefs(message)["units"]
 
@@ -234,8 +274,13 @@ class NeonSkill(MycroftSkill):
         language and spoken response preferences
         Equivalent to self.user_config["speech"] for non-server use
         """
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
         LOG.warning("This reference is deprecated."
-                    "Use neon_utils.user_utils.get_user_prefs directly")
+                    "Use neon_utils.user_utils.get_user_prefs directly - "
+                    f"{name}:{call.lineno}")
         return get_user_prefs(message)["speech"]
 
     @resolve_message
@@ -752,7 +797,12 @@ class NeonSkill(MycroftSkill):
             Username associated with the message or a default value of 'local' or 'server'.
         """
         # TODO: Backwards-compat. deprecate in v1.0.0
-        LOG.warning("This method is deprecated, use message_utils.get_message_user")
+        import inspect
+        call = inspect.stack()[1]
+        module = inspect.getmodule(call.frame)
+        name = module.__name__ if module else call.filename
+        LOG.warning(f"This method is deprecated, use get_message_user - "
+                    f"{name}:{call.lineno}")
         from neon_utils.user_utils import get_default_user_config
         return get_message_user(message) or \
             get_default_user_config()["user"]["username"]

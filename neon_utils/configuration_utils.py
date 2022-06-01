@@ -1127,7 +1127,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
         lng = location['lng']
     try:
         parsed_location = get_full_location((lat, lng))
-    except ValueError as e:
+    except Exception as e:
         LOG.exception(e)
         parsed_location = None
 
@@ -1137,6 +1137,12 @@ def get_mycroft_compatible_location(location: dict) -> dict:
         offset = float(location["utc"])
     except ValueError:
         offset = 0.0
+
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except Exception as e:
+        LOG.exception(e)
 
     location = {
         "city": {
@@ -1153,8 +1159,8 @@ def get_mycroft_compatible_location(location: dict) -> dict:
             }
         },
         "coordinate": {
-            "latitude": float(lat),
-            "longitude": float(lng)
+            "latitude": lat,
+            "longitude": lng
         },
         "timezone": {
             "code": location["tz"],
