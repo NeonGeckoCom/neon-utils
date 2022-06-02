@@ -194,7 +194,7 @@ def transliteration(transcription: str, text: str, lang: str) -> (str, str):
     :param transcription: input text to transliterate
     :param text: input text from audio filename
     :param lang: language of input audio -> ISO-639-1 code
-    :return: transliterated or transcribed string
+    :return: transliterated or raw string
     '''
     transliterated = []
     translit_dict = {}
@@ -223,8 +223,8 @@ def transliteration(transcription: str, text: str, lang: str) -> (str, str):
                     transliterated.append(letter)
         translit_str = ''.join(transliterated)
         if translit_str != '':
-            return translit_str, text
+            return translit_str
         else:
-            return transcription, text
+            return text
     else:
-        return transcription, text
+        return text
