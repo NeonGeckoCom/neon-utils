@@ -1125,6 +1125,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     except (TypeError, ValueError):
         lat = location['lat']
         lng = location['lng']
+    # TODO: Define state/country codes in location config DM
     # try:
     #     parsed_location = get_full_location((lat, lng))
     # except Exception as e:
