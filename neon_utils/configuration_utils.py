@@ -1130,6 +1130,8 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     # except Exception as e:
     #     LOG.exception(e)
     #     parsed_location = None
+    if location["country"].lower() == "united states":
+        location["country_code"] = "us"
 
     try:
         offset = float(clean_quotes(location["utc"]))
@@ -1149,10 +1151,10 @@ def get_mycroft_compatible_location(location: dict) -> dict:
             "code": location["city"],
             "name": location["city"],
             "state": {
-                "code": location.get("state_code"),
+                "code": location.get("state_code") or "",
                 "name": location["state"],
                 "country": {
-                    "code": location.get("country_code"),
+                    "code": location.get("country_code") or "",
                     "name": location["country"]
                 }
             }
