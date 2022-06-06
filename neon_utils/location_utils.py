@@ -32,6 +32,7 @@ from typing import Optional, Union
 import pendulum
 
 from dateutil.tz import tzlocal, gettz
+from geopy.exc import GeocoderServiceError
 
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
@@ -40,21 +41,28 @@ from neon_utils.logger import LOG
 
 
 def get_full_location(address: Union[str, tuple],
-                      lang: Optional[str] = None) -> dict:
+                      lang: Optional[str] = None) -> Optional[dict]:
     """
     Get full location details for the specified address in the specified lang
     :param address: string address or tuple (latitude, longitude)
     :param lang: optional language to format results (else system default)
     :returns: dict containing at minimum `place_id`, `lat`, `lon`, `address`
+        None if service is not available
     """
-    nominatim = Nominatim(user_agent="neon-ai")
-    if isinstance(address, str):
-        location = nominatim.geocode(address, addressdetails=True,
-                                     language=lang)
-    else:
-        location = nominatim.reverse(address, addressdetails=True,
-                                     language=lang)
-    return location.raw
+    try:
+        nominatim = Nominatim(user_agent="neon-ai")
+        if isinstance(address, str):
+            location = nominatim.geocode(address, addressdetails=True,
+                                         language=lang)
+        else:
+            location = nominatim.reverse(address, addressdetails=True,
+                                         language=lang)
+        return location.raw
+    except GeocoderServiceError as e:
+        LOG.error(e)
+    except Exception as e:
+        LOG.exception(e)
+    return None
 
 
 def get_coordinates(gps_loc: dict) -> (float, float):
