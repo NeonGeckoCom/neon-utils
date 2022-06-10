@@ -9,11 +9,8 @@ timezonefinder~=5.2
 netifaces~=0.10
 nltk~=3.5
 ruamel.yaml~=0.16
-pydub~=0.25
 ovos-lingua-franca~=0.4
 ovos_utils~=0.0.6
 neon_mq_connector~=0.2,>=0.5.1a0
-soundfile~=0.10
-librosa~=0.8
 geopy~=2.1
 word2number~=1.0

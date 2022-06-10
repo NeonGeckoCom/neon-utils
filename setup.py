@@ -72,6 +72,10 @@ setuptools.setup(
     ],
     python_requires='>=3.6',
     install_requires=get_requirements("requirements.txt"),
+    extras_require={
+        "test": get_requirements("test_requirements.txt"),
+        "audio": get_requirements("audio.txt")
+    },
     entry_points={
         'console_scripts': [
             "neon-config-import=neon_utils.configuration_utils:create_config_from_setup_params"
