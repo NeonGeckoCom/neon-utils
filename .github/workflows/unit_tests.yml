@@ -36,7 +36,7 @@ jobs:
           python -m pip install --upgrade pip
           sudo apt update
           sudo apt install gcc libfann-dev libsndfile1
-          pip install .[test]
+          pip install .[test,network]
 
       - name: Test Skills Objects
         run: |
