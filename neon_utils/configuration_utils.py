@@ -822,6 +822,24 @@ def get_neon_skills_config() -> dict:
     return skills_config
 
 
+def get_neon_client_config() -> dict:
+    """
+    Get a configuration dict for the client module.
+    Returns:
+        dict of config params used for the Neon client module
+    """
+    LOG.warning(f"The Neon client module has been deprecated. This method will be removed")
+    # TODO: Remove in v1.0.0
+    core_config = get_neon_local_config()
+    server_addr = core_config.get("remoteVars", {}).get("remoteHost", "167.172.112.7")
+    if server_addr == "64.34.186.92":
+        LOG.warning(f"Depreciated call to host: {server_addr}")
+        server_addr = "167.172.112.7"
+    return {"server_addr": server_addr,
+            "devVars": core_config["devVars"],
+            "remoteVars": core_config["remoteVars"]}
+
+
 def get_neon_transcribe_config() -> dict:
     """
     Get a configuration dict for the transcription module.
