@@ -29,7 +29,8 @@
 from socket import gethostname
 from time import time, strftime
 
-from neon_utils import get_neon_local_config, LOG
+from neon_utils.configuration_utils import get_neon_local_config
+from neon_utils.logger import LOG
 from neon_utils.mq_utils import send_mq_request
 from neon_utils.packaging_utils import get_neon_core_version
 
