@@ -26,7 +26,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import datetime
 import os
 import sys
 import unittest
@@ -34,7 +33,6 @@ import unittest
 from multiprocessing import Event
 from threading import Thread
 from time import sleep
-from unittest.mock import patch
 
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
@@ -42,12 +40,10 @@ from mock import Mock
 
 from mycroft.skills.fallback_skill import FallbackSkill
 
-import neon_utils.configuration_utils
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
-from neon_utils.configuration_utils import NGIConfig
-from neon_utils.signal_utils import check_for_signal, create_signal
+from neon_utils.signal_utils import check_for_signal
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from skills import *
@@ -64,10 +60,7 @@ def get_test_mycroft_skill(bus_events: dict):
     for event, callback in bus_events.items():
         bus.on(event, callback)
     bus.run_in_thread()
-    if hasattr(skill, "_startup"):
-        skill._startup(bus)
-    else:
-        skill.bind(bus)
+    skill._startup(bus)
     return skill
 
 
@@ -127,18 +120,8 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill, NeonSkill)
         self.assertEqual(skill.name, "Test Neon Skill")
 
-        self.assertIsInstance(skill.user_config, NGIConfig)
-        self.assertIsInstance(skill.local_config, NGIConfig)
         self.assertIsInstance(skill.lru_cache, LRUCache)
-        self.assertIsInstance(skill.sys_tz, datetime.tzinfo)
-        self.assertIsInstance(skill.gui_enabled, bool)
-        self.assertIsInstance(skill.server, bool)
-        self.assertIsInstance(skill.default_intent_timeout, int)
-        self.assertIsInstance(skill.neon_core, bool)
         self.assertIsInstance(skill.actions_to_confirm, dict)
-
-        self.assertIsInstance(skill.skill_mode, str)
-        self.assertIsInstance(skill.extension_time, int)
 
         if skill.lang_detector:
             from ovos_plugin_manager.templates.language import LanguageDetector
@@ -151,26 +134,12 @@ class SkillObjectTests(unittest.TestCase):
 
         self.assertIsInstance(skill.location_timezone, str)
 
-        self.assertIsInstance(skill.preference_brands(), dict)
-        self.assertIsInstance(skill.preference_user(), dict)
-        self.assertIsInstance(skill.preference_location(), dict)
-        self.assertIsInstance(skill.preference_unit(), dict)
-        self.assertIsInstance(skill.preference_speech(), dict)
         self.assertIsInstance(skill.preference_skill(), dict)
-
-        self.assertIsInstance(skill.build_user_dict(), dict)
-
-        # self.assertEqual(skill.file_system.path, skill.settings_write_path)
-        # self.assertNotEqual(os.path.basename(skill.file_system.path),
-        #                     skill.name)
 
     def test_patched_mycroft_skill_init(self):
         skill = create_skill(TestPatchedSkill)
         self.assertIsInstance(skill, MycroftSkill)
         self.assertEqual(skill.name, "Test Mycroft Skill")
-
-        # self.assertEqual(skill.file_system.path, skill.settings_write_path)
-        # self.assertNotEqual(os.path.basename(skill.file_system.path), skill.name)
 
     def test_instructor_skill_init(self):
         skill = create_skill(TestInstructorSkill)
@@ -179,6 +148,11 @@ class SkillObjectTests(unittest.TestCase):
 
 
 class PatchedMycroftSkillTests(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls) -> None:
+        from lingua_franca import load_language
+        load_language("en-us")
+
     def test_get_response_simple(self):
         def handle_speak(_):
             check_for_signal("isSpeaking")
@@ -626,41 +600,21 @@ class PatchedMycroftSkillTests(unittest.TestCase):
 class NeonSkillTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        from lingua_franca import load_language
+        load_language("en-us")
+
         from skills.test_skill import TestSkill
         bus = FakeBus()
         os.environ['NEON_CONFIG_PATH'] = \
             os.path.join(os.path.dirname(__file__), "skills")
         cls.skill = TestSkill()
         # Mock the skill_loader process
-        if hasattr(cls.skill, "_startup"):
-            cls.skill._startup(bus)
-        else:
-            cls.skill.bind(bus)
-            cls.skill.load_data_files()
-            cls.skill.initialize()
+        cls.skill._startup(bus)
 
     def test_00_skill_init(self):
-        self.assertIsInstance(self.skill.cache_loc, str)
-        self.assertTrue(os.path.isdir(self.skill.cache_loc))
         self.assertIsNotNone(self.skill.lru_cache)
-        self.assertIsInstance(self.skill.sys_tz, datetime.tzinfo)
-        self.assertIsInstance(self.skill.server, bool)
-        self.assertIsInstance(self.skill.default_intent_timeout, int)
-        self.assertIsInstance(self.skill.neon_core, bool)
-        self.assertIsInstance(self.skill.skill_mode, str)
-        self.assertIsInstance(self.skill.extension_time, int)
-        # TODO: Refactor after Neon Plugins all import from OPM
-        # self.assertIsNotNone(self.skill.lang_detector)
-        # self.assertIsNotNone(self.skill.translator)
-
-    def test_properties(self):
-        self.assertIsInstance(self.skill.gui_enabled, bool)
-        self.assertIsInstance(self.skill.user_config, NGIConfig)
-        self.assertIsInstance(self.skill.local_config, NGIConfig)
-        self.assertIsInstance(self.skill.user_info_available, dict)
-        self.assertIsInstance(self.skill.configuration_available, dict)
-        self.assertIsInstance(self.skill.ngi_settings, dict)
-        self.assertEqual(self.skill.ngi_settings, self.skill.settings)
+        self.assertIsNotNone(self.skill.lang_detector)
+        self.assertIsNotNone(self.skill.translator)
 
     def test_preference_skill(self):
         self.assertIsInstance(self.skill.preference_skill(), dict)
@@ -681,10 +635,12 @@ class NeonSkillTests(unittest.TestCase):
         test_message_old = Message("", {},
                                    {'username': test_username,
                                     'nick_profiles': {
-                                        test_username: profile_settings.content}})
+                                        test_username:
+                                            profile_settings.content}})
         test_message_new = Message("", {},
                                    {'username': test_username,
-                                    'user_profiles': [profile_settings.content]})
+                                    'user_profiles':
+                                        [profile_settings.content]})
         new_email = "new@email.test"
         self.skill.update_profile({'user': {'email': new_email}},
                                   test_message_old)
@@ -730,43 +686,47 @@ class NeonSkillTests(unittest.TestCase):
                                  {"klat_data": {
                                      "title": "Test Conversation"}})
         first_message = Message("",
-                                {"utterance": "Welcome to your private conversation with Neon"},
+                                {"utterance": "Welcome to your private "
+                                              "conversation with Neon"},
                                 {"klat_data": {
                                     "title": "!PRIVATE:user"}})
         self.assertFalse(self.skill.neon_must_respond())
         self.assertTrue(self.skill.neon_must_respond(private_message_solo))
         self.assertTrue(self.skill.neon_must_respond(private_message_neon))
-        self.assertFalse(self.skill.neon_must_respond(private_message_neon_plus))
+        self.assertFalse(self.skill.neon_must_respond(
+            private_message_neon_plus))
         self.assertFalse(self.skill.neon_must_respond(public_message))
         self.assertFalse(self.skill.neon_must_respond(first_message))
 
     def test_neon_in_request(self):
-        # TODO: Mock `is_neon_core` and test `skill.neon_in_request` directly
         from neon_utils.message_utils import request_for_neon
+
+        def _voc_match(phrase, voc):
+            return voc in phrase.lower()
 
         # Test message context/vocab
         neon_should_respond = Message("test_neon_should_respond", {},
                                       {'neon_should_respond': True})
         self.assertTrue(request_for_neon(neon_should_respond, "neon",
-                                         self.skill.voc_match, False))
+                                         _voc_match, False))
 
         neon_in_data = Message("test_neon_should_respond", {'neon': "Neon"},
                                {'neon_should_respond': False})
         self.assertTrue(request_for_neon(neon_in_data, "neon",
-                                         self.skill.voc_match, False))
+                                         _voc_match, False))
 
         # Test Config WW state
         self.assertFalse(request_for_neon(Message("test"), "neon",
-                                          self.skill.voc_match, False))
+                                          _voc_match, False))
         self.assertTrue(request_for_neon(Message("test"), "neon",
-                                         self.skill.voc_match, True))
+                                         _voc_match, True))
 
         # Test vocab match
         neon_in_utterance = Message("test_neon_in_utterance",
                                     {'utterance': "hello Neon"},
                                     {"neon_should_respond": False})
         self.assertTrue(request_for_neon(neon_in_utterance, "neon",
-                                         self.skill.voc_match, False))
+                                         _voc_match, False))
 
     def test_report_metric(self):
         metric_handler = Mock()

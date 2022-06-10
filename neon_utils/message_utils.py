@@ -195,8 +195,9 @@ def request_for_neon(message: Message = None,
 
     # Check for voc_match if method provided
     try:
-        if voc_match and voc_match(message.data.get('utterance', '').lower(),
-                                   activation_voc):
+        if voc_match and activation_voc and voc_match(
+                message.data.get('utterance', '').lower(),
+                activation_voc):
             return True
     except FileNotFoundError as e:
         LOG.error(e)
