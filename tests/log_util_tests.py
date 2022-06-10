@@ -177,10 +177,6 @@ class LogUtilTests(unittest.TestCase):
         self.assertEqual(neon_log, ovos_log)
         self.assertEqual(neon_log, LOG)
 
-    def test_log_dir(self):
-        from neon_utils.log_utils import LOG_DIR
-        self.assertIsInstance(LOG_DIR, str)
-
 
 if __name__ == '__main__':
     unittest.main()
