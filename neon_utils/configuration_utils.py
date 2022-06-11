@@ -25,7 +25,7 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+import importlib
 import re
 import json
 import os
@@ -42,9 +42,9 @@ from ovos_utils.configuration import read_mycroft_config, LocalConf
 from ruamel.yaml import YAML
 from typing import Optional
 
-from neon_utils.location_utils import get_full_location
 from neon_utils.logger import LOG
-from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
+from neon_utils.authentication_utils import find_neon_git_token, \
+    populate_github_token_config, build_new_auth_config
 from neon_utils.lock_utils import create_lock
 from neon_utils.file_utils import path_is_read_writable, create_file
 from neon_utils.packaging_utils import get_package_version_spec
@@ -450,6 +450,18 @@ def init_config_dir() -> bool:
     loaded may lead to inconsistent behavior.
     :returns: True if configuration was relocated
     """
+    from ovos_utils.xdg_utils import xdg_config_home
+    ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
+    if not isfile(ovos_path):
+        LOG.info("Populating default ovos.conf with module overrides")
+        os.makedirs(dirname(ovos_path), exist_ok=True)
+        shutil.copy(join(dirname(__file__), "default_configurations",
+                         "ovos.conf"), ovos_path)
+    import mycroft.configuration
+    importlib.reload(mycroft.configuration.locations)
+    importlib.reload(mycroft.configuration)
+
+    # TODO: Below is deprecated
     env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
     valid_dir = get_config_dir()
     if env_spec and valid_dir != env_spec:
@@ -480,37 +492,23 @@ def get_config_dir():
     creating it if it doesn't exist.
     Returns: Path to configuration or else default
     """
+    from ovos_utils.xdg_utils import xdg_config_home
     # Check envvar spec path
     if os.getenv("NEON_CONFIG_PATH"):
-        config_path = expanduser(os.getenv("NEON_CONFIG_PATH"))
-        if os.path.isdir(config_path) and path_is_read_writable(config_path):
-            # LOG.info(f"Got config path from environment vars: {config_path}")
-            return config_path
-        elif path_is_read_writable(dirname(config_path)) and not os.path.exists(config_path):
-            LOG.info(f"Creating requested config path: {config_path}")
-            os.makedirs(config_path)
-            return config_path
-        else:
-            LOG.warning(f"NEON_CONFIG_PATH is not valid and will be ignored: "
-                        f"{config_path}")
+        LOG.warning(f'Deprecated NEON_CONFIG_PATH set: '
+                    f'{os.getenv("NEON_CONFIG_PATH")}')
 
-    # TODO: Update modules to set NEON_CONFIG_PATH and log a deprecation warning here DM
-    # Check for legacy path spec
-    legacy_path = _get_legacy_config_dir()
-    if legacy_path:
-        if not isdir(legacy_path):
-            os.makedirs(legacy_path)
-        # LOG.warning(f"Legacy Config Path Found: {legacy_path}")
-        return legacy_path
-
-    default_path = expanduser("~/.local/share/neon")
-    if not isdir(default_path):
-        os.makedirs(default_path)
-    # LOG.info(f"System packaged core found! Using default configuration at {default_path}")
-    return default_path
+    config_path = join(xdg_config_home(), "neon")
+    LOG.debug(config_path)
+    if not isdir(config_path):
+        LOG.info(f"Creating config directory: {config_path}")
+        os.makedirs(config_path)
+    return config_path
 
 
-def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys_to_remove: list) -> MutableMapping:
+def delete_recursive_dictionary_keys(dct_to_change: MutableMapping,
+                                     list_of_keys_to_remove: list) -> \
+        MutableMapping:
     """
     Removes the specified keys from the specified dict.
     Args:
@@ -520,8 +518,10 @@ def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys
     Returns: dct_to_change with any specified keys removed
 
     """
-    if not isinstance(dct_to_change, MutableMapping) or not isinstance(list_of_keys_to_remove, list):
-        raise AttributeError("delete_recursive_dictionary_keys expects a dict and a list as args")
+    if not isinstance(dct_to_change, MutableMapping) or not \
+            isinstance(list_of_keys_to_remove, list):
+        raise AttributeError("delete_recursive_dictionary_keys expects "
+                             "a dict and a list as args")
 
     for key in list_of_keys_to_remove:
         with suppress(KeyError):
@@ -532,50 +532,64 @@ def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys
     return dct_to_change
 
 
-def dict_merge(dct_to_change: MutableMapping, merge_dct: MutableMapping) -> MutableMapping:
+def dict_merge(dct_to_change: MutableMapping,
+               merge_dct: MutableMapping) -> MutableMapping:
     """
-    Recursively merges two configuration dictionaries and returns the combined object. All keys are returned with values
-    from merge_dct overwriting those from dct_to_change.
+    Recursively merges two configuration dictionaries and returns the
+    combined object. All keys are returned with values from merge_dct
+    overwriting those from dct_to_change.
     Args:
         dct_to_change: dict to append keys and values to
         merge_dct: dict with keys and new values to add to dct_to_change
     Returns: dict of merged preferences
     """
-    if not isinstance(dct_to_change, MutableMapping) or not isinstance(merge_dct, MutableMapping):
-        raise AttributeError("merge_recursive_dicts expects two dict objects as args")
+    if not isinstance(dct_to_change, MutableMapping) or not \
+            isinstance(merge_dct, MutableMapping):
+        raise AttributeError("merge_recursive_dicts expects "
+                             "two dict objects as args")
     for key, value in merge_dct.items():
-        if isinstance(dct_to_change.get(key), dict) and isinstance(value, MutableMapping):
+        if isinstance(dct_to_change.get(key), dict) and \
+                isinstance(value, MutableMapping):
             dct_to_change[key] = dict_merge(dct_to_change[key], value)
         else:
             dct_to_change[key] = value
     return dct_to_change
 
 
-def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping,
-                         max_depth: int = 1, cur_depth: int = 0) -> MutableMapping:
+def dict_make_equal_keys(dct_to_change: MutableMapping,
+                         keys_dct: MutableMapping,
+                         max_depth: int = 1,
+                         cur_depth: int = 0) -> MutableMapping:
     """
-    Adds and removes keys from dct_to_change such that it has the same keys as keys_dct. Values from dct_to_change are
-    preserved with any added keys using default values from keys_dct.
+    Adds and removes keys from dct_to_change such that it has the same keys
+    as keys_dct. Values from dct_to_change are preserved with any added keys
+    using default values from keys_dct.
     Args:
         dct_to_change: Dict of user preferences to modify and return
         keys_dct: Dict containing all keys and default values
         max_depth: Int depth to recurse (0-indexed)
         cur_depth: Current depth relative to top-level config (0-indexed)
-    Returns: dct_to_change with any keys not in keys_dct removed and any new keys added with default values
+    Returns: dct_to_change with any keys not in keys_dct removed and any new
+        keys added with default values
 
     """
-    if not isinstance(dct_to_change, MutableMapping) or not isinstance(keys_dct, MutableMapping):
-        raise AttributeError("merge_recursive_dicts expects two dict objects as args")
+    if not isinstance(dct_to_change, MutableMapping) or not \
+            isinstance(keys_dct, MutableMapping):
+        raise AttributeError("merge_recursive_dicts expects two dict objects "
+                             "as args")
     if not keys_dct:
         raise ValueError("Empty keys_dct provided, not modifying anything.")
     for key in list(dct_to_change.keys()):
-        if isinstance(keys_dct.get(key), dict) and isinstance(dct_to_change[key], MutableMapping):
+        if isinstance(keys_dct.get(key), dict) and \
+                isinstance(dct_to_change[key], MutableMapping):
             if max_depth > cur_depth:
                 if key in ("tts", "stt", "hotwords", "language"):
-                    dct_to_change[key] = dict_update_keys(dct_to_change[key], keys_dct[key])
+                    dct_to_change[key] = dict_update_keys(dct_to_change[key],
+                                                          keys_dct[key])
                 else:
-                    dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key],
-                                                              max_depth, cur_depth + 1)
+                    dct_to_change[key] = \
+                        dict_make_equal_keys(dct_to_change[key], keys_dct[key],
+                                             max_depth, cur_depth + 1)
         elif key not in keys_dct.keys():
             dct_to_change.pop(key)
             LOG.warning(f"Removing '{key}' from dict!")
@@ -586,22 +600,27 @@ def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping
     return dct_to_change
 
 
-def dict_update_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping) -> MutableMapping:
+def dict_update_keys(dct_to_change: MutableMapping,
+                     keys_dct: MutableMapping) -> MutableMapping:
     """
-    Adds keys to dct_to_change such that all keys in keys_dict exist in dict_to_change. Added keys use default values
-    from keys_dict
+    Adds keys to dct_to_change such that all keys in keys_dict exist in
+    dict_to_change. Added keys use default values from keys_dict
     Args:
         dct_to_change: Dict of user preferences to modify and return
         keys_dct: Dict containing potentially new keys and default values
 
-    Returns: dct_to_change with any new keys in keys_dict added with default values
+    Returns: dct_to_change with any new keys in keys_dict added with defaultS
 
     """
-    if not isinstance(dct_to_change, MutableMapping) or not isinstance(keys_dct, MutableMapping):
-        raise AttributeError("merge_recursive_dicts expects two dict objects as args")
+    if not isinstance(dct_to_change, MutableMapping) or not \
+            isinstance(keys_dct, MutableMapping):
+        raise AttributeError("merge_recursive_dicts expects two dict "
+                             "objects as args")
     for key, value in list(keys_dct.items()):
-        if isinstance(keys_dct.get(key), dict) and isinstance(value, MutableMapping):
-            dct_to_change[key] = dict_update_keys(dct_to_change.get(key, {}), keys_dct[key])
+        if isinstance(keys_dct.get(key), dict) and isinstance(value,
+                                                              MutableMapping):
+            dct_to_change[key] = dict_update_keys(dct_to_change.get(key, {}),
+                                                  keys_dct[key])
         else:
             if key not in dct_to_change.keys():
                 dct_to_change[key] = value
@@ -617,12 +636,11 @@ def write_to_json(preference_dict: MutableMapping, output_path: str):
     """
     if not os.path.exists(output_path):
         create_file(output_path)
-    # with NamedLock(output_path): TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
     with open(output_path, "w") as out:
         json.dump(preference_dict, out, indent=4)
 
 
-def get_neon_lang_config() -> dict:
+def _get_neon_lang_config() -> dict:
     """
     Get a language config for language utilities
     Returns:
@@ -641,27 +659,7 @@ def get_neon_lang_config() -> dict:
     return merged_language
 
 
-def get_neon_cli_config() -> dict:
-    """
-    Get a configuration dict for the neon_cli
-    Returns:
-        dict of config params used by the neon_cli
-    """
-    local_config = NGIConfig("ngi_local_conf").content
-    wake_words_enabled = local_config.get("interface", {}).get("wake_word_enabled", True)
-    try:
-        neon_core_version = os.path.basename(glob(local_config['dirVars']['ngiDir'] +
-                                                  '/*.release')[0]).split('.release')[0]
-    except Exception as e:
-        LOG.error(e)
-        neon_core_version = "Unknown"
-    log_dir = local_config.get("dirVars", {}).get("logsDir", "/var/log/mycroft")
-    return {"neon_core_version": neon_core_version,
-            "wake_words_enabled": wake_words_enabled,
-            "log_dir": log_dir}
-
-
-def get_neon_tts_config() -> dict:
+def _get_neon_tts_config() -> dict:
     """
     Get a configuration dict for TTS
     Returns:
@@ -670,7 +668,7 @@ def get_neon_tts_config() -> dict:
     return get_neon_local_config()["tts"]
 
 
-def get_neon_speech_config() -> dict:
+def _get_neon_speech_config() -> dict:
     """
     Get a configuration dict for listener. Merge any values from Mycroft config if missing from Neon.
     Returns:
@@ -747,8 +745,8 @@ def get_neon_audio_config() -> dict:
     #     LOG.warning(f"Keys missing from Neon config! {merged_audio.keys()}")
 
     return {"Audio": merged_audio,
-            "tts": get_neon_tts_config(),
-            "language": get_neon_lang_config()}
+            "tts": _get_neon_tts_config(),
+            "language": _get_neon_lang_config()}
 
 
 def get_neon_api_config() -> dict:
@@ -822,24 +820,6 @@ def get_neon_skills_config() -> dict:
     return skills_config
 
 
-def get_neon_client_config() -> dict:
-    """
-    Get a configuration dict for the client module.
-    Returns:
-        dict of config params used for the Neon client module
-    """
-    LOG.warning(f"The Neon client module has been deprecated. This method will be removed")
-    # TODO: Remove in v1.0.0
-    core_config = get_neon_local_config()
-    server_addr = core_config.get("remoteVars", {}).get("remoteHost", "167.172.112.7")
-    if server_addr == "64.34.186.92":
-        LOG.warning(f"Depreciated call to host: {server_addr}")
-        server_addr = "167.172.112.7"
-    return {"server_addr": server_addr,
-            "devVars": core_config["devVars"],
-            "remoteVars": core_config["remoteVars"]}
-
-
 def get_neon_transcribe_config() -> dict:
     """
     Get a configuration dict for the transcription module.
@@ -864,40 +844,6 @@ def get_neon_gui_config() -> dict:
     gui_config = dict(local_config["gui"])
     gui_config["base_port"] = gui_config["port"]
     return gui_config
-
-
-def _move_config_sections(user_config, local_config):
-    """
-    Temporary method to handle one-time migration of user_config params to local_config
-    Args:
-        user_config (NGIConfig): user configuration object
-        local_config (NGIConfig): local configuration object
-    """
-    depreciated_user_configs = ("interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
-    try:
-        if any([d in user_config.content for d in depreciated_user_configs]):
-            LOG.warning("Depreciated keys found in user config! Adding them to local config")
-            if "wake_words_enabled" in user_config.content.get("interface", dict()):
-                user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
-            config_to_move = {"interface": user_config.content.pop("interface", {}),
-                              "listener": user_config.content.pop("listener", {}),
-                              "skills": user_config.content.pop("skills", {}),
-                              "session": user_config.content.pop("session", {}),
-                              "tts": user_config.content.pop("tts", {}),
-                              "stt": user_config.content.pop("stt", {}),
-                              "logs": user_config.content.pop("logs", {}),
-                              "device": user_config.content.pop("device", {})}
-            local_config.update_keys(config_to_move)
-
-        if not local_config.get("language"):
-            local_config["language"] = dict()
-        if local_config.get("stt", {}).get("detection_module"):
-            local_config["language"]["detection_module"] = local_config["stt"].pop("detection_module")
-        if local_config.get("stt", {}).get("translation_module"):
-            local_config["language"]["translation_module"] = local_config["stt"].pop("translation_module")
-    except (KeyError, RuntimeError):
-        # If some other instance moves these values, just pass
-        pass
 
 
 def _safe_mycroft_config() -> dict:
@@ -977,10 +923,6 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
         LOG.debug("Updated user config from mycroft.conf")
         user_config.write_changes()
 
-    if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
-        local_config = NGIConfig("ngi_local_conf", path)
-        _move_config_sections(user_config, local_config)
-
     user_config.make_equal_by_keys(default_user_config.content)
     return user_config
 
@@ -994,6 +936,8 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     Returns:
         NGIConfig object with local config
     """
+    LOG.warning("Local configuration is deprecated. Use mycroft.configuration"
+                "or ovos_utils.configuration.get_ovos_config")
     try:
         local_config = NGIConfig("ngi_local_conf", path)
     except PermissionError:
@@ -1009,9 +953,6 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
         local_config.populate(default_local_config.content)
         # TODO: Update from Mycroft config DM
 
-    if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
-        user_config = NGIConfig("ngi_user_info", path)
-        _move_config_sections(user_config, local_config)
 
     local_config.make_equal_by_keys(default_local_config.content)
     # LOG.info(f"Loaded local config from {local_config.file_path}")
@@ -1184,7 +1125,7 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     default_config = _safe_mycroft_config()
     if mycroft_only or not is_neon_core():
         return default_config
-    speech = get_neon_speech_config()
+    speech = _get_neon_speech_config()
     user = get_neon_user_config()
     local = get_neon_local_config()
 
@@ -1236,7 +1177,7 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     default_config["Audio"] = get_neon_audio_config()["Audio"]
     default_config["debug"] = local["prefFlags"]["devMode"]
 
-    default_config["language"] = get_neon_lang_config()
+    default_config["language"] = _get_neon_lang_config()
     default_config["keys"] = get_neon_auth_config().content
     default_config["text_parsers"] = {**default_config.get("text_parsers",
                                                            {}),

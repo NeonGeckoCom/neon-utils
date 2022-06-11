@@ -407,7 +407,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config, dict)
 
     def test_get_cli_config(self):
-        config = get_neon_cli_config()
+        config = _get_neon_cli_config()
         self.assertIn("log_dir", config)
         self.assertIn("neon_core_version", config)
         self.assertIn("wake_words_enabled", config)
@@ -439,7 +439,7 @@ class ConfigurationUtilTests(unittest.TestCase):
                       ("desktop", "pi", "linux", "server"))
 
     def test_get_speech_config(self):
-        config = get_neon_speech_config()
+        config = _get_neon_speech_config()
         self.assertIsInstance(config, dict)
         self.assertIsInstance(config["stt"], dict)
         self.assertIsInstance(config["listener"], dict)
@@ -556,7 +556,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.move(bak_user_info, ngi_user_info)
 
     def test_get_lang_config(self):
-        config = get_neon_lang_config()
+        config = _get_neon_lang_config()
         self.assertIsInstance(config, dict)
         self.assertIn("internal", config)
         self.assertIn("user", config)
@@ -565,15 +565,6 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIn("boost", config)
         self.assertIsInstance(config["libretranslate"], dict)
 
-    def test_get_client_config(self):
-        config = get_neon_client_config()
-        self.assertIn("devName", config["devVars"])
-        self.assertIn("devType", config["devVars"])
-        self.assertIn("version", config["devVars"])
-        self.assertIn("coreGit", config["remoteVars"])
-        self.assertIn("skillsGit", config["remoteVars"])
-        self.assertIsInstance(config["server_addr"], str)
-
     def test_get_transcribe_config(self):
         config = get_neon_transcribe_config()
         self.assertIsInstance(config, dict)
@@ -581,7 +572,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["transcript_dir"], str)
 
     def test_get_tts_config(self):
-        config = get_neon_tts_config()
+        config = _get_neon_tts_config()
         self.assertIsInstance(config["module"], str)
         self.assertIsInstance(config[config["module"]], dict)
 
@@ -633,7 +624,7 @@ class ConfigurationUtilTests(unittest.TestCase):
 
     def test_get_speech_config_local_changes(self):
         local_config = NGIConfig("ngi_local_conf")
-        speech_config = get_neon_speech_config()
+        speech_config = _get_neon_speech_config()
         self.assertNotEqual(speech_config.get("listener"), local_config["listener"])
 
     def test_create_config_from_setup_params_dev_mode(self):
@@ -839,7 +830,7 @@ class ConfigurationUtilTests(unittest.TestCase):
                 LOG.error(e)
                 success = False
             try:
-                lang_config = get_neon_lang_config()
+                lang_config = _get_neon_lang_config()
                 self.assertIsInstance(lang_config["boost"], bool)
             except Exception as e:
                 LOG.error(e)

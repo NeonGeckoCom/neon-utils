@@ -39,7 +39,7 @@ from dateutil.tz import gettz
 from ovos_utils.gui import is_gui_running
 from ovos_utils.xdg_utils import xdg_cache_home
 
-from neon_utils.configuration_utils import is_neon_core, get_neon_lang_config
+from neon_utils.configuration_utils import is_neon_core
 from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
 from neon_utils.message_utils import dig_for_message, resolve_message
@@ -91,13 +91,12 @@ class NeonSkill(MycroftSkill):
                 LOG.info("OPM not available, skipping language plugin load")
                 self.lang_detector, self.translator = None, None
             else:
-                language_config = get_neon_lang_config()
                 self.lang_detector = \
-                    OVOSLangDetectionFactory.create(language_config)
+                    OVOSLangDetectionFactory.create(self.config_core)
                 self.translator = \
-                    OVOSLangTranslationFactory.create(language_config)
-        except ValueError as e:
-            LOG.error(f"Configured lang plugins not available: {e}")
+                    OVOSLangTranslationFactory.create(self.config_core)
+        except ValueError as x:
+            LOG.error(f"Configured lang plugins not available: {x}")
             self.lang_detector, self.translator = None, None
 
     def initialize(self):

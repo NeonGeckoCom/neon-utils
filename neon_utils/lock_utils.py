@@ -87,7 +87,9 @@ def create_master_lock(lock_path: str):
     return MasterLock(thread_lock, file_lock)
 
 
-def create_lock(lock_path: Optional[str], lock_type: Union[type(MasterLock), type(ComboLock)] = NamedLock):
+def create_lock(lock_path: Optional[str],
+                lock_type: Union[type(MasterLock),
+                                 type(ComboLock)] = NamedLock):
     """
     Create a lock object with the specified lock_path
     :param lock_path: valid file path; some locks will use this as a lock file, others as a UID
