@@ -442,6 +442,47 @@ def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
     return None
 
 
+_DEFAULT_OVOS_CONF = {"module_overrides": {
+        "neon_core": {
+            "xdg": True,
+            "base_folder": "neon",
+            "config_filename": "neon.conf"
+        }
+    },
+        "submodule_mappings": {}
+    }
+
+
+def _init_ovos_conf(name: str):
+    """
+    Perform a one-time init of ovos.conf for the calling module
+    :param name: Name of calling module to configure to use `neon.conf`
+    """
+    from ovos_utils.xdg_utils import xdg_config_home
+    ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
+    if isfile(ovos_path):
+        try:
+            with open(ovos_path) as f:
+                ovos_conf: dict = json.load(f)
+        except Exception as e:
+            LOG.error(e)
+            ovos_conf = _DEFAULT_OVOS_CONF
+    else:
+        LOG.info(f"Creating new file: {ovos_path}")
+        os.makedirs(dirname(ovos_path), exist_ok=True)
+        ovos_conf = _DEFAULT_OVOS_CONF
+
+    if name and name not in ovos_conf['submodule_mappings']:
+        ovos_conf['submodule_mappings'][name] = 'neon_core'
+        LOG.warning(f"Calling module ({name}) now configured to use neon.conf")
+        with open(ovos_path, "w+") as f:
+            json.dump(ovos_conf, f, indent=4)
+
+    import mycroft.configuration
+    importlib.reload(mycroft.configuration.locations)
+    importlib.reload(mycroft.configuration)
+
+
 def init_config_dir() -> bool:
     """
     Performs one-time initialization of the configuration directory.
@@ -450,16 +491,12 @@ def init_config_dir() -> bool:
     loaded may lead to inconsistent behavior.
     :returns: True if configuration was relocated
     """
-    from ovos_utils.xdg_utils import xdg_config_home
-    ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
-    if not isfile(ovos_path):
-        LOG.info("Populating default ovos.conf with module overrides")
-        os.makedirs(dirname(ovos_path), exist_ok=True)
-        shutil.copy(join(dirname(__file__), "default_configurations",
-                         "ovos.conf"), ovos_path)
-    import mycroft.configuration
-    importlib.reload(mycroft.configuration.locations)
-    importlib.reload(mycroft.configuration)
+    import inspect
+
+    stack = inspect.stack()
+    mod = inspect.getmodule(stack[1][0])
+    name = mod.__name__.split('.')[0] if mod else ''
+    _init_ovos_conf(name)
 
     # TODO: Below is deprecated
     env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
@@ -716,7 +753,7 @@ def _get_neon_speech_config() -> dict:
             }
 
 
-def get_neon_bus_config() -> dict:
+def _get_neon_bus_config() -> dict:
     """
     Get a configuration dict for the messagebus. Merge any values from Mycroft config if missing from Neon.
     Returns:
@@ -732,7 +769,8 @@ def get_neon_bus_config() -> dict:
 
 def get_neon_audio_config() -> dict:
     """
-    Get a configuration dict for the audio module. Merge any values from Mycroft config if missing from Neon.
+    Get a configuration dict for the audio module.
+    Merge any values from Mycroft config if missing from Neon.
     Returns:
         dict of config params used for the Audio module
     """
@@ -749,9 +787,10 @@ def get_neon_audio_config() -> dict:
             "language": _get_neon_lang_config()}
 
 
-def get_neon_api_config() -> dict:
+def _get_neon_api_config() -> dict:
     """
-    Get a configuration dict for the api module. Merge any values from Mycroft config if missing from Neon.
+    Get a configuration dict for the api module.
+    Merge any values from Mycroft config if missing from Neon.
     Returns:
         dict of config params used for the Mycroft API module
     """
@@ -767,14 +806,16 @@ def get_neon_api_config() -> dict:
 
 def get_neon_skills_config() -> dict:
     """
-    Get a configuration dict for the skills module. Merge any values from Mycroft config if missing from Neon.
+    Get a configuration dict for the skills module.
+    Merge any values from Mycroft config if missing from Neon.
     Returns:
         dict of config params used for the Mycroft Skills module
     """
     core_config = get_neon_local_config()
     mycroft_config = _safe_mycroft_config()
     neon_skills = deepcopy(core_config.get("skills", {}))
-    neon_skills["directory"] = os.path.expanduser(core_config["dirVars"].get("skillsDir"))
+    neon_skills["directory"] = \
+        os.path.expanduser(core_config["dirVars"].get("skillsDir"))
 
     # Patch msm config for skills backwards-compat.
     neon_skills["msm"] = {"directory": neon_skills["directory"],
@@ -799,13 +840,15 @@ def get_neon_skills_config() -> dict:
 
     if not isinstance(neon_skills["auto_update_interval"], float):
         try:
-            neon_skills["auto_update_interval"] = float(neon_skills["auto_update_interval"])
+            neon_skills["auto_update_interval"] = \
+                float(neon_skills["auto_update_interval"])
         except Exception as e:
             LOG.error(e)
             neon_skills["auto_update_interval"] = 24.0
     if not isinstance(neon_skills["appstore_sync_interval"], float):
         try:
-            neon_skills["appstore_sync_interval"] = float(neon_skills["appstore_sync_interval"])
+            neon_skills["appstore_sync_interval"] = \
+                float(neon_skills["appstore_sync_interval"])
         except Exception as e:
             LOG.error(e)
             neon_skills["appstore_sync_interval"] = 6.0
@@ -829,8 +872,10 @@ def get_neon_transcribe_config() -> dict:
     local_config = get_neon_local_config()
     user_config = get_neon_user_config()
     neon_transcribe_config = dict()
-    neon_transcribe_config["transcript_dir"] = local_config["dirVars"].get("docsDir", "")
-    neon_transcribe_config["audio_permission"] = user_config["privacy"].get("save_audio", False)
+    neon_transcribe_config["transcript_dir"] = \
+        local_config["dirVars"].get("docsDir", "")
+    neon_transcribe_config["audio_permission"] = \
+        user_config["privacy"].get("save_audio", False)
     return neon_transcribe_config
 
 
@@ -936,7 +981,7 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     Returns:
         NGIConfig object with local config
     """
-    LOG.warning("Local configuration is deprecated. Use mycroft.configuration"
+    LOG.warning("Local configuration is deprecated. Use mycroft.configuration "
                 "or ovos_utils.configuration.get_ovos_config")
     try:
         local_config = NGIConfig("ngi_local_conf", path)
@@ -961,7 +1006,8 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
 
 def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
     """
-    Returns a dict authentication configuration and handles populating values from key files
+    Returns a dict authentication configuration and handles populating values
+    from key files
     Args:
         path: optional path to yml configuration files
     Returns:
@@ -972,14 +1018,16 @@ def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
     except PermissionError:
         LOG.error(f"Insufficient Permissions for path: {path}")
         auth_config = NGIConfig("ngi_auth_vars")
-    _populate_read_only_config(path, basename(auth_config.file_path), auth_config)
+    _populate_read_only_config(path, basename(auth_config.file_path),
+                               auth_config)
     if not auth_config.content:
         LOG.info("Populating empty auth configuration")
         auth_config._content = build_new_auth_config(path)
         auth_config.write_changes()
 
     if not auth_config.content:
-        LOG.info("Empty auth_config generated, adding 'created' key to prevent regeneration attempts")
+        LOG.info("Empty auth_config generated, adding 'created' key to "
+                 "prevent regeneration attempts")
         auth_config._content = {"_loaded": True}
         auth_config.write_changes()
 
@@ -998,11 +1046,15 @@ def _populate_read_only_config(path: Optional[str], config_filename: str,
     :return: True if RO config was copied to new location, else False
     """
     # Handle reading unwritable config contents into new empty config
-    requested_file = os.path.abspath(join(path or expanduser(os.getenv("NEON_CONFIG_PATH", "")), config_filename))
+    requested_file = \
+        os.path.abspath(join(path or
+                             expanduser(os.getenv("NEON_CONFIG_PATH", "")),
+                             config_filename))
     if os.path.isfile(requested_file) and \
             loaded_config.file_path != requested_file and \
             loaded_config.content == dict():
-        LOG.warning(f"Loading requested file contents ({requested_file}) into {loaded_config.file_path}")
+        LOG.warning(f"Loading requested file contents ({requested_file}) "
+                    f"into {loaded_config.file_path}")
         with loaded_config.lock:
             shutil.copy(requested_file, loaded_config.file_path)
         loaded_config.check_for_updates()
@@ -1037,7 +1089,8 @@ def get_neon_device_type() -> str:
 
 def is_neon_core() -> bool:
     """
-    Checks for neon-specific packages to determine if this is a Neon Core or a Mycroft Core
+    Checks for neon-specific packages to determine if
+    this is a Neon Core or a Mycroft Core
     Returns:
         True if core is Neon, else False
     """
@@ -1153,8 +1206,8 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     default_config["skills"] = get_neon_skills_config()
     # default_config["converse"]
     # default_config["system"]
-    default_config["server"] = get_neon_api_config()
-    default_config["websocket"] = get_neon_bus_config()
+    default_config["server"] = _get_neon_api_config()
+    default_config["websocket"] = _get_neon_bus_config()
     default_config["gui_websocket"] = {**default_config.get("gui_websocket",
                                                             {}),
                                        **local["gui"]}
@@ -1221,7 +1274,7 @@ def write_mycroft_compatible_config(file_to_write: str = None) -> str:
 
 def create_config_from_setup_params(path=None) -> NGIConfig:
     """
-    Populate a (probably) new local config with parameters gathered during setup
+    Populate a (probably) new local config with setup parameters
     Args:
         path: Optional config path
     Returns:
@@ -1264,10 +1317,12 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     if local_conf["prefFlags"]["devMode"]:
         root_path = os.environ.get("installerDir", local_conf.path)
         local_conf["dirVars"]["skillsDir"] = os.path.join(root_path, "skills")
-        local_conf["dirVars"]["diagsDir"] = os.path.join(root_path, "Diagnostics")
+        local_conf["dirVars"]["diagsDir"] = os.path.join(root_path,
+                                                         "Diagnostics")
         local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
         local_conf["skills"]["default_skills"] = \
-            "https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/master/skill_lists/DEFAULT-SKILLS-DEV"
+            "https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/" \
+            "master/skill_lists/DEFAULT-SKILLS-DEV"
     else:
         local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
 
@@ -1276,14 +1331,16 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
 
     # TODO: Use XDG here DM
     if not local_conf.write_changes():
-        LOG.error("Disk contents are newer than this config object, changes were not written.")
+        LOG.error("Disk contents are newer than this config object, "
+                  "changes were not written.")
     return local_conf
 
 
 def parse_skill_default_settings(settings_meta: dict) -> dict:
     """
     Parses default skill settings from settingsmeta file contents
-    :param settings_meta: parsed contents of settingsmeta.yml or settingsmeta.json
+    :param settings_meta: parsed contents of settingsmeta.yml or
+    settingsmeta.json
     :return: parsed dict of default settings keys/values
     """
     if not isinstance(settings_meta, dict):
@@ -1295,9 +1352,12 @@ def parse_skill_default_settings(settings_meta: dict) -> dict:
     else:
         settings = dict()
         try:
-            for settings_group in settings_meta.get("skillMetadata", dict()).get("sections", list()):
+            for settings_group in settings_meta.get("skillMetadata",
+                                                    dict()).get("sections",
+                                                                list()):
                 for field in settings_group.get("fields", list()):
-                    settings = {**settings, **{field.get("name"): field.get("value")}}
+                    settings = {**settings,
+                                **{field.get("name"): field.get("value")}}
             return settings
         except Exception as e:
             LOG.error(e)
