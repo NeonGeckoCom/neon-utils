@@ -26,14 +26,10 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import logging
-import shutil
 import sys
 import os
 import unittest
 
-from ruamel.yaml import safe_load
-from pprint import pformat
 from time import sleep
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -406,46 +402,9 @@ class ConfigurationUtilTests(unittest.TestCase):
         config = _safe_mycroft_config()
         self.assertIsInstance(config, dict)
 
-    def test_get_cli_config(self):
-        config = _get_neon_cli_config()
-        self.assertIn("log_dir", config)
-        self.assertIn("neon_core_version", config)
-        self.assertIn("wake_words_enabled", config)
-
-    def test_get_bus_config(self):
-        config = get_neon_bus_config()
-        self.assertIn("host", config)
-        self.assertIn("port", config)
-        self.assertIn("route", config)
-        self.assertIn("ssl", config)
-
-        self.assertIsInstance(config["host"], str)
-        self.assertIsInstance(config["port"], int)
-        self.assertIsInstance(config["route"], str)
-        self.assertTrue(config["route"].startswith('/'))
-        self.assertIsInstance(config["ssl"], bool)
-        self.assertIsInstance(config["shared_connection"], bool)
-
-    def test_get_api_config(self):
-        config = get_neon_api_config()
-        self.assertIsInstance(config["url"], str)
-        self.assertIsInstance(config["version"], str)
-        self.assertIsInstance(config["update"], bool)
-        self.assertIsInstance(config["metrics"], bool)
-        self.assertIsInstance(config["disabled"], bool)
-
     def test_get_device_type(self):
         self.assertIn(get_neon_device_type(),
                       ("desktop", "pi", "linux", "server"))
-
-    def test_get_speech_config(self):
-        config = _get_neon_speech_config()
-        self.assertIsInstance(config, dict)
-        self.assertIsInstance(config["stt"], dict)
-        self.assertIsInstance(config["listener"], dict)
-        self.assertIsInstance(config["hotwords"], dict)
-        self.assertIsInstance(config["listener"]["wake_word_enabled"], bool)
-        self.assertIsInstance(config["listener"]["phoneme_duration"], int)
 
     def test_get_audio_config(self):
         config = get_neon_audio_config()
@@ -556,6 +515,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.move(bak_user_info, ngi_user_info)
 
     def test_get_lang_config(self):
+        from neon_utils.configuration_utils import _get_neon_lang_config
         config = _get_neon_lang_config()
         self.assertIsInstance(config, dict)
         self.assertIn("internal", config)
@@ -572,6 +532,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["transcript_dir"], str)
 
     def test_get_tts_config(self):
+        from neon_utils.configuration_utils import _get_neon_tts_config
         config = _get_neon_tts_config()
         self.assertIsInstance(config["module"], str)
         self.assertIsInstance(config[config["module"]], dict)
@@ -623,6 +584,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(is_neon_core(), bool)
 
     def test_get_speech_config_local_changes(self):
+        from neon_utils.configuration_utils import _get_neon_speech_config
         local_config = NGIConfig("ngi_local_conf")
         speech_config = _get_neon_speech_config()
         self.assertNotEqual(speech_config.get("listener"), local_config["listener"])
@@ -806,6 +768,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(parsed_settings, dict)
 
     def test_simultaneous_config_updates(self):
+        from neon_utils.configuration_utils import _get_neon_lang_config
         from threading import Thread
         test_results = {}
 
@@ -974,6 +937,47 @@ class ConfigurationUtilTests(unittest.TestCase):
         config = get_user_config_from_mycroft_conf()
         self.assertIsInstance(config, dict)
         # TODO: Better tests of config load
+
+    def test_init_ovos_conf(self):
+        test_config_dir = join(dirname(__file__), "test_config")
+        from neon_utils.configuration_utils import _init_ovos_conf
+        os.environ["XDG_CONFIG_HOME"] = test_config_dir
+        _init_ovos_conf("test_module")
+
+        with open(join(test_config_dir, "OpenVoiceOS", "ovos.conf")) as f:
+            config = json.load(f)
+        self.assertEqual(config, {"module_overrides": {
+            "neon_core": {
+                "xdg": True,
+                "base_folder": "neon",
+                "config_filename": "neon.conf"
+            }
+        },
+            "submodule_mappings": {
+                "test_module": "neon_core"
+            }})
+
+        _init_ovos_conf("test_module")
+        with open(join(test_config_dir, "OpenVoiceOS", "ovos.conf")) as f:
+            config2 = json.load(f)
+        self.assertEqual(config, config2)
+
+        _init_ovos_conf("other_test_mod")
+        with open(join(test_config_dir, "OpenVoiceOS", "ovos.conf")) as f:
+            config3 = json.load(f)
+        self.assertEqual(config3, {"module_overrides": {
+            "neon_core": {
+                "xdg": True,
+                "base_folder": "neon",
+                "config_filename": "neon.conf"
+            }
+        },
+            "submodule_mappings": {
+                "test_module": "neon_core",
+                "other_test_mod": "neon_core"
+            }})
+        os.environ.pop("XDG_CONFIG_HOME")
+        shutil.rmtree(test_config_dir)
 
 
 if __name__ == '__main__':
