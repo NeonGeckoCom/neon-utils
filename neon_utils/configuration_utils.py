@@ -767,7 +767,7 @@ def _get_neon_bus_config() -> dict:
     return merged
 
 
-def get_neon_audio_config() -> dict:
+def _get_neon_audio_config() -> dict:
     """
     Get a configuration dict for the audio module.
     Merge any values from Mycroft config if missing from Neon.
@@ -1227,7 +1227,7 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     default_config["tts"] = local["tts"]
     default_config["padatious"] = {**default_config.get("padatious", {}),
                                    **local["padatious"]}
-    default_config["Audio"] = get_neon_audio_config()["Audio"]
+    default_config["Audio"] = _get_neon_audio_config()["Audio"]
     default_config["debug"] = local["prefFlags"]["devMode"]
 
     default_config["language"] = _get_neon_lang_config()

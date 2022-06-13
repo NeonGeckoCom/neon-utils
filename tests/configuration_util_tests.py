@@ -407,7 +407,7 @@ class ConfigurationUtilTests(unittest.TestCase):
                       ("desktop", "pi", "linux", "server"))
 
     def test_get_audio_config(self):
-        config = get_neon_audio_config()
+        config = _get_neon_audio_config()
         self.assertIsInstance(config, dict)
         self.assertIsInstance(config["Audio"], dict)
         self.assertIsInstance(config["tts"], dict)
