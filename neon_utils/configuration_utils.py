@@ -473,6 +473,18 @@ def _init_ovos_conf(name: str):
         os.makedirs(dirname(ovos_path), exist_ok=True)
         ovos_conf = _DEFAULT_OVOS_CONF
 
+    if not ovos_conf.get('module_overrides',
+                         {}).get("neon_core", {}).get("default_config_path"):
+        from neon_utils.packaging_utils import get_neon_core_root
+        try:
+            default_config_path = join(get_neon_core_root(), "configuration",
+                                       "neon.conf")
+            if isfile(default_config_path):
+                ovos_conf["module_overrides"]["neon_core"][
+                    "default_config_path"] = default_config_path
+        except Exception as e:
+            LOG.error(e)
+
     if name and name not in ovos_conf['submodule_mappings']:
         ovos_conf['submodule_mappings'][name] = 'neon_core'
         LOG.warning(f"Calling module ({name}) now configured to use neon.conf")
@@ -556,11 +568,6 @@ def get_config_dir():
     Returns: Path to configuration or else default
     """
     from ovos_utils.xdg_utils import xdg_config_home
-    # Check envvar spec path
-    if os.getenv("NEON_CONFIG_PATH"):
-        LOG.warning(f'Deprecated NEON_CONFIG_PATH set: '
-                    f'{os.getenv("NEON_CONFIG_PATH")}')
-
     config_path = join(xdg_config_home(), "neon")
     LOG.debug(config_path)
     if not isdir(config_path):
