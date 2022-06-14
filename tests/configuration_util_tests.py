@@ -414,7 +414,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["language"], dict)
 
     def test_get_gui_config(self):
-        config = get_neon_gui_config()
+        config = _get_neon_gui_config()
         self.assertIsInstance(config, dict)
         self.assertIsInstance(config["lang"], str)
         self.assertIsInstance(config["enclosure"], str)

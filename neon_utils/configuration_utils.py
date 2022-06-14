@@ -879,7 +879,7 @@ def get_neon_transcribe_config() -> dict:
     return neon_transcribe_config
 
 
-def get_neon_gui_config() -> dict:
+def _get_neon_gui_config() -> dict:
     """
     Get a configuration dict for the gui module.
     Returns:
