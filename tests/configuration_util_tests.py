@@ -979,6 +979,30 @@ class ConfigurationUtilTests(unittest.TestCase):
         os.environ.pop("XDG_CONFIG_HOME")
         shutil.rmtree(test_config_dir)
 
+    def test_validate_config_env(self):
+        from neon_utils.configuration_utils import _validate_config_env
+        os.environ["XDG_CONFIG_HOME"] = ""
+        _validate_config_env()
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"],
+                         expanduser("~/.config/neon"))
+
+        os.environ["NEON_CONFIG_PATH"] = "neon"
+        _validate_config_env()
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"], "neon")
+        self.assertEqual(os.environ["XDG_CONFIG_HOME"], "neon")
+
+        os.environ["XDG_CONFIG_HOME"] = "xdg"
+        _validate_config_env()
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"], "xdg")
+        self.assertEqual(os.environ["XDG_CONFIG_HOME"], "xdg")
+
+        os.environ["NEON_CONFIG_PATH"] = ""
+        _validate_config_env()
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"], "xdg")
+        self.assertEqual(os.environ["XDG_CONFIG_HOME"], "xdg")
+
+        os.environ.pop("XDG_CONFIG_HOME")
+
 
 if __name__ == '__main__':
     unittest.main()

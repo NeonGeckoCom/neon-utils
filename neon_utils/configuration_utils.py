@@ -484,6 +484,29 @@ def _init_ovos_conf(name: str):
     importlib.reload(mycroft.configuration)
 
 
+def _validate_config_env():
+    """
+    Check that XDG_CONFIG_HOME and NEON_CONFIG_PATH match for compatibility
+    """
+    neon_spec = os.getenv("NEON_CONFIG_PATH")
+    xdg_spec = os.getenv("XDG_CONFIG_HOME")
+
+    if neon_spec and xdg_spec:
+        LOG.warning("Configuration over-defined. Using XDG spec")
+        LOG.info(f"xdg={xdg_spec}|neon={neon_spec}")
+        os.environ["NEON_CONFIG_PATH"] = xdg_spec
+    elif xdg_spec:
+        LOG.debug("Setting NEON_CONFIG_PATH for backwards-compat")
+        os.environ["NEON_CONFIG_PATH"] = xdg_spec
+    elif neon_spec:
+        LOG.warning("NEON_CONFIG_PATH set, updating XDG_CONFIG_HOME")
+        LOG.info(f"NEON_CONFIG_PATH={neon_spec}")
+        os.environ["XDG_CONFIG_HOME"] = neon_spec
+    else:
+        LOG.info("Setting NEON_CONFIG_PATH to xdg default ~/.config/neon")
+        os.environ["NEON_CONFIG_PATH"] = expanduser("~/.config/neon")
+
+
 def init_config_dir() -> bool:
     """
     Performs one-time initialization of the configuration directory.
@@ -492,6 +515,8 @@ def init_config_dir() -> bool:
     loaded may lead to inconsistent behavior.
     :returns: True if configuration was relocated
     """
+    _validate_config_env()
+
     import inspect
 
     stack = inspect.stack()
@@ -499,7 +524,7 @@ def init_config_dir() -> bool:
     name = mod.__name__.split('.')[0] if mod else ''
     _init_ovos_conf(name)
 
-    # TODO: Below is deprecated
+    # TODO: Below is mostly deprecated
     env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
     valid_dir = get_config_dir()
     if env_spec and valid_dir != env_spec:
