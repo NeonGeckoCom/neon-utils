@@ -25,6 +25,7 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import importlib
 import re
 import json
@@ -804,7 +805,7 @@ def _get_neon_api_config() -> dict:
     return merged
 
 
-def get_neon_skills_config() -> dict:
+def _get_neon_skills_config() -> dict:
     """
     Get a configuration dict for the skills module.
     Merge any values from Mycroft config if missing from Neon.
@@ -863,7 +864,7 @@ def get_neon_skills_config() -> dict:
     return skills_config
 
 
-def get_neon_transcribe_config() -> dict:
+def _get_neon_transcribe_config() -> dict:
     """
     Get a configuration dict for the transcription module.
     Returns:
@@ -1203,7 +1204,7 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     default_config["data_dir"] = local["dirVars"]["rootDir"]
     default_config["cache_path"] = local["dirVars"]["cacheDir"]
     # default_config["ready_settings"]
-    default_config["skills"] = get_neon_skills_config()
+    default_config["skills"] = _get_neon_skills_config()
     # default_config["converse"]
     # default_config["system"]
     default_config["server"] = _get_neon_api_config()

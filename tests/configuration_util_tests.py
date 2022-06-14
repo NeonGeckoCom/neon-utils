@@ -526,7 +526,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config["libretranslate"], dict)
 
     def test_get_transcribe_config(self):
-        config = get_neon_transcribe_config()
+        config = _get_neon_transcribe_config()
         self.assertIsInstance(config, dict)
         self.assertIsInstance(config["audio_permission"], bool)
         self.assertIsInstance(config["transcript_dir"], str)
@@ -538,7 +538,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config[config["module"]], dict)
 
     def test_get_skills_config(self):
-        config = get_neon_skills_config()
+        config = _get_neon_skills_config()
         self.assertIsInstance(config["debug"], bool)
         self.assertIsInstance(config["blacklist"], list)
         self.assertIsInstance(config["priority"], list)
