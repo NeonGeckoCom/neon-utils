@@ -39,7 +39,7 @@ from collections.abc import MutableMapping
 from contextlib import suppress
 from glob import glob
 from ovos_utils.json_helper import load_commented_json
-from ovos_utils.configuration import read_mycroft_config, LocalConf
+from ovos_utils.configuration import get_ovos_config
 from ruamel.yaml import YAML
 from typing import Optional
 
@@ -493,7 +493,10 @@ def _init_ovos_conf(name: str):
 
     import mycroft.configuration
     importlib.reload(mycroft.configuration.locations)
+    mycroft.configuration.locations.DEFAULT_CONFIG = \
+        ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
     importlib.reload(mycroft.configuration)
+    importlib.reload(mycroft.configuration.config)
 
 
 def _validate_config_env():
@@ -930,13 +933,15 @@ def _safe_mycroft_config() -> dict:
     Returns:
         dict mycroft configuration
     """
-    try:
-        mycroft = read_mycroft_config()
-    except FileNotFoundError:
-        mycroft = LocalConf(os.path.join(os.path.dirname(__file__),
-                                         "default_configurations",
-                                         "mycroft.conf"))
-    return dict(mycroft)
+    config = get_ovos_config()
+    assert config['base_folder'] == "neon"
+    # ovos_utils adds some config values that are not from or expected in .conf
+    for extra in ("xdg", "base_folder", "config_filename",
+                  "default_config_path", "module_overrides",
+                  "submodule_mappings"):
+        if extra in config:
+            config.pop(extra)
+    return dict(config)
 
 
 def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
