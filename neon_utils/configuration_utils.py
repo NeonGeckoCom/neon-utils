@@ -852,9 +852,9 @@ def _get_neon_skills_config() -> dict:
     neon_skills = deepcopy(core_config.get("skills", {}))
     # neon_skills["directory"] = \
     #     os.path.expanduser(core_config["dirVars"].get("skillsDir"))
-    mycroft_config['skills'].setdefault("extra_directories", [])
-    mycroft_config['skills']['extra_directories'].\
-        insert(0, os.path.expanduser(core_config["dirVars"].get("skillsDir")))
+    # mycroft_config['skills'].setdefault("extra_directories", [])
+    # mycroft_config['skills']['extra_directories'].\
+    #     insert(0, os.path.expanduser(core_config["dirVars"].get("skillsDir")))
     # Patch msm config for skills backwards-compat.
     neon_skills["msm"] = {"directory": neon_skills.get("directory"),
                           "versioned": False,
@@ -1313,6 +1313,7 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     Returns:
         NGIConfig object generated from environment vars
     """
+    # TODO: Update to write neon.conf
     local_conf = get_neon_local_config(path)
     pref_flags = local_conf["prefFlags"]
     local_conf["prefFlags"]["devMode"] = \
@@ -1348,21 +1349,13 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
     local_conf["devVars"]["devName"] = os.environ.get("devName")
 
     if local_conf["prefFlags"]["devMode"]:
-        root_path = os.environ.get("installerDir", local_conf.path)
-        local_conf["dirVars"]["skillsDir"] = os.path.join(root_path, "skills")
-        local_conf["dirVars"]["diagsDir"] = os.path.join(root_path,
-                                                         "Diagnostics")
-        local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
         local_conf["skills"]["default_skills"] = \
             "https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/" \
             "master/skill_lists/DEFAULT-SKILLS-DEV"
-    else:
-        local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
 
     if os.environ.get("skillRepo"):
         local_conf["skills"]["default_skills"] = os.environ.get("skillRepo")
 
-    # TODO: Use XDG here DM
     if not local_conf.write_changes():
         LOG.error("Disk contents are newer than this config object, "
                   "changes were not written.")
