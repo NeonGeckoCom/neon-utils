@@ -853,9 +853,8 @@ def _get_neon_skills_config() -> dict:
     # neon_skills["directory"] = \
     #     os.path.expanduser(core_config["dirVars"].get("skillsDir"))
     mycroft_config['skills'].setdefault("extra_directories", [])
-    mycroft_config['skills']['extra_directories'].insert(
-        os.path.expanduser(core_config["dirVars"].get("skillsDir")), 0)
-
+    mycroft_config['skills']['extra_directories'].\
+        insert(0, os.path.expanduser(core_config["dirVars"].get("skillsDir")))
     # Patch msm config for skills backwards-compat.
     neon_skills["msm"] = {"directory": neon_skills.get("directory"),
                           "versioned": False,
