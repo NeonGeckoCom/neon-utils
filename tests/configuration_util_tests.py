@@ -399,8 +399,10 @@ class ConfigurationUtilTests(unittest.TestCase):
 
     def test_safe_mycroft_config(self):
         from neon_utils.configuration_utils import _safe_mycroft_config
+
         config = _safe_mycroft_config()
         self.assertIsInstance(config, dict)
+        self.assertIn("skills", config)
 
     def test_get_device_type(self):
         self.assertIn(get_neon_device_type(),

@@ -39,7 +39,7 @@ from collections.abc import MutableMapping
 from contextlib import suppress
 from glob import glob
 from ovos_utils.json_helper import load_commented_json
-from ovos_utils.configuration import get_ovos_config
+from ovos_utils.configuration import read_mycroft_config
 from ruamel.yaml import YAML
 from typing import Optional
 
@@ -857,7 +857,7 @@ def _get_neon_skills_config() -> dict:
         os.path.expanduser(core_config["dirVars"].get("skillsDir")))
 
     # Patch msm config for skills backwards-compat.
-    neon_skills["msm"] = {"directory": neon_skills["directory"],
+    neon_skills["msm"] = {"directory": neon_skills.get("directory"),
                           "versioned": False,
                           "repo": {"branch": "",
                                    "cache": "",
@@ -936,14 +936,7 @@ def _safe_mycroft_config() -> dict:
     Returns:
         dict mycroft configuration
     """
-    config = get_ovos_config()
-    assert config['base_folder'] == "neon"
-    # ovos_utils adds some config values that are not from or expected in .conf
-    for extra in ("xdg", "base_folder", "config_filename",
-                  "default_config_path", "module_overrides",
-                  "submodule_mappings"):
-        if extra in config:
-            config.pop(extra)
+    config = read_mycroft_config()
     return dict(config)
 
 
