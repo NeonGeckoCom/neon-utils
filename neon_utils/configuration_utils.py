@@ -722,7 +722,7 @@ def _get_neon_lang_config() -> dict:
     lang_config = deepcopy(get_neon_local_config().content.get("language", {}))
     # TODO: Make sure lang_config is valid here!
     user_lang_config = deepcopy(get_neon_user_config().content.get("speech", {}))
-    lang_config["internal"] = lang_config.get("core_lang", "en-us")
+    lang_config["internal"] = lang_config.pop("core_lang", "en-us")
     lang_config["user"] = user_lang_config.get("stt_language", "en-us")
     lang_config["boost"] = lang_config.get("boost", False)
     merged_language = {**_safe_mycroft_config().get("language", {}), **lang_config}
@@ -1294,8 +1294,7 @@ def write_mycroft_compatible_config(file_to_write: str = None) -> str:
     file_path = os.path.expanduser(file_to_write)
 
     if isfile(file_path):
-        with open(file_path, 'r') as f:
-            disk_config = json.load(f)
+        disk_config = load_commented_json(file_path)
         if disk_config == configuration:
             LOG.debug(f"Configuration already up to date")
             return file_path
