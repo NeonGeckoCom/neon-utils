@@ -1273,6 +1273,10 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     default_config["ipc_path"] = local["dirVars"]["ipcDir"]
     default_config["remote-server"] = local["gui"]["file_server"]
     default_config["ready_settings"] = local["ready_settings"]
+
+    if local["dirVars"]["logsDir"]:
+        default_config["log_dir"] = local["dirVars"]["logsDir"]
+
     # default_config["Display"]
 
     return default_config
@@ -1355,6 +1359,9 @@ def create_config_from_setup_params(path=None) -> NGIConfig:
 
     if os.environ.get("skillRepo"):
         local_conf["skills"]["default_skills"] = os.environ.get("skillRepo")
+
+    if os.environ.get("NEON_LOG_DIR"):
+        local_conf["dirVars"]["logsDir"] = os.environ["NEON_LOG_DIR"]
 
     if not local_conf.write_changes():
         LOG.error("Disk contents are newer than this config object, "
