@@ -1426,9 +1426,9 @@ def _get_neon_auth_config(path: Optional[str] = None) -> dict:
             LOG.info("Populating empty auth configuration")
             auth_config._content = build_new_auth_config(path)
             auth_config['api_services'] = {
-                'wolfram_alpha': auth_config.get('wolfram_alpha'),
-                'alpha_vantage': auth_config.get('alpha_vantage'),
-                'open_weather_map': auth_config.get('open_weather_map')
+                'wolfram_alpha': auth_config.get('wolfram_alpha') or {},
+                'alpha_vantage': auth_config.get('alpha_vantage') or {},
+                'open_weather_map': auth_config.get('open_weather_map') or {}
             }
             auth_config.write_changes()
 
