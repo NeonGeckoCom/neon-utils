@@ -496,8 +496,9 @@ def _init_ovos_conf(name: str):
 
     import mycroft.configuration
     importlib.reload(mycroft.configuration.locations)
-    mycroft.configuration.locations.DEFAULT_CONFIG = \
-        ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
+    if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
+        mycroft.configuration.locations.DEFAULT_CONFIG = \
+            ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
     importlib.reload(mycroft.configuration)
     importlib.reload(mycroft.configuration.config)
 
@@ -542,29 +543,30 @@ def init_config_dir() -> bool:
     name = mod.__name__.split('.')[0] if mod else ''
     _init_ovos_conf(name)
 
-    # TODO: Below is mostly deprecated
-    env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
-    valid_dir = get_config_dir()
-    if env_spec and valid_dir != env_spec:
-        with create_lock("init_config"):
-            for file in glob(f"{env_spec}/ngi_*.yml"):
-                filename = basename(file)
-                if not isfile(join(valid_dir, filename)):
-                    LOG.info(f"Copying {filename} to {valid_dir}")
-                    shutil.copyfile(file, join(valid_dir, filename))
-                else:
-                    LOG.warning(f"Skipping overwrite of existing file: "
-                                f"{basename(file)}")
-            os.environ["NEON_CONFIG_PATH"] = valid_dir
-            LOG.warning(f"Config files moved and"
-                        f" NEON_CONFIG_PATH set to {valid_dir}")
-        return True
-    if not env_spec:
-        LOG.info(f"Set NEON_CONFIG_PATH={valid_dir}")
-        os.environ["NEON_CONFIG_PATH"] = valid_dir
-    else:
-        LOG.debug(f"NEON_CONFIG_PATH={env_spec}")
-    return False
+    # TODO: Check if spec'd config dir is unwritable
+    #
+    # env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
+    # valid_dir = get_config_dir()
+    # if env_spec and valid_dir != env_spec:
+    #     with create_lock("init_config"):
+    #         for file in glob(f"{env_spec}/ngi_*.yml"):
+    #             filename = basename(file)
+    #             if not isfile(join(valid_dir, filename)):
+    #                 LOG.info(f"Copying {filename} to {valid_dir}")
+    #                 shutil.copyfile(file, join(valid_dir, filename))
+    #             else:
+    #                 LOG.warning(f"Skipping overwrite of existing file: "
+    #                             f"{basename(file)}")
+    #         os.environ["NEON_CONFIG_PATH"] = valid_dir
+    #         LOG.warning(f"Config files moved and"
+    #                     f" NEON_CONFIG_PATH set to {valid_dir}")
+    #     return True
+    # if not env_spec:
+    #     LOG.info(f"Set NEON_CONFIG_PATH={valid_dir}")
+    #     os.environ["NEON_CONFIG_PATH"] = valid_dir
+    # else:
+    #     LOG.debug(f"NEON_CONFIG_PATH={env_spec}")
+    # return False
 
 
 def get_config_dir():
@@ -808,6 +810,9 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
         local_config.populate(default_local_config.content)
         # TODO: Update from Mycroft config DM
 
+    if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
+        user_config = NGIConfig("ngi_user_info", path)
+        _move_config_sections(user_config, local_config)
 
     local_config.make_equal_by_keys(default_local_config.content)
     # LOG.info(f"Loaded local config from {local_config.file_path}")
@@ -961,7 +966,8 @@ def get_mycroft_compatible_config(mycroft_only=False,
         return default_config
     speech = _get_neon_speech_config(neon_config_path)
     user = get_neon_user_config(neon_config_path) if \
-        isfile(join(neon_config_path, "ngi_user_info.yml")) else \
+        isfile(join(neon_config_path or get_config_dir(),
+                    "ngi_user_info.yml")) else \
         NGIConfig("default_user_conf", os.path.join(os.path.dirname(__file__),
                                                     "default_configurations"))
     local = get_neon_local_config(neon_config_path)
@@ -1362,7 +1368,8 @@ def _get_neon_transcribe_config(neon_config_path=None) -> dict:
     """
     local_config = get_neon_local_config(neon_config_path)
     user_config = get_neon_user_config(neon_config_path) if \
-        isfile(join(neon_config_path, "ngi_user_info.yml")) else {}
+        isfile(join(neon_config_path or get_config_dir(),
+                    "ngi_user_info.yml")) else {}
     neon_transcribe_config = dict()
     neon_transcribe_config["transcript_dir"] = \
         local_config["dirVars"].get("docsDir", "")
@@ -1402,7 +1409,7 @@ def _get_neon_auth_config(path: Optional[str] = None) -> dict:
     Returns:
         NGIConfig object with authentication config
     """
-    if isfile(join(path, "ngi_auth_vars.yml")):
+    if isfile(join(path or get_config_dir(), "ngi_auth_vars.yml")):
         try:
             auth_config = NGIConfig("ngi_auth_vars", path)
         except PermissionError:
@@ -1424,3 +1431,36 @@ def _get_neon_auth_config(path: Optional[str] = None) -> dict:
         return auth_config.content
     else:
         return build_new_auth_config(path)
+
+def _move_config_sections(user_config, local_config):
+    """
+    Temporary method to handle one-time migration of user_config params to local_config
+    Args:
+        user_config (NGIConfig): user configuration object
+        local_config (NGIConfig): local configuration object
+    """
+    depreciated_user_configs = ("interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
+    try:
+        if any([d in user_config.content for d in depreciated_user_configs]):
+            LOG.warning("Depreciated keys found in user config! Adding them to local config")
+            if "wake_words_enabled" in user_config.content.get("interface", dict()):
+                user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
+            config_to_move = {"interface": user_config.content.pop("interface", {}),
+                              "listener": user_config.content.pop("listener", {}),
+                              "skills": user_config.content.pop("skills", {}),
+                              "session": user_config.content.pop("session", {}),
+                              "tts": user_config.content.pop("tts", {}),
+                              "stt": user_config.content.pop("stt", {}),
+                              "logs": user_config.content.pop("logs", {}),
+                              "device": user_config.content.pop("device", {})}
+            local_config.update_keys(config_to_move)
+
+        if not local_config.get("language"):
+            local_config["language"] = dict()
+        if local_config.get("stt", {}).get("detection_module"):
+            local_config["language"]["detection_module"] = local_config["stt"].pop("detection_module")
+        if local_config.get("stt", {}).get("translation_module"):
+            local_config["language"]["translation_module"] = local_config["stt"].pop("translation_module")
+    except (KeyError, RuntimeError):
+        # If some other instance moves these values, just pass
+        pass
