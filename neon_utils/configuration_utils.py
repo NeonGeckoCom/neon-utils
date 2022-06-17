@@ -1420,11 +1420,16 @@ def _get_neon_auth_config(path: Optional[str] = None) -> dict:
         except PermissionError:
             LOG.error(f"Insufficient Permissions for path: {path}")
             auth_config = NGIConfig("ngi_auth_vars")
-        _populate_read_only_config(path, basename(auth_config.file_path),
-                                   auth_config)
+            _populate_read_only_config(path, basename(auth_config.file_path),
+                                       auth_config)
         if not auth_config.content:
             LOG.info("Populating empty auth configuration")
             auth_config._content = build_new_auth_config(path)
+            auth_config['api_services'] = {
+                'wolfram_alpha': auth_config.get('wolfram_alpha'),
+                'alpha_vantage': auth_config.get('alpha_vantage'),
+                'open_weather_map': auth_config.get('open_weather_map')
+            }
             auth_config.write_changes()
 
         if not auth_config.content:
@@ -1435,7 +1440,14 @@ def _get_neon_auth_config(path: Optional[str] = None) -> dict:
         # LOG.info(f"Loaded auth config from {auth_config.file_path}")
         return auth_config.content
     else:
-        return build_new_auth_config(path)
+        auth_config = build_new_auth_config(path)
+        auth_config['api_services'] = {
+            'wolfram_alpha': auth_config.get('wolfram_alpha'),
+            'alpha_vantage': auth_config.get('alpha_vantage'),
+            'open_weather_map': auth_config.get('open_weather_map')
+        }
+        return auth_config
+
 
 def _move_config_sections(user_config, local_config):
     """
