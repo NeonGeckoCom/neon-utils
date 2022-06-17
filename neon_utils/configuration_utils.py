@@ -953,7 +953,7 @@ def get_mycroft_compatible_location(location: dict) -> dict:
 
 
 def get_mycroft_compatible_config(mycroft_only=False,
-                                  neon_config_path = None) -> dict:
+                                  neon_config_path=None) -> dict:
     """
     Get a configuration compatible with mycroft.conf/ovos.conf
     NOTE: This method should only be called at startup to write a .conf file
@@ -962,7 +962,7 @@ def get_mycroft_compatible_config(mycroft_only=False,
     :returns: dict config compatible with mycroft.conf structure
     """
     default_config = _safe_mycroft_config()
-    if mycroft_only or not is_neon_core():
+    if mycroft_only:
         return default_config
     speech = _get_neon_speech_config(neon_config_path)
     user = get_neon_user_config(neon_config_path) if \
