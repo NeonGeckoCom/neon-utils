@@ -774,6 +774,9 @@ class ConfigurationUtilTests(unittest.TestCase):
         _init_ovos_conf("test_module")
         with open(join(test_config_dir, "OpenVoiceOS", "ovos.conf")) as f:
             config2 = json.load(f)
+        # Patch local tests
+        config2['module_overrides']['neon_core'].setdefault(
+            'default_config_path', "")
         self.assertEqual(config, config2)
 
         _init_ovos_conf("other_test_mod")
@@ -836,7 +839,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         with open(new_conf) as f:
             new_config = YAML().load(f)
         last_change = getmtime(new_conf)
-        self.assertEqual(new_config['device_name'],
+        self.assertEqual(new_config.get('device_name'),
                          old_config["devVars"]['devName'])
         self.assertEqual(new_config['hotwords'], old_config['hotwords'])
         for setting in old_config['listener']:
