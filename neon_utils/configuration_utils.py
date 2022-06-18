@@ -1177,7 +1177,7 @@ def parse_skill_default_settings(settings_meta: dict) -> dict:
 # TODO: Below methods are all deprecated and retained only for backwards-compat
 def get_neon_auth_config(*args, **kwargs):
     LOG.error("This method is deprecated")
-    return dict()
+    return {"api_services": {}}
 
 
 def _get_neon_lang_config(neon_config_path=None) -> dict:
