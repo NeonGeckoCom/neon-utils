@@ -450,7 +450,7 @@ _DEFAULT_OVOS_CONF = {"module_overrides": {
         "neon_core": {
             "xdg": True,
             "base_folder": "neon",
-            "config_filename": "neon.conf"
+            "config_filename": "neon.yaml"
         }
     },
         "submodule_mappings": {}
@@ -460,7 +460,7 @@ _DEFAULT_OVOS_CONF = {"module_overrides": {
 def _init_ovos_conf(name: str):
     """
     Perform a one-time init of ovos.conf for the calling module
-    :param name: Name of calling module to configure to use `neon.conf`
+    :param name: Name of calling module to configure to use `neon.yaml`
     """
     from ovos_utils.xdg_utils import xdg_config_home
     ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
@@ -480,8 +480,13 @@ def _init_ovos_conf(name: str):
                          {}).get("neon_core", {}).get("default_config_path"):
         from neon_utils.packaging_utils import get_neon_core_root
         try:
-            default_config_path = join(get_neon_core_root(), "configuration",
-                                       "neon.conf")
+            default_config_dir = join(get_neon_core_root(), "configuration")
+            if isfile(join(default_config_dir, "neon.yaml")):
+                default_config_path = join(default_config_dir, "neon.yaml")
+            elif isfile(join(default_config_dir, "neon.conf")):
+                default_config_path = join(default_config_dir, "neon.conf")
+            else:
+                default_config_path = None
             if isfile(default_config_path):
                 ovos_conf["module_overrides"]["neon_core"][
                     "default_config_path"] = default_config_path
@@ -490,7 +495,7 @@ def _init_ovos_conf(name: str):
 
     if name and name not in ovos_conf['submodule_mappings']:
         ovos_conf['submodule_mappings'][name] = 'neon_core'
-        LOG.warning(f"Calling module ({name}) now configured to use neon.conf")
+        LOG.warning(f"Calling module ({name}) now configured to use neon.yaml")
         with open(ovos_path, "w+") as f:
             json.dump(ovos_conf, f, indent=4)
 
@@ -526,13 +531,12 @@ def _validate_config_env():
         os.environ["NEON_CONFIG_PATH"] = expanduser("~/.config/neon")
 
 
-def init_config_dir() -> bool:
+def init_config_dir():
     """
     Performs one-time initialization of the configuration directory.
     NOTE: This method is intended to be called once at module init, before any
     configuration is loaded. Repeated calls or calls after configuration is
     loaded may lead to inconsistent behavior.
-    :returns: True if configuration was relocated
     """
     _validate_config_env()
 

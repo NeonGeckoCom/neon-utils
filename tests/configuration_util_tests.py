@@ -762,7 +762,7 @@ class ConfigurationUtilTests(unittest.TestCase):
             "neon_core": {
                 "xdg": True,
                 "base_folder": "neon",
-                "config_filename": "neon.conf",
+                "config_filename": "neon.yaml",
                 "default_config_path": config['module_overrides']['neon_core'][
                     'default_config_path']
             }
@@ -789,7 +789,7 @@ class ConfigurationUtilTests(unittest.TestCase):
             "neon_core": {
                 "xdg": True,
                 "base_folder": "neon",
-                "config_filename": "neon.conf",
+                "config_filename": "neon.yaml",
                 "default_config_path": config['module_overrides']['neon_core'][
                     'default_config_path']
             }
