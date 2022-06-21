@@ -485,7 +485,8 @@ def _init_ovos_conf(name: str):
             elif isfile(join(default_config_dir, "neon.conf")):
                 default_config_path = join(default_config_dir, "neon.conf")
             else:
-                LOG.warning("No neon_core default config found!")
+                LOG.warning(f"No neon_core default config found in "
+                            f"{default_config_dir}")
                 default_config_path = None
             if default_config_path:
                 ovos_conf["module_overrides"]["neon_core"][
@@ -1128,6 +1129,7 @@ def create_config_from_setup_params(path=None) -> dict:
         os.makedirs(dirname(output_path))
     with open(output_path, "w+") as f:
         yaml.safe_dump(config_patch, f)
+    LOG.info(f"Dumped new config to: {output_path}")
     return config_patch
 
 

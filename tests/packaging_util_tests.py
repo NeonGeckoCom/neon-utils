@@ -53,7 +53,7 @@ class PackagingUtilTests(unittest.TestCase):
         try:
             core_dir = get_neon_core_root()
             self.assertIsInstance(core_dir, str)
-            self.assertTrue(os.path.isdir(os.path.join(core_dir, "neon_core")))
+            self.assertTrue(os.path.isdir(os.path.join(core_dir, "util")))
         except FileNotFoundError:
             with self.assertRaises(FileNotFoundError):
                 get_neon_core_root()
