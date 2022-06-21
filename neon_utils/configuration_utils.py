@@ -37,7 +37,6 @@ from copy import deepcopy
 from os.path import *
 from collections.abc import MutableMapping
 from contextlib import suppress
-from glob import glob
 
 import yaml
 from ovos_utils.json_helper import load_commented_json
@@ -525,6 +524,8 @@ def _validate_config_env():
     elif neon_spec:
         LOG.warning("NEON_CONFIG_PATH set, updating XDG_CONFIG_HOME")
         LOG.info(f"NEON_CONFIG_PATH={neon_spec}")
+        if neon_spec.endswith("/neon"):  # patch ~/.config/neon real spec
+            neon_spec = dirname(neon_spec)
         os.environ["XDG_CONFIG_HOME"] = neon_spec
     else:
         LOG.info("Setting NEON_CONFIG_PATH to xdg default ~/.config/neon")
