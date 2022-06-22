@@ -1082,9 +1082,9 @@ def create_config_from_setup_params(path=None) -> dict:
         NGIConfig object generated from environment vars
     """
 
-    dev_mode = os.environ.get("devMode") or "false" == "true"
+    dev_mode = (os.environ.get("devMode") or "false") == "true"
     # auto_run = os.environ.get("autoStart") or "false" == "true"
-    auto_update = os.environ.get("autoUpdate") or "false" == "true"
+    auto_update = (os.environ.get("autoUpdate") or "false") == "true"
     neon_token = os.environ.get("GITHUB_TOKEN")
     tts_module = os.environ.get("ttsModule")
     stt_module = os.environ.get("sttModule")

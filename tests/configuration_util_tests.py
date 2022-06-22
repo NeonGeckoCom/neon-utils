@@ -31,6 +31,7 @@ import os
 import unittest
 
 from time import sleep
+from glob import glob
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
@@ -516,7 +517,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         test_dir = f"{ROOT_DIR}/test_setup_config"
         os.environ["devMode"] = "true"
         os.environ["autoStart"] = "true"
-        os.environ["autoUpdate"] = "true"
+        os.environ["autoUpdate"] = "false"
         os.environ["devName"] = "Test-Device"
         os.environ["sttModule"] = "stt_module"
         os.environ["ttsModule"] = "tts_module"
@@ -527,7 +528,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         config = create_config_from_setup_params(test_dir)
 
         self.assertTrue(config["debug"])
-        self.assertTrue(config["skills"]["auto_update"])
+        self.assertFalse(config["skills"]["auto_update"])
         self.assertEqual(config["device_name"], "Test-Device")
         self.assertEqual(config["stt"]["module"], "stt_module")
         self.assertEqual(config["tts"]["module"], "tts_module")
