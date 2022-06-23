@@ -1,0 +1,6 @@
+config: system
+system: True
+user:
+  from_system: True
+  from_user: False
+  not_from_user: True

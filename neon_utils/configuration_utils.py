@@ -40,7 +40,6 @@ from contextlib import suppress
 
 import yaml
 from ovos_utils.json_helper import load_commented_json
-from ovos_utils.configuration import read_mycroft_config
 from ovos_utils.xdg_utils import xdg_config_home
 from ruamel.yaml import YAML
 from typing import Optional
@@ -500,14 +499,16 @@ def _init_ovos_conf(name: str):
         with open(ovos_path, "w+") as f:
             json.dump(ovos_conf, f, indent=4)
 
-    import mycroft.configuration
-    importlib.reload(mycroft.configuration.locations)
-    if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
-        mycroft.configuration.locations.DEFAULT_CONFIG = \
-            ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
-    importlib.reload(mycroft.configuration)
-    importlib.reload(mycroft.configuration.config)
-
+    try:
+        import mycroft.configuration
+        importlib.reload(mycroft.configuration.locations)
+        if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
+            mycroft.configuration.locations.DEFAULT_CONFIG = \
+                ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
+        importlib.reload(mycroft.configuration)
+        importlib.reload(mycroft.configuration.config)
+    except Exception as e:
+        LOG.exception(e)
 
 def _validate_config_env():
     """
@@ -1409,8 +1410,49 @@ def _safe_mycroft_config() -> dict:
     Returns:
         dict mycroft configuration
     """
+    from ovos_utils.configuration import read_mycroft_config
     config = read_mycroft_config()
     return dict(config)
+
+
+def _get_neon_yaml_config() -> dict:
+    from ovos_utils.configuration import get_ovos_config, \
+        get_xdg_config_save_path
+    from ovos_utils.json_helper import merge_dict
+
+    with open(get_ovos_config()["default_config_path"]) as f:
+        default = yaml.safe_load(f)
+    config = dict(default)
+    system_config = os.environ.get("MYCROFT_SYSTEM_CONFIG",
+                                   "/etc/neon/neon.yaml")
+    user_config = join(get_xdg_config_save_path("neon"), "neon.yaml")
+    if isfile(system_config):
+        with open(system_config) as f:
+            system = yaml.safe_load(f)
+        config = merge_dict(config, system)
+
+    if isfile(user_config):
+        with open(user_config) as f:
+            user = yaml.safe_load(f)
+        config = merge_dict(config, user)
+
+    return config
+
+
+def read_config() -> dict:
+    """
+    Read configuration as neon_core.configuration
+    """
+    try:
+        from neon_core.configuration import Configuration
+        return Configuration()
+    except ImportError:
+        pass
+    try:
+        return _safe_mycroft_config()
+    except Exception as e:
+        LOG.error(e)
+    return _get_neon_yaml_config()
 
 
 def _get_neon_auth_config(path: Optional[str] = None) -> dict:

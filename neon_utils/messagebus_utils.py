@@ -28,7 +28,7 @@
 
 from threading import Event
 from mycroft_bus_client import MessageBusClient
-from ovos_utils.configuration import get_ovos_config
+from neon_utils.configuration_utils import read_config
 
 
 def get_messagebus(running: bool = True, timeout: int = 60) -> MessageBusClient:
@@ -38,7 +38,7 @@ def get_messagebus(running: bool = True, timeout: int = 60) -> MessageBusClient:
     :param timeout: Time in seconds to wait for the bus client to connect before raising an exception
     :returns: instantiated MessageBusClient
     """
-    config = get_ovos_config().get("websocket")
+    config = read_config().get("websocket")
     if config:
         bus = MessageBusClient(host=config["host"], port=config["port"],
                                route=config["route"], ssl=config["ssl"])

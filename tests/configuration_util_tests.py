@@ -26,16 +26,20 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import shutil
 import sys
 import os
 import unittest
 
 from time import sleep
 from glob import glob
+from os.path import join, dirname
+
+import mock
+
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.configuration_utils import *
-from neon_utils.authentication_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 CONFIG_PATH = os.path.join(ROOT_DIR, "configuration")
@@ -864,6 +868,30 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         os.remove(new_conf)
 
+    @mock.patch('neon_utils.packaging_utils.get_neon_core_root')
+    def test_get_neon_yaml_config(self, get_core_root):
+        config_dir = join(dirname(__file__), "configuration",
+                          "get_neon_yaml_config")
+        get_core_root.return_value = join(config_dir, "default")
+        os.environ["XDG_CONFIG_HOME"] = config_dir
+        os.environ["MYCROFT_SYSTEM_CONFIG"] = join(config_dir, "system",
+                                                   "neon.yaml")
+        from neon_utils.configuration_utils import _get_neon_yaml_config, \
+            init_config_dir
+        init_config_dir()
+        config = _get_neon_yaml_config()
+        self.assertEqual(config,
+                         {"config": "user",
+                          "default": True,
+                          "system": True,
+                          "user": {
+                              "from_system": True,
+                              "from_default": True,
+                              "from_user": True,
+                              "not_from_user": False
+                          }})
+        shutil.rmtree(join(config_dir, "OpenVoiceOS"))
+
 
 class DeprecatedConfigTests(unittest.TestCase):
     def doCleanups(self) -> None:
@@ -1004,20 +1032,30 @@ class DeprecatedConfigTests(unittest.TestCase):
 
         fresh_config = get_neon_local_config(CONFIG_PATH)
         self.assertEqual(fresh_config.content, local_config.content)
-        self.assertEqual(fresh_config['hotwords']['test_hotword'], test_hotword_config)
+        self.assertEqual(fresh_config['hotwords']['test_hotword'],
+                         test_hotword_config)
 
         shutil.move(bak_local_conf, ngi_local_conf)
 
     def test_get_neon_auth_config(self):
+        from neon_utils.authentication_utils import find_neon_aws_keys,\
+            find_neon_google_keys, find_neon_git_token, find_neon_wolfram_key,\
+            find_neon_alpha_vantage_key, find_neon_owm_key
         from neon_utils.configuration_utils import _get_neon_auth_config
         auth_path = os.path.join(ROOT_DIR, "credentials")
         ngi_auth_vars = _get_neon_auth_config(auth_path)
-        self.assertEqual(ngi_auth_vars["amazon"], find_neon_aws_keys(auth_path))
-        self.assertEqual(ngi_auth_vars["google"], find_neon_google_keys(auth_path))
-        self.assertEqual(ngi_auth_vars["github"], {"token": find_neon_git_token(auth_path)})
-        self.assertEqual(ngi_auth_vars["wolfram"], {"app_id": find_neon_wolfram_key(auth_path)})
-        self.assertEqual(ngi_auth_vars["alpha_vantage"], {"api_key": find_neon_alpha_vantage_key(auth_path)})
-        self.assertEqual(ngi_auth_vars["owm"], {"api_key": find_neon_owm_key(auth_path)})
+        self.assertEqual(ngi_auth_vars["amazon"],
+                         find_neon_aws_keys(auth_path))
+        self.assertEqual(ngi_auth_vars["google"],
+                         find_neon_google_keys(auth_path))
+        self.assertEqual(ngi_auth_vars["github"],
+                         {"token": find_neon_git_token(auth_path)})
+        self.assertEqual(ngi_auth_vars["wolfram"],
+                         {"app_id": find_neon_wolfram_key(auth_path)})
+        self.assertEqual(ngi_auth_vars["alpha_vantage"],
+                         {"api_key": find_neon_alpha_vantage_key(auth_path)})
+        self.assertEqual(ngi_auth_vars["owm"],
+                         {"api_key": find_neon_owm_key(auth_path)})
         # os.remove(ngi_auth_vars.file_path)
 
     # def test_get_neon_auth_config_unwritable(self):
