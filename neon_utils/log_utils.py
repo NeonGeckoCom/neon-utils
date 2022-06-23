@@ -47,7 +47,7 @@ _log_dir = None
 def _get_log_dir():
     global _log_dir
     if not _log_dir:
-        _log_dir = os.path.expanduser(read_mycroft_config().get("logDir") or
+        _log_dir = os.path.expanduser(read_mycroft_config().get("log_dir") or
                                       os.path.join(xdg_data_home(), "neon",
                                                    "logs"))
     return _log_dir
