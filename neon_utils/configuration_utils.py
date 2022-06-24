@@ -41,8 +41,8 @@ from contextlib import suppress
 import yaml
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.xdg_utils import xdg_config_home
-from ruamel.yaml import YAML
-from typing import Optional, OrderedDict
+# from ruamel.yaml import YAML
+from typing import Optional
 
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, \
@@ -59,7 +59,7 @@ class NGIConfig:
     def __init__(self, name, path=None, force_reload: bool = False):
         self.name = name
         self.path = path or get_config_dir()
-        self.parser = YAML()
+        # self.parser = YAML()
         lock_filename = join(self.path, f".{self.name}.lock")
         self.lock = create_lock(lock_filename)
         self._pending_write = False
@@ -290,7 +290,13 @@ class NGIConfig:
             with self.lock:
                 with open(self.file_path, 'r') as f:
                     # config = self.parser.load(f)
-                    config = yaml.safe_load(f)
+                    try:
+                        config = yaml.safe_load(f)
+                    except Exception as e:
+                        LOG.error(e)
+                        f.seek(0)
+                        from ruamel.yaml import YAML
+                        config = self._make_loaded_config_safe(YAML().load(f))
                 if not config:
                     LOG.debug(f"Empty config file found at: {self.file_path}")
                     config = dict()
@@ -303,6 +309,23 @@ class NGIConfig:
         except Exception as c:
             LOG.error(f"{self.file_path} Configuration file error: {c}")
         return dict()
+
+    @staticmethod
+    def _make_loaded_config_safe(config) -> dict:
+        for section in config:
+            if isinstance(config[section], dict):
+                for sub in config[section]:
+                    if isinstance(config[section][sub], dict):
+                        config[section][sub] = dict(config[section][sub])
+                    elif isinstance(config[section][sub], list):
+                        config[section][sub] = list(config[section][sub])
+                    elif isinstance(config[section][sub], float):
+                        config[section][sub] = float(config[section][sub])
+                config[section] = dict(config[section])
+            elif isinstance(config[section], list):
+                config[section] = list(config[section])
+        config = dict(config)
+        return json.loads(json.dumps(config))
 
     def _write_yaml_file(self) -> bool:
         """
@@ -325,8 +348,9 @@ class NGIConfig:
             shutil.copy2(self.file_path, tmp_filename)
             try:
                 with open(self.file_path, 'w+') as f:
-                    self.parser.dump(to_write, f)
-                    LOG.debug(f"YAML updated {self.name}")
+                    yaml.safe_dump(to_write, f, allow_unicode=True,
+                           default_flow_style=False, sort_keys=False)
+                LOG.debug(f"YAML updated {self.name}")
                 self._loaded = os.path.getmtime(self.file_path)
                 self._pending_write = False
                 self._disk_content_hash = hash(repr(self._content))
@@ -469,11 +493,11 @@ def _init_ovos_conf(name: str):
                 ovos_conf: dict = json.load(f)
         except Exception as e:
             LOG.error(e)
-            ovos_conf = _DEFAULT_OVOS_CONF
+            ovos_conf = deepcopy(_DEFAULT_OVOS_CONF)
     else:
         LOG.info(f"Creating new file: {ovos_path}")
         os.makedirs(dirname(ovos_path), exist_ok=True)
-        ovos_conf = _DEFAULT_OVOS_CONF
+        ovos_conf = deepcopy(_DEFAULT_OVOS_CONF)
 
     if not ovos_conf.get('module_overrides',
                          {}).get("neon_core", {}).get("default_config_path"):
@@ -816,7 +840,7 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
         if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
             local_config = NGIConfig("ngi_local_conf", path)
         else:
-            return default_local_config
+            local_config = NGIConfig("ngi_local_conf", "/tmp/neon")
     except PermissionError:
         LOG.error(f"Insufficient Permissions for path: {path}")
         local_config = NGIConfig("ngi_local_conf")
@@ -988,12 +1012,12 @@ def get_mycroft_compatible_config(mycroft_only=False,
         NGIConfig("default_user_conf", os.path.join(os.path.dirname(__file__),
                                                     "default_configurations"))
     local = get_neon_local_config(neon_config_path)
-    for section in local.content:
-        if isinstance(local[section], dict):
-            for subsection in local[section]:
-                if isinstance(local[section][subsection], dict):
-                    local[section][subsection] = dict(local[section][subsection])
-            local[section] = dict(local[section])
+    # for section in local.content:
+    #     if isinstance(local[section], dict):
+    #         for subsection in local[section]:
+    #             if isinstance(local[section][subsection], dict):
+    #                 local[section][subsection] = dict(local[section][subsection])
+    #         local[section] = dict(local[section])
     default_config["lang"] = "en-us"
     default_config["system_unit"] = user["units"]["measure"]
     default_config["time_format"] = \
@@ -1166,12 +1190,12 @@ def migrate_ngi_config(old_config_path: str = None,
     compat_config = get_mycroft_compatible_config(
         neon_config_path=dirname(old_config_path))
     try:
-        for key in compat_config:
-            if isinstance(compat_config[key], dict):
-                for key2 in compat_config[key]:
-                    if isinstance(compat_config[key][key2], dict):
-                        compat_config[key][key2] = dict(compat_config[key][key2])
-                compat_config[key] = dict(compat_config[key])
+        # for key in compat_config:
+        #     if isinstance(compat_config[key], dict):
+        #         for key2 in compat_config[key]:
+        #             if isinstance(compat_config[key][key2], dict):
+        #                 compat_config[key][key2] = dict(compat_config[key][key2])
+        #         compat_config[key] = dict(compat_config[key])
         with open(new_config_path, 'w+') as f:
             yaml.safe_dump(compat_config, f, allow_unicode=True,
                            default_flow_style=False, sort_keys=False)
@@ -1254,12 +1278,12 @@ def _get_neon_speech_config(neon_config_path=None) -> dict:
     """
     mycroft = _safe_mycroft_config()
     local_config = get_neon_local_config(neon_config_path)
-    for section in local_config.content:
-        if isinstance(local_config[section], dict):
-            for subsection in local_config[section]:
-                if isinstance(local_config[section][subsection], dict):
-                    local_config[section][subsection] = dict(local_config[section][subsection])
-            local_config[section] = dict(local_config[section])
+    # for section in local_config.content:
+    #     if isinstance(local_config[section], dict):
+    #         for subsection in local_config[section]:
+    #             if isinstance(local_config[section][subsection], dict):
+    #                 local_config[section][subsection] = dict(local_config[section][subsection])
+    #         local_config[section] = dict(local_config[section])
     neon_listener_config = deepcopy(local_config.get("listener", {}))
     neon_listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
     neon_listener_config["save_utterances"] = local_config["prefFlags"].get("saveAudio", False)
@@ -1531,12 +1555,12 @@ def _get_neon_auth_config(path: Optional[str] = None) -> dict:
             auth_config._content = {"_loaded": True}
             auth_config.write_changes()
         # LOG.info(f"Loaded auth config from {auth_config.file_path}")
-        for key in auth_config.content:
-            if isinstance(auth_config[key], dict):
-                for sub in auth_config[key]:
-                    if isinstance(auth_config[key][sub], dict):
-                        auth_config[key][sub] = dict(auth_config[key][sub])
-                auth_config[key] = dict(auth_config[key])
+        # for key in auth_config.content:
+        #     if isinstance(auth_config[key], dict):
+        #         for sub in auth_config[key]:
+        #             if isinstance(auth_config[key][sub], dict):
+        #                 auth_config[key][sub] = dict(auth_config[key][sub])
+        #         auth_config[key] = dict(auth_config[key])
         return dict(auth_config.content)
     else:
         auth_config = build_new_auth_config(path)
