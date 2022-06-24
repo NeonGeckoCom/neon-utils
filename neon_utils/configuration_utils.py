@@ -42,7 +42,7 @@ import yaml
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.xdg_utils import xdg_config_home
 from ruamel.yaml import YAML
-from typing import Optional
+from typing import Optional, OrderedDict
 
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, \
@@ -289,7 +289,8 @@ class NGIConfig:
         try:
             with self.lock:
                 with open(self.file_path, 'r') as f:
-                    config = self.parser.load(f)
+                    # config = self.parser.load(f)
+                    config = yaml.safe_load(f)
                 if not config:
                     LOG.debug(f"Empty config file found at: {self.file_path}")
                     config = dict()
@@ -493,7 +494,7 @@ def _init_ovos_conf(name: str):
         except Exception as e:
             LOG.error(e)
 
-    if name and name not in ovos_conf['submodule_mappings']:
+    if name != "__main__" and name not in ovos_conf['submodule_mappings']:
         ovos_conf['submodule_mappings'][name] = 'neon_core'
         LOG.warning(f"Calling module ({name}) now configured to use neon.yaml")
         with open(ovos_path, "w+") as f:
@@ -509,6 +510,7 @@ def _init_ovos_conf(name: str):
         importlib.reload(mycroft.configuration.config)
     except Exception as e:
         LOG.exception(e)
+
 
 def _validate_config_env():
     """
@@ -801,22 +803,29 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     Returns:
         NGIConfig object with local config
     """
-    LOG.warning("Local configuration is deprecated. Use mycroft.configuration "
-                "or ovos_utils.configuration.get_ovos_config")
+    import inspect
+    call = inspect.stack()[1]
+    module = inspect.getmodule(call.frame)
+    name = module.__name__ if module else call.filename
+    LOG.warning("This reference is deprecated - "
+                f"{name}:{call.lineno}")
+    default_local_config = NGIConfig("default_core_conf",
+                                     os.path.join(os.path.dirname(__file__),
+                                                  "default_configurations"))
     try:
-        local_config = NGIConfig("ngi_local_conf", path)
+        if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
+            local_config = NGIConfig("ngi_local_conf", path)
+        else:
+            return default_local_config
     except PermissionError:
         LOG.error(f"Insufficient Permissions for path: {path}")
         local_config = NGIConfig("ngi_local_conf")
     _populate_read_only_config(path, basename(local_config.file_path),
                                local_config)
-    default_local_config = NGIConfig("default_core_conf",
-                                     os.path.join(os.path.dirname(__file__),
-                                                  "default_configurations"))
+
     if len(local_config.content) == 0:
         LOG.info(f"Created Empty Local Config at {local_config.path}")
         local_config.populate(default_local_config.content)
-        # TODO: Update from Mycroft config DM
 
     if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
         user_config = NGIConfig("ngi_user_info", path)
@@ -979,7 +988,12 @@ def get_mycroft_compatible_config(mycroft_only=False,
         NGIConfig("default_user_conf", os.path.join(os.path.dirname(__file__),
                                                     "default_configurations"))
     local = get_neon_local_config(neon_config_path)
-
+    for section in local.content:
+        if isinstance(local[section], dict):
+            for subsection in local[section]:
+                if isinstance(local[section][subsection], dict):
+                    local[section][subsection] = dict(local[section][subsection])
+            local[section] = dict(local[section])
     default_config["lang"] = "en-us"
     default_config["system_unit"] = user["units"]["measure"]
     default_config["time_format"] = \
@@ -1151,8 +1165,20 @@ def migrate_ngi_config(old_config_path: str = None,
                                               "neon", "neon.yaml")
     compat_config = get_mycroft_compatible_config(
         neon_config_path=dirname(old_config_path))
-    with open(new_config_path, 'w+') as f:
-        YAML().dump(compat_config, f)
+    try:
+        for key in compat_config:
+            if isinstance(compat_config[key], dict):
+                for key2 in compat_config[key]:
+                    if isinstance(compat_config[key][key2], dict):
+                        compat_config[key][key2] = dict(compat_config[key][key2])
+                compat_config[key] = dict(compat_config[key])
+        with open(new_config_path, 'w+') as f:
+            yaml.safe_dump(compat_config, f, allow_unicode=True,
+                           default_flow_style=False, sort_keys=False)
+    except Exception as e:
+        LOG.exception(e)
+        LOG.error(compat_config)
+    LOG.warning(f"Migrated old config to: {new_config_path}")
 
 
 def parse_skill_default_settings(settings_meta: dict) -> dict:
@@ -1195,6 +1221,12 @@ def _get_neon_lang_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used by Language Detector and Translator modules
     """
+    import inspect
+    call = inspect.stack()[1]
+    module = inspect.getmodule(call.frame)
+    name = module.__name__ if module else call.filename
+    LOG.warning("This reference is deprecated - "
+                f"{name}:{call.lineno}")
     lang_config = deepcopy(get_neon_local_config(neon_config_path).content.get("language", {}))
     lang_config["internal"] = lang_config.pop("core_lang", "en-us")
     lang_config["boost"] = lang_config.get("boost", False)
@@ -1222,7 +1254,12 @@ def _get_neon_speech_config(neon_config_path=None) -> dict:
     """
     mycroft = _safe_mycroft_config()
     local_config = get_neon_local_config(neon_config_path)
-
+    for section in local_config.content:
+        if isinstance(local_config[section], dict):
+            for subsection in local_config[section]:
+                if isinstance(local_config[section][subsection], dict):
+                    local_config[section][subsection] = dict(local_config[section][subsection])
+            local_config[section] = dict(local_config[section])
     neon_listener_config = deepcopy(local_config.get("listener", {}))
     neon_listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
     neon_listener_config["save_utterances"] = local_config["prefFlags"].get("saveAudio", False)
@@ -1286,6 +1323,12 @@ def _get_neon_audio_config(neon_config_path=None) -> dict:
     mycroft = _safe_mycroft_config()
     local_config = get_neon_local_config(neon_config_path)
     neon_audio = local_config.get("audioService", {})
+    for section in neon_audio:
+        if isinstance(neon_audio[section], dict):
+            for s in neon_audio[section]:
+                if isinstance(neon_audio[section][s], dict):
+                    neon_audio[section][s] = dict(neon_audio[section][s])
+            neon_audio[section] = dict(neon_audio[section])
     merged_audio = {**mycroft.get("Audio", {}), **neon_audio}
     # tts keys will vary by installed/configured plugins
     # if merged_audio.keys() != neon_audio.keys():
@@ -1443,11 +1486,11 @@ def read_config() -> dict:
     """
     Read configuration as neon_core.configuration
     """
-    try:
-        from neon_core.configuration import Configuration
-        return Configuration()
-    except ImportError:
-        pass
+    # try:
+    #     from neon_core.configuration import Configuration
+    #     return Configuration()
+    # except ImportError:
+    #     pass
     try:
         return _safe_mycroft_config()
     except Exception as e:
@@ -1488,7 +1531,13 @@ def _get_neon_auth_config(path: Optional[str] = None) -> dict:
             auth_config._content = {"_loaded": True}
             auth_config.write_changes()
         # LOG.info(f"Loaded auth config from {auth_config.file_path}")
-        return auth_config.content
+        for key in auth_config.content:
+            if isinstance(auth_config[key], dict):
+                for sub in auth_config[key]:
+                    if isinstance(auth_config[key][sub], dict):
+                        auth_config[key][sub] = dict(auth_config[key][sub])
+                auth_config[key] = dict(auth_config[key])
+        return dict(auth_config.content)
     else:
         auth_config = build_new_auth_config(path)
         auth_config['api_services'] = {
