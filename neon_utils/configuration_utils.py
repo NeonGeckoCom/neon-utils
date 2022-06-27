@@ -566,8 +566,7 @@ def _validate_config_env():
             for file in glob(f'{os.environ["NEON_CONFIG_PATH"]}/*'):
                 if any((file.endswith(x) for x in ('.yml', '.yaml',
                                                    '.json', '.conf'))):
-                    shutil.copy2(file, join(get_config_dir(), "neon",
-                                            basename(file)))
+                    shutil.copy2(file, join(get_config_dir(), basename(file)))
                     LOG.info(f"Copied {file}")
                 else:
                     LOG.debug(f"Ignoring non-config {file}")
