@@ -553,11 +553,17 @@ def _validate_config_env():
         LOG.debug("Setting NEON_CONFIG_PATH for backwards-compat")
         os.environ["NEON_CONFIG_PATH"] = xdg_spec
     elif neon_spec:
-        LOG.warning("NEON_CONFIG_PATH set, updating XDG_CONFIG_HOME")
         LOG.info(f"NEON_CONFIG_PATH={neon_spec}")
         if neon_spec.endswith("/neon"):  # patch ~/.config/neon real spec
             neon_spec = dirname(neon_spec)
-        os.environ["XDG_CONFIG_HOME"] = neon_spec
+        if path_is_read_writable(neon_spec):
+            LOG.warning("NEON_CONFIG_PATH set, updating XDG_CONFIG_HOME")
+            os.environ["XDG_CONFIG_HOME"] = neon_spec
+        else:
+            # TODO: Write unit test for this DM
+            LOG.warning("NEON_CONFIG_PATH is not writable, copying config")
+            shutil.copy(f'{os.environ["NEON_CONFIG_PATH"]}/*',
+                        os.environ["XDG_CONFIG_HOME"])
     else:
         LOG.info("Setting NEON_CONFIG_PATH to xdg default ~/.config/neon")
         os.environ["NEON_CONFIG_PATH"] = expanduser("~/.config/neon")
