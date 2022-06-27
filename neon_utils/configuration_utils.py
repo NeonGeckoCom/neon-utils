@@ -560,10 +560,11 @@ def _validate_config_env():
             LOG.warning("NEON_CONFIG_PATH set, updating XDG_CONFIG_HOME")
             os.environ["XDG_CONFIG_HOME"] = neon_spec
         else:
+            from glob import glob
             # TODO: Write unit test for this DM
             LOG.warning("NEON_CONFIG_PATH is not writable, copying config")
-            shutil.copy(f'{os.environ["NEON_CONFIG_PATH"]}/*',
-                        join(get_config_dir(), "neon"))
+            for file in glob(f'{os.environ["NEON_CONFIG_PATH"]}/*'):
+                shutil.copy(file, join(get_config_dir(), "neon"))
     else:
         LOG.info("Setting NEON_CONFIG_PATH to xdg default ~/.config/neon")
         os.environ["NEON_CONFIG_PATH"] = expanduser("~/.config/neon")
