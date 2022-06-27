@@ -566,7 +566,12 @@ def _validate_config_env():
             for file in glob(f'{os.environ["NEON_CONFIG_PATH"]}/*'):
                 if any((file.endswith(x) for x in ('.yml', '.yaml',
                                                    '.json', '.conf'))):
-                    shutil.copy(file, join(get_config_dir(), "neon"))
+                    shutil.copy2(file, join(get_config_dir(), "neon",
+                                            basename(file)))
+                    LOG.info(f"Copied {file}")
+                else:
+                    LOG.debug(f"Ignoring non-config {file}")
+            os.environ["NEON_CONFIG_PATH"] = join(get_config_dir(), "neon")
     else:
         LOG.info("Setting NEON_CONFIG_PATH to xdg default ~/.config/neon")
         os.environ["NEON_CONFIG_PATH"] = expanduser("~/.config/neon")
