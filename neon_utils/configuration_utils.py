@@ -548,33 +548,41 @@ def _validate_config_env():
     if neon_spec and xdg_spec:
         LOG.warning("Configuration over-defined. Using XDG spec")
         LOG.info(f"xdg={xdg_spec}|neon={neon_spec}")
-        os.environ["NEON_CONFIG_PATH"] = xdg_spec
+        os.environ["NEON_CONFIG_PATH"] = join(xdg_spec, "neon")
     elif xdg_spec:
         LOG.debug("Setting NEON_CONFIG_PATH for backwards-compat")
-        os.environ["NEON_CONFIG_PATH"] = xdg_spec
+        os.environ["NEON_CONFIG_PATH"] = join(xdg_spec, "neon")
+        return
     elif neon_spec:
+        # Path to Neon config spec'd (probably Docker)
         LOG.info(f"NEON_CONFIG_PATH={neon_spec}")
-        if neon_spec.endswith("/neon"):  # patch ~/.config/neon real spec
-            neon_spec = dirname(neon_spec)
-        # Special case '/config' spec used in Docker containers
-        if path_is_read_writable(neon_spec):
-            LOG.warning("NEON_CONFIG_PATH set, updating XDG_CONFIG_HOME")
-            os.environ["XDG_CONFIG_HOME"] = neon_spec
-        else:
-            from glob import glob
-            # TODO: Write unit test for this DM
-            LOG.warning("NEON_CONFIG_PATH is not writable, copying config")
-            for file in glob(f'{os.environ["NEON_CONFIG_PATH"]}/*'):
-                if any((file.endswith(x) for x in ('.yml', '.yaml',
-                                                   '.json', '.conf'))):
-                    shutil.copy2(file, join(get_config_dir(), basename(file)))
-                    LOG.info(f"Copied {file}")
-                else:
-                    LOG.debug(f"Ignoring non-config {file}")
-            os.environ["NEON_CONFIG_PATH"] = join(get_config_dir(), "neon")
+        if neon_spec.endswith("/neon") and path_is_read_writable(neon_spec):
+            # We can handle this path as XDG
+            xdg = dirname(neon_spec)
+            LOG.warning(f"NEON_CONFIG_PATH set, "
+                        f"updating XDG_CONFIG_HOME to {xdg}")
+            os.environ["XDG_CONFIG_HOME"] = xdg
+            return
     else:
+        # No path configured, just set Neon spec to default XDG
         LOG.info("Setting NEON_CONFIG_PATH to xdg default ~/.config/neon")
         os.environ["NEON_CONFIG_PATH"] = expanduser("~/.config/neon")
+        return
+
+    # Paths like '/config' can't be translated to XDG, just move files
+    from glob import glob
+    # TODO: Write unit test for this DM
+    real_config_path = get_config_dir()
+    LOG.warning("NEON_CONFIG_PATH is not XDG-compatible. "
+                "copying config")
+    for file in glob(f'{neon_spec}/*'):
+        if any((file.endswith(x) for x in ('.yml', '.yaml',
+                                           '.json', '.conf'))):
+            shutil.copy2(file, join(real_config_path, basename(file)))
+            LOG.info(f"Copied {file}")
+        else:
+            LOG.debug(f"Ignoring non-config {file}")
+    os.environ["NEON_CONFIG_PATH"] = real_config_path
 
 
 def init_config_dir():

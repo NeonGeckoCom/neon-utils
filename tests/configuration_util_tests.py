@@ -825,20 +825,39 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(os.environ["NEON_CONFIG_PATH"],
                          expanduser("~/.config/neon"))
 
-        os.environ["NEON_CONFIG_PATH"] = "neon"
+        os.environ["NEON_CONFIG_PATH"] = "/tmp"
         _validate_config_env()
-        self.assertEqual(os.environ["NEON_CONFIG_PATH"], "neon")
-        self.assertEqual(os.environ["XDG_CONFIG_HOME"], "neon")
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"],
+                         expanduser("~/.config/neon"))
 
-        os.environ["XDG_CONFIG_HOME"] = "xdg"
+        os.environ["NEON_CONFIG_PATH"] = "/tmp/neon/neon"
         _validate_config_env()
-        self.assertEqual(os.environ["NEON_CONFIG_PATH"], "xdg")
-        self.assertEqual(os.environ["XDG_CONFIG_HOME"], "xdg")
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"], "/tmp/neon/neon")
+        self.assertEqual(os.environ["XDG_CONFIG_HOME"], "/tmp/neon")
+
+        os.environ["XDG_CONFIG_HOME"] = "/tmp/xdg"
+        _validate_config_env()
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"], "/tmp/xdg/neon")
+        self.assertEqual(os.environ["XDG_CONFIG_HOME"], "/tmp/xdg")
 
         os.environ["NEON_CONFIG_PATH"] = ""
         _validate_config_env()
-        self.assertEqual(os.environ["NEON_CONFIG_PATH"], "xdg")
-        self.assertEqual(os.environ["XDG_CONFIG_HOME"], "xdg")
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"], "/tmp/xdg/neon")
+        self.assertEqual(os.environ["XDG_CONFIG_HOME"], "/tmp/xdg")
+
+        os.environ["XDG_CONFIG_HOME"] = "/tmp/neon_config"
+        os.environ["NEON_CONFIG_PATH"] = join(dirname(__file__),
+                                              "test_migrate_config")
+        _validate_config_env()
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"],
+                         "/tmp/neon_config/neon")
+        with open(join(dirname(__file__), "test_migrate_config",
+                       "ngi_local_conf.yml")) as f:
+            actual = f.read()
+        with open("/tmp/neon_config/neon/ngi_local_conf.yml") as f:
+            migrated = f.read()
+        self.assertEqual(actual, migrated)
+        shutil.rmtree("/tmp/neon_config")
 
         os.environ.pop("XDG_CONFIG_HOME")
 
@@ -900,8 +919,8 @@ class ConfigurationUtilTests(unittest.TestCase):
         config = _get_neon_yaml_config()
         self.assertEqual(config,
                          {"config": "user",
-                          "default": True,
-                          "system": True,
+                          "from_default": True,
+                          "from_system": True,
                           "user": {
                               "from_system": True,
                               "from_default": True,
