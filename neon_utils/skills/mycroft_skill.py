@@ -54,6 +54,10 @@ class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         self.gui = SkillGUI(self)
+        # TODO: Should below be global config? This implementation is designed
+        #       to allow skills to specify overrides per-skill
+        self._speak_timeout = 30
+        self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
 
     # TODO: Override settings property and setter for multi-user compat
 
@@ -322,12 +326,12 @@ class PatchedMycroftSkill(MycroftSkill):
 
         # TODO: get_response should be event-based instead of signals
         def _wait_while_speaking():
-            if wait_for_signal_clear("isSpeaking", 30):
+            if wait_for_signal_clear("isSpeaking", self._speak_timeout):
                 LOG.error("Still speaking after 30s")
             else:
                 # Handle a second prompt after ended speech
                 time.sleep(0.5)
-                wait_for_signal_clear("isSpeaking", 30)
+                wait_for_signal_clear("isSpeaking", self._speak_timeout)
             finished_speaking.set()
 
         def converse(message):
@@ -351,9 +355,9 @@ class PatchedMycroftSkill(MycroftSkill):
         t = Thread(target=_wait_while_speaking, daemon=True)
         t.start()
 
-        finished_speaking.wait(30)
+        finished_speaking.wait(self._speak_timeout)
         t.join(0)
-        if not event.wait(15):  # 10 for listener, 5 for STT, then timeout
+        if not event.wait(self._get_response_timeout):
             LOG.warning("Timed out waiting for user response")
         self.converse = default_converse
         return converse.response
