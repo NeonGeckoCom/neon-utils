@@ -495,7 +495,6 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.move(bak_user_info, ngi_user_info)
 
     def test_get_mycroft_compat_config(self):
-        from typing import OrderedDict
         mycroft_config = get_mycroft_compatible_config()
         self.assertIsInstance(mycroft_config, dict)
         self.assertIsInstance(mycroft_config["gui_websocket"], dict)
@@ -503,8 +502,13 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(mycroft_config["gui_websocket"]["base_port"], int)
         self.assertIsInstance(mycroft_config["ready_settings"], list)
         self.assertIsInstance(mycroft_config['tts'], dict)
-        self.assertNotIsInstance(mycroft_config['tts'], OrderedDict)
-        self.assertNotIsInstance(mycroft_config['tts']['amazon'], OrderedDict)
+        try:
+            from typing import OrderedDict
+            self.assertNotIsInstance(mycroft_config['tts'], OrderedDict)
+            self.assertNotIsInstance(mycroft_config['tts']['amazon'],
+                                     OrderedDict)
+        except ImportError:
+            pass
         # self.assertIsInstance(mycroft_config["keys"], dict)
         # self.assertEqual(mycroft_config["skills"]["directory"], mycroft_config["skills"]["directory_override"])
         # self.assertIsInstance(mycroft_config["language"], dict)
