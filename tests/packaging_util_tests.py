@@ -128,7 +128,6 @@ class PackagingUtilTests(unittest.TestCase):
             spec_requirements = f.read().split('\n')
         # Version specs aren't order-dependent, so they can't be compared
         self.assertEqual(len(self_deps), len(spec_requirements))
-
         with self.assertRaises(ModuleNotFoundError):
             get_package_dependencies("fakeneongeckopackage")
 

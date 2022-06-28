@@ -79,7 +79,7 @@ def get_package_dependencies(pkg: str):
     """
     try:
         constraints = pkg_resources.working_set.by_key[pkg].requires()
-        constraints_spec = [str(c) for c in constraints]
+        constraints_spec = [str(c).split('[', 1)[0] for c in constraints]
         LOG.debug(constraints_spec)
         return constraints_spec
     except KeyError:
@@ -152,9 +152,9 @@ def get_core_root():
 def get_neon_core_root():
     """
     Determines the root of the available/active Neon Core.
-    Should be the immediate parent directory of 'neon_core' dir
+    Directory returned is the root of the `neon_core` package
     Returns:
-        Path to the core directory containing 'neon_core'
+        Path to the 'neon_core' directory
     """
     site = sysconfig.get_paths()['platlib']
     if exists(join(site, 'neon_core')):
