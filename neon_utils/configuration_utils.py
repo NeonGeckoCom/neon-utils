@@ -1458,7 +1458,7 @@ def _get_neon_skills_config(neon_config_path=None) -> dict:
     if not neon_skills["neon_token"]:
         try:
             neon_skills["neon_token"] = find_neon_git_token()
-            populate_github_token_config(neon_skills["neon_token"])
+            # populate_github_token_config(neon_skills["neon_token"])
         except FileNotFoundError:
             LOG.debug(f"No Github token found; skills may fail to install")
     skills_config = {**mycroft_config.get("skills", {}), **neon_skills}
