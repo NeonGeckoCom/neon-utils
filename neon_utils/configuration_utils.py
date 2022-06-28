@@ -556,7 +556,8 @@ def _validate_config_env():
         LOG.info(f"NEON_CONFIG_PATH={neon_spec}")
         if neon_spec.endswith("/neon"):  # patch ~/.config/neon real spec
             neon_spec = dirname(neon_spec)
-        if path_is_read_writable(neon_spec):
+        # Special case '/config' spec used in Docker containers
+        if path_is_read_writable(neon_spec) and neon_spec != "/config":
             LOG.warning("NEON_CONFIG_PATH set, updating XDG_CONFIG_HOME")
             os.environ["XDG_CONFIG_HOME"] = neon_spec
         else:
