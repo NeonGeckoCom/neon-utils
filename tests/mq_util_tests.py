@@ -135,7 +135,7 @@ class MqUtilTests(unittest.TestCase):
 
     def test_send_mq_request_invalid_vhost(self):
         with self.assertRaises(ValueError):
-            send_mq_request("invalid_endpoint", {}, "test", "test")
+            send_mq_request("invalid_endpoint", {}, "test", "test", timeout=5)
 
     # def test_get_mq_response_error_in_handler(self):
     #     # TODO: Troubleshoot this DM
