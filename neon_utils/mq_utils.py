@@ -45,7 +45,9 @@ class NeonMQHandler(MQConnector):
     def __init__(self, config: dict, service_name: str, vhost: str):
         super().__init__(config, service_name)
         self.vhost = vhost
-        self.connection = self.create_mq_connection(vhost=vhost)
+        import pika
+        self.connection = pika.BlockingConnection(
+            parameters=self.get_connection_params(vhost))
 
 
 def get_mq_response(vhost: str, request_data: dict, target_queue: str,
