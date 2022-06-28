@@ -98,7 +98,7 @@ def init_signal_handlers():
     global _MAX_TIMEOUT
     from ovos_config.config import Configuration
     _MAX_TIMEOUT = int(dict(Configuration()).get("signal", {}).get(
-        "max_wait_seconds")) or 300
+        "max_wait_seconds") or '300')
     if check_signal_manager_available():
         LOG.info("Signal Manager Available")
         _create_signal = _manager_create_signal
