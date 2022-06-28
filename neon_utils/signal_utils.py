@@ -96,8 +96,8 @@ def init_signal_handlers():
     global _wait_for_signal_clear
     global _wait_for_signal_create
     global _MAX_TIMEOUT
-    from neon_utils.configuration_utils import read_config
-    _MAX_TIMEOUT = int(read_config()["signal"].get("max_wait_seconds")) or 300
+    from ovos_config.config import Configuration
+    _MAX_TIMEOUT = int(Configuration()["signal"].get("max_wait_seconds")) or 300
     if check_signal_manager_available():
         LOG.info("Signal Manager Available")
         _create_signal = _manager_create_signal

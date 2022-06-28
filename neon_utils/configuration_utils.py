@@ -296,7 +296,7 @@ class NGIConfig:
                         LOG.error(e)
                         f.seek(0)
                         from ruamel.yaml import YAML
-                        config = self._make_loaded_config_safe(YAML().load(f))
+                        config = _make_loaded_config_safe(YAML().load(f))
                 if not config:
                     LOG.debug(f"Empty config file found at: {self.file_path}")
                     config = dict()
@@ -309,23 +309,6 @@ class NGIConfig:
         except Exception as c:
             LOG.error(f"{self.file_path} Configuration file error: {c}")
         return dict()
-
-    @staticmethod
-    def _make_loaded_config_safe(config) -> dict:
-        for section in config:
-            if isinstance(config[section], dict):
-                for sub in config[section]:
-                    if isinstance(config[section][sub], dict):
-                        config[section][sub] = dict(config[section][sub])
-                    elif isinstance(config[section][sub], list):
-                        config[section][sub] = list(config[section][sub])
-                    elif isinstance(config[section][sub], float):
-                        config[section][sub] = float(config[section][sub])
-                config[section] = dict(config[section])
-            elif isinstance(config[section], list):
-                config[section] = list(config[section])
-        config = dict(config)
-        return json.loads(json.dumps(config))
 
     def _write_yaml_file(self) -> bool:
         """
@@ -1256,6 +1239,15 @@ def parse_skill_default_settings(settings_meta: dict) -> dict:
             LOG.error(e)
             raise e
 
+
+def _make_loaded_config_safe(config: dict) -> dict:
+    """
+    Ensure the entire passed config object is json-serializable
+    :param config: "dirty" config object with OrderedDict, etc. items
+    :returns: dict containing only primitive objects
+        (list, dict, str, float, etc.)
+    """
+    return json.loads(json.dumps(config))
 
 # TODO: Below methods are all deprecated and retained only for backwards-compat
 def get_neon_auth_config(*args, **kwargs):

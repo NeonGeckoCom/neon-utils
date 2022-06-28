@@ -516,6 +516,23 @@ class ConfigurationUtilTests(unittest.TestCase):
         # self.assertIsInstance(mycroft_config["stt"], dict)
         # self.assertIsInstance(mycroft_config["tts"], dict)
 
+    def test_make_loaded_config_safe(self):
+        from ruamel.yaml import YAML
+        from neon_utils.configuration_utils import _make_loaded_config_safe
+        test_config = join(dirname(__file__), "configuration",
+                           "local_conf_with_stt_tts.yml")
+        with open(test_config) as f:
+            config = YAML().load(f)
+        clean_config = _make_loaded_config_safe(config)
+        self.assertIsInstance(clean_config, dict)
+        try:
+            from typing import OrderedDict
+            self.assertNotIsInstance(clean_config['tts'], OrderedDict)
+            self.assertNotIsInstance(clean_config['tts']['amazon'],
+                                     OrderedDict)
+        except ImportError:
+            pass
+
     def test_is_neon_core(self):
         self.assertIsInstance(is_neon_core(), bool)
 
