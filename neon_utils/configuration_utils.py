@@ -525,15 +525,15 @@ def _init_ovos_conf(name: str):
             json.dump(ovos_conf, f, indent=4)
 
     try:
-        import mycroft.configuration
-        importlib.reload(mycroft.configuration.locations)
+        import ovos_config
+        importlib.reload(ovos_config.locations)
         from ovos_utils.configuration import get_ovos_config
         ovos_conf = get_ovos_config()  # Load the full stack for /etc overrides
         if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
-            mycroft.configuration.locations.DEFAULT_CONFIG = \
+            ovos_config.locations.DEFAULT_CONFIG = \
                 ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
-        importlib.reload(mycroft.configuration)
-        importlib.reload(mycroft.configuration.config)
+        importlib.reload(ovos_config)
+        importlib.reload(ovos_config.config)
     except Exception as e:
         LOG.exception(e)
 
