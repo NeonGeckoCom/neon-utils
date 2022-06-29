@@ -517,11 +517,13 @@ def _init_ovos_conf(name: str):
                 ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
         importlib.reload(ovos_config.config)
         importlib.reload(ovos_config)
-        import mycroft.configuration
-        importlib.reload(mycroft.configuration.config)
-        importlib.reload(mycroft.configuration)
     except Exception as e:
         LOG.exception(e)
+    try:
+        import mycroft.configuration
+        importlib.reload(mycroft.configuration)
+    except Exception as e:
+        LOG.error(f"Failed to override mycroft.configuration: {e}")
 
 
 def _validate_config_env():
