@@ -517,6 +517,8 @@ def _init_ovos_conf(name: str):
                 ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
         importlib.reload(ovos_config)
         importlib.reload(ovos_config.config)
+        import mycroft.configuration
+        importlib.reload(mycroft.configuration)
     except Exception as e:
         LOG.exception(e)
 
