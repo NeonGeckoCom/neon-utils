@@ -519,6 +519,7 @@ def _init_ovos_conf(name: str):
         importlib.reload(ovos_config.config)
         import mycroft.configuration
         importlib.reload(mycroft.configuration)
+        importlib.reload(mycroft.configuration.config)
     except Exception as e:
         LOG.exception(e)
 
