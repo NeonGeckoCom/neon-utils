@@ -562,7 +562,7 @@ def _validate_config_env():
         if any((file.endswith(x) for x in ('.yml', '.yaml',
                                            '.json', '.conf'))):
             shutil.copy2(file, join(real_config_path, basename(file)))
-            LOG.info(f"Copied {file}")
+            LOG.info(f"Copied {file} to {real_config_path}")
         else:
             LOG.debug(f"Ignoring non-config {file}")
     os.environ["NEON_CONFIG_PATH"] = real_config_path
