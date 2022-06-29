@@ -515,8 +515,8 @@ def _init_ovos_conf(name: str):
         if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
             ovos_config.locations.DEFAULT_CONFIG = \
                 ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
-        importlib.reload(ovos_config)
         importlib.reload(ovos_config.config)
+        importlib.reload(ovos_config)
         import mycroft.configuration
         importlib.reload(mycroft.configuration.config)
         importlib.reload(mycroft.configuration)
