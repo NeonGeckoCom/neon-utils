@@ -34,7 +34,6 @@ import unittest
 from multiprocessing import Event
 from threading import Thread
 from time import sleep
-from unittest.mock import patch
 
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
@@ -42,12 +41,9 @@ from mock import Mock
 
 from mycroft.skills.fallback_skill import FallbackSkill
 
-import neon_utils.configuration_utils
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
-from neon_utils.configuration_utils import NGIConfig
-from neon_utils.signal_utils import check_for_signal, create_signal
+from neon_utils.signal_utils import check_for_signal
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from skills import *
@@ -127,8 +123,6 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill, NeonSkill)
         self.assertEqual(skill.name, "Test Neon Skill")
 
-        self.assertIsInstance(skill.user_config, NGIConfig)
-        self.assertIsInstance(skill.local_config, NGIConfig)
         self.assertIsInstance(skill.lru_cache, LRUCache)
         self.assertIsInstance(skill.sys_tz, datetime.tzinfo)
         self.assertIsInstance(skill.gui_enabled, bool)
@@ -624,13 +618,14 @@ class PatchedMycroftSkillTests(unittest.TestCase):
 
 
 class NeonSkillTests(unittest.TestCase):
+    from skills.test_skill import TestSkill
+    skill = TestSkill()
+
     @classmethod
     def setUpClass(cls) -> None:
-        from skills.test_skill import TestSkill
         bus = FakeBus()
         os.environ['NEON_CONFIG_PATH'] = \
             os.path.join(os.path.dirname(__file__), "skills")
-        cls.skill = TestSkill()
         # Mock the skill_loader process
         if hasattr(cls.skill, "_startup"):
             cls.skill._startup(bus)
@@ -655,10 +650,6 @@ class NeonSkillTests(unittest.TestCase):
 
     def test_properties(self):
         self.assertIsInstance(self.skill.gui_enabled, bool)
-        self.assertIsInstance(self.skill.user_config, NGIConfig)
-        self.assertIsInstance(self.skill.local_config, NGIConfig)
-        self.assertIsInstance(self.skill.user_info_available, dict)
-        self.assertIsInstance(self.skill.configuration_available, dict)
         self.assertIsInstance(self.skill.ngi_settings, dict)
         self.assertEqual(self.skill.ngi_settings, self.skill.settings)
 
