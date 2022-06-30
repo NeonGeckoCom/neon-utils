@@ -34,10 +34,15 @@ import wave
 from tempfile import mkstemp
 
 from typing import Optional, List
-from pydub import AudioSegment
 from ovos_utils.signal import ensure_directory_exists
 
 from neon_utils.logger import LOG
+
+try:
+    from pydub import AudioSegment
+except ImportError:
+    LOG.warning("pydub not available, pip install neon-utils[audio]")
+    AudioSegment = None
 
 
 def encode_file_to_base64_string(path: str) -> str:
@@ -191,10 +196,15 @@ def audio_bytes_from_file(file_path: str) -> dict:
     """
     try:
         import librosa
+    except ImportError:
+        raise ImportError("librosa not available,"
+                          " pip install neon-utils[audio]")
     except OSError as e:
         if repr(e) == "sndfile library not found":
-            LOG.error("libsndfile missing, install via: sudo apt install libsndfile1")
-        raise e
+            raise OSError("libsndfile missing, install via: "
+                          "sudo apt install libsndfile1")
+        else:
+            raise e
 
     supported_audio_formats = ['mp3', 'wav']
     audio_format = file_path.split('.')[-1]
@@ -218,11 +228,16 @@ def audio_bytes_to_file(file_path: str, audio_data: List[float], sample_rate: in
 
         :returns Path to saved file if saved successfully None otherwise
     """
-    import soundfile as sf
+    try:
+        import soundfile as sf
+    except ImportError:
+        raise ImportError("soundfile not available,"
+                          " pip install neon-utils[audio]")
     try:
         sf.write(file=file_path, data=audio_data, samplerate=sample_rate)
     except Exception as ex:
-        LOG.error(f'Exception occurred while writing {audio_data} to {file_path}: {ex}')
+        LOG.error(f'Exception occurred while writing '
+                  f'{audio_data} to {file_path}: {ex}')
         file_path = None
     return file_path
 
@@ -268,7 +283,8 @@ def parse_skill_readme_file(readme_path: str) -> dict:
         raise FileNotFoundError(f"{readme_path} is not a valid file")
 
     # Initialize parser params
-    list_sections = ("examples", "incompatible skills", "platforms", "categories", "tags", "credits")
+    list_sections = ("examples", "incompatible skills", "platforms",
+                     "categories", "tags", "credits")
     section = "header"
     category = None
     parsed_data = {}
@@ -277,7 +293,8 @@ def parse_skill_readme_file(readme_path: str) -> dict:
 
     def _check_section_start(ln: str):
         # Handle section start
-        if ln.startswith("# ![](https://0000.us/klatchat/app/files/neon_images/icons/neon_paw.png)"):
+        if ln.startswith("# ![](https://0000.us/klatchat/app/files/"
+                         "neon_images/icons/neon_paw.png)"):
             # Old style title line
             parsed_data["title"] = ln.split(')', 1)[1].strip()
             parsed_data["icon"] = ln.split('(', 1)[1].split(')', 1)[0].strip()
@@ -285,7 +302,8 @@ def parse_skill_readme_file(readme_path: str) -> dict:
         elif section == "header" and ln.startswith("# <img src="):
             # Title line
             parsed_data["title"] = ln.split(">", 1)[1].strip()
-            parsed_data["icon"] = ln.split("src=", 1)[1].split()[0].strip('"').strip("'").lstrip("./")
+            parsed_data["icon"] = ln.split("src=", 1)[1].split()[0]\
+                .strip('"').strip("'").lstrip("./")
             return "summary"
         elif ln.startswith("# ") or ln.startswith("## "):
             # Top-level section
@@ -348,10 +366,13 @@ def parse_skill_readme_file(readme_path: str) -> dict:
                 if section not in parsed_data:
                     parsed_data[section] = parsed_line
                 else:
-                    parsed_data[section] = " ".join((parsed_data[section], parsed_line))
-    parsed_data["category"] = category or parsed_data.get("categories", [""])[0]
+                    parsed_data[section] = " ".join((parsed_data[section],
+                                                     parsed_line))
+    parsed_data["category"] = category or parsed_data.get("categories",
+                                                          [""])[0]
     if parsed_data.get("incompatible skills"):
-        parsed_data["incompatible_skills"] = parsed_data.pop("incompatible skills")
+        parsed_data["incompatible_skills"] = \
+            parsed_data.pop("incompatible skills")
     if parsed_data.get("credits") and len(parsed_data["credits"]) == 1:
         parsed_data["credits"] = parsed_data["credits"][0].split(' ')
 
@@ -367,7 +388,8 @@ def check_path_permissions(path: str) -> tuple:
     path = os.path.expanduser(path)
     if not os.access(path, os.F_OK):
         raise FileNotFoundError(f"{path} does not exist")
-    stat = (os.access(path, os.R_OK), os.access(path, os.W_OK), os.access(path, os.X_OK))
+    stat = (os.access(path, os.R_OK), os.access(path, os.W_OK),
+            os.access(path, os.X_OK))
     return stat
 
 
