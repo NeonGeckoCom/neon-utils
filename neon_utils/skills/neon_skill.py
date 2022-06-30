@@ -47,7 +47,7 @@ from neon_utils.cache_utils import LRUCache
 from neon_utils.mq_utils import send_mq_request
 from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 from neon_utils.file_utils import resolve_neon_resource_file
-
+from neon_utils.user_utils import get_user_prefs
 from mycroft.skills.settings import save_settings
 
 try:
@@ -84,10 +84,6 @@ class NeonSkill(MycroftSkill):
 
         self.actions_to_confirm = dict()
 
-        self.skill_mode = self.user_config.content.get(
-            'response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
-        self.extension_time = SPEED_MODE_EXTENSION_TIME.get(self.skill_mode)
-
         # TODO: Consider moving to properties to avoid unused init? DM
         try:
             if not OVOSLangDetectionFactory:
@@ -107,6 +103,21 @@ class NeonSkill(MycroftSkill):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET,
                             name="neon.load_cache_on_disk")
+
+    @property
+    def skill_mode(self) -> str:
+        """
+        Determine the "speed mode" requested by the user
+        """
+        return get_user_prefs(dig_for_message()).get(
+            'response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
+
+    @property
+    def extension_time(self) -> int:
+        """
+        Determine how long the skill should extend CommonSkill request timeouts
+        """
+        return SPEED_MODE_EXTENSION_TIME.get(self.skill_mode) or 10
 
     @property
     def gui_enabled(self) -> bool:
