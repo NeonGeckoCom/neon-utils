@@ -241,7 +241,3 @@ jobs:
         with:
           name: messagebus-util-test-results
           path: tests/messagebus-util-test-results.xml
-
-      - name: Test Deprecated Compat
-        run: |
-          pytest tests/deprecated_compat_tests.py --doctest-modules --junitxml=tests/deprecated-compat-test-results.xml
