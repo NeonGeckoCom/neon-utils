@@ -16,5 +16,4 @@ neon_mq_connector~=0.2,>=0.5.1a0
 soundfile~=0.10
 librosa~=0.8
 geopy~=2.1
-neon_api_proxy~=0.2,>=0.3.2a1
 word2number~=1.0
