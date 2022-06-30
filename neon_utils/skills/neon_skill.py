@@ -131,6 +131,17 @@ class NeonSkill(MycroftSkill):
         return self.preference_skill()
 
     @resolve_message
+    def preference_skill(self, message=None) -> dict:
+        """
+        Returns the skill settings configuration
+        Equivalent to self.settings if settings not in message context
+        :param message: Message associated with request
+        :return: dict of skill preferences
+        """
+        return get_user_prefs(
+            message).get("skills", {}).get(self.skill_id) or self.settings
+
+    @resolve_message
     def update_profile(self, new_preferences: dict, message: Message = None):
         """
         Updates a user profile with the passed new_preferences
