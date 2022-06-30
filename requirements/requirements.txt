@@ -12,7 +12,7 @@ ruamel.yaml~=0.16
 pydub~=0.25
 ovos-lingua-franca~=0.4
 ovos_utils~=0.0.6
-neon_mq_connector~=0.2
+neon_mq_connector~=0.2,>=0.5.1a0
 soundfile~=0.10
 librosa~=0.8
 geopy~=2.1
