@@ -126,6 +126,7 @@ class PackagingUtilTests(unittest.TestCase):
                                  "requirements", "requirements.txt")
         with open(requirements_file) as f:
             spec_requirements = f.read().split('\n')
+        spec_requirements = [r for r in spec_requirements if r]
         # Version specs aren't order-dependent, so they can't be compared
         self.assertEqual(len(self_deps), len(spec_requirements))
         with self.assertRaises(ModuleNotFoundError):
