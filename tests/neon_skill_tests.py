@@ -772,7 +772,7 @@ class NeonSkillTests(unittest.TestCase):
                                         "param": "value",
                                         "test": True})
 
-    @pytest.skip
+    @pytest.mark.skip
     def test_send_email(self):
         self.assertTrue(self.skill.send_email(
             "Test Message",
