@@ -28,6 +28,7 @@
 
 import datetime
 import os
+import shutil
 import sys
 import unittest
 
@@ -35,6 +36,7 @@ from multiprocessing import Event
 from threading import Thread
 from time import sleep
 
+import pytest
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 from mock import Mock
@@ -126,7 +128,6 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.lru_cache, LRUCache)
         self.assertIsInstance(skill.sys_tz, datetime.tzinfo)
         self.assertIsInstance(skill.gui_enabled, bool)
-        self.assertIsInstance(skill.server, bool)
         self.assertIsInstance(skill.default_intent_timeout, int)
         self.assertIsInstance(skill.neon_core, bool)
         self.assertIsInstance(skill.actions_to_confirm, dict)
@@ -142,17 +143,9 @@ class SkillObjectTests(unittest.TestCase):
             self.assertIsInstance(skill.translator, LanguageTranslator)
 
         self.assertIsInstance(skill.settings, dict)
-
         self.assertIsInstance(skill.location_timezone, str)
-
-        self.assertIsInstance(skill.preference_brands(), dict)
-        self.assertIsInstance(skill.preference_user(), dict)
-        self.assertIsInstance(skill.preference_location(), dict)
-        self.assertIsInstance(skill.preference_unit(), dict)
-        self.assertIsInstance(skill.preference_speech(), dict)
         self.assertIsInstance(skill.preference_skill(), dict)
-
-        self.assertIsInstance(skill.build_user_dict(), dict)
+        self.assertEqual(skill.settings, skill.preference_skill())
 
         # self.assertEqual(skill.file_system.path, skill.settings_write_path)
         # self.assertNotEqual(os.path.basename(skill.file_system.path),
@@ -618,14 +611,16 @@ class PatchedMycroftSkillTests(unittest.TestCase):
 
 
 class NeonSkillTests(unittest.TestCase):
-    from skills.test_skill import TestSkill
-    skill = TestSkill()
+    skill = None
+    config_dir = os.path.join(os.path.dirname(__file__), "skills", "config")
 
     @classmethod
     def setUpClass(cls) -> None:
+        from skills.test_skill import TestSkill
+
         bus = FakeBus()
-        os.environ['NEON_CONFIG_PATH'] = \
-            os.path.join(os.path.dirname(__file__), "skills")
+        os.environ["XDG_CONFIG_HOME"] = cls.config_dir
+        cls.skill = TestSkill()
         # Mock the skill_loader process
         if hasattr(cls.skill, "_startup"):
             cls.skill._startup(bus)
@@ -634,12 +629,17 @@ class NeonSkillTests(unittest.TestCase):
             cls.skill.load_data_files()
             cls.skill.initialize()
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if os.path.isdir(cls.config_dir):
+            shutil.rmtree(cls.config_dir)
+        os.environ.pop("XDG_CONFIG_HOME")
+
     def test_00_skill_init(self):
         self.assertIsInstance(self.skill.cache_loc, str)
         self.assertTrue(os.path.isdir(self.skill.cache_loc))
         self.assertIsNotNone(self.skill.lru_cache)
         self.assertIsInstance(self.skill.sys_tz, datetime.tzinfo)
-        self.assertIsInstance(self.skill.server, bool)
         self.assertIsInstance(self.skill.default_intent_timeout, int)
         self.assertIsInstance(self.skill.neon_core, bool)
         self.assertIsInstance(self.skill.skill_mode, str)
@@ -772,6 +772,7 @@ class NeonSkillTests(unittest.TestCase):
                                         "param": "value",
                                         "test": True})
 
+    @pytest.skip
     def test_send_email(self):
         self.assertTrue(self.skill.send_email(
             "Test Message",

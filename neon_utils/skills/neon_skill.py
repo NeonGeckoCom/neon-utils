@@ -70,6 +70,7 @@ class NeonSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         super(NeonSkill, self).__init__(name, bus, use_settings)
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")
+        os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
 
         self.sys_tz = gettz()

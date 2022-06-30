@@ -65,12 +65,6 @@ class PatchedMycroftSkill(MycroftSkill):
     def _secondary_langs(self):
         return get_user_prefs()["speech"]["alt_languages"]
 
-    @property
-    def _settings_path(self):
-        if not hasattr(super(), "_settings_path"):
-            return os.path.join(self.file_system.path, 'settings.json')
-        return super()._settings_path
-
     def _init_settings(self):
         """
         Extends the default method to handle settingsmeta defaults locally
