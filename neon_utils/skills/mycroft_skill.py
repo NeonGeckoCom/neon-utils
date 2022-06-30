@@ -58,7 +58,6 @@ class PatchedMycroftSkill(MycroftSkill):
         #       to allow skills to specify overrides per-skill
         self._speak_timeout = 30
         self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
-
     # TODO: Override settings property and setter for multi-user compat
 
     @property
