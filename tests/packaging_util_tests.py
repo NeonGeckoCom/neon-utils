@@ -111,15 +111,6 @@ class PackagingUtilTests(unittest.TestCase):
             with self.assertRaises(ImportError):
                 get_packaged_core_version()
 
-    def test_get_version_from_file(self):
-        try:
-            ver = get_version_from_file()
-            self.assertIsInstance(ver, str)
-            self.assertGreaterEqual(len(ver.split('.')), 2)
-        except FileNotFoundError:
-            with self.assertRaises(FileNotFoundError):
-                get_version_from_file()
-
     def test_get_package_dependencies(self):
         self_deps = get_package_dependencies("neon-utils")
         requirements_file = join(os.path.dirname(os.path.dirname(__file__)),

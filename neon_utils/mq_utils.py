@@ -33,10 +33,10 @@ from threading import Event
 from pika.channel import Channel
 from pika.exceptions import ProbableAccessDeniedError, StreamLostError
 from neon_mq_connector.connector import MQConnector
+from ovos_config.config import Configuration
 
 from neon_utils.logger import LOG
 from neon_utils.socket_utils import b64_to_dict
-from neon_utils.configuration_utils import get_neon_local_config
 
 logging.getLogger("pika").setLevel(logging.CRITICAL)
 
@@ -103,7 +103,7 @@ def send_mq_request(vhost: str, request_data: dict, target_queue: str,
 
     try:
         # LOG.debug('Creating Neon MQ Handler Instance...')
-        config = get_neon_local_config().content.get('MQ')
+        config = dict(Configuration()).get('MQ')
         # LOG.info(f"MQ Config={config}")
         neon_api_mq_handler = NeonMQHandler(config=config, service_name='mq_handler', vhost=vhost)
         # LOG.debug(f'Established MQ connection: {neon_api_mq_handler.connection}')
