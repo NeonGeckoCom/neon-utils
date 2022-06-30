@@ -70,14 +70,6 @@ jobs:
       - name: Change Test File Permissions
         run: |
           sudo chown -R nobody:nogroup tests/configuration/unwritable_path
-      - name: Test Skill Patcher
-        run: |
-          pytest tests/skill_patch_tests.py --doctest-modules --junitxml=tests/skill-patch-test-results.xml
-      - name: Upload skill patch test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: skill-patch-test-results
-          path: tests/skill-patch-test-results.xml
 
       - name: Test Parse Utils
         run: |
@@ -249,7 +241,3 @@ jobs:
         with:
           name: messagebus-util-test-results
           path: tests/messagebus-util-test-results.xml
-
-      - name: Test Deprecated Compat
-        run: |
-          pytest tests/deprecated_compat_tests.py --doctest-modules --junitxml=tests/deprecated-compat-test-results.xml
