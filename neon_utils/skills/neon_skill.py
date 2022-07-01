@@ -170,7 +170,7 @@ class NeonSkill(MycroftSkill):
         # TODO: Spec how to handle global vs per-user settings
         LOG.debug(f"Update skill settings with new: {new_preferences}")
         new_settings = {**self.preference_skill(message), **new_preferences}
-        if self.server and not skill_global:
+        if not skill_global:
             new_preferences["skill_id"] = self.skill_id
             self.update_profile({"skills": {self.skill_id: new_settings}},
                                 message)
@@ -244,7 +244,8 @@ class NeonSkill(MycroftSkill):
         """
         Sends a Neon response with the passed text phrase and audio file
         :param text_shout: (str) Text to shout
-        :param audio_file: (str) Full path to an arbitrary audio file to attach to shout; must be readable/accessible
+        :param audio_file: (str) Full path to an arbitrary audio file to
+            attach to shout; must be readable/accessible
         :param message: Message associated with request
         :param lang: (str) Language of wav_file
         :param private: (bool) Whether or not shout is private to the user
@@ -253,7 +254,8 @@ class NeonSkill(MycroftSkill):
         # TODO: Update 'speak' to handle audio files
         # from shutil import copyfile
         if not speaker:
-            speaker = {"name": "Neon", "language": None, "gender": None, "voice": None}
+            speaker = {"name": "Neon", "language": None, "gender": None,
+                       "voice": None}
 
         # Play this back regardless of user prefs
         speaker["override_user"] = True
@@ -263,8 +265,11 @@ class NeonSkill(MycroftSkill):
                             "male": audio_file,
                             "female": audio_file}}
         message.context["private"] = private
-        LOG.info(f"sending klat.response with responses={responses} | speaker={speaker}")
-        self.bus.emit(message.forward("klat.response", {"responses": responses, "speaker": speaker}))
+        LOG.info(f"sending klat.response with responses={responses} | "
+                 f"speaker={speaker}")
+        self.bus.emit(message.forward("klat.response",
+                                      {"responses": responses,
+                                       "speaker": speaker}))
 
     @resolve_message
     def neon_must_respond(self, message: Message = None) -> bool:
@@ -275,10 +280,11 @@ class NeonSkill(MycroftSkill):
         """
         if not message:
             return False
-        if self.server:
+        if "klat_data" in message.context:
             title = message.context.get("klat_data", {}).get("title", "")
             LOG.debug(message.data.get("utterance"))
-            if message.data.get("utterance", "").startswith("Welcome to your private conversation"):
+            if message.data.get("utterance", "").startswith(
+                    "Welcome to your private conversation"):
                 return False
             if title.startswith("!PRIVATE:"):
                 if ',' in title:
@@ -289,7 +295,8 @@ class NeonSkill(MycroftSkill):
                         # Private with Neon
                         # LOG.debug("DM: Private Conversation with Neon")
                         return True
-                    elif message.data.get("utterance", "").lower().startswith("neon"):
+                    elif message.data.get("utterance",
+                                          "").lower().startswith("neon"):
                         # Message starts with "neon", must respond
                         return True
                 else:
@@ -343,9 +350,9 @@ class NeonSkill(MycroftSkill):
             return True
 
         from neon_utils.message_utils import request_for_neon
-        ww_enabled = self.local_config.get("interface",
-                                           {}).get("wake_word_enabled",
-                                                   True)
+        ww_enabled = self.config_core.get("listener",
+                                          {}).get("wake_word_enabled", True)
+        # TODO: Listen for WW state changes on the bus
         return request_for_neon(message, "neon", self.voc_match, ww_enabled)
 
     def report_metric(self, name, data):
@@ -359,7 +366,8 @@ class NeonSkill(MycroftSkill):
         combined["name"] = name
         self.bus.emit(Message("neon.metric", combined))
 
-    def send_email(self, title, body, message=None, email_addr=None, attachments=None):
+    def send_email(self, title, body, message=None, email_addr=None,
+                   attachments=None):
         """
         Send an email to the registered user's email.
         Method here for backwards compatibility with Mycroft skills.
@@ -376,7 +384,7 @@ class NeonSkill(MycroftSkill):
         """
         message = message or dig_for_message()
         if not email_addr and message:
-            email_addr = self.preference_user(message).get("email")
+            email_addr = get_user_prefs(message)["user"].get("email")
 
         if email_addr:
             LOG.info("Send email via Neon Server")
