@@ -181,65 +181,6 @@ class NeonSkill(MycroftSkill):
             else:
                 save_settings(self.file_system.path, self.settings)
 
-    def build_message(self, kind, utt, message, speaker=None):
-        """
-        Build a message for user input or neon response
-        :param kind: "neon speak" or "execute"
-        :param utt: string to emit
-        :param message: incoming message object
-        :param speaker: speaker data dictionary
-        :return: Message object
-        """
-        # TODO: Move this to message_utils DM
-        LOG.debug(speaker)
-
-        default_speech = get_user_prefs(message)["speech"]
-        # Override user preference for all script responses
-        if not speaker:
-            speaker = {"name": "Neon",
-                       "language": default_speech["tts_language"],
-                       "gender": default_speech["tts_gender"],
-                       "voice": default_speech["neon_voice"],
-                       "override_user": True}
-        elif speaker and speaker.get("language"):
-            speaker["override_user"] = True
-        else:
-            speaker = None
-
-        LOG.debug(f"data={message.data}")
-        # LOG.debug(f"context={message.context}")
-
-        emit_response = False
-        if kind == "skill_data":
-            emit_response = True
-            kind = "execute"
-
-        try:
-            if kind == "execute":
-                # This is picked up in the intent handler
-                return message.reply("skills:execute.utterance", {
-                    "utterances": [utt.lower()],
-                    "lang": message.data.get("lang", "en-US"),
-                    "session": None,
-                    "ident": None,
-                    "speaker": speaker
-                }, {
-                    "neon_should_respond": True,
-                    "cc_data": {"request": utt,
-                                "emit_response": emit_response,
-                                "execute_from_script": True
-                                }
-                })
-            elif kind == "neon speak":
-                added_context = {"cc_data": message.context.get("cc_data", {})}
-                added_context["cc_data"]["request"] = utt
-
-                return message.reply("speak", {"lang": message.data.get("lang", "en-US"),
-                                               "speaker": speaker
-                                               }, added_context)
-        except Exception as x:
-            LOG.error(x)
-
     def send_with_audio(self, text_shout, audio_file, message, lang="en-us", private=False, speaker=None):
         """
         Sends a Neon response with the passed text phrase and audio file

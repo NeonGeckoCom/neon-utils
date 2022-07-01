@@ -223,6 +223,40 @@ class MessageUtilTests(unittest.TestCase):
                                              "title": "!PRIVATE:user"}})
         self.assertTrue(request_for_neon(server_request_private))
 
+    def test_build_message(self):
+        from neon_utils.message_utils import MessageKind, build_message
+        base_message = Message("test", context={"context": time()})
+        speak = build_message("neon speak", "test utterance", base_message)
+        self.assertEqual(speak.context['context'],
+                         base_message.context['context'])
+
+        self.assertEqual(speak.msg_type, "speak")
+        self.assertEqual(speak.data, {"utterance": "test utterance",
+                                      "lang": "en-US",
+                                      "speaker": {
+                                          "name": "Neon",
+                                          "language": "en-us",
+                                          "gender": "female",
+                                          "voice": "",
+                                          "override_user": True
+                                      }})
+
+        utt = "testing again"
+        speaker = {"name": "test name",
+                   "lang": "uk-ua"}
+        base_message.data['lang'] = 'uk-ua'
+        execute = build_message(MessageKind.EXECUTE, utt, base_message,
+                                speaker)
+        self.assertEqual(execute.msg_type, "skills:execute.utterance")
+        self.assertEqual(execute.data["utterances"], [utt])
+        self.assertEqual(execute.data["lang"], "uk-ua")
+        self.assertEqual(execute.data["speaker"], speaker)
+        self.assertEqual(execute.context["cc_data"],
+                         {"request": utt,
+                          "emit_response": True,
+                          "execute_from_script": True
+                          })
+
 
 if __name__ == '__main__':
     unittest.main()
