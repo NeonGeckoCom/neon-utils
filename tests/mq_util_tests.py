@@ -29,15 +29,13 @@
 import os
 import sys
 import unittest
-
 import pika
 
 from threading import Thread
 from time import time
 
-from neon_utils.socket_utils import *
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+from neon_utils.socket_utils import dict_to_b64
 from neon_utils.mq_utils import *
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
@@ -68,14 +66,19 @@ class TestMQConnector(MQConnector):
 
 
 class MqUtilTests(unittest.TestCase):
+    test_connector = None
+
     @classmethod
     def setUpClass(cls) -> None:
+        from neon_utils.mq_utils import _default_mq_config
         vhost = "/neon_testing"
-        cls.test_connector = TestMQConnector(config=get_neon_local_config().content.get('MQ'),
+        cls.test_connector = TestMQConnector(config=_default_mq_config,
                                              service_name="mq_handler",
                                              vhost=vhost)
-        cls.test_connector.register_consumer("neon_utils_test", vhost, INPUT_CHANNEL,
-                                             cls.test_connector.respond, auto_ack=False)
+        cls.test_connector.register_consumer("neon_utils_test", vhost,
+                                             INPUT_CHANNEL,
+                                             cls.test_connector.respond,
+                                             auto_ack=False)
         cls.test_connector.run_consumers()
 
     @classmethod
