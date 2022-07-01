@@ -25,7 +25,7 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+import os.path
 from os.path import join
 from neon_utils.file_utils import resolve_neon_resource_file
 from mycroft.enclosure.gui import SkillGUI as _SkillGUI
@@ -34,7 +34,6 @@ from mycroft.enclosure.gui import SkillGUI as _SkillGUI
 class SkillGUI(_SkillGUI):
     def __init__(self, skill):
         super().__init__(skill)
-        self.base_skill_dir = skill.config_core["skills"]["directory"]
         self.serving_http = skill.config_core["skills"].get(
             "run_gui_file_server", False)
 
@@ -50,8 +49,9 @@ class SkillGUI(_SkillGUI):
             else:
                 page = self.skill.find_resource(name, 'ui')
                 if self.serving_http:
-                    page = page.replace(self.base_skill_dir,
-                                        join(self.remote_url, "skills"))
+                    parts = page.split('/')
+                    path_suffix = join(parts[(parts.index('ui') - 1):])
+                    page = os.path.join(self.remote_url, "skills", path_suffix)
             if page:
                 if self.remote_url and not self.serving_http:
                     page_urls.append(self.remote_url + "/" + page)
