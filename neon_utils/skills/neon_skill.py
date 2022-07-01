@@ -193,7 +193,7 @@ class NeonSkill(MycroftSkill):
         # TODO: Move this to message_utils DM
         LOG.debug(speaker)
 
-        default_speech = self.preference_speech(message)
+        default_speech = get_user_prefs(message)["speech"]
         # Override user preference for all script responses
         if not speaker:
             speaker = {"name": "Neon",
