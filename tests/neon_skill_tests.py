@@ -644,9 +644,8 @@ class NeonSkillTests(unittest.TestCase):
         self.assertIsInstance(self.skill.neon_core, bool)
         self.assertIsInstance(self.skill.skill_mode, str)
         self.assertIsInstance(self.skill.extension_time, int)
-        # TODO: Refactor after Neon Plugins all import from OPM
-        # self.assertIsNotNone(self.skill.lang_detector)
-        # self.assertIsNotNone(self.skill.translator)
+        self.assertIsNotNone(self.skill.lang_detector)
+        self.assertIsNotNone(self.skill.translator)
 
     def test_properties(self):
         self.assertIsInstance(self.skill.gui_enabled, bool)
@@ -706,7 +705,6 @@ class NeonSkillTests(unittest.TestCase):
         # TODO: Define and test for user-specific settings
 
     def test_neon_must_respond(self):
-        self.skill.server = True
         self.assertFalse(self.skill.neon_must_respond())
         private_message_solo = Message("", {},
                                        {"klat_data": {
@@ -716,7 +714,7 @@ class NeonSkillTests(unittest.TestCase):
                                            "title": "!PRIVATE:user,Neon"}})
         private_message_neon_plus = Message("", {},
                                             {"klat_data": {
-                                      "title": "!PRIVATE:user,Neon,user1"}})
+                                                "title": "!PRIVATE:user,Neon,user1"}})
         public_message = Message("", {},
                                  {"klat_data": {
                                      "title": "Test Conversation"}})
