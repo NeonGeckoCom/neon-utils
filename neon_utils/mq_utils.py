@@ -40,6 +40,17 @@ from neon_utils.socket_utils import b64_to_dict
 
 logging.getLogger("pika").setLevel(logging.CRITICAL)
 
+_default_mq_config = {
+    "server": "api.neon.ai",
+    "port": 5672,
+    "users": {
+        "mq_handler": {
+            "user": 'neon_api_utils',
+            "password": 'Klatchat2021'
+        }
+    }
+}
+
 
 class NeonMQHandler(MQConnector):
     def __init__(self, config: dict, service_name: str, vhost: str):
@@ -103,7 +114,7 @@ def send_mq_request(vhost: str, request_data: dict, target_queue: str,
 
     try:
         # LOG.debug('Creating Neon MQ Handler Instance...')
-        config = dict(Configuration()).get('MQ')
+        config = dict(Configuration()).get('MQ') or _default_mq_config
         # LOG.info(f"MQ Config={config}")
         neon_api_mq_handler = NeonMQHandler(config=config, service_name='mq_handler', vhost=vhost)
         # LOG.debug(f'Established MQ connection: {neon_api_mq_handler.connection}')
