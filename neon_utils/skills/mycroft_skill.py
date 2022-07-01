@@ -37,7 +37,7 @@ from json_database import JsonStorage
 from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message
 
-from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
+from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message, resolve_message
@@ -52,26 +52,8 @@ from neon_utils.user_utils import get_user_prefs
 
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        if not hasattr(super(), "_startup"):
-            # TODO: Backwards-compat. deprecate in v1.0.0
-            import sys
-            from mycroft.filesystem import FileSystemAccess
-            self.name = name or self.__class__.__name__
-            skill_id = os.path.basename(os.path.dirname(
-                os.path.abspath(sys.modules[self.__module__].__file__)))
-            self.file_system = FileSystemAccess(os.path.join('skills', skill_id))
-            self._settings = None
-
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         self.gui = SkillGUI(self)
-        if not hasattr(super(), "_startup"):
-            # TODO: Backwards-compat. deprecate in v1.0.0
-            skill_id = os.path.basename(os.path.dirname(
-                os.path.abspath(sys.modules[self.__module__].__file__)))
-            self.file_system = FileSystemAccess(os.path.join('skills',
-                                                             skill_id))
-            LOG.warning(f"overriding self.file_system to: "
-                        f"{self.file_system.path}")
 
     # TODO: Override settings property and setter for multi-user compat
 
@@ -82,12 +64,6 @@ class PatchedMycroftSkill(MycroftSkill):
     @property
     def _secondary_langs(self):
         return get_user_prefs()["speech"]["alt_languages"]
-
-    @property
-    def _settings_path(self):
-        if not hasattr(super(), "_settings_path"):
-            return os.path.join(self.file_system.path, 'settings.json')
-        return super()._settings_path
 
     def _init_settings(self):
         """
