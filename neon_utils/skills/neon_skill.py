@@ -159,7 +159,7 @@ class NeonSkill(MycroftSkill):
 
     @resolve_message
     def update_skill_settings(self, new_preferences: dict,
-                              message: Message = None, skill_global=False):
+                              message: Message = None, skill_global=True):
         """
         Updates skill settings with the passed new_preferences
         :param new_preferences: dict of updated preference values. {key: val}
