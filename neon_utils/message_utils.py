@@ -29,10 +29,17 @@
 import base64
 import inspect
 
-from typing import Optional
+from enum import Enum
+from time import time
+from typing import Optional, Union
 from mycroft_bus_client import Message
-
 from neon_utils.logger import LOG
+
+
+class MessageKind(Enum):
+    SPEAK = "speak"
+    DATA = "skills:execute.utterance"
+    EXECUTE = "skills:execute.utterance"
 
 
 class EncodingError(ValueError):
@@ -203,3 +210,53 @@ def request_for_neon(message: Message = None,
 
     return False
 
+
+@resolve_message
+def build_message(kind: Union[MessageKind, str], utt: str, message: Message,
+                  speaker: Optional[dict] = None) -> Message:
+    """
+    Build a message object for skill execution or TTS output
+    :param kind: "neon speak" or "execute"
+    :param utt: string to emit
+    :param message: incoming message object
+    :param speaker: speaker data dictionary
+    :return: Message object
+    """
+    from neon_utils.user_utils import get_user_prefs
+    if isinstance(kind, str):
+        kind = MessageKind.EXECUTE if kind == "execute" else \
+            MessageKind.DATA if kind == "skill_data" else MessageKind.SPEAK
+
+    default_speech = get_user_prefs(message)["speech"]
+    speaker = speaker or {"name": "Neon",
+                          "language": default_speech["tts_language"],
+                          "gender": default_speech["tts_gender"],
+                          "voice": default_speech["neon_voice"],
+                          "override_user": True}
+    if speaker.get("language"):
+        speaker['override_user'] = True
+
+    if kind in (MessageKind.EXECUTE, MessageKind.DATA):
+        return message.reply(kind.value, {
+            "utterances": [utt.lower()],
+            "lang": message.data.get("lang", "en-US"),
+            "session": None,
+            "ident": time(),
+            "speaker": speaker
+        }, {
+            "neon_should_respond": True,
+            "cc_data": {"request": utt,
+                        "emit_response": kind == MessageKind.DATA,
+                        "execute_from_script": True
+                        }
+        })
+    elif kind == MessageKind.SPEAK:
+        added_context = {"cc_data": message.context.get("cc_data", {})}
+        added_context["cc_data"]["request"] = utt
+
+        return message.reply(kind.value, {"utterance": utt,
+                                          "lang": message.data.get("lang",
+                                                                   "en-US"),
+                                          "speaker": speaker
+                                          }, {**message.context,
+                                              **added_context})
