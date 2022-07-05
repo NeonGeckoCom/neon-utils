@@ -34,10 +34,10 @@ from datetime import datetime, timedelta
 from enum import Enum
 from os.path import isdir
 from typing import Optional, Union
-
+from ovos_config import Configuration
+from ovos_utils.xdg_utils import xdg_data_home
 from neon_utils.decorators import module_property
 from neon_utils.logger import LOG
-from neon_utils.configuration_utils import get_neon_local_config
 
 
 _log_dir = None
@@ -46,8 +46,9 @@ _log_dir = None
 def _get_log_dir():
     global _log_dir
     if not _log_dir:
-        _log_dir = os.path.expanduser(get_neon_local_config()
-                                      ["dirVars"]["logsDir"])
+        _log_dir = os.path.expanduser(dict(Configuration()).get("log_dir") or
+                                      os.path.join(xdg_data_home(), "neon",
+                                                   "logs"))
     return _log_dir
 
 

@@ -268,7 +268,7 @@ def build_new_auth_config(key_path: str = "~/") -> dict:
             else:
                 auth_config[cred] = auth_config[cred](key_path)
         except FileNotFoundError:
-            auth_config[cred] = None
+            auth_config[cred] = dict()
             LOG.error(f"No credentials found for: {cred}")
 
     return auth_config

@@ -26,25 +26,26 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import importlib
 import re
 import json
 import os
 import sys
 import shutil
+import yaml
 
 from copy import deepcopy
 from os.path import *
 from collections.abc import MutableMapping
 from contextlib import suppress
-from glob import glob
+
 from ovos_utils.json_helper import load_commented_json
-from ovos_utils.configuration import read_mycroft_config, LocalConf
-from ruamel.yaml import YAML
+from ovos_utils.xdg_utils import xdg_config_home
 from typing import Optional
 
-from neon_utils.location_utils import get_full_location
 from neon_utils.logger import LOG
-from neon_utils.authentication_utils import find_neon_git_token, populate_github_token_config, build_new_auth_config
+from neon_utils.authentication_utils import find_neon_git_token, \
+    build_new_auth_config
 from neon_utils.lock_utils import create_lock
 from neon_utils.file_utils import path_is_read_writable, create_file
 from neon_utils.packaging_utils import get_package_version_spec
@@ -57,7 +58,6 @@ class NGIConfig:
     def __init__(self, name, path=None, force_reload: bool = False):
         self.name = name
         self.path = path or get_config_dir()
-        self.parser = YAML()
         lock_filename = join(self.path, f".{self.name}.lock")
         self.lock = create_lock(lock_filename)
         self._pending_write = False
@@ -287,7 +287,13 @@ class NGIConfig:
         try:
             with self.lock:
                 with open(self.file_path, 'r') as f:
-                    config = self.parser.load(f)
+                    try:
+                        config = yaml.safe_load(f)
+                    except Exception as e:
+                        LOG.error(e)
+                        f.seek(0)
+                        from ruamel.yaml import YAML
+                        config = _make_loaded_config_safe(YAML().load(f))
                 if not config:
                     LOG.debug(f"Empty config file found at: {self.file_path}")
                     config = dict()
@@ -322,8 +328,9 @@ class NGIConfig:
             shutil.copy2(self.file_path, tmp_filename)
             try:
                 with open(self.file_path, 'w+') as f:
-                    self.parser.dump(to_write, f)
-                    LOG.debug(f"YAML updated {self.name}")
+                    yaml.safe_dump(to_write, f, allow_unicode=True,
+                           default_flow_style=False, sort_keys=False)
+                LOG.debug(f"YAML updated {self.name}")
                 self._loaded = os.path.getmtime(self.file_path)
                 self._pending_write = False
                 self._disk_content_hash = hash(repr(self._content))
@@ -442,75 +449,167 @@ def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
     return None
 
 
-def init_config_dir() -> bool:
+def _init_ovos_conf(name: str):
+    """
+    Perform a one-time init of ovos.conf for the calling module
+    :param name: Name of calling module to configure to use `neon.yaml`
+    """
+    _DEFAULT_OVOS_CONF = {"module_overrides": {
+        "neon_core": {
+            "xdg": True,
+            "base_folder": "neon",
+            "config_filename": "neon.yaml"
+        }
+    },
+        "submodule_mappings": {}
+    }
+
+    from ovos_utils.xdg_utils import xdg_config_home
+    ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
+    if isfile(ovos_path):
+        try:
+            with open(ovos_path) as f:
+                ovos_conf: dict = json.load(f)
+        except Exception as e:
+            LOG.error(e)
+            ovos_conf = deepcopy(_DEFAULT_OVOS_CONF)
+    else:
+        LOG.info(f"Creating new file: {ovos_path}")
+        os.makedirs(dirname(ovos_path), exist_ok=True)
+        ovos_conf = deepcopy(_DEFAULT_OVOS_CONF)
+
+    if not ovos_conf.get('module_overrides',
+                         {}).get("neon_core", {}).get("default_config_path"):
+        from neon_utils.packaging_utils import get_neon_core_root
+        try:
+            default_config_dir = join(get_neon_core_root(), "configuration")
+            if isfile(join(default_config_dir, "neon.yaml")):
+                default_config_path = join(default_config_dir, "neon.yaml")
+            elif isfile(join(default_config_dir, "neon.conf")):
+                default_config_path = join(default_config_dir, "neon.conf")
+            else:
+                LOG.warning(f"No neon_core default config found in "
+                            f"{default_config_dir}")
+                default_config_path = None
+            if default_config_path:
+                ovos_conf["module_overrides"]["neon_core"][
+                    "default_config_path"] = default_config_path
+        except Exception as e:
+            LOG.error(e)
+
+    if name != "__main__" and name not in ovos_conf['submodule_mappings']:
+        ovos_conf['submodule_mappings'][name] = 'neon_core'
+        LOG.warning(f"Calling module ({name}) now configured to use neon.yaml")
+        with open(ovos_path, "w+") as f:
+            json.dump(ovos_conf, f, indent=4)
+
+    try:
+        import ovos_config
+        importlib.reload(ovos_config.locations)
+        from ovos_utils.configuration import get_ovos_config
+        ovos_conf = get_ovos_config()  # Load the full stack for /etc overrides
+        if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
+            ovos_config.locations.DEFAULT_CONFIG = \
+                ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
+        importlib.reload(ovos_config.config)
+        importlib.reload(ovos_config)
+    except Exception as e:
+        LOG.exception(e)
+    try:
+        import mycroft.configuration
+        importlib.reload(mycroft.configuration)
+    except Exception as e:
+        LOG.error(f"Failed to override mycroft.configuration: {e}")
+
+
+def _validate_config_env():
+    """
+    Check that XDG_CONFIG_HOME and NEON_CONFIG_PATH match for compatibility. If
+    config path isn't writable, relocate files to a valid directory and update
+    envvars
+    """
+    neon_spec = os.getenv("NEON_CONFIG_PATH")
+    xdg_spec = os.getenv("XDG_CONFIG_HOME")
+
+    if neon_spec and xdg_spec:
+        LOG.warning("Configuration over-defined. Using XDG spec")
+        LOG.info(f"xdg={xdg_spec}|neon={neon_spec}")
+        os.environ["NEON_CONFIG_PATH"] = join(xdg_spec, "neon")
+    elif xdg_spec:
+        LOG.debug("Setting NEON_CONFIG_PATH for backwards-compat")
+        os.environ["NEON_CONFIG_PATH"] = join(xdg_spec, "neon")
+        return
+    elif neon_spec:
+        # Path to Neon config spec'd (probably Docker)
+        LOG.info(f"NEON_CONFIG_PATH={neon_spec}")
+        if neon_spec.endswith("/neon") and path_is_read_writable(neon_spec):
+            # We can handle this path as XDG
+            xdg = dirname(neon_spec)
+            LOG.warning(f"NEON_CONFIG_PATH set, "
+                        f"updating XDG_CONFIG_HOME to {xdg}")
+            os.environ["XDG_CONFIG_HOME"] = xdg
+            return
+    else:
+        # No path configured, just set Neon spec to default XDG
+        LOG.info("Setting NEON_CONFIG_PATH to xdg default ~/.config/neon")
+        os.environ["NEON_CONFIG_PATH"] = expanduser("~/.config/neon")
+        return
+
+    # Paths like '/config' can't be translated to XDG, just move files
+    from glob import glob
+    real_config_path = get_config_dir()
+    LOG.warning("NEON_CONFIG_PATH is not XDG-compatible. "
+                "copying config")
+    if neon_spec != real_config_path:
+        for file in glob(f'{neon_spec}/*'):
+            if any((file.endswith(x) for x in ('.yml', '.yaml',
+                                               '.json', '.conf'))):
+                shutil.copy2(file, join(real_config_path, basename(file)))
+                LOG.info(f"Copied {file} to {real_config_path}")
+            else:
+                LOG.debug(f"Ignoring non-config {file}")
+    os.environ["NEON_CONFIG_PATH"] = real_config_path
+
+
+def init_config_dir():
     """
     Performs one-time initialization of the configuration directory.
     NOTE: This method is intended to be called once at module init, before any
     configuration is loaded. Repeated calls or calls after configuration is
     loaded may lead to inconsistent behavior.
-    :returns: True if configuration was relocated
     """
-    env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
-    valid_dir = get_config_dir()
-    if env_spec and valid_dir != env_spec:
-        with create_lock("init_config"):
-            for file in glob(f"{env_spec}/ngi_*.yml"):
-                filename = basename(file)
-                if not isfile(join(valid_dir, filename)):
-                    LOG.info(f"Copying {filename} to {valid_dir}")
-                    shutil.copyfile(file, join(valid_dir, filename))
-                else:
-                    LOG.warning(f"Skipping overwrite of existing file: "
-                                f"{basename(file)}")
-            os.environ["NEON_CONFIG_PATH"] = valid_dir
-            LOG.warning(f"Config files moved and"
-                        f" NEON_CONFIG_PATH set to {valid_dir}")
-        return True
-    if not env_spec:
-        LOG.info(f"Set NEON_CONFIG_PATH={valid_dir}")
-        os.environ["NEON_CONFIG_PATH"] = valid_dir
-    else:
-        LOG.debug(f"NEON_CONFIG_PATH={env_spec}")
-    return False
+
+    # Ensure envvars are consistent and valid (read/writeable)
+    _validate_config_env()
+
+    import inspect
+
+    stack = inspect.stack()
+    mod = inspect.getmodule(stack[1][0])
+    name = mod.__name__.split('.')[0] if mod else ''
+
+    # Ensure `ovos.conf` specifies this module as using `neon.yaml`
+    _init_ovos_conf(name)
 
 
 def get_config_dir():
     """
-    Get a default directory in which to find configuration files,
+    Get a default directory in which to find Neon configuration files,
     creating it if it doesn't exist.
     Returns: Path to configuration or else default
     """
-    # Check envvar spec path
-    if os.getenv("NEON_CONFIG_PATH"):
-        config_path = expanduser(os.getenv("NEON_CONFIG_PATH"))
-        if os.path.isdir(config_path) and path_is_read_writable(config_path):
-            # LOG.info(f"Got config path from environment vars: {config_path}")
-            return config_path
-        elif path_is_read_writable(dirname(config_path)) and not os.path.exists(config_path):
-            LOG.info(f"Creating requested config path: {config_path}")
-            os.makedirs(config_path)
-            return config_path
-        else:
-            LOG.warning(f"NEON_CONFIG_PATH is not valid and will be ignored: "
-                        f"{config_path}")
-
-    # TODO: Update modules to set NEON_CONFIG_PATH and log a deprecation warning here DM
-    # Check for legacy path spec
-    legacy_path = _get_legacy_config_dir()
-    if legacy_path:
-        if not isdir(legacy_path):
-            os.makedirs(legacy_path)
-        # LOG.warning(f"Legacy Config Path Found: {legacy_path}")
-        return legacy_path
-
-    default_path = expanduser("~/.local/share/neon")
-    if not isdir(default_path):
-        os.makedirs(default_path)
-    # LOG.info(f"System packaged core found! Using default configuration at {default_path}")
-    return default_path
+    from ovos_utils.xdg_utils import xdg_config_home
+    config_path = join(xdg_config_home(), "neon")
+    LOG.debug(config_path)
+    if not isdir(config_path):
+        LOG.info(f"Creating config directory: {config_path}")
+        os.makedirs(config_path)
+    return config_path
 
 
-def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys_to_remove: list) -> MutableMapping:
+def delete_recursive_dictionary_keys(dct_to_change: MutableMapping,
+                                     list_of_keys_to_remove: list) -> \
+        MutableMapping:
     """
     Removes the specified keys from the specified dict.
     Args:
@@ -520,8 +619,10 @@ def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys
     Returns: dct_to_change with any specified keys removed
 
     """
-    if not isinstance(dct_to_change, MutableMapping) or not isinstance(list_of_keys_to_remove, list):
-        raise AttributeError("delete_recursive_dictionary_keys expects a dict and a list as args")
+    if not isinstance(dct_to_change, MutableMapping) or not \
+            isinstance(list_of_keys_to_remove, list):
+        raise AttributeError("delete_recursive_dictionary_keys expects "
+                             "a dict and a list as args")
 
     for key in list_of_keys_to_remove:
         with suppress(KeyError):
@@ -532,50 +633,64 @@ def delete_recursive_dictionary_keys(dct_to_change: MutableMapping, list_of_keys
     return dct_to_change
 
 
-def dict_merge(dct_to_change: MutableMapping, merge_dct: MutableMapping) -> MutableMapping:
+def dict_merge(dct_to_change: MutableMapping,
+               merge_dct: MutableMapping) -> MutableMapping:
     """
-    Recursively merges two configuration dictionaries and returns the combined object. All keys are returned with values
-    from merge_dct overwriting those from dct_to_change.
+    Recursively merges two configuration dictionaries and returns the
+    combined object. All keys are returned with values from merge_dct
+    overwriting those from dct_to_change.
     Args:
         dct_to_change: dict to append keys and values to
         merge_dct: dict with keys and new values to add to dct_to_change
     Returns: dict of merged preferences
     """
-    if not isinstance(dct_to_change, MutableMapping) or not isinstance(merge_dct, MutableMapping):
-        raise AttributeError("merge_recursive_dicts expects two dict objects as args")
+    if not isinstance(dct_to_change, MutableMapping) or not \
+            isinstance(merge_dct, MutableMapping):
+        raise AttributeError("merge_recursive_dicts expects "
+                             "two dict objects as args")
     for key, value in merge_dct.items():
-        if isinstance(dct_to_change.get(key), dict) and isinstance(value, MutableMapping):
+        if isinstance(dct_to_change.get(key), dict) and \
+                isinstance(value, MutableMapping):
             dct_to_change[key] = dict_merge(dct_to_change[key], value)
         else:
             dct_to_change[key] = value
     return dct_to_change
 
 
-def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping,
-                         max_depth: int = 1, cur_depth: int = 0) -> MutableMapping:
+def dict_make_equal_keys(dct_to_change: MutableMapping,
+                         keys_dct: MutableMapping,
+                         max_depth: int = 1,
+                         cur_depth: int = 0) -> MutableMapping:
     """
-    Adds and removes keys from dct_to_change such that it has the same keys as keys_dct. Values from dct_to_change are
-    preserved with any added keys using default values from keys_dct.
+    Adds and removes keys from dct_to_change such that it has the same keys
+    as keys_dct. Values from dct_to_change are preserved with any added keys
+    using default values from keys_dct.
     Args:
         dct_to_change: Dict of user preferences to modify and return
         keys_dct: Dict containing all keys and default values
         max_depth: Int depth to recurse (0-indexed)
         cur_depth: Current depth relative to top-level config (0-indexed)
-    Returns: dct_to_change with any keys not in keys_dct removed and any new keys added with default values
+    Returns: dct_to_change with any keys not in keys_dct removed and any new
+        keys added with default values
 
     """
-    if not isinstance(dct_to_change, MutableMapping) or not isinstance(keys_dct, MutableMapping):
-        raise AttributeError("merge_recursive_dicts expects two dict objects as args")
+    if not isinstance(dct_to_change, MutableMapping) or not \
+            isinstance(keys_dct, MutableMapping):
+        raise AttributeError("merge_recursive_dicts expects two dict objects "
+                             "as args")
     if not keys_dct:
         raise ValueError("Empty keys_dct provided, not modifying anything.")
     for key in list(dct_to_change.keys()):
-        if isinstance(keys_dct.get(key), dict) and isinstance(dct_to_change[key], MutableMapping):
+        if isinstance(keys_dct.get(key), dict) and \
+                isinstance(dct_to_change[key], MutableMapping):
             if max_depth > cur_depth:
                 if key in ("tts", "stt", "hotwords", "language"):
-                    dct_to_change[key] = dict_update_keys(dct_to_change[key], keys_dct[key])
+                    dct_to_change[key] = dict_update_keys(dct_to_change[key],
+                                                          keys_dct[key])
                 else:
-                    dct_to_change[key] = dict_make_equal_keys(dct_to_change[key], keys_dct[key],
-                                                              max_depth, cur_depth + 1)
+                    dct_to_change[key] = \
+                        dict_make_equal_keys(dct_to_change[key], keys_dct[key],
+                                             max_depth, cur_depth + 1)
         elif key not in keys_dct.keys():
             dct_to_change.pop(key)
             LOG.warning(f"Removing '{key}' from dict!")
@@ -586,22 +701,27 @@ def dict_make_equal_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping
     return dct_to_change
 
 
-def dict_update_keys(dct_to_change: MutableMapping, keys_dct: MutableMapping) -> MutableMapping:
+def dict_update_keys(dct_to_change: MutableMapping,
+                     keys_dct: MutableMapping) -> MutableMapping:
     """
-    Adds keys to dct_to_change such that all keys in keys_dict exist in dict_to_change. Added keys use default values
-    from keys_dict
+    Adds keys to dct_to_change such that all keys in keys_dict exist in
+    dict_to_change. Added keys use default values from keys_dict
     Args:
         dct_to_change: Dict of user preferences to modify and return
         keys_dct: Dict containing potentially new keys and default values
 
-    Returns: dct_to_change with any new keys in keys_dict added with default values
+    Returns: dct_to_change with any new keys in keys_dict added with defaultS
 
     """
-    if not isinstance(dct_to_change, MutableMapping) or not isinstance(keys_dct, MutableMapping):
-        raise AttributeError("merge_recursive_dicts expects two dict objects as args")
+    if not isinstance(dct_to_change, MutableMapping) or not \
+            isinstance(keys_dct, MutableMapping):
+        raise AttributeError("merge_recursive_dicts expects two dict "
+                             "objects as args")
     for key, value in list(keys_dct.items()):
-        if isinstance(keys_dct.get(key), dict) and isinstance(value, MutableMapping):
-            dct_to_change[key] = dict_update_keys(dct_to_change.get(key, {}), keys_dct[key])
+        if isinstance(keys_dct.get(key), dict) and isinstance(value,
+                                                              MutableMapping):
+            dct_to_change[key] = dict_update_keys(dct_to_change.get(key, {}),
+                                                  keys_dct[key])
         else:
             if key not in dct_to_change.keys():
                 dct_to_change[key] = value
@@ -617,302 +737,8 @@ def write_to_json(preference_dict: MutableMapping, output_path: str):
     """
     if not os.path.exists(output_path):
         create_file(output_path)
-    # with NamedLock(output_path): TODO: Implement combo_lock with file lock support or add lock utils to neon_utils DM
     with open(output_path, "w") as out:
         json.dump(preference_dict, out, indent=4)
-
-
-def get_neon_lang_config() -> dict:
-    """
-    Get a language config for language utilities
-    Returns:
-        dict of config params used by Language Detector and Translator modules
-    """
-    lang_config = deepcopy(get_neon_local_config().content.get("language", {}))
-    # TODO: Make sure lang_config is valid here!
-    user_lang_config = deepcopy(get_neon_user_config().content.get("speech", {}))
-    lang_config["internal"] = lang_config.get("core_lang", "en-us")
-    lang_config["user"] = user_lang_config.get("stt_language", "en-us")
-    lang_config["boost"] = lang_config.get("boost", False)
-    merged_language = {**_safe_mycroft_config().get("language", {}), **lang_config}
-    if merged_language.keys() != lang_config.keys():
-        LOG.warning(f"Keys missing from Neon config! {merged_language.keys()}")
-
-    return merged_language
-
-
-def get_neon_cli_config() -> dict:
-    """
-    Get a configuration dict for the neon_cli
-    Returns:
-        dict of config params used by the neon_cli
-    """
-    local_config = NGIConfig("ngi_local_conf").content
-    wake_words_enabled = local_config.get("interface", {}).get("wake_word_enabled", True)
-    try:
-        neon_core_version = os.path.basename(glob(local_config['dirVars']['ngiDir'] +
-                                                  '/*.release')[0]).split('.release')[0]
-    except Exception as e:
-        LOG.error(e)
-        neon_core_version = "Unknown"
-    log_dir = local_config.get("dirVars", {}).get("logsDir", "/var/log/mycroft")
-    return {"neon_core_version": neon_core_version,
-            "wake_words_enabled": wake_words_enabled,
-            "log_dir": log_dir}
-
-
-def get_neon_tts_config() -> dict:
-    """
-    Get a configuration dict for TTS
-    Returns:
-    dict of TTS-related configuration
-    """
-    return get_neon_local_config()["tts"]
-
-
-def get_neon_speech_config() -> dict:
-    """
-    Get a configuration dict for listener. Merge any values from Mycroft config if missing from Neon.
-    Returns:
-        dict of config params used for listener in neon_speech
-    """
-    mycroft = _safe_mycroft_config()
-    local_config = get_neon_local_config()
-
-    neon_listener_config = deepcopy(local_config.get("listener", {}))
-    neon_listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
-    neon_listener_config["save_utterances"] = local_config["prefFlags"].get("saveAudio", False)
-    neon_listener_config["confirm_listening"] = local_config["interface"].get("confirm_listening", True)
-    neon_listener_config["record_utterances"] = neon_listener_config["save_utterances"]
-    neon_listener_config["record_wake_words"] = neon_listener_config["save_utterances"]
-    merged_listener = {**mycroft.get("listener", {}), **neon_listener_config}
-    if merged_listener.keys() != neon_listener_config.keys():
-        LOG.warning(f"Keys missing from Neon config! {merged_listener.keys()}")
-
-    lang = mycroft.get("language", {}).get("internal", "en-us")  # core_lang
-
-    neon_stt_config = local_config.get("stt", {})
-    merged_stt_config = {**mycroft.get("stt", {}), **neon_stt_config}
-    # stt keys will vary by installed/configured plugins
-    # if merged_stt_config.keys() != neon_stt_config.keys():
-    #     LOG.warning(f"Keys missing from Neon config! {merged_stt_config.keys()}")
-
-    hotword_config = local_config.get("hotwords") or mycroft.get("hotwords")
-    if hotword_config != local_config.get("hotwords"):
-        LOG.warning(f"Neon hotword config missing! {hotword_config}")
-
-    neon_audio_parser_config = local_config.get("audio_parsers", {})
-    merged_audio_parser_config = {**mycroft.get("audio_parsers", {}), **neon_audio_parser_config}
-    if merged_audio_parser_config.keys() != neon_audio_parser_config.keys():
-        LOG.warning(f"Keys missing from Neon config! {merged_audio_parser_config.keys()}")
-
-    return {"listener": merged_listener,
-            "hotwords": hotword_config,
-            "audio_parsers": merged_audio_parser_config,
-            "lang": lang,
-            "stt": merged_stt_config,
-            "metric_upload": local_config["prefFlags"].get("metrics", False),
-            "remote_server": local_config.get("remoteVars", {}).get("remoteHost", "64.34.186.120"),
-            "data_dir": os.path.expanduser(local_config.get("dirVars", {}).get("rootDir") or "~/.local/share/neon"),
-            "keys": {}  # TODO: Read from somewhere DM
-            }
-
-
-def get_neon_bus_config() -> dict:
-    """
-    Get a configuration dict for the messagebus. Merge any values from Mycroft config if missing from Neon.
-    Returns:
-        dict of config params used for a messagebus client
-    """
-    mycroft = _safe_mycroft_config().get("websocket", {})
-    neon = get_neon_local_config().get("websocket", {})
-    merged = {**mycroft, **neon}
-    if merged.keys() != neon.keys():
-        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
-    return merged
-
-
-def get_neon_audio_config() -> dict:
-    """
-    Get a configuration dict for the audio module. Merge any values from Mycroft config if missing from Neon.
-    Returns:
-        dict of config params used for the Audio module
-    """
-    mycroft = _safe_mycroft_config()
-    local_config = get_neon_local_config()
-    neon_audio = local_config.get("audioService", {})
-    merged_audio = {**mycroft.get("Audio", {}), **neon_audio}
-    # tts keys will vary by installed/configured plugins
-    # if merged_audio.keys() != neon_audio.keys():
-    #     LOG.warning(f"Keys missing from Neon config! {merged_audio.keys()}")
-
-    return {"Audio": merged_audio,
-            "tts": get_neon_tts_config(),
-            "language": get_neon_lang_config()}
-
-
-def get_neon_api_config() -> dict:
-    """
-    Get a configuration dict for the api module. Merge any values from Mycroft config if missing from Neon.
-    Returns:
-        dict of config params used for the Mycroft API module
-    """
-    core_config = get_neon_local_config()
-    api_config = deepcopy(core_config.get("api"))
-    api_config["metrics"] = core_config["prefFlags"].get("metrics", False)
-    mycroft = _safe_mycroft_config().get("server", {})
-    merged = {**mycroft, **api_config}
-    if merged.keys() != api_config.keys():
-        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
-    return merged
-
-
-def get_neon_skills_config() -> dict:
-    """
-    Get a configuration dict for the skills module. Merge any values from Mycroft config if missing from Neon.
-    Returns:
-        dict of config params used for the Mycroft Skills module
-    """
-    core_config = get_neon_local_config()
-    mycroft_config = _safe_mycroft_config()
-    neon_skills = deepcopy(core_config.get("skills", {}))
-    neon_skills["directory"] = os.path.expanduser(core_config["dirVars"].get("skillsDir"))
-
-    # Patch msm config for skills backwards-compat.
-    neon_skills["msm"] = {"directory": neon_skills["directory"],
-                          "versioned": False,
-                          "repo": {"branch": "",
-                                   "cache": "",
-                                   "url": ""}}
-
-    try:
-        ovos_core_version = get_package_version_spec("ovos-core")
-        if ovos_core_version.startswith("0.0.1"):
-            # ovos-core 0.0.1 uses directory_override param
-            LOG.debug("Adding `directory_override` setting for ovos-core")
-            neon_skills["directory_override"] = neon_skills["directory"]
-    except ModuleNotFoundError:
-        LOG.warning("ovos-core not installed")
-        neon_skills["directory_override"] = neon_skills["directory"]
-
-    neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
-    neon_skills["priority_skills"] = neon_skills["priority"] or []
-    neon_skills["blacklisted_skills"] = neon_skills["blacklist"] or []
-
-    if not isinstance(neon_skills["auto_update_interval"], float):
-        try:
-            neon_skills["auto_update_interval"] = float(neon_skills["auto_update_interval"])
-        except Exception as e:
-            LOG.error(e)
-            neon_skills["auto_update_interval"] = 24.0
-    if not isinstance(neon_skills["appstore_sync_interval"], float):
-        try:
-            neon_skills["appstore_sync_interval"] = float(neon_skills["appstore_sync_interval"])
-        except Exception as e:
-            LOG.error(e)
-            neon_skills["appstore_sync_interval"] = 6.0
-    neon_skills["update_interval"] = neon_skills["auto_update_interval"]  # Backwards Compat.
-    if not neon_skills["neon_token"]:
-        try:
-            neon_skills["neon_token"] = find_neon_git_token()  # TODO: GetPrivateKeys
-            populate_github_token_config(neon_skills["neon_token"])
-        except FileNotFoundError:
-            LOG.debug(f"No Github token found; skills may fail to install")
-    skills_config = {**mycroft_config.get("skills", {}), **neon_skills}
-    return skills_config
-
-
-def get_neon_client_config() -> dict:
-    """
-    Get a configuration dict for the client module.
-    Returns:
-        dict of config params used for the Neon client module
-    """
-    LOG.warning(f"The Neon client module has been deprecated. This method will be removed")
-    # TODO: Remove in v1.0.0
-    core_config = get_neon_local_config()
-    server_addr = core_config.get("remoteVars", {}).get("remoteHost", "167.172.112.7")
-    if server_addr == "64.34.186.92":
-        LOG.warning(f"Depreciated call to host: {server_addr}")
-        server_addr = "167.172.112.7"
-    return {"server_addr": server_addr,
-            "devVars": core_config["devVars"],
-            "remoteVars": core_config["remoteVars"]}
-
-
-def get_neon_transcribe_config() -> dict:
-    """
-    Get a configuration dict for the transcription module.
-    Returns:
-        dict of config params used for the Neon transcription module
-    """
-    local_config = get_neon_local_config()
-    user_config = get_neon_user_config()
-    neon_transcribe_config = dict()
-    neon_transcribe_config["transcript_dir"] = local_config["dirVars"].get("docsDir", "")
-    neon_transcribe_config["audio_permission"] = user_config["privacy"].get("save_audio", False)
-    return neon_transcribe_config
-
-
-def get_neon_gui_config() -> dict:
-    """
-    Get a configuration dict for the gui module.
-    Returns:
-        dict of config params used for the Neon gui module
-    """
-    local_config = get_neon_local_config()
-    gui_config = dict(local_config["gui"])
-    gui_config["base_port"] = gui_config["port"]
-    return gui_config
-
-
-def _move_config_sections(user_config, local_config):
-    """
-    Temporary method to handle one-time migration of user_config params to local_config
-    Args:
-        user_config (NGIConfig): user configuration object
-        local_config (NGIConfig): local configuration object
-    """
-    depreciated_user_configs = ("interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
-    try:
-        if any([d in user_config.content for d in depreciated_user_configs]):
-            LOG.warning("Depreciated keys found in user config! Adding them to local config")
-            if "wake_words_enabled" in user_config.content.get("interface", dict()):
-                user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
-            config_to_move = {"interface": user_config.content.pop("interface", {}),
-                              "listener": user_config.content.pop("listener", {}),
-                              "skills": user_config.content.pop("skills", {}),
-                              "session": user_config.content.pop("session", {}),
-                              "tts": user_config.content.pop("tts", {}),
-                              "stt": user_config.content.pop("stt", {}),
-                              "logs": user_config.content.pop("logs", {}),
-                              "device": user_config.content.pop("device", {})}
-            local_config.update_keys(config_to_move)
-
-        if not local_config.get("language"):
-            local_config["language"] = dict()
-        if local_config.get("stt", {}).get("detection_module"):
-            local_config["language"]["detection_module"] = local_config["stt"].pop("detection_module")
-        if local_config.get("stt", {}).get("translation_module"):
-            local_config["language"]["translation_module"] = local_config["stt"].pop("translation_module")
-    except (KeyError, RuntimeError):
-        # If some other instance moves these values, just pass
-        pass
-
-
-def _safe_mycroft_config() -> dict:
-    """
-    Safe reference to mycroft config that always returns a dict
-    Returns:
-        dict mycroft configuration
-    """
-    try:
-        mycroft = read_mycroft_config()
-    except FileNotFoundError:
-        mycroft = LocalConf(os.path.join(os.path.dirname(__file__),
-                                         "default_configurations",
-                                         "mycroft.conf"))
-    return dict(mycroft)
 
 
 def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
@@ -977,37 +803,42 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
         LOG.debug("Updated user config from mycroft.conf")
         user_config.write_changes()
 
-    if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
-        local_config = NGIConfig("ngi_local_conf", path)
-        _move_config_sections(user_config, local_config)
-
     user_config.make_equal_by_keys(default_user_config.content)
     return user_config
 
 
-def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
+def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     """
     Returns a dict local configuration and handles any
      migration of configuration values to local config from user config
     Args:
-        path: optional path to yml configuration files
+        path: optional path to directory containing yml configuration files
     Returns:
         NGIConfig object with local config
     """
+    import inspect
+    call = inspect.stack()[1]
+    module = inspect.getmodule(call.frame)
+    name = module.__name__ if module else call.filename
+    LOG.warning("This reference is deprecated - "
+                f"{name}:{call.lineno}")
+    default_local_config = NGIConfig("default_core_conf",
+                                     os.path.join(os.path.dirname(__file__),
+                                                  "default_configurations"))
     try:
-        local_config = NGIConfig("ngi_local_conf", path)
+        if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
+            local_config = NGIConfig("ngi_local_conf", path)
+        else:
+            local_config = NGIConfig("ngi_local_conf", "/tmp/neon")
     except PermissionError:
         LOG.error(f"Insufficient Permissions for path: {path}")
         local_config = NGIConfig("ngi_local_conf")
     _populate_read_only_config(path, basename(local_config.file_path),
                                local_config)
-    default_local_config = NGIConfig("default_core_conf",
-                                     os.path.join(os.path.dirname(__file__),
-                                                  "default_configurations"))
+
     if len(local_config.content) == 0:
         LOG.info(f"Created Empty Local Config at {local_config.path}")
         local_config.populate(default_local_config.content)
-        # TODO: Update from Mycroft config DM
 
     if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
         user_config = NGIConfig("ngi_user_info", path)
@@ -1016,34 +847,6 @@ def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     local_config.make_equal_by_keys(default_local_config.content)
     # LOG.info(f"Loaded local config from {local_config.file_path}")
     return local_config
-
-
-def get_neon_auth_config(path: Optional[str] = None) -> NGIConfig:
-    """
-    Returns a dict authentication configuration and handles populating values from key files
-    Args:
-        path: optional path to yml configuration files
-    Returns:
-        NGIConfig object with authentication config
-    """
-    try:
-        auth_config = NGIConfig("ngi_auth_vars", path)
-    except PermissionError:
-        LOG.error(f"Insufficient Permissions for path: {path}")
-        auth_config = NGIConfig("ngi_auth_vars")
-    _populate_read_only_config(path, basename(auth_config.file_path), auth_config)
-    if not auth_config.content:
-        LOG.info("Populating empty auth configuration")
-        auth_config._content = build_new_auth_config(path)
-        auth_config.write_changes()
-
-    if not auth_config.content:
-        LOG.info("Empty auth_config generated, adding 'created' key to prevent regeneration attempts")
-        auth_config._content = {"_loaded": True}
-        auth_config.write_changes()
-
-    # LOG.info(f"Loaded auth config from {auth_config.file_path}")
-    return auth_config
 
 
 def _populate_read_only_config(path: Optional[str], config_filename: str,
@@ -1057,11 +860,15 @@ def _populate_read_only_config(path: Optional[str], config_filename: str,
     :return: True if RO config was copied to new location, else False
     """
     # Handle reading unwritable config contents into new empty config
-    requested_file = os.path.abspath(join(path or expanduser(os.getenv("NEON_CONFIG_PATH", "")), config_filename))
+    requested_file = \
+        os.path.abspath(join(path or
+                             expanduser(os.getenv("NEON_CONFIG_PATH", "")),
+                             config_filename))
     if os.path.isfile(requested_file) and \
             loaded_config.file_path != requested_file and \
             loaded_config.content == dict():
-        LOG.warning(f"Loading requested file contents ({requested_file}) into {loaded_config.file_path}")
+        LOG.warning(f"Loading requested file contents ({requested_file}) "
+                    f"into {loaded_config.file_path}")
         with loaded_config.lock:
             shutil.copy(requested_file, loaded_config.file_path)
         loaded_config.check_for_updates()
@@ -1069,34 +876,10 @@ def _populate_read_only_config(path: Optional[str], config_filename: str,
     return False
 
 
-def get_neon_device_type() -> str:
-    """
-    Returns device type (server, pi, other)
-    Returns:
-        str device type
-    """
-    import platform
-    import importlib.util
-    local_config = get_neon_local_config()
-    config_dev = local_config["devVars"].get("devType", "")
-    if "pi" in config_dev:
-        return "pi"
-    if config_dev == "server":
-        return "server"
-    if config_dev != "generic":
-        return config_dev
-    if "arm" in platform.machine():
-        return "pi"
-    if importlib.util.find_spec("neon-core-client"):
-        return "desktop"
-    if importlib.util.find_spec("neon-core-server"):
-        return "server"
-    return "desktop"
-
-
 def is_neon_core() -> bool:
     """
-    Checks for neon-specific packages to determine if this is a Neon Core or a Mycroft Core
+    Checks for neon-specific packages to determine if
+    this is a Neon Core or a Mycroft Core
     Returns:
         True if core is Neon, else False
     """
@@ -1174,19 +957,25 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     return location
 
 
-def get_mycroft_compatible_config(mycroft_only=False) -> dict:
+def get_mycroft_compatible_config(mycroft_only=False,
+                                  neon_config_path=None) -> dict:
     """
     Get a configuration compatible with mycroft.conf/ovos.conf
     NOTE: This method should only be called at startup to write a .conf file
     :param mycroft_only: if True, ignore Neon configuration files
+    :param neon_config_path: optional path override to yml config directory
     :returns: dict config compatible with mycroft.conf structure
     """
     default_config = _safe_mycroft_config()
-    if mycroft_only or not is_neon_core():
+    if mycroft_only:
         return default_config
-    speech = get_neon_speech_config()
-    user = get_neon_user_config()
-    local = get_neon_local_config()
+    speech = _get_neon_speech_config(neon_config_path)
+    user = get_neon_user_config(neon_config_path) if \
+        isfile(join(neon_config_path or get_config_dir(),
+                    "ngi_user_info.yml")) else \
+        NGIConfig("default_user_conf", os.path.join(os.path.dirname(__file__),
+                                                    "default_configurations"))
+    local = _get_neon_local_config(neon_config_path)
 
     default_config["lang"] = "en-us"
     default_config["system_unit"] = user["units"]["measure"]
@@ -1199,21 +988,14 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     default_config["sounds"] = {**default_config.get("sounds", {}),
                                 **local.get("sounds", {})}
 
-    # default_config["play_wav_cmdline"]
-    # default_config["play_mp3_cmdline"]
-    # default_config["play_ogg_cmdline"]
-
     default_config["location"] = \
-        get_mycroft_compatible_location(user["location"])
+        get_mycroft_compatible_location(user.get("location"))
 
     default_config["data_dir"] = local["dirVars"]["rootDir"]
     default_config["cache_path"] = local["dirVars"]["cacheDir"]
-    # default_config["ready_settings"]
-    default_config["skills"] = get_neon_skills_config()
-    # default_config["converse"]
-    # default_config["system"]
-    default_config["server"] = get_neon_api_config()
-    default_config["websocket"] = get_neon_bus_config()
+    default_config["skills"] = _get_neon_skills_config(neon_config_path)
+    default_config["server"] = _get_neon_api_config(neon_config_path)
+    default_config["websocket"] = _get_neon_bus_config(neon_config_path)
     default_config["gui_websocket"] = {**default_config.get("gui_websocket",
                                                             {}),
                                        **local["gui"]}
@@ -1221,23 +1003,19 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
         default_config["gui_websocket"].get("base_port") or \
         default_config["gui_websocket"].get("port")
 
-    # default_config["network_tests"]
     default_config["listener"] = speech["listener"]
-    # default_config["precise"]
     default_config["hotwords"] = speech["hotwords"]
-    # default_config["enclosure"]
     default_config["log_level"] = local["logs"]["log_level"]
-    # default_config["ignore_logs"]
     default_config["session"] = local["session"]
     default_config["stt"] = speech["stt"]
     default_config["tts"] = local["tts"]
     default_config["padatious"] = {**default_config.get("padatious", {}),
                                    **local["padatious"]}
-    default_config["Audio"] = get_neon_audio_config()["Audio"]
+    default_config["Audio"] = _get_neon_audio_config(neon_config_path)["Audio"]
     default_config["debug"] = local["prefFlags"]["devMode"]
 
-    default_config["language"] = get_neon_lang_config()
-    default_config["keys"] = get_neon_auth_config().content
+    default_config["language"] = _get_neon_lang_config(neon_config_path)
+    default_config["keys"] = _get_neon_auth_config(neon_config_path)
     default_config["text_parsers"] = {**default_config.get("text_parsers",
                                                            {}),
                                       **local.get("text_parsers", {})}
@@ -1246,7 +1024,10 @@ def get_mycroft_compatible_config(mycroft_only=False) -> dict:
     default_config["ipc_path"] = local["dirVars"]["ipcDir"]
     default_config["remote-server"] = local["gui"]["file_server"]
     default_config["ready_settings"] = local["ready_settings"]
-    # default_config["Display"]
+    default_config["device_name"] = local["devVars"]["devName"]
+
+    if local["dirVars"]["logsDir"]:
+        default_config["log_dir"] = local["dirVars"]["logsDir"]
 
     return default_config
 
@@ -1263,8 +1044,7 @@ def write_mycroft_compatible_config(file_to_write: str = None) -> str:
     file_path = os.path.expanduser(file_to_write)
 
     if isfile(file_path):
-        with open(file_path, 'r') as f:
-            disk_config = json.load(f)
+        disk_config = load_commented_json(file_path)
         if disk_config == configuration:
             LOG.debug(f"Configuration already up to date")
             return file_path
@@ -1278,71 +1058,98 @@ def write_mycroft_compatible_config(file_to_write: str = None) -> str:
     return file_path
 
 
-def create_config_from_setup_params(path=None) -> NGIConfig:
+def create_config_from_setup_params(path=None) -> dict:
     """
-    Populate a (probably) new local config with parameters gathered during setup
+    Populate a (probably) new local config with setup parameters
     Args:
         path: Optional config path
     Returns:
         NGIConfig object generated from environment vars
     """
-    local_conf = get_neon_local_config(path)
-    pref_flags = local_conf["prefFlags"]
-    local_conf["prefFlags"]["devMode"] = \
-        os.environ.get("devMode",
-                       str(pref_flags["devMode"])).lower() == "true"
-    local_conf["prefFlags"]["autoStart"] = \
-        os.environ.get("autoStart",
-                       str(pref_flags["autoStart"])).lower() == "true"
-    local_conf["prefFlags"]["autoUpdate"] = \
-        os.environ.get("autoUpdate",
-                       str(pref_flags["autoUpdate"])).lower() == "true"
-    local_conf["skills"]["auto_update"] = local_conf["prefFlags"]["autoUpdate"]
-    local_conf["skills"]["neon_token"] = os.environ.get("GITHUB_TOKEN")
-    local_conf["tts"]["module"] = os.environ.get("ttsModule",
-                                                 local_conf["tts"]["module"])
-    local_conf["stt"]["module"] = os.environ.get("sttModule",
-                                                 local_conf["stt"]["module"])
-    local_conf["language"]["translation_module"] = \
-        os.environ.get("translateModule",
-                       local_conf["language"]["translation_module"])
-    local_conf["language"]["detection_module"] = \
-        os.environ.get("detectionModule",
-                       local_conf["language"]["detection_module"])
 
-    if os.environ.get("installServer", "false") == "true":
-        local_conf["devVars"]["devType"] = "server"
-    elif os.environ.get("devType"):
-        local_conf["devVars"]["devType"] = os.environ.get("devType")
-    else:
-        import platform
-        local_conf["devVars"]["devType"] = platform.system().lower()
-
-    local_conf["devVars"]["devName"] = os.environ.get("devName")
-
-    if local_conf["prefFlags"]["devMode"]:
-        root_path = os.environ.get("installerDir", local_conf.path)
-        local_conf["dirVars"]["skillsDir"] = os.path.join(root_path, "skills")
-        local_conf["dirVars"]["diagsDir"] = os.path.join(root_path, "Diagnostics")
-        local_conf["dirVars"]["logsDir"] = os.path.join(root_path, "logs")
-        local_conf["skills"]["default_skills"] = \
-            "https://raw.githubusercontent.com/NeonGeckoCom/neon_skills/master/skill_lists/DEFAULT-SKILLS-DEV"
-    else:
-        local_conf["dirVars"]["logsDir"] = "~/.local/share/neon/logs"
-
+    dev_mode = (os.environ.get("devMode") or "false") == "true"
+    # auto_run = os.environ.get("autoStart") or "false" == "true"
+    auto_update = (os.environ.get("autoUpdate") or "false") == "true"
+    neon_token = os.environ.get("GITHUB_TOKEN")
+    tts_module = os.environ.get("ttsModule")
+    stt_module = os.environ.get("sttModule")
+    translation_module = os.environ.get("translateModule")
+    detection_module = os.environ.get("detectionModule")
+    device_name = os.environ.get("devName") or "unknown"
+    logs_dir = os.environ.get("logsDir")
     if os.environ.get("skillRepo"):
-        local_conf["skills"]["default_skills"] = os.environ.get("skillRepo")
+        default_skills = os.environ["skillRepo"]
+    elif dev_mode:
+        default_skills = "https://raw.githubusercontent.com/NeonGeckoCom/" \
+                         "neon_skills/master/skill_lists/DEFAULT-SKILLS-DEV"
+    else:
+        default_skills = "https://raw.githubusercontent.com/NeonGeckoCom/" \
+                         "neon_skills/master/skill_lists/DEFAULT-SKILLS"
 
-    # TODO: Use XDG here DM
-    if not local_conf.write_changes():
-        LOG.error("Disk contents are newer than this config object, changes were not written.")
-    return local_conf
+    config_patch = {
+        "debug": dev_mode,
+        "skills": {
+            "auto_update": auto_update,
+            "neon_token": neon_token,
+            "default_skills": default_skills
+        },
+        "tts": {},
+        "stt": {},
+        "language": {},
+        "device_name": device_name
+    }
+    if tts_module:
+        config_patch["tts"]["module"] = tts_module
+    if stt_module:
+        config_patch["stt"]["module"] = stt_module
+    if translation_module:
+        config_patch["language"]["translation_module"] = translation_module
+    if detection_module:
+        config_patch["language"]["detection_module"] = detection_module
+    if logs_dir:
+        config_patch["log_dir"] = logs_dir
+
+    output_path = join((path or join(xdg_config_home(), "neon")), "neon.yaml")
+    if not isdir(dirname(output_path)):
+        os.makedirs(dirname(output_path))
+    with open(output_path, "w+") as f:
+        yaml.safe_dump(config_patch, f)
+    LOG.info(f"Dumped new config to: {output_path}")
+    return config_patch
+
+
+def migrate_ngi_config(old_config_path: str = None,
+                       new_config_path: str = None):
+    """
+    Migrate an old ngi_local_conf.yml to mycroft-style config
+    :param old_config_path: path to ngi_local_conf.yml file to read
+    :param new_config_path: path to output yaml file to write
+    """
+    old_config_path = expanduser(old_config_path or _get_legacy_config_dir())
+    if not isfile(old_config_path):
+        old_config_path = join(old_config_path, "ngi_local_conf.yml")
+    if not isfile(old_config_path):
+        raise FileNotFoundError(f"No config at path: {old_config_path}")
+
+    new_config_path = new_config_path or join(xdg_config_home(),
+                                              "neon", "neon.yaml")
+    compat_config = get_mycroft_compatible_config(
+        neon_config_path=dirname(old_config_path))
+    try:
+        with open(new_config_path, 'w+') as f:
+            yaml.safe_dump(compat_config, f, allow_unicode=True,
+                           default_flow_style=False, sort_keys=False)
+    except Exception as e:
+        LOG.exception(e)
+        LOG.error(compat_config)
+    LOG.warning(f"Migrated old config to: {new_config_path}")
 
 
 def parse_skill_default_settings(settings_meta: dict) -> dict:
     """
     Parses default skill settings from settingsmeta file contents
-    :param settings_meta: parsed contents of settingsmeta.yml or settingsmeta.json
+    :param settings_meta: parsed contents of settingsmeta.yml or
+    settingsmeta.json
     :return: parsed dict of default settings keys/values
     """
     if not isinstance(settings_meta, dict):
@@ -1354,10 +1161,380 @@ def parse_skill_default_settings(settings_meta: dict) -> dict:
     else:
         settings = dict()
         try:
-            for settings_group in settings_meta.get("skillMetadata", dict()).get("sections", list()):
+            for settings_group in settings_meta.get("skillMetadata",
+                                                    dict()).get("sections",
+                                                                list()):
                 for field in settings_group.get("fields", list()):
-                    settings = {**settings, **{field.get("name"): field.get("value")}}
+                    settings = {**settings,
+                                **{field.get("name"): field.get("value")}}
             return settings
         except Exception as e:
             LOG.error(e)
             raise e
+
+
+def _make_loaded_config_safe(config: dict) -> dict:
+    """
+    Ensure the entire passed config object is json-serializable
+    :param config: "dirty" config object with OrderedDict, etc. items
+    :returns: dict containing only primitive objects
+        (list, dict, str, float, etc.)
+    """
+    return json.loads(json.dumps(config))
+
+
+# TODO: Below methods are all deprecated and retained only for backwards-compat
+def get_neon_auth_config(*args, **kwargs):
+    LOG.error("This method is deprecated")
+    return {"api_services": {}}
+
+
+def _get_neon_lang_config(neon_config_path=None) -> dict:
+    """
+    Get a language config for language utilities
+    Returns:
+        dict of config params used by Language Detector and Translator modules
+    """
+    import inspect
+    call = inspect.stack()[1]
+    module = inspect.getmodule(call.frame)
+    name = module.__name__ if module else call.filename
+    LOG.warning("This reference is deprecated - "
+                f"{name}:{call.lineno}")
+    lang_config = deepcopy(_get_neon_local_config(neon_config_path).content.get("language", {}))
+    lang_config["internal"] = lang_config.pop("core_lang", "en-us")
+    lang_config["boost"] = lang_config.get("boost", False)
+    merged_language = {**_safe_mycroft_config().get("language", {}), **lang_config}
+    if merged_language.keys() != lang_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged_language.keys()}")
+
+    return merged_language
+
+
+def _get_neon_tts_config(neon_config_path=None) -> dict:
+    """
+    Get a configuration dict for TTS
+    Returns:
+    dict of TTS-related configuration
+    """
+    return _get_neon_local_config(neon_config_path)["tts"]
+
+
+def _get_neon_speech_config(neon_config_path=None) -> dict:
+    """
+    Get a configuration dict for listener. Merge any values from Mycroft config if missing from Neon.
+    Returns:
+        dict of config params used for listener in neon_speech
+    """
+    mycroft = _safe_mycroft_config()
+    local_config = _get_neon_local_config(neon_config_path)
+    # for section in local_config.content:
+    #     if isinstance(local_config[section], dict):
+    #         for subsection in local_config[section]:
+    #             if isinstance(local_config[section][subsection], dict):
+    #                 local_config[section][subsection] = dict(local_config[section][subsection])
+    #         local_config[section] = dict(local_config[section])
+    neon_listener_config = deepcopy(local_config.get("listener", {}))
+    neon_listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
+    neon_listener_config["save_utterances"] = local_config["prefFlags"].get("saveAudio", False)
+    neon_listener_config["confirm_listening"] = local_config["interface"].get("confirm_listening", True)
+    neon_listener_config["record_utterances"] = neon_listener_config["save_utterances"]
+    neon_listener_config["record_wake_words"] = neon_listener_config["save_utterances"]
+    merged_listener = {**mycroft.get("listener", {}), **neon_listener_config}
+    if merged_listener.keys() != neon_listener_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged_listener.keys()}")
+
+    lang = mycroft.get("language", {}).get("internal", "en-us")  # core_lang
+
+    neon_stt_config = local_config.get("stt", {})
+    merged_stt_config = {**mycroft.get("stt", {}), **neon_stt_config}
+    # stt keys will vary by installed/configured plugins
+    # if merged_stt_config.keys() != neon_stt_config.keys():
+    #     LOG.warning(f"Keys missing from Neon config! {merged_stt_config.keys()}")
+
+    hotword_config = local_config.get("hotwords") or mycroft.get("hotwords")
+    if hotword_config != local_config.get("hotwords"):
+        LOG.warning(f"Neon hotword config missing! {hotword_config}")
+
+    neon_audio_parser_config = local_config.get("audio_parsers", {})
+    merged_audio_parser_config = {**mycroft.get("audio_parsers", {}), **neon_audio_parser_config}
+    if merged_audio_parser_config.keys() != neon_audio_parser_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged_audio_parser_config.keys()}")
+
+    return {"listener": merged_listener,
+            "hotwords": hotword_config,
+            "audio_parsers": merged_audio_parser_config,
+            "lang": lang,
+            "stt": merged_stt_config,
+            "metric_upload": local_config["prefFlags"].get("metrics", False),
+            "remote_server": local_config.get("remoteVars", {}).get("remoteHost", "64.34.186.120"),
+            "data_dir": os.path.expanduser(local_config.get("dirVars", {}).get("rootDir") or "~/.local/share/neon"),
+            "keys": {}
+            }
+
+
+def _get_neon_bus_config(neon_config_path=None) -> dict:
+    """
+    Get a configuration dict for the messagebus. Merge any values from Mycroft config if missing from Neon.
+    Returns:
+        dict of config params used for a messagebus client
+    """
+    mycroft = _safe_mycroft_config().get("websocket", {})
+    neon = _get_neon_local_config(neon_config_path).get("websocket", {})
+    merged = {**mycroft, **neon}
+    if merged.keys() != neon.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
+    return merged
+
+
+def _get_neon_audio_config(neon_config_path=None) -> dict:
+    """
+    Get a configuration dict for the audio module.
+    Merge any values from Mycroft config if missing from Neon.
+    Returns:
+        dict of config params used for the Audio module
+    """
+    mycroft = _safe_mycroft_config()
+    local_config = _get_neon_local_config(neon_config_path)
+    neon_audio = local_config.get("audioService", {})
+    for section in neon_audio:
+        if isinstance(neon_audio[section], dict):
+            for s in neon_audio[section]:
+                if isinstance(neon_audio[section][s], dict):
+                    neon_audio[section][s] = dict(neon_audio[section][s])
+            neon_audio[section] = dict(neon_audio[section])
+    merged_audio = {**mycroft.get("Audio", {}), **neon_audio}
+    # tts keys will vary by installed/configured plugins
+    # if merged_audio.keys() != neon_audio.keys():
+    #     LOG.warning(f"Keys missing from Neon config! {merged_audio.keys()}")
+
+    return {"Audio": merged_audio,
+            "tts": _get_neon_tts_config(),
+            "language": _get_neon_lang_config()}
+
+
+def _get_neon_api_config(neon_config_path=None) -> dict:
+    """
+    Get a configuration dict for the api module.
+    Merge any values from Mycroft config if missing from Neon.
+    Returns:
+        dict of config params used for the Mycroft API module
+    """
+    core_config = _get_neon_local_config(neon_config_path)
+    api_config = deepcopy(core_config.get("api"))
+    api_config["metrics"] = core_config["prefFlags"].get("metrics", False)
+    mycroft = _safe_mycroft_config().get("server", {})
+    merged = {**mycroft, **api_config}
+    if merged.keys() != api_config.keys():
+        LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
+    return merged
+
+
+def _get_neon_skills_config(neon_config_path=None) -> dict:
+    """
+    Get a configuration dict for the skills module.
+    Merge any values from Mycroft config if missing from Neon.
+    Returns:
+        dict of config params used for the Mycroft Skills module
+    """
+    core_config = _get_neon_local_config(neon_config_path)
+    mycroft_config = _safe_mycroft_config()
+    neon_skills = deepcopy(core_config.get("skills", {}))
+    # neon_skills["directory"] = \
+    #     os.path.expanduser(core_config["dirVars"].get("skillsDir"))
+    # mycroft_config['skills'].setdefault("extra_directories", [])
+    # mycroft_config['skills']['extra_directories'].\
+    #     insert(0, os.path.expanduser(core_config["dirVars"].get("skillsDir")))
+    # Patch msm config for skills backwards-compat.
+    neon_skills["msm"] = {"directory": neon_skills.get("directory"),
+                          "versioned": False,
+                          "repo": {"branch": "",
+                                   "cache": "",
+                                   "url": ""}}
+
+    try:
+        ovos_core_version = get_package_version_spec("ovos-core")
+        if ovos_core_version.startswith("0.0.1"):
+            # ovos-core 0.0.1 uses directory_override param
+            LOG.debug("Adding `directory_override` setting for ovos-core")
+            neon_skills["directory_override"] = neon_skills["directory"]
+    except ModuleNotFoundError:
+        LOG.warning("ovos-core not installed")
+        neon_skills["directory_override"] = neon_skills["directory"]
+
+    neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
+    neon_skills["priority_skills"] = neon_skills["priority"] or []
+    neon_skills["blacklisted_skills"] = neon_skills["blacklist"] or []
+
+    if not isinstance(neon_skills["auto_update_interval"], float):
+        try:
+            neon_skills["auto_update_interval"] = \
+                float(neon_skills["auto_update_interval"])
+        except Exception as e:
+            LOG.error(e)
+            neon_skills["auto_update_interval"] = 24.0
+    if not isinstance(neon_skills["appstore_sync_interval"], float):
+        try:
+            neon_skills["appstore_sync_interval"] = \
+                float(neon_skills["appstore_sync_interval"])
+        except Exception as e:
+            LOG.error(e)
+            neon_skills["appstore_sync_interval"] = 6.0
+    neon_skills["update_interval"] = neon_skills["auto_update_interval"]  # Backwards Compat.
+    if not neon_skills["neon_token"]:
+        try:
+            neon_skills["neon_token"] = find_neon_git_token()
+            # populate_github_token_config(neon_skills["neon_token"])
+        except FileNotFoundError:
+            LOG.debug(f"No Github token found; skills may fail to install")
+    skills_config = {**mycroft_config.get("skills", {}), **neon_skills}
+    return skills_config
+
+
+def _get_neon_transcribe_config(neon_config_path=None) -> dict:
+    """
+    Get a configuration dict for the transcription module.
+    Returns:
+        dict of config params used for the Neon transcription module
+    """
+    local_config = _get_neon_local_config(neon_config_path)
+    user_config = get_neon_user_config(neon_config_path) if \
+        isfile(join(neon_config_path or get_config_dir(),
+                    "ngi_user_info.yml")) else {}
+    neon_transcribe_config = dict()
+    neon_transcribe_config["transcript_dir"] = \
+        local_config["dirVars"].get("docsDir", "")
+    neon_transcribe_config["audio_permission"] = \
+        user_config.get("privacy", {}).get("save_audio", False)
+    return neon_transcribe_config
+
+
+def _get_neon_gui_config(neon_config_path=None) -> dict:
+    """
+    Get a configuration dict for the gui module.
+    Returns:
+        dict of config params used for the Neon gui module
+    """
+    local_config = _get_neon_local_config(neon_config_path)
+    gui_config = dict(local_config["gui"])
+    gui_config["base_port"] = gui_config["port"]
+    return gui_config
+
+
+def _safe_mycroft_config() -> dict:
+    """
+    Safe reference to mycroft config that always returns a dict
+    Returns:
+        dict mycroft configuration
+    """
+    from ovos_utils.configuration import read_mycroft_config
+    config = read_mycroft_config()
+    return dict(config)
+
+
+def _get_neon_yaml_config() -> dict:
+    from ovos_utils.configuration import get_ovos_config, \
+        get_xdg_config_save_path
+    from ovos_utils.json_helper import merge_dict
+
+    with open(get_ovos_config()["default_config_path"]) as f:
+        default = yaml.safe_load(f)
+    config = dict(default)
+    system_config = os.environ.get("MYCROFT_SYSTEM_CONFIG",
+                                   "/etc/neon/neon.yaml")
+    user_config = join(get_xdg_config_save_path("neon"), "neon.yaml")
+    if isfile(system_config):
+        with open(system_config) as f:
+            system = yaml.safe_load(f)
+        config = merge_dict(config, system)
+
+    if isfile(user_config):
+        with open(user_config) as f:
+            user = yaml.safe_load(f)
+        config = merge_dict(config, user)
+
+    return config
+
+
+def _get_neon_auth_config(path: Optional[str] = None) -> dict:
+    """
+    Returns a dict authentication configuration and handles populating values
+    from key files
+    Args:
+        path: optional path to yml configuration files
+    Returns:
+        NGIConfig object with authentication config
+    """
+    if isfile(join(path or get_config_dir(), "ngi_auth_vars.yml")):
+        try:
+            auth_config = NGIConfig("ngi_auth_vars", path)
+        except PermissionError:
+            LOG.error(f"Insufficient Permissions for path: {path}")
+            auth_config = NGIConfig("ngi_auth_vars")
+            _populate_read_only_config(path, basename(auth_config.file_path),
+                                       auth_config)
+        if not auth_config.content:
+            LOG.info("Populating empty auth configuration")
+            auth_config._content = build_new_auth_config(path)
+            auth_config['api_services'] = {
+                'wolfram_alpha': auth_config.get('wolfram_alpha') or {},
+                'alpha_vantage': auth_config.get('alpha_vantage') or {},
+                'open_weather_map': auth_config.get('open_weather_map') or {}
+            }
+            auth_config.write_changes()
+
+        if not auth_config.content:
+            LOG.info("Empty auth_config generated, adding 'created' key to "
+                     "prevent regeneration attempts")
+            auth_config._content = {"_loaded": True}
+            auth_config.write_changes()
+        # LOG.info(f"Loaded auth config from {auth_config.file_path}")
+        # for key in auth_config.content:
+        #     if isinstance(auth_config[key], dict):
+        #         for sub in auth_config[key]:
+        #             if isinstance(auth_config[key][sub], dict):
+        #                 auth_config[key][sub] = dict(auth_config[key][sub])
+        #         auth_config[key] = dict(auth_config[key])
+        return dict(auth_config.content)
+    else:
+        auth_config = build_new_auth_config(path)
+        auth_config['api_services'] = {
+            'wolfram_alpha': auth_config.get('wolfram_alpha') or {},
+            'alpha_vantage': auth_config.get('alpha_vantage') or {},
+            'open_weather_map': auth_config.get('open_weather_map' or {})
+        }
+        return auth_config
+
+
+def _move_config_sections(user_config, local_config):
+    """
+    Temporary method to handle one-time migration of user_config params to local_config
+    Args:
+        user_config (NGIConfig): user configuration object
+        local_config (NGIConfig): local configuration object
+    """
+    depreciated_user_configs = ("interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
+    try:
+        if any([d in user_config.content for d in depreciated_user_configs]):
+            LOG.warning("Depreciated keys found in user config! Adding them to local config")
+            if "wake_words_enabled" in user_config.content.get("interface", dict()):
+                user_config["interface"]["wake_word_enabled"] = user_config["interface"].pop("wake_words_enabled")
+            config_to_move = {"interface": user_config.content.pop("interface", {}),
+                              "listener": user_config.content.pop("listener", {}),
+                              "skills": user_config.content.pop("skills", {}),
+                              "session": user_config.content.pop("session", {}),
+                              "tts": user_config.content.pop("tts", {}),
+                              "stt": user_config.content.pop("stt", {}),
+                              "logs": user_config.content.pop("logs", {}),
+                              "device": user_config.content.pop("device", {})}
+            local_config.update_keys(config_to_move)
+
+        if not local_config.get("language"):
+            local_config["language"] = dict()
+        if local_config.get("stt", {}).get("detection_module"):
+            local_config["language"]["detection_module"] = local_config["stt"].pop("detection_module")
+        if local_config.get("stt", {}).get("translation_module"):
+            local_config["language"]["translation_module"] = local_config["stt"].pop("translation_module")
+    except (KeyError, RuntimeError):
+        # If some other instance moves these values, just pass
+        pass

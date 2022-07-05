@@ -102,23 +102,6 @@ def get_packaged_core_version() -> str:
     raise ImportError("No Core Package Found")
 
 
-def get_version_from_file() -> str:
-    """
-    Get the core version from a .release file, Provides legacy support for Neon
-    Returns:
-        Version of the cloned core repository
-    """
-    import glob
-    import os
-    from neon_utils.configuration_utils import get_neon_local_config
-    path = get_neon_local_config().get("dirVars", {}).get("ngiDir") or \
-        os.path.expanduser("~/.neon")
-    release_files = glob.glob(f'{path}/*.release')
-    if len(release_files):
-        return os.path.splitext(os.path.basename(release_files[0]))[0]
-    raise FileNotFoundError("No Version File Found")
-
-
 def get_neon_core_version() -> str:
     """
     Gets the current version of the installed Neon Core.
@@ -129,11 +112,6 @@ def get_neon_core_version() -> str:
     try:
         return get_packaged_core_version()
     except ImportError:
-        pass
-
-    try:
-        return get_version_from_file()
-    except FileNotFoundError:
         pass
 
     return "0.0"

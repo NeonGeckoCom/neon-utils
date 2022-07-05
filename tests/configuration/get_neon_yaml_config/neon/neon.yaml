@@ -1,0 +1,4 @@
+config: user
+user:
+  from_user: True
+  not_from_user: False

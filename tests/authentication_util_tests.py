@@ -33,7 +33,7 @@ import shutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.authentication_utils import *
-from neon_utils.configuration_utils import get_neon_local_config, NGIConfig
+from neon_utils.configuration_utils import _get_neon_local_config, NGIConfig
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 CRED_PATH = os.path.join(ROOT_DIR, "credentials")
@@ -139,14 +139,14 @@ class AuthUtilTests(unittest.TestCase):
     def test_write_github_token(self):
         config_path = os.path.join(ROOT_DIR, "configuration")
         token = "TOKEN"
-        local_config = get_neon_local_config(config_path)
+        local_config = _get_neon_local_config(config_path)
         self.assertIsNone(local_config["skills"]["neon_token"])
         populate_github_token_config(token, config_path)
         self.assertEqual(local_config["skills"]["neon_token"], token)
 
     def test_write_aws_credentials(self):
         config_path = os.path.join(ROOT_DIR, "configuration")
-        local_config = get_neon_local_config(config_path)
+        local_config = _get_neon_local_config(config_path)
         self.assertEqual(local_config["tts"]["amazon"], {"region": "us-west-2",
                                                          "aws_access_key_id": "",
                                                          "aws_secret_access_key": ""})

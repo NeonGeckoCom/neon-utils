@@ -133,8 +133,7 @@ skills:
   repo_branch: "18.08"
   data_dir: "~/.neon/msm"
   neon_token:
-  extra_directories:
-    - /skills
+  extra_directories: []
 
 audio_parsers:
   blacklist: ["gender"]
@@ -203,26 +202,13 @@ gnome:
   appFolders: "['accessories', 'office', 'Neongecko']"
 
 dirVars:
-  coreDir: /opt/neon
-  # coreDir is depreciated for packaged Neon Installations
   rootDir: ~/.local/share/neon
   confDir: ~/.config/neon
   cacheDir: ~/.cache/neon
   skillsDir: ~/.local/share/neon/skills
-  ngiDir: /opt/neon/NGI
-  # ngiDir is depreciated for packaged Neon Installations
-  guiDir:
-  tempDir: /tmp/neon
-  docsDir: ~/Documents/NeonGecko
-  diagsDir: ~/Documents/NeonGecko/Diagnostics
   ipcDir: /tmp/neon/ipc
   # Changes to ipcDir must also be made in NGI/utilities/configHelper
-  musicDir: ~/Music
-  videoDir: ~/Videos/NeonGecko
-  picsDir: ~/Pictures/NeonGecko
-  logsDir: /var/log/mycroft
-  repoDir: ~/.neon/skills-repo
-  padatiousDir: ~/.neon/intent_cache
+  logsDir:
 
 # File paths should be absolute (or ~/ relative) or relative to /res/ (see resolve_resource_file)
 fileVars:
@@ -233,34 +219,6 @@ sounds:
   startListening: snd/start_listening.wav
   endListening: snd/end_listening.wav
   acknowledge: snd/acknowledge.mp3
-
-ttsOpts: {None: '', 'Chinese, Mandarin': zh-ZH, Danish: da-DK, Dutch: nl-NL, 'English, Australian': en-AU,
-          'English, British': en-GB, 'English, Indian': en-IN, 'English, US': en-US, 'English, Welsh': en-GB-WLS,
-          French: fr-FR, 'French, Canadian': fr-CA, Hindi: hi-IN, German: de-DE, Icelandic: is-IS,
-          Italian: it-IT, Japanese: ja-JP, Korean: ko-KR, Norwegian: nb-NO, Polish: pl-PL,
-          'Portuguese, Brazilian': pt-BR, 'Portuguese, European': pt-PT, Romanian: ro-RO,
-          Russian: ru-RU, 'Spanish, European': es-ES, 'Spanish, Mexican': es-MX, 'Spanish, US': es-US,
-          Swedish: sv-SE, Turkish: tr-TR, Welsh: cy-GB}
-
-sttOpts: {Deutsch (Deutschland): de-DE, English (United States): en-US, Español (España): es-ES,
-          Español (México): es-MX, Français (Canada): fr-CA, Français (France): fr-FR,
-          Italiano (Italia): it-IT, Português (Portugal): pt-PT}
-
-sttSpokenOpts: {Afrikaans: af-ZA, Amharic: am-ET, Armenian: hy-AM, Azerbaijani: az-AZ,
-                Indonesian: id-ID, Malay: ms-MY, Bengali: bn-BD, Catalan: ca-ES, Czech: cs-CZ, Danish: da-DK,
-                German: de-DE, 'English, British': en-GB, 'English, American': en-US, Spanish: es-ES,
-                'Spanish, American': es-US, 'Spanish, Mexican': es-MX, Basque: eu-ES, Filipino: fil-PH,
-                'French, Canadian': fr-CA, French: fr-FR, Galician: gl-ES, Georgian: ka-GE, Gujarati: gu-IN,
-                Croatian: hr-HR, Zulu: zu-ZA, Icelandic: is-IS, Italian: it-IT, Javanese: jv-ID,
-                Kannada: kn-IN, Khmer: km-KH, Lao: lo-LA, Latvian: lv-LV, Lithuanian: lt-LT, Hungarian: hu-HU,
-                Malayalam: ml-IN, Marathi: mr-IN, Dutch: nl-NL, Nepali: ne-NP, Norwegian Bokmål: nb-NO,
-                Polish: pl-PL, 'Portuguese, Brazilian': pt-BR, Portuguese: pt-PT, Romanian: ro-RO,
-                Sinhala: si-LK, Slovak: sk-SK, Slovenian: sl-SI, Sundanese: su-ID, Swahili: sw-TZ,
-                Finnish: fi-FI, Swedish: sv-SE, Tamil: ta-IN, Telugu: te-IN, Vietnamese: vi-VN,
-                Turkish: tr-TR, Urdu: ur-PK, Greek: el-GR, Bulgarian: bg-BG, Russian: ru-RU, Serbian: sr-RS,
-                Ukrainian: uk-UA, Hebrew: he-IL, Arabic: ar-IL, Persian: fa-IR, Hindi: hi-IN, Thai: th-TH,
-                Korean: ko-KR, Taiwanese: zh-TW, 'Chinese, Cantonese': yue-Hant-HK, Japanese: ja-JP,
-                'Chinese, Mandarin': zh}
 
 ready_settings:
   # pairing -> device is paired
