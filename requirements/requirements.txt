@@ -11,4 +11,4 @@ ovos_utils~=0.0.6
 neon_mq_connector~=0.2,>=0.5.1a1
 geopy~=2.1
 word2number~=1.0
-ovos-config~=0.0,>=0.0.2a3
+ovos-config~=0.0,>=0.0.2a3,!=0.0.2
