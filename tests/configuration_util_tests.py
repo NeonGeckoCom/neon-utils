@@ -404,10 +404,6 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(from_disk, TEST_DICT)
         os.remove(file_path)
 
-    def test_get_device_type(self):
-        self.assertIn(get_neon_device_type(),
-                      ("desktop", "pi", "linux", "server"))
-
     def test_get_user_config_add_keys(self):
         old_user_info = os.path.join(CONFIG_PATH, "old_user_info.yml")
         ngi_user_info = os.path.join(CONFIG_PATH, "ngi_user_info.yml")

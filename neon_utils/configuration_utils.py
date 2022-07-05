@@ -900,31 +900,6 @@ def _populate_read_only_config(path: Optional[str], config_filename: str,
     return False
 
 
-def get_neon_device_type() -> str:
-    """
-    Returns device type (server, pi, other)
-    Returns:
-        str device type
-    """
-    import platform
-    import importlib.util
-    local_config = get_neon_local_config()
-    config_dev = local_config["devVars"].get("devType", "")
-    if "pi" in config_dev:
-        return "pi"
-    if config_dev == "server":
-        return "server"
-    if config_dev != "generic":
-        return config_dev
-    if "arm" in platform.machine():
-        return "pi"
-    if importlib.util.find_spec("neon-core-client"):
-        return "desktop"
-    if importlib.util.find_spec("neon-core-server"):
-        return "server"
-    return "desktop"
-
-
 def is_neon_core() -> bool:
     """
     Checks for neon-specific packages to determine if
