@@ -838,30 +838,37 @@ class ConfigurationUtilTests(unittest.TestCase):
     def test_validate_config_env(self):
         from neon_utils.configuration_utils import _validate_config_env
         os.environ["XDG_CONFIG_HOME"] = ""
+
+        # Valid default path
         _validate_config_env()
         self.assertEqual(os.environ["NEON_CONFIG_PATH"],
                          expanduser("~/.config/neon"))
 
+        # Invalid neon spec
         os.environ["NEON_CONFIG_PATH"] = "/tmp"
         _validate_config_env()
         self.assertEqual(os.environ["NEON_CONFIG_PATH"],
                          expanduser("~/.config/neon"))
 
+        # Valid neon spec
         os.environ["NEON_CONFIG_PATH"] = "/tmp/neon/neon"
         _validate_config_env()
         self.assertEqual(os.environ["NEON_CONFIG_PATH"], "/tmp/neon/neon")
         self.assertEqual(os.environ["XDG_CONFIG_HOME"], "/tmp/neon")
 
+        # Valid XDG override, Valid Neon spec
         os.environ["XDG_CONFIG_HOME"] = "/tmp/xdg"
         _validate_config_env()
         self.assertEqual(os.environ["NEON_CONFIG_PATH"], "/tmp/xdg/neon")
         self.assertEqual(os.environ["XDG_CONFIG_HOME"], "/tmp/xdg")
 
+        # Valid XDG override, No Neon spec
         os.environ["NEON_CONFIG_PATH"] = ""
         _validate_config_env()
         self.assertEqual(os.environ["NEON_CONFIG_PATH"], "/tmp/xdg/neon")
         self.assertEqual(os.environ["XDG_CONFIG_HOME"], "/tmp/xdg")
 
+        # Valid XDG Override, relocate Neon-spec config
         os.environ["XDG_CONFIG_HOME"] = "/tmp/neon_config"
         os.environ["NEON_CONFIG_PATH"] = join(dirname(__file__),
                                               "test_migrate_config")

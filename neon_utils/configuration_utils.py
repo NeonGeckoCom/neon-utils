@@ -32,21 +32,20 @@ import json
 import os
 import sys
 import shutil
+import yaml
 
 from copy import deepcopy
 from os.path import *
 from collections.abc import MutableMapping
 from contextlib import suppress
 
-import yaml
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.xdg_utils import xdg_config_home
-# from ruamel.yaml import YAML
 from typing import Optional
 
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, \
-    populate_github_token_config, build_new_auth_config
+    build_new_auth_config
 from neon_utils.lock_utils import create_lock
 from neon_utils.file_utils import path_is_read_writable, create_file
 from neon_utils.packaging_utils import get_package_version_spec
@@ -59,7 +58,6 @@ class NGIConfig:
     def __init__(self, name, path=None, force_reload: bool = False):
         self.name = name
         self.path = path or get_config_dir()
-        # self.parser = YAML()
         lock_filename = join(self.path, f".{self.name}.lock")
         self.lock = create_lock(lock_filename)
         self._pending_write = False
@@ -289,7 +287,6 @@ class NGIConfig:
         try:
             with self.lock:
                 with open(self.file_path, 'r') as f:
-                    # config = self.parser.load(f)
                     try:
                         config = yaml.safe_load(f)
                     except Exception as e:
@@ -452,7 +449,12 @@ def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
     return None
 
 
-_DEFAULT_OVOS_CONF = {"module_overrides": {
+def _init_ovos_conf(name: str):
+    """
+    Perform a one-time init of ovos.conf for the calling module
+    :param name: Name of calling module to configure to use `neon.yaml`
+    """
+    _DEFAULT_OVOS_CONF = {"module_overrides": {
         "neon_core": {
             "xdg": True,
             "base_folder": "neon",
@@ -462,12 +464,6 @@ _DEFAULT_OVOS_CONF = {"module_overrides": {
         "submodule_mappings": {}
     }
 
-
-def _init_ovos_conf(name: str):
-    """
-    Perform a one-time init of ovos.conf for the calling module
-    :param name: Name of calling module to configure to use `neon.yaml`
-    """
     from ovos_utils.xdg_utils import xdg_config_home
     ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
     if isfile(ovos_path):
@@ -528,7 +524,9 @@ def _init_ovos_conf(name: str):
 
 def _validate_config_env():
     """
-    Check that XDG_CONFIG_HOME and NEON_CONFIG_PATH match for compatibility
+    Check that XDG_CONFIG_HOME and NEON_CONFIG_PATH match for compatibility. If
+    config path isn't writable, relocate files to a valid directory and update
+    envvars
     """
     neon_spec = os.getenv("NEON_CONFIG_PATH")
     xdg_spec = os.getenv("XDG_CONFIG_HOME")
@@ -559,7 +557,6 @@ def _validate_config_env():
 
     # Paths like '/config' can't be translated to XDG, just move files
     from glob import glob
-    # TODO: Write unit test for this DM
     real_config_path = get_config_dir()
     LOG.warning("NEON_CONFIG_PATH is not XDG-compatible. "
                 "copying config")
@@ -581,6 +578,8 @@ def init_config_dir():
     configuration is loaded. Repeated calls or calls after configuration is
     loaded may lead to inconsistent behavior.
     """
+
+    # Ensure envvars are consistent and valid (read/writeable)
     _validate_config_env()
 
     import inspect
@@ -588,37 +587,14 @@ def init_config_dir():
     stack = inspect.stack()
     mod = inspect.getmodule(stack[1][0])
     name = mod.__name__.split('.')[0] if mod else ''
-    _init_ovos_conf(name)
 
-    # TODO: Check if spec'd config dir is unwritable
-    #
-    # env_spec = expanduser(os.getenv("NEON_CONFIG_PATH", ""))
-    # valid_dir = get_config_dir()
-    # if env_spec and valid_dir != env_spec:
-    #     with create_lock("init_config"):
-    #         for file in glob(f"{env_spec}/ngi_*.yml"):
-    #             filename = basename(file)
-    #             if not isfile(join(valid_dir, filename)):
-    #                 LOG.info(f"Copying {filename} to {valid_dir}")
-    #                 shutil.copyfile(file, join(valid_dir, filename))
-    #             else:
-    #                 LOG.warning(f"Skipping overwrite of existing file: "
-    #                             f"{basename(file)}")
-    #         os.environ["NEON_CONFIG_PATH"] = valid_dir
-    #         LOG.warning(f"Config files moved and"
-    #                     f" NEON_CONFIG_PATH set to {valid_dir}")
-    #     return True
-    # if not env_spec:
-    #     LOG.info(f"Set NEON_CONFIG_PATH={valid_dir}")
-    #     os.environ["NEON_CONFIG_PATH"] = valid_dir
-    # else:
-    #     LOG.debug(f"NEON_CONFIG_PATH={env_spec}")
-    # return False
+    # Ensure `ovos.conf` specifies this module as using `neon.yaml`
+    _init_ovos_conf(name)
 
 
 def get_config_dir():
     """
-    Get a default directory in which to find configuration files,
+    Get a default directory in which to find Neon configuration files,
     creating it if it doesn't exist.
     Returns: Path to configuration or else default
     """
@@ -1000,12 +976,7 @@ def get_mycroft_compatible_config(mycroft_only=False,
         NGIConfig("default_user_conf", os.path.join(os.path.dirname(__file__),
                                                     "default_configurations"))
     local = get_neon_local_config(neon_config_path)
-    # for section in local.content:
-    #     if isinstance(local[section], dict):
-    #         for subsection in local[section]:
-    #             if isinstance(local[section][subsection], dict):
-    #                 local[section][subsection] = dict(local[section][subsection])
-    #         local[section] = dict(local[section])
+
     default_config["lang"] = "en-us"
     default_config["system_unit"] = user["units"]["measure"]
     default_config["time_format"] = \
@@ -1017,19 +988,12 @@ def get_mycroft_compatible_config(mycroft_only=False,
     default_config["sounds"] = {**default_config.get("sounds", {}),
                                 **local.get("sounds", {})}
 
-    # default_config["play_wav_cmdline"]
-    # default_config["play_mp3_cmdline"]
-    # default_config["play_ogg_cmdline"]
-
     default_config["location"] = \
         get_mycroft_compatible_location(user.get("location"))
 
     default_config["data_dir"] = local["dirVars"]["rootDir"]
     default_config["cache_path"] = local["dirVars"]["cacheDir"]
-    # default_config["ready_settings"]
     default_config["skills"] = _get_neon_skills_config(neon_config_path)
-    # default_config["converse"]
-    # default_config["system"]
     default_config["server"] = _get_neon_api_config(neon_config_path)
     default_config["websocket"] = _get_neon_bus_config(neon_config_path)
     default_config["gui_websocket"] = {**default_config.get("gui_websocket",
@@ -1039,13 +1003,9 @@ def get_mycroft_compatible_config(mycroft_only=False,
         default_config["gui_websocket"].get("base_port") or \
         default_config["gui_websocket"].get("port")
 
-    # default_config["network_tests"]
     default_config["listener"] = speech["listener"]
-    # default_config["precise"]
     default_config["hotwords"] = speech["hotwords"]
-    # default_config["enclosure"]
     default_config["log_level"] = local["logs"]["log_level"]
-    # default_config["ignore_logs"]
     default_config["session"] = local["session"]
     default_config["stt"] = speech["stt"]
     default_config["tts"] = local["tts"]
@@ -1068,8 +1028,6 @@ def get_mycroft_compatible_config(mycroft_only=False,
 
     if local["dirVars"]["logsDir"]:
         default_config["log_dir"] = local["dirVars"]["logsDir"]
-
-    # default_config["Display"]
 
     return default_config
 
@@ -1178,12 +1136,6 @@ def migrate_ngi_config(old_config_path: str = None,
     compat_config = get_mycroft_compatible_config(
         neon_config_path=dirname(old_config_path))
     try:
-        # for key in compat_config:
-        #     if isinstance(compat_config[key], dict):
-        #         for key2 in compat_config[key]:
-        #             if isinstance(compat_config[key][key2], dict):
-        #                 compat_config[key][key2] = dict(compat_config[key][key2])
-        #         compat_config[key] = dict(compat_config[key])
         with open(new_config_path, 'w+') as f:
             yaml.safe_dump(compat_config, f, allow_unicode=True,
                            default_flow_style=False, sort_keys=False)
@@ -1229,6 +1181,7 @@ def _make_loaded_config_safe(config: dict) -> dict:
         (list, dict, str, float, etc.)
     """
     return json.loads(json.dumps(config))
+
 
 # TODO: Below methods are all deprecated and retained only for backwards-compat
 def get_neon_auth_config(*args, **kwargs):
@@ -1501,22 +1454,6 @@ def _get_neon_yaml_config() -> dict:
         config = merge_dict(config, user)
 
     return config
-
-
-def read_config() -> dict:
-    """
-    Read configuration as neon_core.configuration
-    """
-    # try:
-    #     from neon_core.configuration import Configuration
-    #     return Configuration()
-    # except ImportError:
-    #     pass
-    try:
-        return _safe_mycroft_config()
-    except Exception as e:
-        LOG.error(e)
-    return _get_neon_yaml_config()
 
 
 def _get_neon_auth_config(path: Optional[str] = None) -> dict:
