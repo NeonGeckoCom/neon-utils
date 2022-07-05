@@ -46,19 +46,11 @@ LOG_PATH = os.path.join(ROOT_DIR, "tests", "log_files")
 class LogUtilTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        from neon_utils.configuration_utils import _get_neon_local_config
-        # cls.test_config_path = os.path.join(ROOT_DIR, "test_config")
-        # os.environ["NEON_CONFIG_PATH"] = cls.test_config_path
-        # conf = _get_neon_local_config()
-        # conf["dirVars"]["logsDir"] = LOG_PATH
-        # conf.write_changes()
         os.makedirs(LOG_PATH, exist_ok=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
         shutil.rmtree(LOG_PATH)
-        # if os.path.exists(cls.test_config_path):
-        #     shutil.rmtree(cls.test_config_path)
 
     def test_get_log_file(self):
         from neon_utils.log_utils import get_logger
