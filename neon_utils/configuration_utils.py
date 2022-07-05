@@ -807,7 +807,7 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     return user_config
 
 
-def get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
+def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     """
     Returns a dict local configuration and handles any
      migration of configuration values to local config from user config
@@ -975,7 +975,7 @@ def get_mycroft_compatible_config(mycroft_only=False,
                     "ngi_user_info.yml")) else \
         NGIConfig("default_user_conf", os.path.join(os.path.dirname(__file__),
                                                     "default_configurations"))
-    local = get_neon_local_config(neon_config_path)
+    local = _get_neon_local_config(neon_config_path)
 
     default_config["lang"] = "en-us"
     default_config["system_unit"] = user["units"]["measure"]
@@ -1201,7 +1201,7 @@ def _get_neon_lang_config(neon_config_path=None) -> dict:
     name = module.__name__ if module else call.filename
     LOG.warning("This reference is deprecated - "
                 f"{name}:{call.lineno}")
-    lang_config = deepcopy(get_neon_local_config(neon_config_path).content.get("language", {}))
+    lang_config = deepcopy(_get_neon_local_config(neon_config_path).content.get("language", {}))
     lang_config["internal"] = lang_config.pop("core_lang", "en-us")
     lang_config["boost"] = lang_config.get("boost", False)
     merged_language = {**_safe_mycroft_config().get("language", {}), **lang_config}
@@ -1217,7 +1217,7 @@ def _get_neon_tts_config(neon_config_path=None) -> dict:
     Returns:
     dict of TTS-related configuration
     """
-    return get_neon_local_config(neon_config_path)["tts"]
+    return _get_neon_local_config(neon_config_path)["tts"]
 
 
 def _get_neon_speech_config(neon_config_path=None) -> dict:
@@ -1227,7 +1227,7 @@ def _get_neon_speech_config(neon_config_path=None) -> dict:
         dict of config params used for listener in neon_speech
     """
     mycroft = _safe_mycroft_config()
-    local_config = get_neon_local_config(neon_config_path)
+    local_config = _get_neon_local_config(neon_config_path)
     # for section in local_config.content:
     #     if isinstance(local_config[section], dict):
     #         for subsection in local_config[section]:
@@ -1280,7 +1280,7 @@ def _get_neon_bus_config(neon_config_path=None) -> dict:
         dict of config params used for a messagebus client
     """
     mycroft = _safe_mycroft_config().get("websocket", {})
-    neon = get_neon_local_config(neon_config_path).get("websocket", {})
+    neon = _get_neon_local_config(neon_config_path).get("websocket", {})
     merged = {**mycroft, **neon}
     if merged.keys() != neon.keys():
         LOG.warning(f"Keys missing from Neon config! {merged.keys()}")
@@ -1295,7 +1295,7 @@ def _get_neon_audio_config(neon_config_path=None) -> dict:
         dict of config params used for the Audio module
     """
     mycroft = _safe_mycroft_config()
-    local_config = get_neon_local_config(neon_config_path)
+    local_config = _get_neon_local_config(neon_config_path)
     neon_audio = local_config.get("audioService", {})
     for section in neon_audio:
         if isinstance(neon_audio[section], dict):
@@ -1320,7 +1320,7 @@ def _get_neon_api_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for the Mycroft API module
     """
-    core_config = get_neon_local_config(neon_config_path)
+    core_config = _get_neon_local_config(neon_config_path)
     api_config = deepcopy(core_config.get("api"))
     api_config["metrics"] = core_config["prefFlags"].get("metrics", False)
     mycroft = _safe_mycroft_config().get("server", {})
@@ -1337,7 +1337,7 @@ def _get_neon_skills_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for the Mycroft Skills module
     """
-    core_config = get_neon_local_config(neon_config_path)
+    core_config = _get_neon_local_config(neon_config_path)
     mycroft_config = _safe_mycroft_config()
     neon_skills = deepcopy(core_config.get("skills", {}))
     # neon_skills["directory"] = \
@@ -1397,7 +1397,7 @@ def _get_neon_transcribe_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for the Neon transcription module
     """
-    local_config = get_neon_local_config(neon_config_path)
+    local_config = _get_neon_local_config(neon_config_path)
     user_config = get_neon_user_config(neon_config_path) if \
         isfile(join(neon_config_path or get_config_dir(),
                     "ngi_user_info.yml")) else {}
@@ -1415,7 +1415,7 @@ def _get_neon_gui_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for the Neon gui module
     """
-    local_config = get_neon_local_config(neon_config_path)
+    local_config = _get_neon_local_config(neon_config_path)
     gui_config = dict(local_config["gui"])
     gui_config["base_port"] = gui_config["port"]
     return gui_config
