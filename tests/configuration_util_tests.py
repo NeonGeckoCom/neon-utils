@@ -357,9 +357,9 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertTrue(os.path.isdir(config_path))
 
         # Valid override
-        os.environ["XDG_CONFIG_HOME"] = "~/"
+        os.environ["XDG_CONFIG_HOME"] = expanduser("~/")
         config_path = get_config_dir()
-        self.assertEqual(config_path, os.path.expanduser("~/neon"))
+        self.assertEqual(config_path, expanduser("~/neon"))
         self.assertTrue(os.path.isdir(config_path))
         os.environ.pop("XDG_CONFIG_HOME")
         self.assertIsNone(os.getenv("XDG_CONFIG_HOME"))
