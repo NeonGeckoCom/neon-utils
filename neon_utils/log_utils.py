@@ -27,7 +27,6 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import sys
 import logging
 
 from datetime import datetime, timedelta
@@ -36,31 +35,12 @@ from os.path import isdir
 from typing import Optional, Union
 from ovos_config import Configuration
 from ovos_utils.xdg_utils import xdg_data_home
-from neon_utils.decorators import module_property
 from neon_utils.logger import LOG
 
 
-_log_dir = None
-
-
 def _get_log_dir():
-    global _log_dir
-    if not _log_dir:
-        _log_dir = os.path.expanduser(dict(Configuration()).get("log_dir") or
-                                      os.path.join(xdg_data_home(), "neon",
-                                                   "logs"))
-    return _log_dir
-
-
-# Below patches LOG_DIR global param
-if float('.'.join(sys.version.split('.', 2)[:2])) > 3.6:
-    @module_property
-    def _LOG_DIR():
-        # TODO: Deprecate in v1.0.0
-        print("This reference is deprecated. Read from config directly")
-        return _get_log_dir()
-else:
-    LOG_DIR = _get_log_dir()
+    return os.path.expanduser(dict(Configuration()).get("log_dir") or
+                              os.path.join(xdg_data_home(), "neon", "logs"))
 
 
 class ServiceLog(Enum):
