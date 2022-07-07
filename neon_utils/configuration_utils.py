@@ -506,6 +506,7 @@ def _init_ovos_conf(name: str):
     # Note that the below block reloads modules in a specific order due to
     # imports within ovos_config and mycroft.configuration
     import ovos_config
+    importlib.reload(ovos_config.locations)
     from ovos_utils.configuration import get_ovos_config
     ovos_conf = get_ovos_config()  # Load the full stack for /etc overrides
     if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
@@ -513,7 +514,6 @@ def _init_ovos_conf(name: str):
             ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
 
     importlib.reload(ovos_config.config)
-    importlib.reload(ovos_config.locations)
     importlib.reload(ovos_config)
     import ovos_config.models
     importlib.reload(ovos_config.models)
