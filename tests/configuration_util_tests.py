@@ -780,6 +780,25 @@ class ConfigurationUtilTests(unittest.TestCase):
                 "test_module": "neon_core",
                 "other_test_mod": "neon_core"
             }})
+
+        import inspect
+        import ovos_config
+        ovos_config.DEFAULT_CONFIG = join(dirname(__file__),
+                                          "configuration", "mycroft.conf")
+        old_value = deepcopy(ovos_config.DEFAULT_CONFIG)
+
+        stack = inspect.stack()
+        mod = inspect.getmodule(stack[1][0])
+        this_modname = mod.__name__.split('.')[0]
+        _init_ovos_conf(this_modname)
+        self.assertNotEqual(old_value, ovos_config.DEFAULT_CONFIG)
+        import ovos_config.models
+        self.assertEqual(ovos_config.models.DEFAULT_CONFIG,
+                         ovos_config.DEFAULT_CONFIG)
+        import ovos_config.config
+        self.assertEqual(ovos_config.config.Configuration.default.path,
+                         ovos_config.DEFAULT_CONFIG)
+
         os.environ.pop("XDG_CONFIG_HOME")
         shutil.rmtree(test_config_dir)
 
