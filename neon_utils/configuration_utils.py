@@ -464,7 +464,6 @@ def _init_ovos_conf(name: str):
         "submodule_mappings": {}
     }
 
-    from ovos_utils.xdg_utils import xdg_config_home
     ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
     if isfile(ovos_path):
         try:
@@ -507,7 +506,7 @@ def _init_ovos_conf(name: str):
     # imports within ovos_config and mycroft.configuration
     import ovos_config
     importlib.reload(ovos_config.locations)
-    from ovos_utils.configuration import get_ovos_config
+    from ovos_config.meta import get_ovos_config
     ovos_conf = get_ovos_config()  # Load the full stack for /etc overrides
     if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
         ovos_config.locations.DEFAULT_CONFIG = \
@@ -578,6 +577,15 @@ def _validate_config_env():
     os.environ["NEON_CONFIG_PATH"] = real_config_path
 
 
+def _check_legacy_config() -> str:
+    """
+    Return the path to valid legacy core configuration
+    """
+    os.environ["NEON_CONFIG_PATH"] = os.getenv("NEON_CONFIG_PATH") or \
+        get_config_dir()
+    return join(os.getenv("NEON_CONFIG_PATH"), "ngi_local_conf.yml")
+
+
 def init_config_dir():
     """
     Performs one-time initialization of the configuration directory.
@@ -586,9 +594,28 @@ def init_config_dir():
     loaded may lead to inconsistent behavior.
     """
 
+    old_config_file = _check_legacy_config()
+
     # Ensure envvars are consistent and valid (read/writeable)
     _validate_config_env()
-
+    if isfile(old_config_file):
+        new_config_path = get_config_dir()
+        if isfile(join(new_config_path, "neon.yaml")):
+            LOG.error("Config already exists, skipping migration")
+        else:
+            LOG.warning(f"Migrating legacy config: {old_config_file}")
+            migrate_ngi_config(old_config_file,
+                               join(new_config_path, "neon.yaml"))
+            LOG.info(f"Wrote new config: {join(new_config_path, 'neon.yaml')}")
+        if path_is_read_writable(dirname(old_config_file)):
+            shutil.move(old_config_file,
+                        splitext(old_config_file)[0] + ".bak")
+            LOG.info(f"Archived {old_config_file}")
+        valid_legacy_config = join(new_config_path, "ngi_local_conf.yml")
+        if isfile(valid_legacy_config):
+            shutil.move(valid_legacy_config,
+                        splitext(valid_legacy_config)[0] + ".bak")
+            LOG.info(f"Archived {valid_legacy_config}")
     import inspect
 
     stack = inspect.stack()
@@ -605,7 +632,6 @@ def get_config_dir():
     creating it if it doesn't exist.
     Returns: Path to configuration or else default
     """
-    from ovos_utils.xdg_utils import xdg_config_home
     config_path = join(xdg_config_home(), "neon")
     LOG.debug(config_path)
     if not isdir(config_path):
@@ -753,7 +779,7 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
     Populates user_config with values from mycroft.conf
     :returns: dict modified or created user config
     """
-    from ovos_utils.configuration import MycroftUserConfig
+    from ovos_config.models import MycroftUserConfig
     user_config = user_config or \
         deepcopy(NGIConfig("default_user_conf",
                            os.path.join(os.path.dirname(__file__),
@@ -1032,6 +1058,7 @@ def get_mycroft_compatible_config(mycroft_only=False,
     default_config["remote-server"] = local["gui"]["file_server"]
     default_config["ready_settings"] = local["ready_settings"]
     default_config["device_name"] = local["devVars"]["devName"]
+    default_config["MQ"] = local["MQ"]
 
     if local["dirVars"]["logsDir"]:
         default_config["log_dir"] = local["dirVars"]["logsDir"]
@@ -1434,14 +1461,14 @@ def _safe_mycroft_config() -> dict:
     Returns:
         dict mycroft configuration
     """
-    from ovos_utils.configuration import read_mycroft_config
-    config = read_mycroft_config()
+    from ovos_config.config import Configuration
+    config = Configuration()
     return dict(config)
 
 
 def _get_neon_yaml_config() -> dict:
-    from ovos_utils.configuration import get_ovos_config, \
-        get_xdg_config_save_path
+    from ovos_config.meta import get_ovos_config
+    from ovos_config.locations import get_xdg_config_save_path
     from ovos_utils.json_helper import merge_dict
 
     with open(get_ovos_config()["default_config_path"]) as f:

@@ -633,13 +633,31 @@ class ConfigurationUtilTests(unittest.TestCase):
         os.remove(test_conf.file_path)
 
     @mock.patch('neon_utils.configuration_utils._init_ovos_conf')
-    def test_init_config_dir(self, init_config):
+    def test_init_config_dir(self, init_ovos_conf):
         from neon_utils.configuration_utils import init_config_dir
         ro_dir = os.path.join(ROOT_DIR, "configuration", "unwritable_path")
+        config_dir = os.path.join(ROOT_DIR, "configuration", "test")
         os.environ["NEON_CONFIG_PATH"] = ro_dir
+        os.environ["XDG_CONFIG_HOME"] = config_dir
         init_config_dir()
-        self.assertNotEqual(os.environ["NEON_CONFIG_PATH"], ro_dir)
-        init_config.assert_called_once()
+
+        # Test config migration
+        self.assertEqual(os.environ["NEON_CONFIG_PATH"],
+                         join(config_dir, "neon"))
+        self.assertFalse(os.path.exists(join(config_dir, "neon",
+                                             "ngi_local_conf.yml")))
+        self.assertTrue(os.path.exists(join(config_dir, "neon",
+                                            "ngi_local_conf.bak")))
+        self.assertTrue(os.path.exists(join(config_dir, "neon",
+                                            "neon.yaml")))
+        with open(join(config_dir, "neon", "neon.yaml")) as f:
+            config = yaml.safe_load(f)
+        with open(join(config_dir, "neon", "ngi_local_conf.bak")) as f:
+            old_config = yaml.safe_load(f)
+        self.assertEqual(config["MQ"], old_config["MQ"])
+
+        init_ovos_conf.assert_called_once()
+        shutil.rmtree(os.environ.pop("XDG_CONFIG_HOME"))
         os.environ.pop("NEON_CONFIG_PATH")
 
     def test_get_mycroft_compatible_location(self):
@@ -886,6 +904,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         for setting in old_config['tts']:
             self.assertEqual(old_config['tts'][setting],
                              new_config['tts'][setting])
+        self.assertEqual(old_config["MQ"], new_config["MQ"])
 
         # Spec old config file
         migrate_ngi_config(join(test_dir, "ngi_local_conf.yml"), new_conf)
