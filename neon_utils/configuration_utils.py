@@ -578,6 +578,15 @@ def _validate_config_env():
     os.environ["NEON_CONFIG_PATH"] = real_config_path
 
 
+def _check_legacy_config() -> str:
+    """
+    Return the path to valid legacy core configuration
+    """
+    os.environ["NEON_CONFIG_PATH"] = os.getenv("NEON_CONFIG_PATH") or \
+        get_config_dir()
+    return join(os.getenv("NEON_CONFIG_PATH"), "ngi_local_conf.yml")
+
+
 def init_config_dir():
     """
     Performs one-time initialization of the configuration directory.
@@ -586,9 +595,28 @@ def init_config_dir():
     loaded may lead to inconsistent behavior.
     """
 
+    old_config_file = _check_legacy_config()
+
     # Ensure envvars are consistent and valid (read/writeable)
     _validate_config_env()
-
+    if isfile(old_config_file):
+        new_config_path = get_config_dir()
+        if isfile(join(new_config_path, "neon.yaml")):
+            LOG.error("Config already exists, skipping migration")
+        else:
+            LOG.warning(f"Migrating legacy config: {old_config_file}")
+            migrate_ngi_config(old_config_file,
+                               join(new_config_path, "neon.yaml"))
+            LOG.info(f"Wrote new config: {join(new_config_path, 'neon.yaml')}")
+        if path_is_read_writable(dirname(old_config_file)):
+            shutil.move(old_config_file,
+                        splitext(old_config_file)[0] + ".bak")
+            LOG.info(f"Archived {old_config_file}")
+        valid_legacy_config = join(new_config_path, "ngi_local_conf.yml")
+        if isfile(valid_legacy_config):
+            shutil.move(valid_legacy_config,
+                        splitext(valid_legacy_config)[0] + ".bak")
+            LOG.info(f"Archived {valid_legacy_config}")
     import inspect
 
     stack = inspect.stack()
@@ -1032,6 +1060,7 @@ def get_mycroft_compatible_config(mycroft_only=False,
     default_config["remote-server"] = local["gui"]["file_server"]
     default_config["ready_settings"] = local["ready_settings"]
     default_config["device_name"] = local["devVars"]["devName"]
+    default_config["MQ"] = local["MQ"]
 
     if local["dirVars"]["logsDir"]:
         default_config["log_dir"] = local["dirVars"]["logsDir"]
