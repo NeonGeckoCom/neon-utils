@@ -40,10 +40,13 @@ from neon_utils.logger import LOG
 
 def get_log_dir() -> str:
     """
-    Get log directory from configuration or default path
+    Get log directory from configuration or default path, create if not exists
     """
-    return os.path.expanduser(dict(Configuration()).get("log_dir") or
-                              os.path.join(xdg_data_home(), "neon", "logs"))
+    log_dir = os.path.expanduser(dict(Configuration()).get("log_dir") or
+                                 os.path.join(xdg_data_home(), "neon", "logs"))
+    if not isdir(log_dir):
+        os.makedirs(log_dir, exist_ok=True)
+    return log_dir
 
 
 class ServiceLog(Enum):
