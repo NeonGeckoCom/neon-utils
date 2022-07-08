@@ -27,40 +27,26 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
-import sys
 import logging
 
 from datetime import datetime, timedelta
 from enum import Enum
 from os.path import isdir
 from typing import Optional, Union
-from ovos_config import Configuration
+from ovos_config.config import Configuration
 from ovos_utils.xdg_utils import xdg_data_home
-from neon_utils.decorators import module_property
 from neon_utils.logger import LOG
 
 
-_log_dir = None
-
-
-def _get_log_dir():
-    global _log_dir
-    if not _log_dir:
-        _log_dir = os.path.expanduser(dict(Configuration()).get("log_dir") or
-                                      os.path.join(xdg_data_home(), "neon",
-                                                   "logs"))
-    return _log_dir
-
-
-# Below patches LOG_DIR global param
-if float('.'.join(sys.version.split('.', 2)[:2])) > 3.6:
-    @module_property
-    def _LOG_DIR():
-        # TODO: Deprecate in v1.0.0
-        print("This reference is deprecated. Read from config directly")
-        return _get_log_dir()
-else:
-    LOG_DIR = _get_log_dir()
+def get_log_dir() -> str:
+    """
+    Get log directory from configuration or default path, create if not exists
+    """
+    log_dir = os.path.expanduser(dict(Configuration()).get("log_dir") or
+                                 os.path.join(xdg_data_home(), "neon", "logs"))
+    if not isdir(log_dir):
+        os.makedirs(log_dir, exist_ok=True)
+    return log_dir
 
 
 class ServiceLog(Enum):
@@ -85,7 +71,7 @@ def remove_old_logs(log_dir: str = None,
         history_to_retain: Timedelta of history to retain
     """
     from shutil import rmtree
-    log_dir = log_dir or _get_log_dir()
+    log_dir = log_dir or get_log_dir()
     for archive in os.listdir(log_dir):
         archive_path = os.path.join(log_dir, archive)
         if not os.path.isdir(archive_path):
@@ -107,7 +93,7 @@ def archive_logs(log_dir: str = None, archive_dir: Optional[str] = None):
     from os.path import join, basename
     from os import makedirs
     from shutil import move
-    log_dir = log_dir or _get_log_dir()
+    log_dir = log_dir or get_log_dir()
     default_dirname = "logs--" + datetime.now().strftime("%Y-%m-%d--%H:%M:%S")
     archive_dir = join(log_dir, archive_dir or default_dirname)
     makedirs(archive_dir, exist_ok=True)
@@ -129,7 +115,7 @@ def get_logger(log_name: str, log_dir: str = None,
     Returns:
         Logger with the specified handlers
     """
-    log_dir = log_dir or _get_log_dir()
+    log_dir = log_dir or get_log_dir()
     LOG.init({"path": log_dir or "stdout"})
     LOG.name = log_name
     log = LOG.create_logger(log_name, std_out)
@@ -172,7 +158,7 @@ def get_log_file_for_module(module_name: Union[str, list]) -> str:
     else:
         log_name = "extras.log"
 
-    return os.path.join(_get_log_dir(), log_name)
+    return os.path.join(get_log_dir(), log_name)
 
 
 def init_log_for_module(service: ServiceLog = ServiceLog.OTHER,
@@ -187,10 +173,10 @@ def init_log_for_module(service: ServiceLog = ServiceLog.OTHER,
         backup_count: number of archived logs to save
         level: minimum log level to filter to
     """
-    if not isdir(_get_log_dir()):
-        LOG.info(f"Creating log directory: {_get_log_dir()}")
-        os.makedirs(_get_log_dir())
-    log_file = "stdout" if std_out else os.path.join(_get_log_dir(),
+    if not isdir(get_log_dir()):
+        LOG.info(f"Creating log directory: {get_log_dir()}")
+        os.makedirs(get_log_dir())
+    log_file = "stdout" if std_out else os.path.join(get_log_dir(),
                                                      service.value)
     LOG.init({"path": log_file,
               "max_bytes": max_bytes,

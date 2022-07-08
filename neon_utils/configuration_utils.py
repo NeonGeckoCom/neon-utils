@@ -1130,7 +1130,8 @@ def create_config_from_setup_params(path=None) -> dict:
         "tts": {},
         "stt": {},
         "language": {},
-        "device_name": device_name
+        "device_name": device_name,
+        "log_dir": logs_dir
     }
     if tts_module:
         config_patch["tts"]["module"] = tts_module
@@ -1140,8 +1141,6 @@ def create_config_from_setup_params(path=None) -> dict:
         config_patch["language"]["translation_module"] = translation_module
     if detection_module:
         config_patch["language"]["detection_module"] = detection_module
-    if logs_dir:
-        config_patch["log_dir"] = logs_dir
 
     output_path = join((path or join(xdg_config_home(), "neon")), "neon.yaml")
     if not isdir(dirname(output_path)):
