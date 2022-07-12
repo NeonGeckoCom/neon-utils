@@ -124,7 +124,12 @@ class NeonSkill(MycroftSkill):
         """
         If True, skill should display GUI pages
         """
-        return is_gui_running()
+        try:
+            return is_gui_running()
+        except Exception as x:
+            # In container environments, this check fails so assume True
+            LOG.exception(x)
+            return True
 
     @property
     def ngi_settings(self):
