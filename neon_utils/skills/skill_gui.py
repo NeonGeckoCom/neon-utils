@@ -51,11 +51,11 @@ class SkillGUI(_SkillGUI):
                 page = self.skill.find_resource(name, 'ui')
                 if self.serving_http:
                     parts = page.split('/')
-                    LOG.info(parts)
+                    LOG.debug(parts)
                     path_suffix = join(*parts[(parts.index('ui') - 1):])
-                    LOG.info(path_suffix)
+                    LOG.debug(path_suffix)
                     page = join(self.remote_url, "skills", path_suffix)
-                    LOG.info(page)
+                    LOG.debug(page)
             if page:
                 if self.remote_url and not self.serving_http:
                     page_urls.append(self.remote_url + "/" + page)
