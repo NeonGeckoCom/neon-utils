@@ -126,6 +126,9 @@ class NeonSkill(MycroftSkill):
         """
         try:
             return is_gui_running()
+        except FileNotFoundError as x:
+            LOG.error(x)
+            return False
         except Exception as x:
             # In container environments, this check fails so assume True
             LOG.exception(x)
