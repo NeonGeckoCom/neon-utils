@@ -31,7 +31,8 @@ from mycroft_bus_client import Message, MessageBusClient
 
 from neon_utils.message_utils import resolve_message, get_message_user
 from neon_utils.configuration_utils import NGIConfig, get_neon_user_config, \
-    dict_make_equal_keys, get_config_dir, get_user_config_from_mycroft_conf
+    dict_merge, dict_make_equal_keys, get_config_dir, \
+    get_user_config_from_mycroft_conf
 from neon_utils.logger import LOG
 
 _DEFAULT_USER_CONFIG = None
@@ -95,7 +96,7 @@ def get_user_prefs(message: Message = None) -> dict:
 
     for profile in message.context.get(profile_key):
         if profile["user"]["username"] == username:
-            return dict(dict_make_equal_keys(profile, default_user_config))
+            return dict(dict_merge(profile, default_user_config))
     LOG.warning(f"No preferences found for {username} in {message.context}")
     return default_user_config
 
