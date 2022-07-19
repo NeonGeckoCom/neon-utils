@@ -54,11 +54,10 @@ class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         self.gui = SkillGUI(self)
-        # TODO: Should below be global config? This implementation is designed
-        #       to allow skills to specify overrides per-skill
+        # TODO: Should below defaults be global config?
+        # allow skills to specify timeout overrides per-skill
         self._speak_timeout = 30
         self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
-    # TODO: Override settings property and setter for multi-user compat
 
     @property
     def location(self):
