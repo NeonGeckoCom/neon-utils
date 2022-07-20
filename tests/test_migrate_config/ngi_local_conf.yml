@@ -26,7 +26,7 @@ interface:
   use_hesitation: false
 
 devVars:
-  devName:
+  devName: test
   devType: linux
   # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU, mycroft_mark_2, ubuntu, linux
   version:

@@ -726,9 +726,12 @@ def dict_make_equal_keys(dct_to_change: MutableMapping,
                     dct_to_change[key] = dict_update_keys(dct_to_change[key],
                                                           keys_dct[key])
                 else:
-                    dct_to_change[key] = \
-                        dict_make_equal_keys(dct_to_change[key], keys_dct[key],
-                                             max_depth, cur_depth + 1)
+                    try:
+                        dct_to_change[key] = \
+                            dict_make_equal_keys(dct_to_change[key], keys_dct[key],
+                                                 max_depth, cur_depth + 1)
+                    except ValueError:
+                        pass
         elif key not in keys_dct.keys():
             dct_to_change.pop(key)
             LOG.warning(f"Removing '{key}' from dict!")
@@ -860,9 +863,6 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     name = module.__name__ if module else call.filename
     LOG.warning("This reference is deprecated - "
                 f"{name}:{call.lineno}")
-    default_local_config = NGIConfig("default_core_conf",
-                                     os.path.join(os.path.dirname(__file__),
-                                                  "default_configurations"))
     try:
         if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
             local_config = NGIConfig("ngi_local_conf", path)
@@ -876,13 +876,18 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
 
     if len(local_config.content) == 0:
         LOG.info(f"Created Empty Local Config at {local_config.path}")
-        local_config.populate(default_local_config.content)
+        local_config.populate({"skills": {"default_skills": "https://neon.ai"},
+                               "hotwords": {},
+                               "Audio": {},
+                               "tts": {},
+                               "gui": {},
+                               })
 
     if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
         user_config = NGIConfig("ngi_user_info", path)
         _move_config_sections(user_config, local_config)
 
-    local_config.make_equal_by_keys(default_local_config.content)
+    # local_config.make_equal_by_keys(default_local_config.content)
     # LOG.info(f"Loaded local config from {local_config.file_path}")
     return local_config
 
@@ -1020,37 +1025,39 @@ def get_mycroft_compatible_config(mycroft_only=False,
     default_config["time_format"] = \
         "half" if user["units"]["time"] == 12 else "full"
     default_config["date_format"] = user["units"]["date"]
-    default_config["opt_in"] = local["prefFlags"]["metrics"]
+    default_config["opt_in"] = local.get("prefFlags", {}).get("metrics", False)
     default_config["confirm_listening"] = \
-        local["interface"]["confirm_listening"]
+        local.get("interface", {}).get("confirm_listening", True)
     default_config["sounds"] = {**default_config.get("sounds", {}),
                                 **local.get("sounds", {})}
 
     default_config["location"] = \
         get_mycroft_compatible_location(user.get("location"))
 
-    default_config["data_dir"] = local["dirVars"]["rootDir"]
-    default_config["cache_path"] = local["dirVars"]["cacheDir"]
+    default_config["data_dir"] = local.get("dirVars", {}).get("rootDir")
+    default_config["cache_path"] = local.get("dirVars", {}).get("cacheDir")
     default_config["skills"] = _get_neon_skills_config(neon_config_path)
     default_config["server"] = _get_neon_api_config(neon_config_path)
     default_config["websocket"] = _get_neon_bus_config(neon_config_path)
     default_config["gui_websocket"] = {**default_config.get("gui_websocket",
                                                             {}),
-                                       **local["gui"]}
+                                       **local.get("gui", {})}
     default_config["gui_websocket"]["base_port"] = \
         default_config["gui_websocket"].get("base_port") or \
         default_config["gui_websocket"].get("port")
 
     default_config["listener"] = speech["listener"]
     default_config["hotwords"] = speech["hotwords"]
-    default_config["log_level"] = local["logs"]["log_level"]
-    default_config["session"] = local["session"]
+    default_config["log_level"] = local.get("logs", {}).get("log_level") or \
+        default_config.get("log_level")
+    default_config["session"] = local.get("session") or \
+        default_config.get("session")
     default_config["stt"] = speech["stt"]
-    default_config["tts"] = local["tts"]
+    default_config["tts"] = local.get("tts") or default_config.get("tts") or {}
     default_config["padatious"] = {**default_config.get("padatious", {}),
-                                   **local["padatious"]}
+                                   **local.get("padatious", {})}
     default_config["Audio"] = _get_neon_audio_config(neon_config_path)["Audio"]
-    default_config["debug"] = local["prefFlags"]["devMode"]
+    default_config["debug"] = local.get("prefFlags", {}.get("devMode", False))
 
     default_config["language"] = _get_neon_lang_config(neon_config_path)
     default_config["keys"] = _get_neon_auth_config(neon_config_path)
@@ -1059,13 +1066,16 @@ def get_mycroft_compatible_config(mycroft_only=False,
                                       **local.get("text_parsers", {})}
     default_config["audio_parsers"] = speech["audio_parsers"]
     default_config["disable_xdg"] = False
-    default_config["ipc_path"] = local["dirVars"]["ipcDir"]
-    default_config["remote-server"] = local["gui"]["file_server"]
-    default_config["ready_settings"] = local["ready_settings"]
-    default_config["device_name"] = local["devVars"]["devName"]
-    default_config["MQ"] = local["MQ"]
+    default_config["ipc_path"] = local.get("dirVars", {}).get("ipcDir") or \
+        default_config.get("ipc_path")
+    default_config["remote-server"] = local.get("gui", {}).get("file_server")
+    default_config["ready_settings"] = local.get("ready_settings") or \
+        default_config.get("ready_settings")
+    default_config["device_name"] = local.get("devVars", {}).get("devName") or\
+        default_config.get("device_name")
+    default_config["MQ"] = local.get("MQ", {})
 
-    if local["dirVars"]["logsDir"]:
+    if local.get("dirVars", {}).get("logsDir"):
         default_config["log_dir"] = local["dirVars"]["logsDir"]
 
     return default_config
@@ -1255,7 +1265,7 @@ def _get_neon_tts_config(neon_config_path=None) -> dict:
     Returns:
     dict of TTS-related configuration
     """
-    return _get_neon_local_config(neon_config_path)["tts"]
+    return _get_neon_local_config(neon_config_path).get("tts") or {}
 
 
 def _get_neon_speech_config(neon_config_path=None) -> dict:
@@ -1273,9 +1283,9 @@ def _get_neon_speech_config(neon_config_path=None) -> dict:
     #                 local_config[section][subsection] = dict(local_config[section][subsection])
     #         local_config[section] = dict(local_config[section])
     neon_listener_config = deepcopy(local_config.get("listener", {}))
-    neon_listener_config["wake_word_enabled"] = local_config["interface"].get("wake_word_enabled", True)
-    neon_listener_config["save_utterances"] = local_config["prefFlags"].get("saveAudio", False)
-    neon_listener_config["confirm_listening"] = local_config["interface"].get("confirm_listening", True)
+    neon_listener_config["wake_word_enabled"] = local_config.get("interface", {}).get("wake_word_enabled", True)
+    neon_listener_config["save_utterances"] = local_config.get("prefFlags", {}).get("saveAudio", False)
+    neon_listener_config["confirm_listening"] = local_config.get("interface", {}).get("confirm_listening", True)
     neon_listener_config["record_utterances"] = neon_listener_config["save_utterances"]
     neon_listener_config["record_wake_words"] = neon_listener_config["save_utterances"]
     merged_listener = {**mycroft.get("listener", {}), **neon_listener_config}
@@ -1304,7 +1314,7 @@ def _get_neon_speech_config(neon_config_path=None) -> dict:
             "audio_parsers": merged_audio_parser_config,
             "lang": lang,
             "stt": merged_stt_config,
-            "metric_upload": local_config["prefFlags"].get("metrics", False),
+            "metric_upload": local_config.get("prefFlags", {}).get("metrics", False),
             "remote_server": local_config.get("remoteVars", {}).get("remoteHost", "64.34.186.120"),
             "data_dir": os.path.expanduser(local_config.get("dirVars", {}).get("rootDir") or "~/.local/share/neon"),
             "keys": {}
@@ -1359,8 +1369,8 @@ def _get_neon_api_config(neon_config_path=None) -> dict:
         dict of config params used for the Mycroft API module
     """
     core_config = _get_neon_local_config(neon_config_path)
-    api_config = deepcopy(core_config.get("api"))
-    api_config["metrics"] = core_config["prefFlags"].get("metrics", False)
+    api_config = deepcopy(core_config.get("api", {}))
+    api_config["metrics"] = core_config.get("prefFlags", {}).get("metrics", False)
     mycroft = _safe_mycroft_config().get("server", {})
     merged = {**mycroft, **api_config}
     if merged.keys() != api_config.keys():
@@ -1400,32 +1410,34 @@ def _get_neon_skills_config(neon_config_path=None) -> dict:
         LOG.warning("ovos-core not installed")
         neon_skills["directory_override"] = neon_skills["directory"]
 
-    neon_skills["disable_osm"] = neon_skills["skill_manager"] != "osm"
-    neon_skills["priority_skills"] = neon_skills["priority"] or []
-    neon_skills["blacklisted_skills"] = neon_skills["blacklist"] or []
+    neon_skills["disable_osm"] = neon_skills.get("skill_manager", "osm") != "osm"
+    neon_skills["priority_skills"] = neon_skills.get("priority") or []
+    neon_skills["blacklisted_skills"] = neon_skills.get("blacklist") or []
 
-    if not isinstance(neon_skills["auto_update_interval"], float):
+    if not isinstance(neon_skills.get("auto_update_interval"), float):
         try:
             neon_skills["auto_update_interval"] = \
-                float(neon_skills["auto_update_interval"])
+                float(neon_skills.get("auto_update_interval") or 24.0)
         except Exception as e:
             LOG.error(e)
             neon_skills["auto_update_interval"] = 24.0
-    if not isinstance(neon_skills["appstore_sync_interval"], float):
+    if not isinstance(neon_skills.get("appstore_sync_interval"), float):
         try:
             neon_skills["appstore_sync_interval"] = \
-                float(neon_skills["appstore_sync_interval"])
+                float(neon_skills.get("appstore_sync_interval") or 6.0)
         except Exception as e:
             LOG.error(e)
             neon_skills["appstore_sync_interval"] = 6.0
     neon_skills["update_interval"] = neon_skills["auto_update_interval"]  # Backwards Compat.
-    if not neon_skills["neon_token"]:
+    if not neon_skills.get("neon_token"):
         try:
             neon_skills["neon_token"] = find_neon_git_token()
             # populate_github_token_config(neon_skills["neon_token"])
         except FileNotFoundError:
             LOG.debug(f"No Github token found; skills may fail to install")
+            neon_skills["neon_token"] = None
     skills_config = {**mycroft_config.get("skills", {}), **neon_skills}
+    skills_config.setdefault("debug", False)
     return skills_config
 
 
@@ -1441,7 +1453,7 @@ def _get_neon_transcribe_config(neon_config_path=None) -> dict:
                     "ngi_user_info.yml")) else {}
     neon_transcribe_config = dict()
     neon_transcribe_config["transcript_dir"] = \
-        local_config["dirVars"].get("docsDir", "")
+        local_config.get("dirVars", {}).get("docsDir", "")
     neon_transcribe_config["audio_permission"] = \
         user_config.get("privacy", {}).get("save_audio", False)
     return neon_transcribe_config
@@ -1455,7 +1467,7 @@ def _get_neon_gui_config(neon_config_path=None) -> dict:
     """
     local_config = _get_neon_local_config(neon_config_path)
     gui_config = dict(local_config["gui"])
-    gui_config["base_port"] = gui_config["port"]
+    gui_config["base_port"] = gui_config.get("port")
     return gui_config
 
 

@@ -128,7 +128,6 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.lru_cache, LRUCache)
         self.assertIsInstance(skill.sys_tz, datetime.tzinfo)
         self.assertIsInstance(skill.gui_enabled, bool)
-        self.assertIsInstance(skill.default_intent_timeout, int)
         self.assertIsInstance(skill.neon_core, bool)
         self.assertIsInstance(skill.actions_to_confirm, dict)
 
@@ -644,7 +643,6 @@ class NeonSkillTests(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.skill.cache_loc))
         self.assertIsNotNone(self.skill.lru_cache)
         self.assertIsInstance(self.skill.sys_tz, datetime.tzinfo)
-        self.assertIsInstance(self.skill.default_intent_timeout, int)
         self.assertIsInstance(self.skill.neon_core, bool)
         self.assertIsInstance(self.skill.skill_mode, str)
         self.assertIsInstance(self.skill.extension_time, int)
