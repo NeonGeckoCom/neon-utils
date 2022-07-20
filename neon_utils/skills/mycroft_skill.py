@@ -121,7 +121,7 @@ class PatchedMycroftSkill(MycroftSkill):
         if utterance:
             if not message:
                 LOG.debug('message is None.')
-                message = Message("speak", context={"source": ["skills"]})
+                message = Message("speak")
             if not speaker:
                 speaker = message.data.get("speaker", None)
 
@@ -152,9 +152,9 @@ class PatchedMycroftSkill(MycroftSkill):
                     "speaker": speaker}
 
             if message.context.get("cc_data", {}).get("emit_response"):
-                data["destination"] = ["skills"]
                 msg_to_emit = message.reply("skills:execute.response", data,
-                                            {"source": ["skills"]})
+                                            {"destination": ["skills"],
+                                             "source": ["skills"]})
             else:
                 message.context.get("timing", {})["speech_start"] = time.time()
 
