@@ -42,11 +42,11 @@ from contextlib import suppress
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.xdg_utils import xdg_config_home
 from typing import Optional
+from combo_lock import NamedLock
 
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, \
     build_new_auth_config
-from neon_utils.lock_utils import create_lock
 from neon_utils.file_utils import path_is_read_writable, create_file
 from neon_utils.packaging_utils import get_package_version_spec
 
