@@ -59,7 +59,7 @@ class NGIConfig:
         self.name = name
         self.path = path or get_config_dir()
         lock_filename = join(self.path, f".{self.name}.lock")
-        self.lock = create_lock(lock_filename)
+        self.lock = NamedLock(lock_filename)
         self._pending_write = False
         self._content = dict()
         self._loaded = os.path.getmtime(self.file_path)
