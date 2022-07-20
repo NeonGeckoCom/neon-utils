@@ -1086,7 +1086,7 @@ def write_mycroft_compatible_config(file_to_write: str = None) -> str:
     elif not isdir(dirname(file_path)):
         os.makedirs(dirname(file_path))
 
-    with create_lock(file_path):
+    with NamedLock(file_path):
         with open(file_path, 'w') as f:
             json.dump(configuration, f, indent=4)
     return file_path
