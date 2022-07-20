@@ -292,8 +292,13 @@ class NGIConfig:
                     except Exception as e:
                         LOG.error(e)
                         f.seek(0)
-                        from ruamel.yaml import YAML
-                        config = _make_loaded_config_safe(YAML().load(f))
+                        try:
+                            from ruamel.yaml import YAML
+                            config = _make_loaded_config_safe(YAML().load(f))
+                        except ImportError:
+                            LOG.error(f"ruamel.yaml not available to load "
+                                      f"legacy config. "
+                                      f"pip install neon-utils[configuration]")
                 if not config:
                     LOG.debug(f"Empty config file found at: {self.file_path}")
                     config = dict()

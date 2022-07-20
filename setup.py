@@ -75,7 +75,8 @@ setuptools.setup(
     extras_require={
         "test": get_requirements("test_requirements.txt"),
         "audio": get_requirements("audio.txt"),
-        "network": get_requirements("network.txt")
+        "network": get_requirements("network.txt"),
+        "configuration": get_requirements("configuration.txt")
     },
     entry_points={
         'console_scripts': [

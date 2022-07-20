@@ -1,14 +1,11 @@
 mycroft-messagebus-client~=0.10
 combo-lock~=0.2
-filelock~=3.2
 pendulum~=2.1
 timezonefinder~=5.2
 nltk~=3.5
-ruamel.yaml~=0.16
 pyyaml~=5.4
 ovos-lingua-franca~=0.4
 ovos_utils~=0.0.6
 neon_mq_connector~=0.2,>=0.5.1a1
 geopy~=2.1
-word2number~=1.0
 ovos-config~=0.0,>=0.0.2a3,!=0.0.2,!=0.0.2a4
