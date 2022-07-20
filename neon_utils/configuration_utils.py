@@ -42,11 +42,11 @@ from contextlib import suppress
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.xdg_utils import xdg_config_home
 from typing import Optional
+from combo_lock import NamedLock
 
 from neon_utils.logger import LOG
 from neon_utils.authentication_utils import find_neon_git_token, \
     build_new_auth_config
-from neon_utils.lock_utils import create_lock
 from neon_utils.file_utils import path_is_read_writable, create_file
 from neon_utils.packaging_utils import get_package_version_spec
 
@@ -59,7 +59,7 @@ class NGIConfig:
         self.name = name
         self.path = path or get_config_dir()
         lock_filename = join(self.path, f".{self.name}.lock")
-        self.lock = create_lock(lock_filename)
+        self.lock = NamedLock(lock_filename)
         self._pending_write = False
         self._content = dict()
         self._loaded = os.path.getmtime(self.file_path)
@@ -1086,7 +1086,7 @@ def write_mycroft_compatible_config(file_to_write: str = None) -> str:
     elif not isdir(dirname(file_path)):
         os.makedirs(dirname(file_path))
 
-    with create_lock(file_path):
+    with NamedLock(file_path):
         with open(file_path, 'w') as f:
             json.dump(configuration, f, indent=4)
     return file_path
