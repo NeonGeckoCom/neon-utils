@@ -99,7 +99,8 @@ class PatchedMycroftSkill(MycroftSkill):
         return parse_skill_default_settings(self.settings_meta)
 
     @resolve_message
-    def speak(self, utterance, expect_response=False, wait=False, meta=None, message=None, private=False, speaker=None):
+    def speak(self, utterance, expect_response=False, wait=False, meta=None,
+              message=None, private=False, speaker=None):
         """
         Speak an utterance.
         Arguments:
@@ -151,12 +152,15 @@ class PatchedMycroftSkill(MycroftSkill):
                     "speaker": speaker}
 
             if message.context.get("cc_data", {}).get("emit_response"):
-                msg_to_emit = message.reply("skills:execute.response", data)
+                msg_to_emit = message.reply("skills:execute.response", data,
+                                            {"destination": ["skills"],
+                                             "source": ["skills"]})
             else:
                 message.context.get("timing", {})["speech_start"] = time.time()
-                msg_to_emit = message.reply("speak", data, message.context)
+                msg_to_emit = message.reply("speak", data,
+                                            {"destination": ["skills"],
+                                             "source": ["audio"]})
                 LOG.debug(f"Skill speak! {data}")
-
             LOG.debug(msg_to_emit.msg_type)
             self.bus.emit(msg_to_emit)
         else:

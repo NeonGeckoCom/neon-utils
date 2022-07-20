@@ -446,6 +446,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertIsNone(msg.data["speaker"])
+        self.assertEqual(msg.context['destination'], ['audio'])
+        self.assertEqual(msg.context['source'], ['skills'])
 
     def test_speak_speaker_valid(self):
         handle_speak = Mock()
@@ -462,6 +464,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertEqual(msg.data["speaker"], speaker)
+        self.assertEqual(msg.context['destination'], ['audio'])
+        self.assertEqual(msg.context['source'], ['skills'])
 
     def test_speak_simple_with_message_valid(self):
         message = Message("date-time.neon:handle_query_time",
@@ -490,10 +494,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertIsNone(msg.data["speaker"])
-        self.assertEqual(message.context.pop("source"),
-                         msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"),
-                         msg.context.pop("source"))
+        self.assertEqual(msg.context.pop('destination'), ['audio'])
+        self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
+        message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
     def test_speak_speaker_with_message_override_valid(self):
@@ -528,10 +532,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertEqual(msg.data["speaker"], speaker)
-        self.assertEqual(message.context.pop("source"),
-                         msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"),
-                         msg.context.pop("source"))
+        self.assertEqual(msg.context.pop('destination'), ['audio'])
+        self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
+        message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
     def test_speak_speaker_with_message_valid(self):
@@ -566,10 +570,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertEqual(msg.data["speaker"], speaker)
-        self.assertEqual(message.context.pop("source"),
-                         msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"),
-                         msg.context.pop("source"))
+        self.assertEqual(msg.context.pop('destination'), ['audio'])
+        self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
+        message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
     def test_speak_emit_response_valid(self):
@@ -601,10 +605,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["utterance"], utterance)
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
-        self.assertEqual(message.context.pop("source"),
-                         msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"),
-                         msg.context.pop("source"))
+        self.assertEqual(msg.context.pop('destination'), ['skills'])
+        self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
+        message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
     # TODO: Test settings load
