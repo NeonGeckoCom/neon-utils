@@ -876,7 +876,7 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
 
     if len(local_config.content) == 0:
         LOG.info(f"Created Empty Local Config at {local_config.path}")
-        local_config.populate({"skills": {"default_skills": "https://neon.ai"},
+        local_config.populate({"skills": {},
                                "hotwords": {},
                                "Audio": {},
                                "tts": {},
