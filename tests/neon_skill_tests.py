@@ -447,6 +447,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertIsNone(msg.data["speaker"])
         self.assertEqual(msg.context['destination'], ['audio'])
+        self.assertEqual(msg.context['source'], ['skills'])
 
     def test_speak_speaker_valid(self):
         handle_speak = Mock()
@@ -464,6 +465,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertEqual(msg.data["speaker"], speaker)
         self.assertEqual(msg.context['destination'], ['audio'])
+        self.assertEqual(msg.context['source'], ['skills'])
 
     def test_speak_simple_with_message_valid(self):
         message = Message("date-time.neon:handle_query_time",

@@ -157,8 +157,6 @@ class PatchedMycroftSkill(MycroftSkill):
                                              "source": ["skills"]})
             else:
                 message.context.get("timing", {})["speech_start"] = time.time()
-
-                # Set destination and remove previous source context
                 msg_to_emit = message.reply("speak", data,
                                             {"destination": ["skills"],
                                              "source": ["audio"]})
