@@ -29,12 +29,11 @@
 import json
 import time
 import os.path
+import yaml
 
 from threading import Event, Thread
 from typing import Optional
-
 from json_database import JsonStorage
-from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message
 
 from neon_utils.signal_utils import wait_for_signal_clear
@@ -90,7 +89,7 @@ class PatchedMycroftSkill(MycroftSkill):
         json_path = os.path.join(self.root_dir, "settingsmeta.json")
         if os.path.isfile(yaml_path):
             with open(yaml_path) as f:
-                self.settings_meta = YAML().load(f) or dict()
+                self.settings_meta = yaml.safe_load(f) or dict()
         elif os.path.isfile(json_path):
             with open(json_path) as f:
                 self.settings_meta = json.load(f)
