@@ -494,6 +494,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertIsNone(msg.data["speaker"])
         self.assertEqual(msg.context.pop('destination'), ['audio'])
         self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
@@ -531,6 +532,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["speaker"], speaker)
         self.assertEqual(msg.context.pop('destination'), ['audio'])
         self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
@@ -568,6 +570,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["speaker"], speaker)
         self.assertEqual(msg.context.pop('destination'), ['audio'])
         self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
@@ -600,8 +603,9 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["utterance"], utterance)
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
-        self.assertEqual(msg.context.pop('destination'), ['audio'])
+        self.assertEqual(msg.context.pop('destination'), ['skills'])
         self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
