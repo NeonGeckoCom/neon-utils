@@ -179,15 +179,6 @@ jobs:
           name: cache-util-test-results
           path: tests/cache-util-test-results.xml
 
-      - name: Test CCL Utils
-        run: |
-          pytest tests/ccl_util_tests.py --doctest-modules --junitxml=tests/ccl-util-test-results.xml
-      - name: Upload CCL utils test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: ccl-util-test-results
-          path: tests/ccl-util-test-results.xml
-
       - name: Test MQ Utils
         run: |
           pytest tests/mq_util_tests.py --doctest-modules --junitxml=tests/mq-util-test-results.xml
