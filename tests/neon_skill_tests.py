@@ -33,10 +33,12 @@ import sys
 import unittest
 
 from multiprocessing import Event
+from os.path import join
 from threading import Thread
 from time import sleep
 
 import pytest
+from mock.mock import patch, MagicMock
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 from mock import Mock
@@ -128,7 +130,6 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.lru_cache, LRUCache)
         self.assertIsInstance(skill.sys_tz, datetime.tzinfo)
         self.assertIsInstance(skill.gui_enabled, bool)
-        self.assertIsInstance(skill.default_intent_timeout, int)
         self.assertIsInstance(skill.neon_core, bool)
         self.assertIsInstance(skill.actions_to_confirm, dict)
 
@@ -644,7 +645,6 @@ class NeonSkillTests(unittest.TestCase):
         self.assertTrue(os.path.isdir(self.skill.cache_loc))
         self.assertIsNotNone(self.skill.lru_cache)
         self.assertIsInstance(self.skill.sys_tz, datetime.tzinfo)
-        self.assertIsInstance(self.skill.default_intent_timeout, int)
         self.assertIsInstance(self.skill.neon_core, bool)
         self.assertIsInstance(self.skill.skill_mode, str)
         self.assertIsInstance(self.skill.extension_time, int)
@@ -811,6 +811,49 @@ class NeonSkillTests(unittest.TestCase):
     def test_decorate_api_call_use_lru(self):
         # TODO
         pass
+
+
+class SkillGuiTests(unittest.TestCase):
+    from neon_utils.skills.skill_gui import SkillGUI
+    skill = get_test_neon_skill({})
+    skill_gui = SkillGUI(skill)
+
+    @classmethod
+    def setUpClass(cls) -> None:
+
+        cls.skill_gui.config = {
+            "remote-server": None
+        }
+
+    def test_pages2uri(self):
+        def _find_resource(*args, **kwargs):
+            return join("skill_id", args[1], args[0])
+
+        real_method = self.skill.find_resource
+        self.skill.find_resource = _find_resource
+
+        self.skill_gui.serving_http = False
+        urls = self.skill_gui._pages2uri(["test_page1", "test_page2"])
+        self.assertEqual(urls, ["file://skill_id/ui/test_page1",
+                                "file://skill_id/ui/test_page2"])
+
+        self.skill_gui.config = {
+            "remote-server": "remote_url"
+        }
+        urls = self.skill_gui._pages2uri(["test_page1", "test_page2"])
+        self.assertEqual(urls, ["remote_url/skill_id/ui/test_page1",
+                                "remote_url/skill_id/ui/test_page2"])
+
+        self.skill_gui.serving_http = True
+        urls = self.skill_gui._pages2uri(["SYSTEM_Test1", "SYSTEM_Test2"])
+        self.assertEqual(urls, ["file://remote_url/system/ui/SYSTEM_Test1",
+                                "file://remote_url/system/ui/SYSTEM_Test2"])
+
+        urls = self.skill_gui._pages2uri(["test_page1", "test_page2"])
+        self.assertEqual(urls, ["file://remote_url/skills/skill_id/ui/test_page1",
+                                "file://remote_url/skills/skill_id/ui/test_page2"])
+
+        self.skill.find_resource = real_method
 
 
 if __name__ == '__main__':

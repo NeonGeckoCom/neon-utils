@@ -75,8 +75,6 @@ class NeonSkill(MycroftSkill):
 
         self.sys_tz = gettz()
 
-        self.default_intent_timeout = 90
-
         try:
             import neon_core
             self.neon_core = True
