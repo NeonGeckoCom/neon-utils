@@ -1078,8 +1078,8 @@ class DeprecatedConfigTests(unittest.TestCase):
 
         shutil.move(ngi_local_conf, bak_local_conf)
         local_config = _get_neon_local_config(CONFIG_PATH)
+        local_config.content.setdefault('hotwords', {})
         hotwords_config = deepcopy(local_config["hotwords"])
-
         local_config['hotwords']["test_hotword"] = test_hotword_config
         for hotword, config in hotwords_config.items():
             self.assertEqual(local_config['hotwords'][hotword], config)

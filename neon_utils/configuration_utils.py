@@ -876,12 +876,6 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
 
     if len(local_config.content) == 0:
         LOG.info(f"Created Empty Local Config at {local_config.path}")
-        local_config.populate({"skills": {},
-                               "hotwords": {},
-                               "Audio": {},
-                               "tts": {},
-                               "gui": {},
-                               })
 
     if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
         user_config = NGIConfig("ngi_user_info", path)
@@ -1466,7 +1460,7 @@ def _get_neon_gui_config(neon_config_path=None) -> dict:
         dict of config params used for the Neon gui module
     """
     local_config = _get_neon_local_config(neon_config_path)
-    gui_config = dict(local_config["gui"])
+    gui_config = dict(local_config.get("gui", {}))
     gui_config["base_port"] = gui_config.get("port")
     return gui_config
 
