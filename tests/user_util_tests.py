@@ -45,7 +45,7 @@ class UserUtilTests(unittest.TestCase):
         test_user_1_profile = {"user": {"username": "test_user_1",
                                         "email": "test@neon.ai"}}
         test_user_2_profile = {"user": {"username": "test_user_2",
-                                        "address": "invalid_key"}}
+                                        "address": "new_key"}}
         test_message_1 = Message("test_message", {}, {
             "username": "test_user_1",
             "user_profiles": [test_user_1_profile,
@@ -58,10 +58,12 @@ class UserUtilTests(unittest.TestCase):
         user_1 = get_user_prefs(test_message_1)
         self.assertEqual(user_1["user"]["username"], "test_user_1")
         self.assertEqual(user_1["user"]["email"], "test@neon.ai")
+        self.assertEqual(test_message_1.context['user_profiles'][0], user_1)
 
         user_2 = get_user_prefs(test_message_2)
         self.assertEqual(user_2["user"]["username"], "test_user_2")
-        self.assertNotIn("address", user_2["user"])
+        self.assertIn("address", user_2["user"])
+        self.assertEqual(test_message_2.context['user_profiles'][1], user_2)
 
         def wrapper(message, valid_dict):
             self.assertEqual(get_user_prefs(), valid_dict)
