@@ -79,7 +79,7 @@ def get_package_dependencies(pkg: str):
     """
     try:
         constraints = pkg_resources.working_set.by_key[pkg].requires()
-        constraints_spec = [str(c) for c in constraints]
+        constraints_spec = [str(c).split('[', 1)[0] for c in constraints]
         LOG.debug(constraints_spec)
         return constraints_spec
     except KeyError:
@@ -102,23 +102,6 @@ def get_packaged_core_version() -> str:
     raise ImportError("No Core Package Found")
 
 
-def get_version_from_file() -> str:
-    """
-    Get the core version from a .release file, Provides legacy support for Neon
-    Returns:
-        Version of the cloned core repository
-    """
-    import glob
-    import os
-    from neon_utils.configuration_utils import get_neon_local_config
-    path = get_neon_local_config().get("dirVars", {}).get("ngiDir") or \
-        os.path.expanduser("~/.neon")
-    release_files = glob.glob(f'{path}/*.release')
-    if len(release_files):
-        return os.path.splitext(os.path.basename(release_files[0]))[0]
-    raise FileNotFoundError("No Version File Found")
-
-
 def get_neon_core_version() -> str:
     """
     Gets the current version of the installed Neon Core.
@@ -129,11 +112,6 @@ def get_neon_core_version() -> str:
     try:
         return get_packaged_core_version()
     except ImportError:
-        pass
-
-    try:
-        return get_version_from_file()
-    except FileNotFoundError:
         pass
 
     return "0.0"
@@ -152,9 +130,9 @@ def get_core_root():
 def get_neon_core_root():
     """
     Determines the root of the available/active Neon Core.
-    Should be the immediate parent directory of 'neon_core' dir
+    Directory returned is the root of the `neon_core` package
     Returns:
-        Path to the core directory containing 'neon_core'
+        Path to the 'neon_core' directory
     """
     site = sysconfig.get_paths()['platlib']
     if exists(join(site, 'neon_core')):

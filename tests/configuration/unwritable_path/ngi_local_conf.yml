@@ -1,0 +1,36 @@
+prefFlags:
+  codeSource: git
+  devMode: true
+  autoStart: true
+  autoUpdate: false
+  # Flag if gui is installed locally
+  localGui: true
+  # Flag if enclosure service should run to generate gui events
+  guiEvents: true
+  notifyRelease: true
+  showDemo: false
+  optDiags: false
+  metrics: false
+
+devVars:
+  devName: NeonTestRunner
+  devType: generic
+  # generic, server, pi, neonK, neonX, neonPi, neonAlpha, neonU
+  version: 2021-02-26-185606
+  installUser: neon
+  likesLastUpdate:
+  caffeineUpdate: ''
+  touchDev:
+  micDev:
+  camDev: 0
+  soundDev:
+  clapThreshold: 10.0e10
+  defaultVolume: 60
+  defaultMicVolume: 100
+MQ:
+  server: 2022.us
+  port: 25672
+  users:
+    mq_handler:
+      user: 'neon_api_utils'
+      password: 'Klatchat2021'

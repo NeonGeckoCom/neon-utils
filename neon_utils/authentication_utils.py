@@ -28,8 +28,8 @@
 
 import json
 import os.path
+
 from enum import Enum
-from typing import Optional
 from urllib.parse import urlparse
 from neon_utils.logger import LOG
 
@@ -55,7 +55,8 @@ def find_generic_keyfile(base_path: str, filename: str) -> str:
     """
     Locates a generic text keyfile
     Args:
-        base_path: Base directory to check in addition to XDG directories (default ~/)
+        base_path: Base directory to check in addition to XDG directories
+        (default ~/)
         filename: File basename to read
     Returns:
         str contents of located file
@@ -69,7 +70,8 @@ def find_generic_keyfile(base_path: str, filename: str) -> str:
             with open(path, "r") as f:
                 credential = f.read().strip()
             return credential
-    raise FileNotFoundError(f"No credentials found in default locations or path: {path_to_check}")
+    raise FileNotFoundError(f"No credentials found in default locations or "
+                            f"path: {path_to_check}")
 
 
 def find_environment_key(service: CredentialEnvVar):
@@ -85,9 +87,11 @@ def find_environment_key(service: CredentialEnvVar):
 
 def find_neon_git_token(base_path: str = "~/") -> str:
     """
-    Searches environment variables and standard locations for a text file with a Github token.
+    Searches environment variables and standard locations for a text file with
+    a Github token.
     Args:
-        base_path: Base directory to check in addition to XDG directories (default ~/)
+        base_path: Base directory to check in addition to XDG directories
+        (default ~/)
     Returns:
         Github token string
     """
@@ -110,7 +114,8 @@ def find_neon_aws_keys(base_path: str = "~/") -> dict:
     """
     Searches environment variables and standard locations for AWS credentials
     Args:
-        base_path: Base directory to check in addition to XDG directories (default ~/)
+        base_path: Base directory to check in addition to XDG directories
+        (default ~/)
     Returns:
         dict containing 'aws_access_key_id' and 'aws_secret_access_key'
     """
@@ -157,14 +162,17 @@ def find_neon_aws_keys(base_path: str = "~/") -> dict:
             return {"aws_access_key_id": aws_id,
                     "aws_secret_access_key": aws_key}
 
-    raise CredentialNotFoundError(f"No aws credentials found in default locations or path: {base_path}")
+    raise CredentialNotFoundError(f"No aws credentials found in default "
+                                  f"locations or path: {base_path}")
 
 
 def find_neon_google_keys(base_path: str = "~/") -> dict:
     """
-    Locates google json credentials and returns the parsed credentials as a dict
+    Locates google json credentials and returns the parsed
+    credentials as a dict
     Args:
-        base_path: Base directory to check in addition to XDG directories (default ~/)
+        base_path: Base directory to check in addition to XDG directories
+        (default ~/)
     Returns:
         dict Google json credential
     """
@@ -183,64 +191,72 @@ def find_neon_google_keys(base_path: str = "~/") -> dict:
         return credential
     except Exception as e:
         LOG.error(e)
-    raise CredentialNotFoundError(f"No google credentials found in default locations or path: {base_path}")
+    raise CredentialNotFoundError(f"No google credentials found in default "
+                                  f"locations or path: {base_path}")
 
 
 def find_neon_wolfram_key(base_path: str = "~/") -> str:
     """
     Locates Wolfram|Alpha API key
     Args:
-        base_path: Base directory to check in addition to XDG directories (default ~/)
+        base_path: Base directory to check in addition to XDG directories
+         (default ~/)
     Returns:
         str Wolfram|Alpha API key
     """
     return find_environment_key(CredentialEnvVar.WOLFRAM) or \
-           find_generic_keyfile(base_path, "wolfram.txt")
+        find_generic_keyfile(base_path, "wolfram.txt")
 
 
 def find_neon_alpha_vantage_key(base_path: str = "~/") -> str:
     """
     Locates Alpha Vantage API key
     Args:
-        base_path: Base directory to check in addition to XDG directories (default ~/)
+        base_path: Base directory to check in addition to XDG directories
+         (default ~/)
     Returns:
         str Alpha Vantage API key
     """
     return find_environment_key(CredentialEnvVar.ALPHA_VANTAGE) or \
-           find_generic_keyfile(base_path, "alpha_vantage.txt")
+        find_generic_keyfile(base_path, "alpha_vantage.txt")
 
 
 def find_neon_owm_key(base_path: str = "~/") -> str:
     """
     Locates Open Weather Map key
     Args:
-        base_path: Base directory to check in addition to XDG directories (default ~/)
+        base_path: Base directory to check in addition to XDG directories
+         (default ~/)
     Returns:
         str Open Weather Map API key
     """
     return find_environment_key(CredentialEnvVar.OPEN_WEATHER_MAP) or \
-           find_generic_keyfile(base_path, "owm.txt")
+        find_generic_keyfile(base_path, "owm.txt")
 
 
 def repo_is_neon(repo_url: str) -> bool:
     """
-    Determines if the specified repository url is part of the NeonGeckoCom org on github
+    Determines if the specified repository url is part of the NeonGeckoCom
+    org on github
     Args:
         repo_url: string url to check
     Returns:
-        True if the repository URL is known to be accessible using a neon auth key
+        True if the repository URL is known to be accessible using a neon
+        auth key
     """
     url = urlparse(repo_url)
     if not url.scheme or not url.netloc:
         raise ValueError(f"{repo_url} is not a valid url")
-    if any([x for x in ("github.com", "githubusercontent.com") if x in url.netloc]):
+    if any([x for x in ("github.com", "githubusercontent.com")
+            if x in url.netloc]):
         try:
             author = url.path.split('/')[1]
         except IndexError:
             raise ValueError(f"{repo_url} is not a valid github url")
         if author.lower() == "neongeckocom":
             return True
-        elif author.lower().startswith("neon"):  # TODO: Get token and scrape org? DM
+        elif author.lower().startswith("neon"):
+            # TODO: Get token and scrape org? DM
             LOG.info(f"Assuming repository uses Neon auth: {repo_url}")
             return True
     return False
@@ -248,8 +264,10 @@ def repo_is_neon(repo_url: str) -> bool:
 
 def build_new_auth_config(key_path: str = "~/") -> dict:
     """
-    Constructs a dict of authentication key data by locating credential files in the specified path
-    :param key_path: path to locate key files (default locations checked in addition)
+    Constructs a dict of authentication key data by locating credential files
+        in the specified path
+    :param key_path: path to locate key files
+        (default locations checked in addition)
     :return: dict of located authentication keys
     """
     key_path = key_path or "~/"
@@ -264,52 +282,12 @@ def build_new_auth_config(key_path: str = "~/") -> dict:
         try:
             if isinstance(auth_config[cred], dict):
                 for real_cred in auth_config[cred]:
-                    auth_config[cred][real_cred] = auth_config[cred][real_cred](key_path)
+                    auth_config[cred][real_cred] = \
+                        auth_config[cred][real_cred](key_path)
             else:
                 auth_config[cred] = auth_config[cred](key_path)
         except FileNotFoundError:
-            auth_config[cred] = None
+            auth_config[cred] = dict()
             LOG.error(f"No credentials found for: {cred}")
 
     return auth_config
-
-
-# TODO: Below methods should be deprecated and references updated to auth config DM
-def populate_amazon_keys_config(aws_keys: dict, config_path: Optional[str] = None):
-    """
-    Populates configuration with the specified Amazon keys to be referenced by tts/translation modules.
-    Args:
-        aws_keys: Dict of aws credentials to use (returned by `find_neon_aws_keys()`)
-        config_path: Override path to ngi_local_conf
-    """
-    from neon_utils.configuration_utils import NGIConfig
-
-    assert "aws_access_key_id" in aws_keys
-    assert "aws_secret_access_key" in aws_keys
-
-    if not aws_keys.get("aws_access_key_id") or not aws_keys.get("aws_secret_access_key"):
-        raise ValueError
-
-    local_conf = NGIConfig("ngi_local_conf", config_path, True)
-    aws_config = local_conf["tts"]["amazon"]
-    aws_config = {**aws_config, **aws_keys}
-    local_conf["tts"]["amazon"] = aws_config
-    local_conf.write_changes()
-    # TODO: This should be depreciated and references moved to neon_auth_config DM
-
-
-def populate_github_token_config(token: str, config_path: Optional[str] = None):
-    """
-    Populates configuration with the specified github token for later reference.
-    Args:
-        token: String Github token
-        config_path: Override path to ngi_local_conf
-    """
-    from neon_utils.configuration_utils import NGIConfig
-
-    assert token
-
-    local_conf = NGIConfig("ngi_local_conf", config_path, True)
-    local_conf["skills"]["neon_token"] = token
-    local_conf.write_changes()
-    # TODO: This should be depreciated and references moved to neon_auth_config DM

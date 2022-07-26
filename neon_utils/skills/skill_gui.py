@@ -27,6 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from os.path import join
+from neon_utils.logger import LOG
 from neon_utils.file_utils import resolve_neon_resource_file
 from mycroft.enclosure.gui import SkillGUI as _SkillGUI
 
@@ -34,7 +35,6 @@ from mycroft.enclosure.gui import SkillGUI as _SkillGUI
 class SkillGUI(_SkillGUI):
     def __init__(self, skill):
         super().__init__(skill)
-        self.base_skill_dir = skill.config_core["skills"]["directory"]
         self.serving_http = skill.config_core["skills"].get(
             "run_gui_file_server", False)
 
@@ -50,8 +50,12 @@ class SkillGUI(_SkillGUI):
             else:
                 page = self.skill.find_resource(name, 'ui')
                 if self.serving_http:
-                    page = page.replace(self.base_skill_dir,
-                                        join(self.remote_url, "skills"))
+                    parts = page.split('/')
+                    LOG.debug(parts)
+                    path_suffix = join(*parts[(parts.index('ui') - 1):])
+                    LOG.debug(path_suffix)
+                    page = join(self.remote_url, "skills", path_suffix)
+                    LOG.debug(page)
             if page:
                 if self.remote_url and not self.serving_http:
                     page_urls.append(self.remote_url + "/" + page)

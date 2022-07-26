@@ -1,0 +1,4 @@
+requests
+beautifulsoup4~=4.9
+lxml~=4.5
+netifaces~=0.10

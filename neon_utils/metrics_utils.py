@@ -29,7 +29,7 @@
 from socket import gethostname
 from time import time, strftime
 
-from neon_utils import get_neon_local_config, LOG
+from neon_utils.logger import LOG
 from neon_utils.mq_utils import send_mq_request
 from neon_utils.packaging_utils import get_neon_core_version
 
@@ -98,9 +98,9 @@ def report_metric(name: str, **kwargs):
 
 def announce_connection():
     try:
-        local_conf = get_neon_local_config().content
+        from ovos_config.config import Configuration
         data = {"time": strftime('%Y-%m-%d %H:%M:%S'),
-                "name": local_conf["devVars"]["devName"],
+                "name": dict(Configuration()).get("device_name") or "unknown",
                 "host": gethostname(),
                 "ver": get_neon_core_version()}
         send_mq_request("/neon_metrics", data, "neon_connections_input", expect_response=False)

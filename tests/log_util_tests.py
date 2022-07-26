@@ -33,7 +33,7 @@ import sys
 import shutil
 import unittest
 
-from os.path import basename
+from os.path import basename, isdir
 from time import time, sleep
 from datetime import timedelta
 
@@ -46,19 +46,11 @@ LOG_PATH = os.path.join(ROOT_DIR, "tests", "log_files")
 class LogUtilTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        from neon_utils.configuration_utils import get_neon_local_config
-        cls.test_config_path = os.path.join(ROOT_DIR, "test_config")
-        os.environ["NEON_CONFIG_PATH"] = cls.test_config_path
-        conf = get_neon_local_config()
-        conf["dirVars"]["logsDir"] = LOG_PATH
-        conf.write_changes()
         os.makedirs(LOG_PATH, exist_ok=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
         shutil.rmtree(LOG_PATH)
-        if os.path.exists(cls.test_config_path):
-            shutil.rmtree(cls.test_config_path)
 
     def test_get_log_file(self):
         from neon_utils.log_utils import get_logger
@@ -177,9 +169,10 @@ class LogUtilTests(unittest.TestCase):
         self.assertEqual(neon_log, ovos_log)
         self.assertEqual(neon_log, LOG)
 
-    def test_log_dir(self):
-        from neon_utils.log_utils import LOG_DIR
-        self.assertIsInstance(LOG_DIR, str)
+    def test_get_log_dir(self):
+        from neon_utils.log_utils import get_log_dir
+        log_dir = get_log_dir()
+        self.assertTrue(isdir(log_dir))
 
 
 if __name__ == '__main__':

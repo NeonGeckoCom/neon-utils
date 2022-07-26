@@ -27,9 +27,15 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import socket
-import netifaces
-import requests
-from requests.exceptions import MissingSchema, InvalidSchema, InvalidURL, ConnectionError
+
+try:
+    import netifaces
+    import requests
+    from requests.exceptions import MissingSchema, InvalidSchema, InvalidURL, \
+        ConnectionError
+except ImportError:
+    raise ImportError("netifaces or requests not available,"
+                      " pip install neon-utils[network]")
 
 
 def get_ip_address() -> str:

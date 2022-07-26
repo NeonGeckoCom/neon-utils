@@ -29,15 +29,14 @@
 import json
 import time
 import os.path
+import yaml
 
 from threading import Event, Thread
 from typing import Optional
-
 from json_database import JsonStorage
-from ruamel.yaml import YAML
 from mycroft_bus_client.message import Message
 
-from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
+from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message, resolve_message
@@ -52,28 +51,12 @@ from neon_utils.user_utils import get_user_prefs
 
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        if not hasattr(super(), "_startup"):
-            # TODO: Backwards-compat. deprecate in v1.0.0
-            import sys
-            from mycroft.filesystem import FileSystemAccess
-            self.name = name or self.__class__.__name__
-            skill_id = os.path.basename(os.path.dirname(
-                os.path.abspath(sys.modules[self.__module__].__file__)))
-            self.file_system = FileSystemAccess(os.path.join('skills', skill_id))
-            self._settings = None
-
         super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
         self.gui = SkillGUI(self)
-        if not hasattr(super(), "_startup"):
-            # TODO: Backwards-compat. deprecate in v1.0.0
-            skill_id = os.path.basename(os.path.dirname(
-                os.path.abspath(sys.modules[self.__module__].__file__)))
-            self.file_system = FileSystemAccess(os.path.join('skills',
-                                                             skill_id))
-            LOG.warning(f"overriding self.file_system to: "
-                        f"{self.file_system.path}")
-
-    # TODO: Override settings property and setter for multi-user compat
+        # TODO: Should below defaults be global config?
+        # allow skills to specify timeout overrides per-skill
+        self._speak_timeout = 30
+        self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
 
     @property
     def location(self):
@@ -82,12 +65,6 @@ class PatchedMycroftSkill(MycroftSkill):
     @property
     def _secondary_langs(self):
         return get_user_prefs()["speech"]["alt_languages"]
-
-    @property
-    def _settings_path(self):
-        if not hasattr(super(), "_settings_path"):
-            return os.path.join(self.file_system.path, 'settings.json')
-        return super()._settings_path
 
     def _init_settings(self):
         """
@@ -112,7 +89,7 @@ class PatchedMycroftSkill(MycroftSkill):
         json_path = os.path.join(self.root_dir, "settingsmeta.json")
         if os.path.isfile(yaml_path):
             with open(yaml_path) as f:
-                self.settings_meta = YAML().load(f) or dict()
+                self.settings_meta = yaml.safe_load(f) or dict()
         elif os.path.isfile(json_path):
             with open(json_path) as f:
                 self.settings_meta = json.load(f)
@@ -121,7 +98,8 @@ class PatchedMycroftSkill(MycroftSkill):
         return parse_skill_default_settings(self.settings_meta)
 
     @resolve_message
-    def speak(self, utterance, expect_response=False, wait=False, meta=None, message=None, private=False, speaker=None):
+    def speak(self, utterance, expect_response=False, wait=False, meta=None,
+              message=None, private=False, speaker=None):
         """
         Speak an utterance.
         Arguments:
@@ -173,12 +151,15 @@ class PatchedMycroftSkill(MycroftSkill):
                     "speaker": speaker}
 
             if message.context.get("cc_data", {}).get("emit_response"):
-                msg_to_emit = message.reply("skills:execute.response", data)
+                msg_to_emit = message.reply("skills:execute.response", data,
+                                            {"destination": ["skills"],
+                                             "source": ["skills"]})
             else:
                 message.context.get("timing", {})["speech_start"] = time.time()
-                msg_to_emit = message.reply("speak", data, message.context)
+                msg_to_emit = message.reply("speak", data,
+                                            {"destination": ["skills"],
+                                             "source": ["audio"]})
                 LOG.debug(f"Skill speak! {data}")
-
             LOG.debug(msg_to_emit.msg_type)
             self.bus.emit(msg_to_emit)
         else:
@@ -346,12 +327,12 @@ class PatchedMycroftSkill(MycroftSkill):
 
         # TODO: get_response should be event-based instead of signals
         def _wait_while_speaking():
-            if wait_for_signal_clear("isSpeaking", 30):
+            if wait_for_signal_clear("isSpeaking", self._speak_timeout):
                 LOG.error("Still speaking after 30s")
             else:
                 # Handle a second prompt after ended speech
                 time.sleep(0.5)
-                wait_for_signal_clear("isSpeaking", 30)
+                wait_for_signal_clear("isSpeaking", self._speak_timeout)
             finished_speaking.set()
 
         def converse(message):
@@ -375,9 +356,9 @@ class PatchedMycroftSkill(MycroftSkill):
         t = Thread(target=_wait_while_speaking, daemon=True)
         t.start()
 
-        finished_speaking.wait(30)
+        finished_speaking.wait(self._speak_timeout)
         t.join(0)
-        if not event.wait(15):  # 10 for listener, 5 for STT, then timeout
+        if not event.wait(self._get_response_timeout):
             LOG.warning("Timed out waiting for user response")
         self.converse = default_converse
         return converse.response

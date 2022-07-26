@@ -26,14 +26,20 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import requests
-from bs4 import BeautifulSoup
+
 from abc import ABC
 from html.parser import HTMLParser
 
-from requests.exceptions import ConnectTimeout
 
 from neon_utils.logger import LOG
+
+try:
+    import requests
+    from bs4 import BeautifulSoup
+    from requests.exceptions import ConnectTimeout
+except ImportError:
+    raise ImportError("requests or bs4 not available,"
+                      " pip install neon-utils[network]")
 
 
 def strip_tags(html):  # TODO: Document this! DM

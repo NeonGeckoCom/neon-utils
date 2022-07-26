@@ -33,7 +33,7 @@ import shutil
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.authentication_utils import *
-from neon_utils.configuration_utils import get_neon_local_config, NGIConfig
+from neon_utils.configuration_utils import NGIConfig
 
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 CRED_PATH = os.path.join(ROOT_DIR, "credentials")
@@ -45,7 +45,8 @@ class AuthUtilTests(unittest.TestCase):
         self.old_local_conf = os.path.join(config_path, "old_local_conf.yml")
         self.ngi_local_conf = os.path.join(config_path, "ngi_local_conf.yml")
         shutil.copy(self.ngi_local_conf, self.old_local_conf)
-        NGIConfig(os.path.splitext(os.path.basename(self.ngi_local_conf))[0], os.path.dirname(self.ngi_local_conf),
+        NGIConfig(os.path.splitext(os.path.basename(self.ngi_local_conf))[0],
+                  os.path.dirname(self.ngi_local_conf),
                   force_reload=True)
 
     def tearDown(self) -> None:
@@ -67,7 +68,8 @@ class AuthUtilTests(unittest.TestCase):
     def test_get_aws_credentials(self):
         try:
             keys = find_neon_aws_keys("/tmp")
-            self.assertEqual(list(keys.keys()), ["aws_access_key_id", "aws_secret_access_key"])
+            self.assertEqual(list(keys.keys()), ["aws_access_key_id",
+                                                 "aws_secret_access_key"])
         except Exception as e:
             self.assertIsInstance(e, CredentialNotFoundError)
 
@@ -77,8 +79,9 @@ class AuthUtilTests(unittest.TestCase):
 
         os.environ["AWS_ACCESS_KEY_ID"] = "test_aws_id"
         os.environ["AWS_SECRET_ACCESS_KEY"] = "test_aws_secret"
-        self.assertEqual(find_neon_aws_keys(), {"aws_access_key_id": "test_aws_id",
-                                                "aws_secret_access_key": "test_aws_secret"})
+        self.assertEqual(find_neon_aws_keys(),
+                         {"aws_access_key_id": "test_aws_id",
+                          "aws_secret_access_key": "test_aws_secret"})
 
     def test_get_google_credentials(self):
         try:
@@ -88,13 +91,18 @@ class AuthUtilTests(unittest.TestCase):
             self.assertIsInstance(e, CredentialNotFoundError)
 
         creds = find_neon_google_keys(CRED_PATH)
-        self.assertEqual(list(creds.keys()), ["type", "project_id", "private_key_id", "private_key", "client_email",
-                                              "client_id", "auth_uri", "token_uri", "auth_provider_x509_cert_url",
-                                              "client_x509_cert_url"])
+        self.assertEqual(list(creds.keys()),
+                         ["type", "project_id", "private_key_id",
+                          "private_key", "client_email", "client_id",
+                          "auth_uri", "token_uri",
+                          "auth_provider_x509_cert_url",
+                          "client_x509_cert_url"])
         self.assertEqual(creds["private_key"],
-                         "-----BEGIN PRIVATE KEY-----\nREDACTED\nREDACTED\nREDACTED\n-----END PRIVATE KEY-----\n")
+                         "-----BEGIN PRIVATE KEY-----\nREDACTED\nREDACTED\n"
+                         "REDACTED\n-----END PRIVATE KEY-----\n")
 
-        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.path.join(CRED_PATH, "google.json")
+        os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = \
+            os.path.join(CRED_PATH, "google.json")
         self.assertEqual(find_neon_google_keys(), creds)
 
     def test_get_wolfram_key(self):
@@ -136,49 +144,21 @@ class AuthUtilTests(unittest.TestCase):
         os.environ["OWM_KEY"] = "test_owm_key"
         self.assertEqual(find_neon_owm_key(), "test_owm_key")
 
-    def test_write_github_token(self):
-        config_path = os.path.join(ROOT_DIR, "configuration")
-        token = "TOKEN"
-        local_config = get_neon_local_config(config_path)
-        self.assertIsNone(local_config["skills"]["neon_token"])
-        populate_github_token_config(token, config_path)
-        self.assertEqual(local_config["skills"]["neon_token"], token)
-
-    def test_write_aws_credentials(self):
-        config_path = os.path.join(ROOT_DIR, "configuration")
-        local_config = get_neon_local_config(config_path)
-        self.assertEqual(local_config["tts"]["amazon"], {"region": "us-west-2",
-                                                         "aws_access_key_id": "",
-                                                         "aws_secret_access_key": ""})
-        populate_amazon_keys_config({"aws_access_key_id": "KEY_ID",
-                                     "aws_secret_access_key": "KEY_SECRET"}, config_path)
-        self.assertEqual(local_config["tts"]["amazon"], {"region": "us-west-2",
-                                                         "aws_access_key_id": "KEY_ID",
-                                                         "aws_secret_access_key": "KEY_SECRET"})
-
-    def test_aws_credentials_missing_keys(self):
-        with self.assertRaises(AssertionError):
-            populate_amazon_keys_config({})
-
-        with self.assertRaises(AssertionError):
-            populate_amazon_keys_config({"aws_access_key_id": ""})
-        with self.assertRaises(AssertionError):
-            populate_amazon_keys_config({"aws_secret_access_key": ""})
-
-    def test_aws_credentials_invalid_keys(self):
-        with self.assertRaises(ValueError):
-            populate_amazon_keys_config({"aws_access_key_id": "",
-                                         "aws_secret_access_key": ""})
-
     def test_repo_is_neon_valid(self):
-        self.assertTrue(repo_is_neon("http://github.com/NeonGeckoCom/alerts.neon"))
-        self.assertTrue(repo_is_neon("https://github.com/NeonGeckoCom/caffeinewiz.neon"))
-        self.assertTrue(repo_is_neon("ssh://github.com/NeonGeckoCom/launcher.neon"))
+        self.assertTrue(repo_is_neon(
+            "http://github.com/NeonGeckoCom/alerts.neon"))
+        self.assertTrue(repo_is_neon(
+            "https://github.com/NeonGeckoCom/caffeinewiz.neon"))
+        self.assertTrue(repo_is_neon(
+            "ssh://github.com/NeonGeckoCom/launcher.neon"))
 
-        self.assertTrue(repo_is_neon("https://github.com/neondaniel/speedtest.neon"))
+        self.assertTrue(repo_is_neon(
+            "https://github.com/neondaniel/speedtest.neon"))
 
-        self.assertFalse(repo_is_neon("https://github.com/mycroftai/skill-alarm"))
-        self.assertFalse(repo_is_neon("http://gitlab.com/neongecko/some-skill"))
+        self.assertFalse(repo_is_neon(
+            "https://github.com/mycroftai/skill-alarm"))
+        self.assertFalse(repo_is_neon(
+            "http://gitlab.com/neongecko/some-skill"))
 
     def test_repo_is_neon_invalid(self):
         with self.assertRaises(ValueError):
@@ -190,7 +170,9 @@ class AuthUtilTests(unittest.TestCase):
 
     def test_build_new_auth_config(self):
         config = build_new_auth_config(CRED_PATH)
-        self.assertEqual(set(config.keys()), {"github", "amazon", "wolfram", "google", "alpha_vantage", "owm"})
+        self.assertEqual(set(config.keys()), {"github", "amazon", "wolfram",
+                                              "google", "alpha_vantage",
+                                              "owm"})
         for key in config.keys():
             self.assertIsInstance(config[key], dict)
             self.assertTrue(config[key])

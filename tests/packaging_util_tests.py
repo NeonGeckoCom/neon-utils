@@ -53,7 +53,7 @@ class PackagingUtilTests(unittest.TestCase):
         try:
             core_dir = get_neon_core_root()
             self.assertIsInstance(core_dir, str)
-            self.assertTrue(os.path.isdir(os.path.join(core_dir, "neon_core")))
+            self.assertTrue(os.path.isdir(os.path.join(core_dir, "util")))
         except FileNotFoundError:
             with self.assertRaises(FileNotFoundError):
                 get_neon_core_root()
@@ -111,24 +111,15 @@ class PackagingUtilTests(unittest.TestCase):
             with self.assertRaises(ImportError):
                 get_packaged_core_version()
 
-    def test_get_version_from_file(self):
-        try:
-            ver = get_version_from_file()
-            self.assertIsInstance(ver, str)
-            self.assertGreaterEqual(len(ver.split('.')), 2)
-        except FileNotFoundError:
-            with self.assertRaises(FileNotFoundError):
-                get_version_from_file()
-
     def test_get_package_dependencies(self):
         self_deps = get_package_dependencies("neon-utils")
         requirements_file = join(os.path.dirname(os.path.dirname(__file__)),
                                  "requirements", "requirements.txt")
         with open(requirements_file) as f:
             spec_requirements = f.read().split('\n')
+        spec_requirements = [r for r in spec_requirements if r]
         # Version specs aren't order-dependent, so they can't be compared
         self.assertEqual(len(self_deps), len(spec_requirements))
-
         with self.assertRaises(ModuleNotFoundError):
             get_package_dependencies("fakeneongeckopackage")
 

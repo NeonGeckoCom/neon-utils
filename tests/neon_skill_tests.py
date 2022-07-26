@@ -28,26 +28,26 @@
 
 import datetime
 import os
+import shutil
 import sys
 import unittest
 
 from multiprocessing import Event
+from os.path import join
 from threading import Thread
 from time import sleep
-from unittest.mock import patch
 
+import pytest
+from mock.mock import patch, MagicMock
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 from mock import Mock
 
 from mycroft.skills.fallback_skill import FallbackSkill
 
-import neon_utils.configuration_utils
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
-from neon_utils.configuration_utils import NGIConfig
-from neon_utils.signal_utils import check_for_signal, create_signal
+from neon_utils.signal_utils import check_for_signal
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 from skills import *
@@ -127,13 +127,9 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill, NeonSkill)
         self.assertEqual(skill.name, "Test Neon Skill")
 
-        self.assertIsInstance(skill.user_config, NGIConfig)
-        self.assertIsInstance(skill.local_config, NGIConfig)
         self.assertIsInstance(skill.lru_cache, LRUCache)
         self.assertIsInstance(skill.sys_tz, datetime.tzinfo)
         self.assertIsInstance(skill.gui_enabled, bool)
-        self.assertIsInstance(skill.server, bool)
-        self.assertIsInstance(skill.default_intent_timeout, int)
         self.assertIsInstance(skill.neon_core, bool)
         self.assertIsInstance(skill.actions_to_confirm, dict)
 
@@ -148,17 +144,9 @@ class SkillObjectTests(unittest.TestCase):
             self.assertIsInstance(skill.translator, LanguageTranslator)
 
         self.assertIsInstance(skill.settings, dict)
-
         self.assertIsInstance(skill.location_timezone, str)
-
-        self.assertIsInstance(skill.preference_brands(), dict)
-        self.assertIsInstance(skill.preference_user(), dict)
-        self.assertIsInstance(skill.preference_location(), dict)
-        self.assertIsInstance(skill.preference_unit(), dict)
-        self.assertIsInstance(skill.preference_speech(), dict)
         self.assertIsInstance(skill.preference_skill(), dict)
-
-        self.assertIsInstance(skill.build_user_dict(), dict)
+        self.assertEqual(skill.settings, skill.preference_skill())
 
         # self.assertEqual(skill.file_system.path, skill.settings_write_path)
         # self.assertNotEqual(os.path.basename(skill.file_system.path),
@@ -459,6 +447,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertIsNone(msg.data["speaker"])
+        self.assertEqual(msg.context['destination'], ['audio'])
+        self.assertEqual(msg.context['source'], ['skills'])
 
     def test_speak_speaker_valid(self):
         handle_speak = Mock()
@@ -475,6 +465,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertEqual(msg.data["speaker"], speaker)
+        self.assertEqual(msg.context['destination'], ['audio'])
+        self.assertEqual(msg.context['source'], ['skills'])
 
     def test_speak_simple_with_message_valid(self):
         message = Message("date-time.neon:handle_query_time",
@@ -503,10 +495,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertIsNone(msg.data["speaker"])
-        self.assertEqual(message.context.pop("source"),
-                         msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"),
-                         msg.context.pop("source"))
+        self.assertEqual(msg.context.pop('destination'), ['audio'])
+        self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
+        message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
     def test_speak_speaker_with_message_override_valid(self):
@@ -541,10 +533,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertEqual(msg.data["speaker"], speaker)
-        self.assertEqual(message.context.pop("source"),
-                         msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"),
-                         msg.context.pop("source"))
+        self.assertEqual(msg.context.pop('destination'), ['audio'])
+        self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
+        message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
     def test_speak_speaker_with_message_valid(self):
@@ -579,10 +571,10 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
         self.assertEqual(msg.data["speaker"], speaker)
-        self.assertEqual(message.context.pop("source"),
-                         msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"),
-                         msg.context.pop("source"))
+        self.assertEqual(msg.context.pop('destination'), ['audio'])
+        self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
+        message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
     def test_speak_emit_response_valid(self):
@@ -614,22 +606,25 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.data["utterance"], utterance)
         self.assertEqual(msg.data["expect_response"], False)
         self.assertIsInstance(msg.data["meta"], dict)
-        self.assertEqual(message.context.pop("source"),
-                         msg.context.pop("destination"))
-        self.assertEqual(message.context.pop("destination"),
-                         msg.context.pop("source"))
+        self.assertEqual(msg.context.pop('destination'), ['skills'])
+        self.assertEqual(msg.context.pop('source'), ['skills'])
+        message.context.pop('source')
+        message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
     # TODO: Test settings load
 
 
 class NeonSkillTests(unittest.TestCase):
+    skill = None
+    config_dir = os.path.join(os.path.dirname(__file__), "skills", "config")
+
     @classmethod
     def setUpClass(cls) -> None:
         from skills.test_skill import TestSkill
+
         bus = FakeBus()
-        os.environ['NEON_CONFIG_PATH'] = \
-            os.path.join(os.path.dirname(__file__), "skills")
+        os.environ["XDG_CONFIG_HOME"] = cls.config_dir
         cls.skill = TestSkill()
         # Mock the skill_loader process
         if hasattr(cls.skill, "_startup"):
@@ -639,26 +634,25 @@ class NeonSkillTests(unittest.TestCase):
             cls.skill.load_data_files()
             cls.skill.initialize()
 
+    @classmethod
+    def tearDownClass(cls) -> None:
+        if os.path.isdir(cls.config_dir):
+            shutil.rmtree(cls.config_dir)
+        os.environ.pop("XDG_CONFIG_HOME")
+
     def test_00_skill_init(self):
         self.assertIsInstance(self.skill.cache_loc, str)
         self.assertTrue(os.path.isdir(self.skill.cache_loc))
         self.assertIsNotNone(self.skill.lru_cache)
         self.assertIsInstance(self.skill.sys_tz, datetime.tzinfo)
-        self.assertIsInstance(self.skill.server, bool)
-        self.assertIsInstance(self.skill.default_intent_timeout, int)
         self.assertIsInstance(self.skill.neon_core, bool)
         self.assertIsInstance(self.skill.skill_mode, str)
         self.assertIsInstance(self.skill.extension_time, int)
-        # TODO: Refactor after Neon Plugins all import from OPM
-        # self.assertIsNotNone(self.skill.lang_detector)
-        # self.assertIsNotNone(self.skill.translator)
+        self.assertIsNotNone(self.skill.lang_detector)
+        self.assertIsNotNone(self.skill.translator)
 
     def test_properties(self):
         self.assertIsInstance(self.skill.gui_enabled, bool)
-        self.assertIsInstance(self.skill.user_config, NGIConfig)
-        self.assertIsInstance(self.skill.local_config, NGIConfig)
-        self.assertIsInstance(self.skill.user_info_available, dict)
-        self.assertIsInstance(self.skill.configuration_available, dict)
         self.assertIsInstance(self.skill.ngi_settings, dict)
         self.assertEqual(self.skill.ngi_settings, self.skill.settings)
 
@@ -715,7 +709,6 @@ class NeonSkillTests(unittest.TestCase):
         # TODO: Define and test for user-specific settings
 
     def test_neon_must_respond(self):
-        self.skill.server = True
         self.assertFalse(self.skill.neon_must_respond())
         private_message_solo = Message("", {},
                                        {"klat_data": {
@@ -725,7 +718,7 @@ class NeonSkillTests(unittest.TestCase):
                                            "title": "!PRIVATE:user,Neon"}})
         private_message_neon_plus = Message("", {},
                                             {"klat_data": {
-                                      "title": "!PRIVATE:user,Neon,user1"}})
+                                                "title": "!PRIVATE:user,Neon,user1"}})
         public_message = Message("", {},
                                  {"klat_data": {
                                      "title": "Test Conversation"}})
@@ -781,6 +774,7 @@ class NeonSkillTests(unittest.TestCase):
                                         "param": "value",
                                         "test": True})
 
+    @pytest.mark.skip
     def test_send_email(self):
         self.assertTrue(self.skill.send_email(
             "Test Message",
@@ -817,6 +811,49 @@ class NeonSkillTests(unittest.TestCase):
     def test_decorate_api_call_use_lru(self):
         # TODO
         pass
+
+
+class SkillGuiTests(unittest.TestCase):
+    from neon_utils.skills.skill_gui import SkillGUI
+    skill = get_test_neon_skill({})
+    skill_gui = SkillGUI(skill)
+
+    @classmethod
+    def setUpClass(cls) -> None:
+
+        cls.skill_gui.config = {
+            "remote-server": None
+        }
+
+    def test_pages2uri(self):
+        def _find_resource(*args, **kwargs):
+            return join("skill_id", args[1], args[0])
+
+        real_method = self.skill.find_resource
+        self.skill.find_resource = _find_resource
+
+        self.skill_gui.serving_http = False
+        urls = self.skill_gui._pages2uri(["test_page1", "test_page2"])
+        self.assertEqual(urls, ["file://skill_id/ui/test_page1",
+                                "file://skill_id/ui/test_page2"])
+
+        self.skill_gui.config = {
+            "remote-server": "remote_url"
+        }
+        urls = self.skill_gui._pages2uri(["test_page1", "test_page2"])
+        self.assertEqual(urls, ["remote_url/skill_id/ui/test_page1",
+                                "remote_url/skill_id/ui/test_page2"])
+
+        self.skill_gui.serving_http = True
+        urls = self.skill_gui._pages2uri(["SYSTEM_Test1", "SYSTEM_Test2"])
+        self.assertEqual(urls, ["file://remote_url/system/ui/SYSTEM_Test1",
+                                "file://remote_url/system/ui/SYSTEM_Test2"])
+
+        urls = self.skill_gui._pages2uri(["test_page1", "test_page2"])
+        self.assertEqual(urls, ["file://remote_url/skills/skill_id/ui/test_page1",
+                                "file://remote_url/skills/skill_id/ui/test_page2"])
+
+        self.skill.find_resource = real_method
 
 
 if __name__ == '__main__':

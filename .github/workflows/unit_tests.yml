@@ -23,7 +23,7 @@ jobs:
   skill_object_tests:
     strategy:
       matrix:
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
+        python-version: [ 3.7, 3.8, 3.9, '3.10' ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -36,7 +36,7 @@ jobs:
           python -m pip install --upgrade pip
           sudo apt update
           sudo apt install gcc libfann-dev libsndfile1
-          pip install . -r requirements/test_requirements.txt
+          pip install .[test,network]
 
       - name: Test Skills Objects
         run: |
@@ -49,7 +49,7 @@ jobs:
   unit_tests:
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9, '3.10']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -66,18 +66,10 @@ jobs:
           sudo apt update
           sudo apt install gcc libfann-dev
           python -m pip install --upgrade pip
-          pip install . -r requirements/test_requirements.txt
+          pip install .[test,audio,network,configuration]
       - name: Change Test File Permissions
         run: |
           sudo chown -R nobody:nogroup tests/configuration/unwritable_path
-      - name: Test Skill Patcher
-        run: |
-          pytest tests/skill_patch_tests.py --doctest-modules --junitxml=tests/skill-patch-test-results.xml
-      - name: Upload skill patch test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: skill-patch-test-results
-          path: tests/skill-patch-test-results.xml
 
       - name: Test Parse Utils
         run: |
@@ -87,15 +79,6 @@ jobs:
         with:
           name: parse-util-test-results
           path: tests/parse-util-test-results.xml
-
-      - name: Test Transcript Utils
-        run: |
-          pytest tests/transcript_util_tests.py --doctest-modules --junitxml=tests/transcript-util-test-results.xml
-      - name: Upload transcript util test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: transcript-util-test-results
-          path: tests/transcript-util-test-results.xml
 
       - name: Test Web Utils
         run: |
@@ -196,15 +179,6 @@ jobs:
           name: cache-util-test-results
           path: tests/cache-util-test-results.xml
 
-      - name: Test CCL Utils
-        run: |
-          pytest tests/ccl_util_tests.py --doctest-modules --junitxml=tests/ccl-util-test-results.xml
-      - name: Upload CCL utils test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: ccl-util-test-results
-          path: tests/ccl-util-test-results.xml
-
       - name: Test MQ Utils
         run: |
           pytest tests/mq_util_tests.py --doctest-modules --junitxml=tests/mq-util-test-results.xml
@@ -213,15 +187,6 @@ jobs:
         with:
           name: mq-util-test-results
           path: tests/mq-util-test-results.xml
-
-      - name: Test Lock Utils
-        run: |
-          pytest tests/lock_util_tests.py --doctest-modules --junitxml=tests/lock-util-test-results.xml
-      - name: Upload lock utils test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: lock-util-test-results
-          path: tests/lock-util-test-results.xml
 
       - name: Test Validator Utils
         run: |
@@ -249,32 +214,3 @@ jobs:
         with:
           name: messagebus-util-test-results
           path: tests/messagebus-util-test-results.xml
-
-      - name: Test Deprecated Compat
-        run: |
-          pytest tests/deprecated_compat_tests.py --doctest-modules --junitxml=tests/deprecated-compat-test-results.xml
-
-  backwards_compat_tests:
-    strategy:
-      matrix:
-        python-version: [ 3.6, 3.7, 3.8, 3.9 ]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Set up python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Install dependencies
-        run: |
-          sudo apt install gcc libfann-dev
-          python -m pip install --upgrade pip~=21.0
-          pip install . -r requirements/test_requirements.txt
-      - name: Test Service API Compat
-        run: |
-          pytest tests/_compat_service_api_tests.py --doctest-modules --junitxml=tests/service-api-test-results.xml
-      - name: Upload service API test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: service-api-test-results
-          path: tests/service-api-test-results.xml
