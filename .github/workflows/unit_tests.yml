@@ -214,3 +214,12 @@ jobs:
         with:
           name: messagebus-util-test-results
           path: tests/messagebus-util-test-results.xml
+
+      - name: Test User Utils
+        run: |
+          pytest tests/user_util_tests.py --doctest-modules --junitxml=tests/user-util-test-results.xml
+      - name: Upload user utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: user-util-test-results
+          path: tests/user-util-test-results.xml
