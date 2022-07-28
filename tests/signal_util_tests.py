@@ -123,6 +123,7 @@ class SignalUtilsTests(unittest.TestCase):
         self.assertIsInstance(neon_utils.signal_utils._MAX_TIMEOUT, int)
         self.assertTrue(neon_utils.signal_utils.check_signal_manager_available())
 
+        # Check neon_utils references
         self.assertEqual(neon_utils.signal_utils._check_for_signal,
                          neon_utils.signal_utils._manager_check_for_signal)
         self.assertEqual(neon_utils.signal_utils._create_signal,
@@ -132,6 +133,7 @@ class SignalUtilsTests(unittest.TestCase):
         self.assertEqual(neon_utils.signal_utils._wait_for_signal_create,
                          neon_utils.signal_utils._manager_wait_for_signal_create)
 
+        # Check ovos_utils references
         self.assertEqual(ovos_utils.signal.check_for_signal,
                          neon_utils.signal_utils._manager_check_for_signal)
         self.assertEqual(ovos_utils.signal.create_signal,
