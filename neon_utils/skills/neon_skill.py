@@ -72,7 +72,7 @@ class NeonSkill(MycroftSkill):
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
-        self._gui_connected = is_gui_connected()
+        self._gui_connected = False
         self.sys_tz = gettz()
 
         try:
@@ -123,7 +123,8 @@ class NeonSkill(MycroftSkill):
         If True, skill should display GUI pages
         """
         try:
-            return self._gui_connected or is_gui_connected()
+            self._gui_connected = self._gui_connected or is_gui_connected()
+            return self._gui_connected
         except Exception as x:
             # In container environments, this check fails so assume True
             LOG.exception(x)
