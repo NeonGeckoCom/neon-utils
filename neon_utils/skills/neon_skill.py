@@ -123,7 +123,8 @@ class NeonSkill(MycroftSkill):
         If True, skill should display GUI pages
         """
         try:
-            self._gui_connected = self._gui_connected or is_gui_connected()
+            self._gui_connected = self._gui_connected or \
+                                  is_gui_connected(self.bus)
             return self._gui_connected
         except Exception as x:
             # In container environments, this check fails so assume True
