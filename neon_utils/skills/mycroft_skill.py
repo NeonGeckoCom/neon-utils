@@ -36,6 +36,7 @@ from typing import Optional
 from json_database import JsonStorage
 from mycroft_bus_client.message import Message
 
+from neon_utils.parse_utils import get_full_lang_code
 from neon_utils.signal_utils import wait_for_signal_clear
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
@@ -63,8 +64,18 @@ class PatchedMycroftSkill(MycroftSkill):
         return get_mycroft_compatible_location(get_user_prefs()["location"])
 
     @property
+    def _core_lang(self):
+        return self.config_core.get('language', {}).get("internal") or \
+               super()._core_lang
+
+    @property
     def _secondary_langs(self):
-        return get_user_prefs()["speech"]["alt_languages"]
+        if self.config_core.get('language', {}).get('supported_langs'):
+            full_langs = (get_full_lang_code(lang) for lang in
+                          self.config_core['language']['supported_langs'])
+            core_lang = self._core_lang
+            return [lang for lang in full_langs if lang != core_lang]
+        return super()._secondary_langs
 
     def _init_settings(self):
         """
@@ -188,8 +199,17 @@ class PatchedMycroftSkill(MycroftSkill):
         """
         data = data or {}
         LOG.debug(f"data={data}")
-        if self.dialog_renderer:  # TODO: Pass index (0) here to use non-random responses DM
-            to_speak = self.dialog_renderer.render(key, data)
+        user = get_user_prefs(message)
+        requested_response_language = user['speech']['tts_language']
+        original_lang = str(message.data.get('lang'))
+        message.data['lang'] = requested_response_language
+        if not self.dialog_renderer:
+            message.data['lang'] = original_lang
+        if self.dialog_renderer:
+            if user['response_mode'].get('limit_dialog'):
+                to_speak = self.dialog_renderer.render(key, data, 0)
+            else:
+                to_speak = self.dialog_renderer.render(key, data)
         else:
             to_speak = key
         self.speak(to_speak,

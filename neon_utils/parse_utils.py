@@ -228,3 +228,28 @@ def transliteration(transcription: str, text: str, lang: str) -> (str, str):
             return text
     else:
         return text
+
+
+def get_full_lang_code(lang: str) -> str:
+    """
+    Get a BCP 47 lang code for an input ISO 639-2 code
+    """
+    if '-' in lang:
+        return lang
+    known_defaults = {
+        'uk': 'uk-ua',
+        'ja': 'ja-jp',
+        'bg': 'bg-bg',
+        'fi': 'fi-fi',
+        'ga': 'ga-ie'
+    }
+    from lingua_franca import get_full_lang_code
+    try:
+        full_code = get_full_lang_code(lang)
+    except AttributeError:
+        full_code = None
+    full_code = full_code if full_code and full_code != lang else \
+        known_defaults.get(lang, lang)
+    if '-' not in full_code:
+        LOG.warning(f"No full code resolved for {lang}")
+    return full_code

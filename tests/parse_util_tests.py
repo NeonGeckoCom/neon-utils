@@ -168,6 +168,17 @@ class ParseUtilTests(unittest.TestCase):
         tagged_with_exclusion = format_speak_tags("Don't<speak>Speak This.</speak>But Not this.", False)
         self.assertEqual(tagged_with_exclusion, valid_output)
 
+    def test_get_full_lang_code(self):
+        from neon_utils.parse_utils import get_full_lang_code
+        self.assertEqual(get_full_lang_code('en'), 'en-us')
+        self.assertEqual(get_full_lang_code('ga'), 'ga-ie')
+        self.assertEqual(get_full_lang_code(''), '')
+        self.assertEqual(get_full_lang_code('en-AU'), 'en-AU')
+        self.assertEqual(get_full_lang_code('not-valid'), 'not-valid')
+        self.assertEqual(get_full_lang_code('invalid'), 'invalid')
+        with self.assertRaises(TypeError):
+            get_full_lang_code(None)
+
 
 if __name__ == '__main__':
     unittest.main()
