@@ -25,22 +25,10 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from ovos_utils.messagebus import get_message_lang
 
 from neon_utils.skills import PatchedMycroftSkill
-from neon_utils.skills.mycroft_skill import dig_for_message
 
 
 class TestSkill(PatchedMycroftSkill):
     def __init__(self, bus=None):
         super(TestSkill, self).__init__(name="Test Skill", bus=bus)
-
-    @property
-    def lang(self):
-        # Overridden to ensure patched `dig_for_message` is used
-        lang = self._core_lang
-        message = dig_for_message()
-        if message:
-            lang = get_message_lang(message)
-        return lang.lower()
-

@@ -38,6 +38,7 @@ from os.path import join
 from threading import Thread
 from time import sleep
 
+import mycroft.skills.mycroft_skill.mycroft_skill
 import pytest
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
@@ -655,8 +656,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         import skills.test_mycroft_skill
         importlib.reload(skills.test_mycroft_skill)
         from skills.test_mycroft_skill import TestSkill
-        self.assertEqual(neon_utils.skills.mycroft_skill.dig_for_message,
-                         dig_for_message)
+        mycroft.skills.mycroft_skill.mycroft_skill.dig_for_message = dig_for_message
         bus = FakeBus()
         skill = TestSkill()
         # Mock the skill_loader process
@@ -703,6 +703,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         import skills.test_mycroft_skill
         importlib.reload(skills.test_mycroft_skill)
         from skills.test_mycroft_skill import TestSkill
+        mycroft.skills.mycroft_skill.mycroft_skill.dig_for_message = dig_for_message
 
         bus = FakeBus()
         skill = TestSkill()
