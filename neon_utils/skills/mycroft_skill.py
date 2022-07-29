@@ -204,12 +204,18 @@ class PatchedMycroftSkill(MycroftSkill):
         original_lang = str(message.data.get('lang'))
         message.data['lang'] = requested_response_language
         if not self.dialog_renderer:
+            LOG.info(f"No dialog_renderer for: {requested_response_language}. "
+                     f"Falling back to: {original_lang}")
             message.data['lang'] = original_lang
         if self.dialog_renderer:
-            if user['response_mode'].get('limit_dialog'):
-                to_speak = self.dialog_renderer.render(key, data, 0)
-            else:
-                to_speak = self.dialog_renderer.render(key, data)
+            index = 0 if user['response_mode'].get('limit_dialog') else None
+            to_speak = self.dialog_renderer.render(key, data, index)
+            if to_speak == key and message.data['lang'] != original_lang:
+                LOG.warning(f"Resource {key} missing for lang: "
+                            f"{requested_response_language}. Falling back to: "
+                            f"{original_lang}")
+                message.data['lang'] = original_lang
+                to_speak = self.dialog_renderer.render(key, data, index)
         else:
             to_speak = key
         self.speak(to_speak,
