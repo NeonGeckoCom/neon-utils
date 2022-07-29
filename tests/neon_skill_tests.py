@@ -27,6 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
+import importlib
 import os
 import shutil
 import sys
@@ -651,6 +652,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
     @patch('neon_utils.skills.mycroft_skill.dig_for_message')
     def test_translate(self, dig_for_message):
         # Init skill
+        import skills.test_mycroft_skill
+        importlib.reload(skills.test_mycroft_skill)
         from skills.test_mycroft_skill import TestSkill
         self.assertEqual(neon_utils.skills.mycroft_skill.dig_for_message,
                          dig_for_message)
@@ -675,6 +678,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(base_message.data['lang'], 'en-us')
 
         # Translate supported lang with resource
+        base_message.data['lang'] = 'en-us'
         base_message.context['user_profiles'][0]['speech']['tts_language'] = \
             "uk-ua"
         self.assertEqual(skill.translate("finished"),
@@ -696,6 +700,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
 
     @patch('neon_utils.skills.mycroft_skill.dig_for_message')
     def test_speak_dialog(self, dig_for_message):
+        import skills.test_mycroft_skill
+        importlib.reload(skills.test_mycroft_skill)
         from skills.test_mycroft_skill import TestSkill
 
         bus = FakeBus()
