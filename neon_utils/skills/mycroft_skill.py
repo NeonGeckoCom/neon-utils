@@ -181,6 +181,27 @@ class PatchedMycroftSkill(MycroftSkill):
             # TODO: Refactor to wait for event emit
             wait_for_signal_clear('isSpeaking')
 
+    def translate(self, text, data=None):
+        """
+        Overrides the default `translate` method to use the user's requested
+        response language if native support is available
+        """
+        message = dig_for_message()
+        user = get_user_prefs(message)
+        requested_response_language = user['speech']['tts_language']
+        original_lang = str(message.data.get('lang'))
+        message.data['lang'] = requested_response_language
+        if not self.dialog_renderer:
+            message.data['lang'] = original_lang
+        translated = self.dialog_renderer.render(text)
+        if translated == text and message.data['lang'] != original_lang:
+            LOG.warning(f"Resource {text} missing for lang: "
+                        f"{requested_response_language}. Falling back to: "
+                        f"{original_lang}")
+            message.data['lang'] = original_lang
+            translated = self.dialog_renderer.render(text)
+        return translated
+
     @resolve_message
     def speak_dialog(self, key, data=None, expect_response=False, wait=False,
                      message=None, private=False, speaker=None):
@@ -203,7 +224,8 @@ class PatchedMycroftSkill(MycroftSkill):
         requested_response_language = user['speech']['tts_language']
         original_lang = str(message.data.get('lang'))
         message.data['lang'] = requested_response_language
-        if not self.dialog_renderer:
+        if not self.dialog_renderer and \
+                original_lang != requested_response_language:
             LOG.info(f"No dialog_renderer for: {requested_response_language}. "
                      f"Falling back to: {original_lang}")
             message.data['lang'] = original_lang
