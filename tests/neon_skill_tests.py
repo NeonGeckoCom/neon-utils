@@ -45,8 +45,6 @@ from ovos_utils.messagebus import FakeBus
 from mock import Mock
 from unittest.mock import patch
 
-import neon_utils.skills.mycroft_skill
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
 from neon_utils.signal_utils import check_for_signal
