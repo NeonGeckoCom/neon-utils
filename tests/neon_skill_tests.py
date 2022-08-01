@@ -648,6 +648,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         skill.config_core['language']['supported_langs'].append('nolang')
         self.assertEqual(skill._secondary_langs, ['uk-ua', 'es-es', 'nolang'])
 
+    @pytest.mark.skip
     @patch('neon_utils.skills.mycroft_skill.dig_for_message')
     def test_translate(self, dig_for_message):
         # Init skill
