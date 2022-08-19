@@ -36,7 +36,7 @@ from json_database import JsonStorage
 from mycroft_bus_client.message import Message
 from typing import Optional, List, Any
 from dateutil.tz import gettz
-from ovos_utils.gui import is_gui_running
+from ovos_utils.gui import is_gui_connected
 from ovos_utils.xdg_utils import xdg_cache_home
 
 from neon_utils.configuration_utils import is_neon_core
@@ -72,7 +72,7 @@ class NeonSkill(MycroftSkill):
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
-
+        self._gui_connected = False
         self.sys_tz = gettz()
 
         try:
@@ -123,10 +123,9 @@ class NeonSkill(MycroftSkill):
         If True, skill should display GUI pages
         """
         try:
-            return is_gui_running()
-        except FileNotFoundError as x:
-            LOG.error(x)
-            return False
+            self._gui_connected = self._gui_connected or \
+                                  is_gui_connected(self.bus)
+            return self._gui_connected
         except Exception as x:
             # In container environments, this check fails so assume True
             LOG.exception(x)
