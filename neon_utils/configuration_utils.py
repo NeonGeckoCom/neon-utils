@@ -847,71 +847,6 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     return user_config
 
 
-def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
-    """
-    Returns a dict local configuration and handles any
-     migration of configuration values to local config from user config
-    Args:
-        path: optional path to directory containing yml configuration files
-    Returns:
-        NGIConfig object with local config
-    """
-    import inspect
-    call = inspect.stack()[1]
-    module = inspect.getmodule(call.frame)
-    name = module.__name__ if module else call.filename
-    LOG.warning("This reference is deprecated - "
-                f"{name}:{call.lineno}")
-    try:
-        if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
-            local_config = NGIConfig("ngi_local_conf", path)
-        else:
-            local_config = NGIConfig("ngi_local_conf", "/tmp/neon")
-    except PermissionError:
-        LOG.error(f"Insufficient Permissions for path: {path}")
-        local_config = NGIConfig("ngi_local_conf")
-    _populate_read_only_config(path, basename(local_config.file_path),
-                               local_config)
-
-    if len(local_config.content) == 0:
-        LOG.info(f"Created Empty Local Config at {local_config.path}")
-
-    if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
-        user_config = NGIConfig("ngi_user_info", path)
-        _move_config_sections(user_config, local_config)
-
-    # local_config.make_equal_by_keys(default_local_config.content)
-    # LOG.info(f"Loaded local config from {local_config.file_path}")
-    return local_config
-
-
-def _populate_read_only_config(path: Optional[str], config_filename: str,
-                               loaded_config: NGIConfig) -> bool:
-    """
-    Check if a requested config file wasn't loaded due to insufficient write
-    permissions and duplicate its contents into the loaded config object.
-    :param path: Optional requested RO config path
-    :param config_filename: basename of the requested and loaded config file
-    :param loaded_config: Loaded config object to populate with RO config
-    :return: True if RO config was copied to new location, else False
-    """
-    # Handle reading unwritable config contents into new empty config
-    requested_file = \
-        os.path.abspath(join(path or
-                             expanduser(os.getenv("NEON_CONFIG_PATH", "")),
-                             config_filename))
-    if os.path.isfile(requested_file) and \
-            loaded_config.file_path != requested_file and \
-            loaded_config.content == dict():
-        LOG.warning(f"Loading requested file contents ({requested_file}) "
-                    f"into {loaded_config.file_path}")
-        with loaded_config.lock:
-            shutil.copy(requested_file, loaded_config.file_path)
-        loaded_config.check_for_updates()
-        return True
-    return False
-
-
 def is_neon_core() -> bool:
     """
     Checks for neon-specific packages to determine if
@@ -1581,3 +1516,68 @@ def _move_config_sections(user_config, local_config):
     except (KeyError, RuntimeError):
         # If some other instance moves these values, just pass
         pass
+
+
+def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
+    """
+    Returns a dict local configuration and handles any
+     migration of configuration values to local config from user config
+    Args:
+        path: optional path to directory containing yml configuration files
+    Returns:
+        NGIConfig object with local config
+    """
+    import inspect
+    call = inspect.stack()[1]
+    module = inspect.getmodule(call.frame)
+    name = module.__name__ if module else call.filename
+    LOG.warning("This reference is deprecated - "
+                f"{name}:{call.lineno}")
+    try:
+        if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
+            local_config = NGIConfig("ngi_local_conf", path)
+        else:
+            local_config = NGIConfig("ngi_local_conf", "/tmp/neon")
+    except PermissionError:
+        LOG.error(f"Insufficient Permissions for path: {path}")
+        local_config = NGIConfig("ngi_local_conf")
+    _populate_read_only_config(path, basename(local_config.file_path),
+                               local_config)
+
+    if len(local_config.content) == 0:
+        LOG.info(f"Created Empty Local Config at {local_config.path}")
+
+    if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
+        user_config = NGIConfig("ngi_user_info", path)
+        _move_config_sections(user_config, local_config)
+
+    # local_config.make_equal_by_keys(default_local_config.content)
+    # LOG.info(f"Loaded local config from {local_config.file_path}")
+    return local_config
+
+
+def _populate_read_only_config(path: Optional[str], config_filename: str,
+                               loaded_config: NGIConfig) -> bool:
+    """
+    Check if a requested config file wasn't loaded due to insufficient write
+    permissions and duplicate its contents into the loaded config object.
+    :param path: Optional requested RO config path
+    :param config_filename: basename of the requested and loaded config file
+    :param loaded_config: Loaded config object to populate with RO config
+    :return: True if RO config was copied to new location, else False
+    """
+    # Handle reading unwritable config contents into new empty config
+    requested_file = \
+        os.path.abspath(join(path or
+                             expanduser(os.getenv("NEON_CONFIG_PATH", "")),
+                             config_filename))
+    if os.path.isfile(requested_file) and \
+            loaded_config.file_path != requested_file and \
+            loaded_config.content == dict():
+        LOG.warning(f"Loading requested file contents ({requested_file}) "
+                    f"into {loaded_config.file_path}")
+        with loaded_config.lock:
+            shutil.copy(requested_file, loaded_config.file_path)
+            loaded_config.check_for_updates()
+        return True
+    return False
