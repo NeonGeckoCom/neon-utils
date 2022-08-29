@@ -760,7 +760,6 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         self.assertEqual(config, {"module_overrides": {
             "neon_core": {
-                "xdg": True,
                 "base_folder": "neon",
                 "config_filename": "neon.yaml",
                 "default_config_path": config['module_overrides']['neon_core'][
@@ -787,7 +786,6 @@ class ConfigurationUtilTests(unittest.TestCase):
                 'default_config_path', "")
         self.assertEqual(config3, {"module_overrides": {
             "neon_core": {
-                "xdg": True,
                 "base_folder": "neon",
                 "config_filename": "neon.yaml",
                 "default_config_path": config['module_overrides']['neon_core'][

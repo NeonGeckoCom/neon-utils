@@ -461,7 +461,6 @@ def _init_ovos_conf(name: str):
     """
     _DEFAULT_OVOS_CONF = {"module_overrides": {
         "neon_core": {
-            "xdg": True,
             "base_folder": "neon",
             "config_filename": "neon.yaml"
         }

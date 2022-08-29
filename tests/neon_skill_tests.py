@@ -147,7 +147,7 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.location_timezone, str)
         self.assertIsInstance(skill.preference_skill(), dict)
         self.assertEqual(skill.settings, skill.preference_skill())
-
+        self.assertIsInstance(skill.file_system.path, str)
         # self.assertEqual(skill.file_system.path, skill.settings_write_path)
         # self.assertNotEqual(os.path.basename(skill.file_system.path),
         #                     skill.name)
