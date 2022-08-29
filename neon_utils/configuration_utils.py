@@ -68,7 +68,8 @@ class NGIConfig:
             cache.check_reload()
             self._content = cache.content
         else:
-            self._content = self._load_yaml_file()
+            with self.lock:
+                self._content = self._load_yaml_file()
             NGIConfig.configuration_list[self.__repr__()] = self
         self._disk_content_hash = hash(repr(self._content))
 
@@ -189,12 +190,13 @@ class NGIConfig:
         Reloads updated configuration from disk. Used to reload changes when other instances modify a configuration
         Returns:Updated configuration.content
         """
-        new_content = self._load_yaml_file()
-        if new_content:
-            LOG.debug(f"{self.name} Checked for Updates")
-            self._content = new_content
-        elif self._content:
-            LOG.error("new_content is empty! keeping current config")
+        with self.lock:
+            new_content = self._load_yaml_file()
+            if new_content:
+                LOG.debug(f"{self.name} Checked for Updates")
+                self._content = new_content
+            elif self._content:
+                LOG.error("new_content is empty! keeping current config")
         return self._content
 
     def update_yaml_file(self, header=None, sub_header=None, value="", multiple=False, final=False):
@@ -285,24 +287,23 @@ class NGIConfig:
                  selected YAML.
         """
         try:
-            with self.lock:
-                with open(self.file_path, 'r') as f:
+            with open(self.file_path, 'r') as f:
+                try:
+                    config = yaml.safe_load(f)
+                except Exception as e:
+                    LOG.error(e)
+                    f.seek(0)
                     try:
-                        config = yaml.safe_load(f)
-                    except Exception as e:
-                        LOG.error(e)
-                        f.seek(0)
-                        try:
-                            from ruamel.yaml import YAML
-                            config = _make_loaded_config_safe(YAML().load(f))
-                        except ImportError:
-                            LOG.error(f"ruamel.yaml not available to load "
-                                      f"legacy config. "
-                                      f"pip install neon-utils[configuration]")
-                if not config:
-                    LOG.debug(f"Empty config file found at: {self.file_path}")
-                    config = dict()
-                self._loaded = os.path.getmtime(self.file_path)
+                        from ruamel.yaml import YAML
+                        config = _make_loaded_config_safe(YAML().load(f))
+                    except ImportError:
+                        LOG.error(f"ruamel.yaml not available to load "
+                                  f"legacy config. "
+                                  f"pip install neon-utils[configuration]")
+            if not config:
+                LOG.debug(f"Empty config file found at: {self.file_path}")
+                config = dict()
+            self._loaded = os.path.getmtime(self.file_path)
             return config
         except FileNotFoundError:
             LOG.error(f"Configuration file not found! ({self.file_path})")
@@ -1578,6 +1579,6 @@ def _populate_read_only_config(path: Optional[str], config_filename: str,
                     f"into {loaded_config.file_path}")
         with loaded_config.lock:
             shutil.copy(requested_file, loaded_config.file_path)
-            loaded_config.check_for_updates()
+        loaded_config.check_for_updates()
         return True
     return False
