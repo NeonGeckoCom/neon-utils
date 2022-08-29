@@ -27,6 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import datetime
+import importlib
 import os
 import shutil
 import sys
@@ -37,28 +38,26 @@ from os.path import join
 from threading import Thread
 from time import sleep
 
+import mycroft.skills.mycroft_skill.mycroft_skill
 import pytest
-from mock.mock import patch, MagicMock
 from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 from mock import Mock
-
-from mycroft.skills.fallback_skill import FallbackSkill
+from unittest.mock import patch
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
 from neon_utils.signal_utils import check_for_signal
 
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-from skills import *
 
-MycroftSkill = PatchedMycroftSkill
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
 SKILL_PATH = os.path.join(ROOT_DIR, "skills")
 BUS = FakeBus()
 
 
 def get_test_mycroft_skill(bus_events: dict):
+    from skills import PatchedMycroftSkill as MycroftSkill
     skill = MycroftSkill()
     bus = FakeBus()
     for event, callback in bus_events.items():
@@ -72,6 +71,7 @@ def get_test_mycroft_skill(bus_events: dict):
 
 
 def get_test_neon_skill(bus_events: dict):
+    from skills import NeonSkill
     skill = NeonSkill()
     bus = FakeBus()
     for event, callback in bus_events.items():
@@ -93,6 +93,8 @@ def create_skill(skill):
 
 class SkillObjectTests(unittest.TestCase):
     def test_common_message_skill_init(self):
+        from skills import PatchedMycroftSkill as MycroftSkill
+        from skills import TestCMS, NeonSkill, CommonMessageSkill
         skill = create_skill(TestCMS)
         self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
@@ -100,6 +102,8 @@ class SkillObjectTests(unittest.TestCase):
         self.assertEqual(skill.name, "Test Common Message Skill")
 
     def test_common_play_skill_init(self):
+        from skills import PatchedMycroftSkill as MycroftSkill
+        from skills import TestCPS, NeonSkill, CommonPlaySkill
         skill = create_skill(TestCPS)
         self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
@@ -107,6 +111,8 @@ class SkillObjectTests(unittest.TestCase):
         self.assertEqual(skill.name, "Test Common Play Skill")
 
     def test_common_query_skill_init(self):
+        from skills import PatchedMycroftSkill as MycroftSkill
+        from skills import TestCQS, NeonSkill, CommonQuerySkill
         skill = create_skill(TestCQS)
         self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
@@ -114,6 +120,10 @@ class SkillObjectTests(unittest.TestCase):
         self.assertEqual(skill.name, "Test Common Query Skill")
 
     def test_fallback_skill_init(self):
+        from skills import PatchedMycroftSkill as MycroftSkill
+        from skills import TestFBS, NeonSkill, NeonFallbackSkill
+        from mycroft.skills.fallback_skill import FallbackSkill
+
         skill = create_skill(TestFBS)
         self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
@@ -122,6 +132,8 @@ class SkillObjectTests(unittest.TestCase):
         self.assertEqual(skill.name, "Test Fallback Skill")
 
     def test_neon_skill_init(self):
+        from skills import PatchedMycroftSkill as MycroftSkill
+        from skills import TestNeonSkill, NeonSkill, CommonQuerySkill
         skill = create_skill(TestNeonSkill)
         self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
@@ -153,6 +165,8 @@ class SkillObjectTests(unittest.TestCase):
         #                     skill.name)
 
     def test_patched_mycroft_skill_init(self):
+        from skills import PatchedMycroftSkill as MycroftSkill
+        from skills import TestPatchedSkill
         skill = create_skill(TestPatchedSkill)
         self.assertIsInstance(skill, MycroftSkill)
         self.assertEqual(skill.name, "Test Mycroft Skill")
@@ -161,6 +175,8 @@ class SkillObjectTests(unittest.TestCase):
         # self.assertNotEqual(os.path.basename(skill.file_system.path), skill.name)
 
     def test_instructor_skill_init(self):
+        from skills import PatchedMycroftSkill as MycroftSkill
+        from skills import TestInstructorSkill
         skill = create_skill(TestInstructorSkill)
         self.assertIsInstance(skill, MycroftSkill)
         self.assertEqual(skill.name, "Test Instructor Skill")
@@ -172,7 +188,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             check_for_signal("isSpeaking")
             spoken.set()
 
-        def skill_response_thread(s: MycroftSkill, idx: str):
+        def skill_response_thread(s, idx: str):
             resp = s.get_response(test_dialog)
             test_results[idx] = resp
 
@@ -197,7 +213,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                          message.data["utterances"][0])
 
     def test_get_response_interrupt_prompt(self):
-        def skill_response_thread(s: MycroftSkill, idx: str):
+        def skill_response_thread(s, idx: str):
             resp = s.get_response(test_dialog)
             test_results[idx] = resp
 
@@ -225,7 +241,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             check_for_signal("isSpeaking")
             spoken.set()
 
-        def skill_response_thread(s: MycroftSkill, idx: str):
+        def skill_response_thread(s, idx: str):
             resp = s.get_response(test_dialog)
             test_results[idx] = resp
 
@@ -252,7 +268,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             check_for_signal("isSpeaking")
             spoken.set()
 
-        def skill_response_thread(s: MycroftSkill, idx: str):
+        def skill_response_thread(s, idx: str):
             resp = s.get_response(test_dialog, message=Message(
                 "converse_message", {}, {"username": "valid_converse_user"}))
             test_results[idx] = resp
@@ -289,10 +305,11 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             check_for_signal("isSpeaking")
             spoken.set()
 
-        def skill_response_thread(s: MycroftSkill, idx: str):
+        def skill_response_thread(s, idx: str):
             def intent_handler(message):
                 resp = s.get_response(test_dialog)
                 test_results[idx] = resp
+
             intent_handler(Message("converse_message",
                                    {}, {"username": "valid_converse_user"}))
 
@@ -328,7 +345,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             check_for_signal("isSpeaking")
             spoken.set()
 
-        def skill_response_thread(s: MycroftSkill, idx: str):
+        def skill_response_thread(s, idx: str):
             resp = s.get_response(test_dialog, num_retries=0, message=Message(
                 "converse_message", {}, {"username": "valid_converse_user"}))
             test_results[idx] = resp
@@ -366,7 +383,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             test_results["validator"] = True
             return True
 
-        def skill_response_thread(s: MycroftSkill, idx: str):
+        def skill_response_thread(s, idx: str):
             resp = s.get_response(test_dialog, validator=is_valid,
                                   message=Message(
                                       "converse_message", {},
@@ -406,7 +423,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
 
         on_fail = Mock()
 
-        def skill_response_thread(s: MycroftSkill, idx: str):
+        def skill_response_thread(s, idx: str):
             resp = s.get_response(test_dialog, validator=is_valid,
                                   on_fail=on_fail, message=Message(
                     "converse_message", {},
@@ -435,10 +452,12 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         on_fail.assert_called_once()
         on_fail.assert_called_with("testing one")
 
-    def test_speak_simple_valid(self):
+    def test_speak(self):
         handle_speak = Mock()
         utterance = "test to speak"
         skill = get_test_mycroft_skill({"speak": handle_speak})
+
+        # Simple Case
         skill.speak(utterance)
         handle_speak.assert_called_once()
         msg = handle_speak.call_args.args[0]
@@ -450,13 +469,11 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.context['destination'], ['audio'])
         self.assertEqual(msg.context['source'], ['skills'])
 
-    def test_speak_speaker_valid(self):
-        handle_speak = Mock()
-        utterance = "test to speak"
+        # Speaker Specified
+        handle_speak.reset_mock()
         speaker = {"speaker": "Test Speaker",
                    "language": "en-au",
                    "gender": "female"}
-        skill = get_test_mycroft_skill({"speak": handle_speak})
         skill.speak(utterance, speaker=speaker)
         handle_speak.assert_called_once()
         msg = handle_speak.call_args.args[0]
@@ -468,7 +485,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(msg.context['destination'], ['audio'])
         self.assertEqual(msg.context['source'], ['skills'])
 
-    def test_speak_simple_with_message_valid(self):
+        # Message Specified
+        handle_speak.reset_mock()
         message = Message("date-time.neon:handle_query_time",
                           {'intent_type': 'date-time.neon:handle_query_time',
                            'target': None,
@@ -484,9 +502,6 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                                       'speech_start': 1631062888.1001909},
                            'audio_file': '',
                            'skill_id': 'date-time.neon'})
-        handle_speak = Mock()
-        utterance = "test to speak"
-        skill = get_test_mycroft_skill({"speak": handle_speak})
         skill.speak(utterance, message=message)
         handle_speak.assert_called_once()
         msg = handle_speak.call_args.args[0]
@@ -501,7 +516,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
-    def test_speak_speaker_with_message_override_valid(self):
+        # Message and Speaker overriding Message contents
+        handle_speak.reset_mock()
         message = Message("date-time.neon:handle_query_time",
                           {'intent_type': 'date-time.neon:handle_query_time',
                            'target': None,
@@ -519,12 +535,9 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                                       'speech_start': 1631062888.1001909},
                            'audio_file': '',
                            'skill_id': 'date-time.neon'})
-        handle_speak = Mock()
-        utterance = "test to speak"
         speaker = {"speaker": "Test Speaker",
                    "language": "en-au",
                    "gender": "female"}
-        skill = get_test_mycroft_skill({"speak": handle_speak})
         skill.speak(utterance, speaker=speaker, message=message)
         handle_speak.assert_called_once()
         msg = handle_speak.call_args.args[0]
@@ -539,7 +552,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
-    def test_speak_speaker_with_message_valid(self):
+        # Message and Speaker specified
+        handle_speak.reset_mock()
         speaker = {"speaker": "Test Speaker",
                    "language": "en-au",
                    "gender": "female"}
@@ -559,10 +573,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                                       'speech_start': 1631062888.1001909},
                            'audio_file': '',
                            'skill_id': 'date-time.neon'})
-        handle_speak = Mock()
-        utterance = "test to speak"
 
-        skill = get_test_mycroft_skill({"speak": handle_speak})
         skill.speak(utterance, message=message)
         handle_speak.assert_called_once()
         msg = handle_speak.call_args.args[0]
@@ -611,6 +622,143 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         message.context.pop('source')
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
+
+    def test_core_lang(self):
+        skill = get_test_mycroft_skill({})
+        skill.config_core = {"lang": "default"}
+        self.assertEqual(skill._core_lang, "default")
+        skill.config_core['language'] = {'lang': "invalid"}
+        self.assertEqual(skill._core_lang, "default")
+        skill.config_core['language']['internal'] = 'en-us'
+        self.assertEqual(skill._core_lang, 'en-us')
+
+    def test_secondary_langs(self):
+        skill = get_test_mycroft_skill({})
+        skill.config_core = {"lang": "default"}
+        self.assertEqual(skill._secondary_langs, [])
+        skill.config_core['language'] = {'internal': 'en-us'}
+        self.assertEqual(skill._secondary_langs, [])
+        # Add primary language
+        skill.config_core['language']['supported_langs'] = ['en']
+        self.assertEqual(skill._secondary_langs, [])
+        # Add valid supported languages
+        skill.config_core['language']['supported_langs'].extend(['uk', 'es'])
+        self.assertEqual(skill._secondary_langs, ['uk-ua', 'es-es'])
+        # Emulate a lang we can't get a full code for
+        skill.config_core['language']['supported_langs'].append('nolang')
+        self.assertEqual(skill._secondary_langs, ['uk-ua', 'es-es', 'nolang'])
+
+    @pytest.mark.skip
+    @patch('neon_utils.skills.mycroft_skill.dig_for_message')
+    def test_translate(self, dig_for_message):
+        # Init skill
+        import skills.test_mycroft_skill
+        importlib.reload(skills.test_mycroft_skill)
+        from skills.test_mycroft_skill import TestSkill
+        mycroft.skills.mycroft_skill.mycroft_skill.dig_for_message = dig_for_message
+        bus = FakeBus()
+        skill = TestSkill()
+        # Mock the skill_loader process
+        if hasattr(skill, "_startup"):
+            skill._startup(bus)
+        else:
+            skill.bind(bus)
+            skill.load_data_files()
+            skill.initialize()
+
+        base_message = Message("test", {"lang": "en-us"},
+                               {"username": "test_user",
+                                "user_profiles": [
+                                    {"user": {"username": "test_user"},
+                                     "speech": {"tts_language": "en-us"}}]})
+        dig_for_message.return_value = base_message
+        # Translate message lang
+        self.assertEqual(skill.translate("finished"), "Finished. Goodbye!")
+        self.assertEqual(base_message.data['lang'], 'en-us')
+
+        # Translate supported lang with resource
+        base_message.data['lang'] = 'en-us'
+        base_message.context['user_profiles'][0]['speech']['tts_language'] = \
+            "uk-ua"
+        self.assertEqual(skill.translate("finished"),
+                         "Закінчили. До побачення!")
+        self.assertEqual(base_message.data['lang'], 'uk-ua')
+
+        # Translate supported lang missing resource
+        base_message.data['lang'] = 'en-us'
+        self.assertEqual(skill.translate("start"),
+                         "Would you like me to start the instructions?")
+        self.assertEqual(base_message.data['lang'], 'en-us')
+
+        # Translate unsupported lang
+        base_message.context['user_profiles'][0]['speech']['tts_language'] = \
+            "es-es"
+        self.assertEqual(skill.translate("start"),
+                         "Would you like me to start the instructions?")
+        self.assertEqual(base_message.data['lang'], 'en-us')
+
+    @patch('neon_utils.skills.mycroft_skill.dig_for_message')
+    def test_speak_dialog(self, dig_for_message):
+        import skills.test_mycroft_skill
+        importlib.reload(skills.test_mycroft_skill)
+        from skills.test_mycroft_skill import TestSkill
+        mycroft.skills.mycroft_skill.mycroft_skill.dig_for_message = dig_for_message
+
+        bus = FakeBus()
+        skill = TestSkill()
+        # Mock the skill_loader process
+        if hasattr(skill, "_startup"):
+            skill._startup(bus)
+        else:
+            skill.bind(bus)
+            skill.load_data_files()
+            skill.initialize()
+        skill.speak = Mock()
+
+        message = Message("test", {"lang": "en-us"},
+                          {"username": "test_user",
+                           "user_profiles": [
+                               {"user": {"username": "test_user"},
+                                "speech": {"tts_language": "en-us"},
+                                "response_mode": {"limit_dialog": True}}
+                           ]})
+        dig_for_message.return_value = message
+
+        # Test limited/random responses
+        for i in range(5):
+            skill.speak_dialog("multiple", message=message)
+        self.assertEqual(skill.speak.call_count, 5)
+        dialogs = (call.args[0] for call in skill.speak.mock_calls)
+        self.assertTrue(all([dialog == "one" for dialog in dialogs]))
+
+        skill.speak.reset_mock()
+        message.context['user_profiles'][0]['response_mode']['limit_dialog'] =\
+            False
+        for i in range(10):  # Arbitrary number to hope for a different choice
+            skill.speak_dialog("multiple", message=message)
+        self.assertEqual(skill.speak.call_count, 10)
+        dialogs = (call.args[0] for call in skill.speak.mock_calls)
+        self.assertTrue(any([dialog == "two" for dialog in dialogs]))
+
+        # Test supported response language valid dialog
+        message.context['user_profiles'][0]['speech']['tts_language'] = 'uk-ua'
+        skill.speak_dialog('finished', message=message)
+        self.assertEqual(message.data['lang'], 'uk-ua')
+        self.assertEqual(skill.speak.call_args[0][0],
+                         'Закінчили. До побачення!')
+
+        # Test supported response language missing dialog
+        message.data['lang'] = 'en-us'
+        skill.speak_dialog('start', message=message)
+        self.assertEqual(message.data['lang'], 'en-us')
+        self.assertEqual(skill.speak.call_args[0][0],
+                         'Would you like me to start the instructions?')
+        # Test unsupported response language
+        message.context['user_profiles'][0]['speech']['tts_language'] = 'es-es'
+        skill.speak_dialog('start', message=message)
+        self.assertEqual(message.data['lang'], 'en-us')
+        self.assertEqual(skill.speak.call_args[0][0],
+                         'Would you like me to start the instructions?')
 
     # TODO: Test settings load
 
@@ -820,7 +968,6 @@ class SkillGuiTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls) -> None:
-
         cls.skill_gui.config = {
             "remote-server": None
         }
