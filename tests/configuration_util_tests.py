@@ -25,7 +25,7 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+import importlib
 import shutil
 import sys
 import os
@@ -844,6 +844,7 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         os.environ.pop("XDG_CONFIG_HOME")
         shutil.rmtree(test_config_dir)
+        importlib.reload(ovos_config.locations)
 
     def test_validate_config_env(self):
         from neon_utils.configuration_utils import _validate_config_env
