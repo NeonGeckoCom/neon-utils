@@ -502,8 +502,12 @@ def _init_ovos_conf(name: str):
 
         ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
         os.makedirs(dirname(ovos_path), exist_ok=True)
+        config_to_write = {
+            "module_overrides": ovos_conf.get('module_overrides'),
+            "submodule_mappings": ovos_conf.get('submodule_mappings')
+        }
         with open(ovos_path, "w+") as f:
-            json.dump(ovos_conf, f, indent=4)
+            json.dump(config_to_write, f, indent=4)
 
     # Note that the below block reloads modules in a specific order due to
     # imports within ovos_config and mycroft.configuration
