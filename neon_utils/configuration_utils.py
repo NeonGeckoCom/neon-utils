@@ -501,6 +501,7 @@ def _init_ovos_conf(name: str):
                 = 'neon_core'
 
         ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
+        os.makedirs(dirname(ovos_path), exist_ok=True)
         with open(ovos_path, "w+") as f:
             json.dump(ovos_conf, f, indent=4)
 
