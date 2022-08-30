@@ -749,6 +749,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         if isfile(join(test_config_dir, "OpenVoiceOS", "ovos.conf")):
             os.remove(join(test_config_dir, "OpenVoiceOS", "ovos.conf"))
 
+        # Init 'test_module' to use 'neon_core' config
         _init_ovos_conf("test_module")
 
         with open(join(test_config_dir, "OpenVoiceOS", "ovos.conf")) as f:
@@ -770,6 +771,7 @@ class ConfigurationUtilTests(unittest.TestCase):
                 "test_module": "neon_core"
             }})
 
+        # init same module again, config should be unchanged
         _init_ovos_conf("test_module")
         with open(join(test_config_dir, "OpenVoiceOS", "ovos.conf")) as f:
             config2 = json.load(f)
@@ -778,6 +780,7 @@ class ConfigurationUtilTests(unittest.TestCase):
             'default_config_path', "")
         self.assertEqual(config, config2)
 
+        # init another different module
         _init_ovos_conf("other_test_mod")
         with open(join(test_config_dir, "OpenVoiceOS", "ovos.conf")) as f:
             config3 = json.load(f)
@@ -797,12 +800,36 @@ class ConfigurationUtilTests(unittest.TestCase):
                 "other_test_mod": "neon_core"
             }})
 
+        # init neon_core
+        _init_ovos_conf("neon_core")
+        with open(join(test_config_dir, "OpenVoiceOS", "ovos.conf")) as f:
+            config4 = json.load(f)
+            # Patch local tests
+            config4['module_overrides']['neon_core'].setdefault(
+                'default_config_path', "")
+        self.assertEqual(config4, {"module_overrides": {
+            "neon_core": {
+                "base_folder": "neon",
+                "config_filename": "neon.yaml",
+                "default_config_path": config['module_overrides']['neon_core'][
+                    'default_config_path']
+            }
+        },
+            "submodule_mappings": {
+                "test_module": "neon_core",
+                "other_test_mod": "neon_core",
+                "neon_core": "neon_core",
+                "neon_core.skills.skill_manager": "neon_core"
+            }})
+
+        # Override default config with test file
         import inspect
         import ovos_config
         ovos_config.DEFAULT_CONFIG = join(dirname(__file__),
                                           "configuration", "mycroft.conf")
         old_value = deepcopy(ovos_config.DEFAULT_CONFIG)
 
+        # Init config and validate other config file is loaded
         stack = inspect.stack()
         mod = inspect.getmodule(stack[1][0])
         this_modname = mod.__name__.split('.')[0]

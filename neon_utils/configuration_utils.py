@@ -32,6 +32,8 @@ import json
 import os
 import sys
 import shutil
+from time import sleep
+
 import yaml
 
 from copy import deepcopy
@@ -292,6 +294,7 @@ class NGIConfig:
                     config = yaml.safe_load(f)
                 except Exception as e:
                     LOG.error(e)
+                    sleep(1)
                     f.seek(0)
                     try:
                         from ruamel.yaml import YAML
@@ -504,6 +507,10 @@ def _init_ovos_conf(name: str):
     if name != "__main__" and name not in ovos_conf['submodule_mappings']:
         ovos_conf['submodule_mappings'][name] = 'neon_core'
         LOG.warning(f"Calling module ({name}) now configured to use neon.yaml")
+        if name == "neon_core":
+            ovos_conf['submodule_mappings']['neon_core.skills.skill_manager'] \
+                = 'neon_core'
+
         with open(ovos_path, "w+") as f:
             json.dump(ovos_conf, f, indent=4)
 
