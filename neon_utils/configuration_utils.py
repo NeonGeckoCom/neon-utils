@@ -32,6 +32,8 @@ import json
 import os
 import sys
 import shutil
+from time import sleep
+
 import yaml
 
 from copy import deepcopy
@@ -292,6 +294,7 @@ class NGIConfig:
                     config = yaml.safe_load(f)
                 except Exception as e:
                     LOG.error(e)
+                    sleep(1)
                     f.seek(0)
                     try:
                         from ruamel.yaml import YAML
