@@ -463,27 +463,16 @@ def _init_ovos_conf(name: str):
     Perform a one-time init of ovos.conf for the calling module
     :param name: Name of calling module to configure to use `neon.yaml`
     """
-    _DEFAULT_OVOS_CONF = {"module_overrides": {
-        "neon_core": {
+    from ovos_config.meta import get_ovos_config
+    ovos_conf = get_ovos_config()
+    ovos_conf.setdefault('module_overrides', {})
+    ovos_conf.setdefault('submodule_mappings', {})
+
+    if "neon_core" not in ovos_conf['module_overrides']:
+        ovos_conf['module_overrides']['neon_core'] = {
             "base_folder": "neon",
             "config_filename": "neon.yaml"
         }
-    },
-        "submodule_mappings": {}
-    }
-
-    ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
-    if isfile(ovos_path):
-        try:
-            with open(ovos_path) as f:
-                ovos_conf: dict = json.load(f)
-        except Exception as e:
-            LOG.error(e)
-            ovos_conf = deepcopy(_DEFAULT_OVOS_CONF)
-    else:
-        LOG.info(f"Creating new file: {ovos_path}")
-        os.makedirs(dirname(ovos_path), exist_ok=True)
-        ovos_conf = deepcopy(_DEFAULT_OVOS_CONF)
 
     if not ovos_conf.get('module_overrides',
                          {}).get("neon_core", {}).get("default_config_path"):
@@ -511,6 +500,7 @@ def _init_ovos_conf(name: str):
             ovos_conf['submodule_mappings']['neon_core.skills.skill_manager'] \
                 = 'neon_core'
 
+        ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
         with open(ovos_path, "w+") as f:
             json.dump(ovos_conf, f, indent=4)
 
