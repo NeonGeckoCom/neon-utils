@@ -853,6 +853,7 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         os.environ.pop("XDG_CONFIG_HOME")
         shutil.rmtree(test_config_dir)
+        importlib.reload(ovos_config.meta)
         importlib.reload(ovos_config.locations)
 
     def test_validate_config_env(self):
