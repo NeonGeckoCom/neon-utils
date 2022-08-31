@@ -515,12 +515,16 @@ def _init_ovos_conf(name: str):
     importlib.reload(ovos_config.locations)
     from ovos_config.meta import get_ovos_config
     ovos_conf = get_ovos_config()  # Load the full stack for /etc overrides
-    if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
+    if ovos_conf["module_overrides"]["neon_core"].get("default_config_path") \
+        and ovos_config.locations.DEFAULT_CONFIG != \
+            ovos_conf["module_overrides"]["neon_core"]["default_config_path"]:
         ovos_config.locations.DEFAULT_CONFIG = \
             ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
 
-    del ovos_config.config.Configuration
-    del ovos_config.Configuration
+        # Default config changed, remove any cached configuration
+        del ovos_config.config.Configuration
+        del ovos_config.Configuration
+
     import ovos_config.models
     importlib.reload(ovos_config.models)
     importlib.reload(ovos_config.config)
