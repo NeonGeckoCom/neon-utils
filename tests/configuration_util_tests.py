@@ -851,10 +851,13 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(get_ovos_config()['default_config_path'],
                          join(default_config, "configuration", "neon.yaml"))
 
+        # Cleanup configuration and force reload of pre-test defaults
         os.environ.pop("XDG_CONFIG_HOME")
         shutil.rmtree(test_config_dir)
-        importlib.reload(ovos_config.meta)
+        del ovos_config.config.Configuration
         importlib.reload(ovos_config.locations)
+        importlib.reload(ovos_config.models)
+        importlib.reload(ovos_config.config)
 
     def test_validate_config_env(self):
         from neon_utils.configuration_utils import _validate_config_env
