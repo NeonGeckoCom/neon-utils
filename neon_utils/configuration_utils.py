@@ -520,15 +520,17 @@ def _init_ovos_conf(name: str):
             ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
 
     del ovos_config.config.Configuration
-    importlib.reload(ovos_config.config)
-    importlib.reload(ovos_config)
+    del ovos_config.Configuration
     import ovos_config.models
     importlib.reload(ovos_config.models)
+    importlib.reload(ovos_config.config)
+    importlib.reload(ovos_config)
 
     try:
         import mycroft.configuration
         import mycroft.configuration.locations
         import mycroft.configuration.config
+        del mycroft.configuration.Configuration
         importlib.reload(mycroft.configuration.locations)
         importlib.reload(mycroft.configuration.config)
         importlib.reload(mycroft.configuration)
