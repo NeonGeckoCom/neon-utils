@@ -842,6 +842,11 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertEqual(ovos_config.config.Configuration.default.path,
                          ovos_config.DEFAULT_CONFIG)
 
+        # Test default config path
+        from ovos_config.meta import get_ovos_config
+        self.assertEqual(ovos_config.config.Configuration.default.path,
+                         get_ovos_config()['default_config_path'])
+
         os.environ.pop("XDG_CONFIG_HOME")
         shutil.rmtree(test_config_dir)
         importlib.reload(ovos_config.locations)
