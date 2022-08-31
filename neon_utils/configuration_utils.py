@@ -519,6 +519,7 @@ def _init_ovos_conf(name: str):
         ovos_config.locations.DEFAULT_CONFIG = \
             ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
 
+    del ovos_config.config.Configuration
     importlib.reload(ovos_config.config)
     importlib.reload(ovos_config)
     import ovos_config.models
