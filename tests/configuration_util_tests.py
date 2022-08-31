@@ -741,7 +741,10 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config, dict)
         # TODO: Better tests of config load
 
-    def test_init_ovos_conf(self):
+    @mock.patch('neon_utils.packaging_utils.get_neon_core_root')
+    def test_init_ovos_conf(self, get_core_root):
+        default_config = join(dirname(__file__), "configuration", "neon_core")
+        get_core_root.return_value = default_config
         test_config_dir = join(dirname(__file__), "test_config")
         from neon_utils.configuration_utils import _init_ovos_conf
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
@@ -824,7 +827,10 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         # Override default config with test file
         import inspect
-        import ovos_config
+        import ovos_config.models
+        import ovos_config.config
+        from ovos_config.meta import get_ovos_config
+
         ovos_config.DEFAULT_CONFIG = join(dirname(__file__),
                                           "configuration", "mycroft.conf")
         old_value = deepcopy(ovos_config.DEFAULT_CONFIG)
@@ -835,17 +841,15 @@ class ConfigurationUtilTests(unittest.TestCase):
         this_modname = mod.__name__.split('.')[0]
         _init_ovos_conf(this_modname)
         self.assertNotEqual(old_value, ovos_config.DEFAULT_CONFIG)
-        import ovos_config.models
         self.assertEqual(ovos_config.models.DEFAULT_CONFIG,
                          ovos_config.DEFAULT_CONFIG)
-        import ovos_config.config
         self.assertEqual(ovos_config.config.Configuration.default.path,
                          ovos_config.DEFAULT_CONFIG)
 
-        # Test default config path
-        from ovos_config.meta import get_ovos_config
-        self.assertEqual(ovos_config.config.Configuration.default.path,
-                         get_ovos_config()['default_config_path'])
+        # Test default config
+        self.assertTrue(ovos_config.config.Configuration()['default_config'])
+        self.assertEqual(get_ovos_config()['default_config_path'],
+                         join(default_config, "configuration", "neon.yaml"))
 
         os.environ.pop("XDG_CONFIG_HOME")
         shutil.rmtree(test_config_dir)
