@@ -435,6 +435,52 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         on_fail.assert_called_once()
         on_fail.assert_called_with("testing one")
 
+    def test_get_response_klat(self):
+        speak_message: Message = None
+        def handle_speak(msg):
+            nonlocal speak_message
+            speak_message = msg
+            spoken.set()
+
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            resp = s.get_response(test_dialog, message=Message(
+                "converse_message", {},
+                {"username": "valid_converse_user",
+                 "klat_data": {"title": "Public Convo"}}))
+            test_results[idx] = resp
+
+        test_results = dict()
+        spoken = Event()
+        test_dialog = "testing get response multi user."
+        valid_message = Message("recognizer_loop:utterance",
+                                {"utterances": ["testing one",
+                                                "testing 1", "resting one"]},
+                                {"timing": {},
+                                 "username": "valid_converse_user",
+                                 "klat_data": {"title": "Public Convo"}})
+        invalid_message = Message("recognizer_loop:utterance",
+                                  {"utterances": ["invalid return"]},
+                                  {"timing": {},
+                                   "username": "invalid_converse_user",
+                                   "klat_data": {"title": "Public Convo"}})
+
+        skill = get_test_mycroft_skill({"speak": handle_speak})
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
+        t.start()
+        spoken.wait(30)
+        self.assertIsInstance(speak_message, Message)
+        self.assertTrue(speak_message.data['utterance'].startswith('@valid_converse_user '),
+                        speak_message.data['utterance'])
+        sleep(1)
+        skill.converse(invalid_message)
+        skill.converse(valid_message)
+        skill.converse(invalid_message)
+        t.join(5)
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_message.data["utterances"][0])
+
     def test_speak_simple_valid(self):
         handle_speak = Mock()
         utterance = "test to speak"

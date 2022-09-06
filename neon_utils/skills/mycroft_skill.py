@@ -166,7 +166,7 @@ class PatchedMycroftSkill(MycroftSkill):
             LOG.warning("Null utterance passed to speak")
             LOG.warning(f"{self.name} | message={message}")
 
-        if wait:
+        if wait and not message.context.get("klat_data"):
             # TODO: Refactor to wait for event emit
             wait_for_signal_clear('isSpeaking')
 
@@ -263,7 +263,7 @@ class PatchedMycroftSkill(MycroftSkill):
 
         if dialog:
             self.speak(dialog, expect_response=True, wait=False,
-                       message=message)
+                       message=message, private=True)
         else:
             self.bus.emit(message.forward('mycroft.mic.listen'))
         return self._wait_response(is_cancel, validator, on_fail_fn,
