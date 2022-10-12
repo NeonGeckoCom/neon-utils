@@ -347,6 +347,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                                    "username": "invalid_converse_user"})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
+        skill._get_response_timeout = 5
         t = Thread(target=skill_response_thread,
                    args=(skill, valid_message.context["username"]),
                    daemon=True)
@@ -559,6 +560,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(test_results[valid_message.context["username"]],
                          valid_message.data["utterances"][0])
 
+# TODO: test get_response with `speak_bus_api`
+
     def test_speak_simple_valid(self):
         handle_speak = Mock()
         utterance = "test to speak"
@@ -735,6 +738,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         message.context.pop('source')
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
+
+    # TODO: test wait with/without `speak_bus_api`
 
     # TODO: Test settings load
 
