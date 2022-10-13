@@ -46,10 +46,12 @@ LOG_PATH = os.path.join(ROOT_DIR, "tests", "log_files")
 class LogUtilTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
+        os.environ['XDG_CONFIG_HOME'] = '/tmp'
         os.makedirs(LOG_PATH, exist_ok=True)
 
     @classmethod
     def tearDownClass(cls) -> None:
+        os.environ.pop('XDG_CONFIG_HOME')
         shutil.rmtree(LOG_PATH)
 
     def test_get_log_file(self):
@@ -202,7 +204,6 @@ class LogUtilTests(unittest.TestCase):
         self.assertEqual(NLOG, log)
 
     def test_get_log(self):
-        os.environ['XDG_CONFIG_HOME'] = '/tmp'
         from neon_utils.log_utils import get_log
         from ovos_utils.log import LOG as OLOG
         from neon_utils.log_utils import LOG as NLOG
