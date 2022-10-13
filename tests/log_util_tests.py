@@ -202,6 +202,7 @@ class LogUtilTests(unittest.TestCase):
         self.assertEqual(NLOG, log)
 
     def test_get_log(self):
+        os.environ['XDG_CONFIG_HOME'] = '/tmp'
         from neon_utils.log_utils import get_log
         from ovos_utils.log import LOG as OLOG
         from neon_utils.log_utils import LOG as NLOG
