@@ -11,7 +11,8 @@ license_overrides = {
     'pyxdg': 'GPL-2.0',
     'ptyprocess': 'ISC license',
     'psutil': 'BSD3',
-    "python-dateutil": "Apache-2.0"
+    "python-dateutil": "Apache-2.0",
+    "idna": "BSD3"
 }
 # explicitly allow these packages that would fail otherwise
 whitelist = []
