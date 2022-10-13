@@ -174,6 +174,40 @@ class LogUtilTests(unittest.TestCase):
         log_dir = get_log_dir()
         self.assertTrue(isdir(log_dir))
 
+    def test_init_log(self):
+        from neon_utils.log_utils import init_log
+        config = {'log_level': 'DEBUG',
+                  "logs": {
+                      "name": "neon-utils"
+                  }}
+        log = init_log(config)
+        self.assertEqual(log.name, "neon-utils")
+        self.assertEqual(log.level, "DEBUG")
+        from ovos_utils.log import LOG as OLOG
+        from neon_utils.logger import LOG as NLOG
+        self.assertEqual(OLOG, log)
+        self.assertEqual(NLOG, log)
+
+        config['log_level'] = 'INFO'
+        config['logs']['name'] = 'test'
+        config['logs']['level_overrides'] = {
+            'error': ['filelock']
+        }
+        new_log = init_log(config)
+        self.assertEqual(log, new_log)
+        self.assertEqual(log.name, "test")
+        self.assertEqual(log.level, "INFO")
+        self.assertEqual(logging.getLogger('filelock').level, logging.ERROR)
+        self.assertEqual(OLOG, log)
+        self.assertEqual(NLOG, log)
+
+    def test_get_log(self):
+        from neon_utils.log_utils import get_log
+        from ovos_utils.log import LOG as OLOG
+        from neon_utils.log_utils import LOG as NLOG
+        self.assertEqual(get_log(), OLOG)
+        self.assertEqual(get_log(), NLOG)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -35,7 +35,10 @@ from os.path import isdir
 from typing import Optional, Union
 from ovos_config.config import Configuration
 from ovos_utils.xdg_utils import xdg_data_home
-from neon_utils.logger import LOG
+from ovos_utils.log import LOG
+
+
+_LOG = None
 
 
 def get_log_dir() -> str:
@@ -182,3 +185,36 @@ def init_log_for_module(service: ServiceLog = ServiceLog.OTHER,
               "max_bytes": max_bytes,
               "backup_count": backup_count,
               "level": level})
+
+
+def init_log(config: dict = None) -> type(LOG):
+    """
+    Initialize `LOG` with configuration params. Should be called once on module
+    init.
+    """
+    _cfg = config or Configuration()
+    _log_level = _cfg.get("log_level", "INFO")
+    _logs_conf = _cfg.get("logs") or {}
+    _logs_conf["level"] = _log_level
+    LOG.init(_logs_conf)  # read log level from config
+    LOG.name = _logs_conf.get("name") or "neon-utils"
+    overrides = _logs_conf.get('level_overrides') or {}
+    for log in overrides.get("error") or []:
+        logging.getLogger(log).setLevel(logging.ERROR)
+    for log in overrides.get("warning") or []:
+        logging.getLogger(log).setLevel(logging.WARNING)
+    for log in overrides.get("info") or []:
+        logging.getLogger(log).setLevel(logging.INFO)
+    for log in overrides.get("debug") or []:
+        logging.getLogger(log).setLevel(logging.DEBUG)
+    return LOG
+
+
+def get_log() -> type(LOG):
+    """
+    Return an initialized `LOG` object
+    """
+    global _LOG
+    if not _LOG:
+        _LOG = init_log()
+    return _LOG

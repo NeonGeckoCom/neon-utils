@@ -26,10 +26,6 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import logging
-from ovos_utils.log import LOG
+from neon_utils.log_utils import get_log
 
-LOG.name = "neon-utils"
-
-logging.getLogger("filelock").setLevel(logging.WARNING)
-logging.getLogger("botocore").setLevel(logging.WARNING)
+LOG = get_log()
