@@ -27,4 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from ovos_utils.log import LOG
+
+if LOG.name == 'OVOS':
+    LOG.name = 'neon-utils'
 # TODO: Deprecate this backwards-compat import in 2.0.0
