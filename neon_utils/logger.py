@@ -29,3 +29,4 @@
 from neon_utils.log_utils import get_log
 
 LOG = get_log()
+# TODO: Deprecate this backwards-compat object in 2.0.0
