@@ -33,7 +33,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 from os.path import isdir
 from typing import Optional, Union
-from ovos_config.config import Configuration
 from ovos_utils.xdg_utils import xdg_data_home
 from ovos_utils.log import LOG
 
@@ -41,11 +40,13 @@ from ovos_utils.log import LOG
 _LOG = None
 
 
-def get_log_dir() -> str:
+def get_log_dir(config: dict = None) -> str:
     """
     Get log directory from configuration or default path, create if not exists
     """
-    log_dir = os.path.expanduser(dict(Configuration()).get("log_dir") or
+    from ovos_config.config import Configuration
+    config = config or Configuration()
+    log_dir = os.path.expanduser(config.get("log_dir") or
                                  os.path.join(xdg_data_home(), "neon", "logs"))
     if not isdir(log_dir):
         os.makedirs(log_dir, exist_ok=True)
@@ -192,6 +193,7 @@ def init_log(config: dict = None) -> type(LOG):
     Initialize `LOG` with configuration params. Should be called once on module
     init.
     """
+    from ovos_config.config import Configuration
     _cfg = config or Configuration()
     _log_level = _cfg.get("log_level", "INFO")
     _logs_conf = _cfg.get("logs") or {}

@@ -26,7 +26,5 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from neon_utils.log_utils import get_log
-
-LOG = get_log()
-# TODO: Deprecate this backwards-compat object in 2.0.0
+from ovos_utils.log import LOG
+# TODO: Deprecate this backwards-compat import in 2.0.0
