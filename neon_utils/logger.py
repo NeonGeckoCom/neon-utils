@@ -26,10 +26,8 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import logging
 from ovos_utils.log import LOG
 
-LOG.name = "neon-utils"
-
-logging.getLogger("filelock").setLevel(logging.WARNING)
-logging.getLogger("botocore").setLevel(logging.WARNING)
+if LOG.name == 'OVOS':
+    LOG.name = 'neon-utils'
+# TODO: Deprecate this backwards-compat import in 2.0.0
