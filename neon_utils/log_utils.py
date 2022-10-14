@@ -198,9 +198,9 @@ def init_log(config: dict = None) -> type(LOG):
     _log_level = _cfg.get("log_level", "INFO")
     _logs_conf = _cfg.get("logs") or {}
     _logs_conf["level"] = _log_level
+    LOG.name = _logs_conf.get("name") or "neon-utils"
     LOG.debug(f"Initializing logger with: {_logs_conf}")
     LOG.init(_logs_conf)  # read log level from config
-    LOG.name = _logs_conf.get("name") or "neon-utils"
     overrides = _logs_conf.get('level_overrides') or {}
     for log in overrides.get("error") or []:
         logging.getLogger(log).setLevel(logging.ERROR)
