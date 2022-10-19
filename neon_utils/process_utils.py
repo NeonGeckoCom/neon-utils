@@ -26,13 +26,20 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sdnotify
+from ovos_utils.log import LOG
 
 
 def start_systemd_service(service: callable, **kwargs):
     """
     Start a Neon Core module with systemd wrappers to report process lifecycle
     """
+    try:
+        import sdnotify
+    except ImportError:
+        LOG.exception(f'sdnotify not installed! '
+                      f'Starting service without systemd hooks')
+        service(**kwargs)
+        return
     notifier = sdnotify.SystemdNotifier()
 
     def on_ready():
