@@ -84,14 +84,14 @@ def scrape_page_for_links(url: str) -> dict:
             LOG.warning(e)
             html = None
         if not str(url).startswith("http") and not html:
-            request_url = f"http://{url}"
+            request_url = f"https://{url}"
             try:
                 html = requests.get(request_url, timeout=2.0).text
             except ConnectTimeout:
                 html = None
             if not html:
                 try:
-                    request_url = f"https://{url}"
+                    request_url = f"http://{url}"
                     html = requests.get(request_url, timeout=2.0).text
                 except ConnectTimeout:
                     html = None

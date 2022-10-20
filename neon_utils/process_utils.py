@@ -44,9 +44,11 @@ def start_systemd_service(service: callable, **kwargs):
 
     def on_ready():
         notifier.notify('READY=1')
+        notifier.notify('STATUS=Ready')
 
     def on_stopping():
         notifier.notify('STOPPING=1')
+        notifier.notify('STATUS=Stopping')
 
     def on_error(err: str):
         if err.isnumeric():
