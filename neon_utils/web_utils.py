@@ -80,6 +80,8 @@ def scrape_page_for_links(url: str) -> dict:
         LOG.debug(url)
         try:
             html = requests.get(url, timeout=2.0).text
+        except ConnectTimeout as e:
+            raise e
         except Exception as e:
             LOG.warning(e)
             html = None
@@ -87,6 +89,8 @@ def scrape_page_for_links(url: str) -> dict:
             request_url = f"https://{url}"
             try:
                 html = requests.get(request_url, timeout=2.0).text
+            except ConnectTimeout as e:
+                raise e
             except Exception as e:
                 LOG.warning(e)
                 html = None
@@ -94,7 +98,10 @@ def scrape_page_for_links(url: str) -> dict:
                 try:
                     request_url = f"http://{url}"
                     html = requests.get(request_url, timeout=2.0).text
-                except ConnectTimeout:
+                except ConnectTimeout as e:
+                    raise e
+                except Exception as e:
+                    LOG.warning(e)
                     html = None
             url = request_url
 
