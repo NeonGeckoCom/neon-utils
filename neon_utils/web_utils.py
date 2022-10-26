@@ -87,7 +87,8 @@ def scrape_page_for_links(url: str) -> dict:
             request_url = f"https://{url}"
             try:
                 html = requests.get(request_url, timeout=2.0).text
-            except ConnectTimeout:
+            except Exception as e:
+                LOG.warning(e)
                 html = None
             if not html:
                 try:
