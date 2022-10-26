@@ -32,6 +32,8 @@ import json
 import os
 import sys
 import shutil
+from time import sleep
+
 import yaml
 
 from copy import deepcopy
@@ -68,7 +70,8 @@ class NGIConfig:
             cache.check_reload()
             self._content = cache.content
         else:
-            self._content = self._load_yaml_file()
+            with self.lock:
+                self._content = self._load_yaml_file()
             NGIConfig.configuration_list[self.__repr__()] = self
         self._disk_content_hash = hash(repr(self._content))
 
@@ -189,12 +192,13 @@ class NGIConfig:
         Reloads updated configuration from disk. Used to reload changes when other instances modify a configuration
         Returns:Updated configuration.content
         """
-        new_content = self._load_yaml_file()
-        if new_content:
-            LOG.debug(f"{self.name} Checked for Updates")
-            self._content = new_content
-        elif self._content:
-            LOG.error("new_content is empty! keeping current config")
+        with self.lock:
+            new_content = self._load_yaml_file()
+            if new_content:
+                LOG.debug(f"{self.name} Checked for Updates")
+                self._content = new_content
+            elif self._content:
+                LOG.error("new_content is empty! keeping current config")
         return self._content
 
     def update_yaml_file(self, header=None, sub_header=None, value="", multiple=False, final=False):
@@ -285,24 +289,24 @@ class NGIConfig:
                  selected YAML.
         """
         try:
-            with self.lock:
-                with open(self.file_path, 'r') as f:
+            with open(self.file_path, 'r') as f:
+                try:
+                    config = yaml.safe_load(f)
+                except Exception as e:
+                    LOG.error(e)
+                    sleep(1)
+                    f.seek(0)
                     try:
-                        config = yaml.safe_load(f)
-                    except Exception as e:
-                        LOG.error(e)
-                        f.seek(0)
-                        try:
-                            from ruamel.yaml import YAML
-                            config = _make_loaded_config_safe(YAML().load(f))
-                        except ImportError:
-                            LOG.error(f"ruamel.yaml not available to load "
-                                      f"legacy config. "
-                                      f"pip install neon-utils[configuration]")
-                if not config:
-                    LOG.debug(f"Empty config file found at: {self.file_path}")
-                    config = dict()
-                self._loaded = os.path.getmtime(self.file_path)
+                        from ruamel.yaml import YAML
+                        config = _make_loaded_config_safe(YAML().load(f))
+                    except ImportError:
+                        LOG.error(f"ruamel.yaml not available to load "
+                                  f"legacy config. "
+                                  f"pip install neon-utils[configuration]")
+            if not config:
+                LOG.debug(f"Empty config file found at: {self.file_path}")
+                config = dict()
+            self._loaded = os.path.getmtime(self.file_path)
             return config
         except FileNotFoundError:
             LOG.error(f"Configuration file not found! ({self.file_path})")
@@ -459,28 +463,16 @@ def _init_ovos_conf(name: str):
     Perform a one-time init of ovos.conf for the calling module
     :param name: Name of calling module to configure to use `neon.yaml`
     """
-    _DEFAULT_OVOS_CONF = {"module_overrides": {
-        "neon_core": {
-            "xdg": True,
+    from ovos_config.meta import get_ovos_config
+    ovos_conf = get_ovos_config()
+    ovos_conf.setdefault('module_overrides', {})
+    ovos_conf.setdefault('submodule_mappings', {})
+
+    if "neon_core" not in ovos_conf['module_overrides']:
+        ovos_conf['module_overrides']['neon_core'] = {
             "base_folder": "neon",
             "config_filename": "neon.yaml"
         }
-    },
-        "submodule_mappings": {}
-    }
-
-    ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
-    if isfile(ovos_path):
-        try:
-            with open(ovos_path) as f:
-                ovos_conf: dict = json.load(f)
-        except Exception as e:
-            LOG.error(e)
-            ovos_conf = deepcopy(_DEFAULT_OVOS_CONF)
-    else:
-        LOG.info(f"Creating new file: {ovos_path}")
-        os.makedirs(dirname(ovos_path), exist_ok=True)
-        ovos_conf = deepcopy(_DEFAULT_OVOS_CONF)
 
     if not ovos_conf.get('module_overrides',
                          {}).get("neon_core", {}).get("default_config_path"):
@@ -504,8 +496,18 @@ def _init_ovos_conf(name: str):
     if name != "__main__" and name not in ovos_conf['submodule_mappings']:
         ovos_conf['submodule_mappings'][name] = 'neon_core'
         LOG.warning(f"Calling module ({name}) now configured to use neon.yaml")
+        if name == "neon_core":
+            ovos_conf['submodule_mappings']['neon_core.skills.skill_manager'] \
+                = 'neon_core'
+
+        ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
+        os.makedirs(dirname(ovos_path), exist_ok=True)
+        config_to_write = {
+            "module_overrides": ovos_conf.get('module_overrides'),
+            "submodule_mappings": ovos_conf.get('submodule_mappings')
+        }
         with open(ovos_path, "w+") as f:
-            json.dump(ovos_conf, f, indent=4)
+            json.dump(config_to_write, f, indent=4)
 
     # Note that the below block reloads modules in a specific order due to
     # imports within ovos_config and mycroft.configuration
@@ -513,19 +515,26 @@ def _init_ovos_conf(name: str):
     importlib.reload(ovos_config.locations)
     from ovos_config.meta import get_ovos_config
     ovos_conf = get_ovos_config()  # Load the full stack for /etc overrides
-    if ovos_conf["module_overrides"]["neon_core"].get("default_config_path"):
+    if ovos_conf["module_overrides"]["neon_core"].get("default_config_path") \
+        and ovos_config.locations.DEFAULT_CONFIG != \
+            ovos_conf["module_overrides"]["neon_core"]["default_config_path"]:
         ovos_config.locations.DEFAULT_CONFIG = \
             ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
 
-    importlib.reload(ovos_config.config)
-    importlib.reload(ovos_config)
+        # Default config changed, remove any cached configuration
+        del ovos_config.config.Configuration
+        del ovos_config.Configuration
+
     import ovos_config.models
     importlib.reload(ovos_config.models)
+    importlib.reload(ovos_config.config)
+    importlib.reload(ovos_config)
 
     try:
         import mycroft.configuration
         import mycroft.configuration.locations
         import mycroft.configuration.config
+        del mycroft.configuration.Configuration
         importlib.reload(mycroft.configuration.locations)
         importlib.reload(mycroft.configuration.config)
         importlib.reload(mycroft.configuration)
@@ -846,71 +855,6 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
 
     user_config.make_equal_by_keys(default_user_config.content)
     return user_config
-
-
-def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
-    """
-    Returns a dict local configuration and handles any
-     migration of configuration values to local config from user config
-    Args:
-        path: optional path to directory containing yml configuration files
-    Returns:
-        NGIConfig object with local config
-    """
-    import inspect
-    call = inspect.stack()[1]
-    module = inspect.getmodule(call.frame)
-    name = module.__name__ if module else call.filename
-    LOG.warning("This reference is deprecated - "
-                f"{name}:{call.lineno}")
-    try:
-        if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
-            local_config = NGIConfig("ngi_local_conf", path)
-        else:
-            local_config = NGIConfig("ngi_local_conf", "/tmp/neon")
-    except PermissionError:
-        LOG.error(f"Insufficient Permissions for path: {path}")
-        local_config = NGIConfig("ngi_local_conf")
-    _populate_read_only_config(path, basename(local_config.file_path),
-                               local_config)
-
-    if len(local_config.content) == 0:
-        LOG.info(f"Created Empty Local Config at {local_config.path}")
-
-    if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
-        user_config = NGIConfig("ngi_user_info", path)
-        _move_config_sections(user_config, local_config)
-
-    # local_config.make_equal_by_keys(default_local_config.content)
-    # LOG.info(f"Loaded local config from {local_config.file_path}")
-    return local_config
-
-
-def _populate_read_only_config(path: Optional[str], config_filename: str,
-                               loaded_config: NGIConfig) -> bool:
-    """
-    Check if a requested config file wasn't loaded due to insufficient write
-    permissions and duplicate its contents into the loaded config object.
-    :param path: Optional requested RO config path
-    :param config_filename: basename of the requested and loaded config file
-    :param loaded_config: Loaded config object to populate with RO config
-    :return: True if RO config was copied to new location, else False
-    """
-    # Handle reading unwritable config contents into new empty config
-    requested_file = \
-        os.path.abspath(join(path or
-                             expanduser(os.getenv("NEON_CONFIG_PATH", "")),
-                             config_filename))
-    if os.path.isfile(requested_file) and \
-            loaded_config.file_path != requested_file and \
-            loaded_config.content == dict():
-        LOG.warning(f"Loading requested file contents ({requested_file}) "
-                    f"into {loaded_config.file_path}")
-        with loaded_config.lock:
-            shutil.copy(requested_file, loaded_config.file_path)
-        loaded_config.check_for_updates()
-        return True
-    return False
 
 
 def is_neon_core() -> bool:
@@ -1582,3 +1526,68 @@ def _move_config_sections(user_config, local_config):
     except (KeyError, RuntimeError):
         # If some other instance moves these values, just pass
         pass
+
+
+def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
+    """
+    Returns a dict local configuration and handles any
+     migration of configuration values to local config from user config
+    Args:
+        path: optional path to directory containing yml configuration files
+    Returns:
+        NGIConfig object with local config
+    """
+    import inspect
+    call = inspect.stack()[1]
+    module = inspect.getmodule(call.frame)
+    name = module.__name__ if module else call.filename
+    LOG.warning("This reference is deprecated - "
+                f"{name}:{call.lineno}")
+    try:
+        if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
+            local_config = NGIConfig("ngi_local_conf", path)
+        else:
+            local_config = NGIConfig("ngi_local_conf", "/tmp/neon")
+    except PermissionError:
+        LOG.error(f"Insufficient Permissions for path: {path}")
+        local_config = NGIConfig("ngi_local_conf")
+    _populate_read_only_config(path, basename(local_config.file_path),
+                               local_config)
+
+    if len(local_config.content) == 0:
+        LOG.info(f"Created Empty Local Config at {local_config.path}")
+
+    if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
+        user_config = NGIConfig("ngi_user_info", path)
+        _move_config_sections(user_config, local_config)
+
+    # local_config.make_equal_by_keys(default_local_config.content)
+    # LOG.info(f"Loaded local config from {local_config.file_path}")
+    return local_config
+
+
+def _populate_read_only_config(path: Optional[str], config_filename: str,
+                               loaded_config: NGIConfig) -> bool:
+    """
+    Check if a requested config file wasn't loaded due to insufficient write
+    permissions and duplicate its contents into the loaded config object.
+    :param path: Optional requested RO config path
+    :param config_filename: basename of the requested and loaded config file
+    :param loaded_config: Loaded config object to populate with RO config
+    :return: True if RO config was copied to new location, else False
+    """
+    # Handle reading unwritable config contents into new empty config
+    requested_file = \
+        os.path.abspath(join(path or
+                             expanduser(os.getenv("NEON_CONFIG_PATH", "")),
+                             config_filename))
+    if os.path.isfile(requested_file) and \
+            loaded_config.file_path != requested_file and \
+            loaded_config.content == dict():
+        LOG.warning(f"Loading requested file contents ({requested_file}) "
+                    f"into {loaded_config.file_path}")
+        with loaded_config.lock:
+            shutil.copy(requested_file, loaded_config.file_path)
+        loaded_config.check_for_updates()
+        return True
+    return False

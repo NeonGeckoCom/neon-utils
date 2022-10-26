@@ -33,16 +33,20 @@ from datetime import datetime, timedelta
 from enum import Enum
 from os.path import isdir
 from typing import Optional, Union
-from ovos_config.config import Configuration
 from ovos_utils.xdg_utils import xdg_data_home
-from neon_utils.logger import LOG
+from ovos_utils.log import LOG
 
 
-def get_log_dir() -> str:
+_LOG = None
+
+
+def get_log_dir(config: dict = None) -> str:
     """
     Get log directory from configuration or default path, create if not exists
     """
-    log_dir = os.path.expanduser(dict(Configuration()).get("log_dir") or
+    from ovos_config.config import Configuration
+    config = config or Configuration()
+    log_dir = os.path.expanduser(config.get("log_dir") or
                                  os.path.join(xdg_data_home(), "neon", "logs"))
     if not isdir(log_dir):
         os.makedirs(log_dir, exist_ok=True)
@@ -182,3 +186,41 @@ def init_log_for_module(service: ServiceLog = ServiceLog.OTHER,
               "max_bytes": max_bytes,
               "backup_count": backup_count,
               "level": level})
+
+
+def init_log(config: dict = None, log_name: str = None) -> type(LOG):
+    """
+    Initialize `LOG` with configuration params. Should be called once on module
+    init.
+    :param config: Configuration to apply to LOG
+    :param log_name: Optional LOG.name override, else use Configuration or default
+    :returns: LOG singleton
+    """
+    from ovos_config.config import Configuration
+    _cfg = config or Configuration()
+    _log_level = _cfg.get("log_level", "INFO")
+    _logs_conf = _cfg.get("logs") or {}
+    _logs_conf["level"] = _log_level
+    LOG.name = log_name or _logs_conf.get("name") or "neon-utils"
+    LOG.debug(f"Initializing logger with: {_logs_conf}")
+    LOG.init(_logs_conf)  # read log level from config
+    overrides = _logs_conf.get('level_overrides') or {}
+    for log in overrides.get("error") or []:
+        logging.getLogger(log).setLevel(logging.ERROR)
+    for log in overrides.get("warning") or []:
+        logging.getLogger(log).setLevel(logging.WARNING)
+    for log in overrides.get("info") or []:
+        logging.getLogger(log).setLevel(logging.INFO)
+    for log in overrides.get("debug") or []:
+        logging.getLogger(log).setLevel(logging.DEBUG)
+    return LOG
+
+
+def get_log() -> type(LOG):
+    """
+    Return an initialized `LOG` object
+    """
+    global _LOG
+    if not _LOG:
+        _LOG = init_log()
+    return _LOG

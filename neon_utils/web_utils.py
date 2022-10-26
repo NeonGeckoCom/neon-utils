@@ -78,10 +78,34 @@ def scrape_page_for_links(url: str) -> dict:
 
     def _get_links(url):
         LOG.debug(url)
-        if not str(url).startswith("http"):
-            url = f"http://{url}"
+        try:
+            html = requests.get(url, timeout=2.0).text
+        except ConnectTimeout as e:
+            raise e
+        except Exception as e:
+            LOG.warning(e)
+            html = None
+        if not str(url).startswith("http") and not html:
+            request_url = f"https://{url}"
+            try:
+                html = requests.get(request_url, timeout=2.0).text
+            except ConnectTimeout as e:
+                raise e
+            except Exception as e:
+                LOG.warning(e)
+                html = None
+            if not html:
+                try:
+                    request_url = f"http://{url}"
+                    html = requests.get(request_url, timeout=2.0).text
+                except ConnectTimeout as e:
+                    raise e
+                except Exception as e:
+                    LOG.warning(e)
+                    html = None
+            url = request_url
+
         LOG.debug(url)
-        html = requests.get(url, timeout=2.0).text
         soup = BeautifulSoup(html, 'lxml')
         # LOG.debug(html)
         # LOG.debug(soup)

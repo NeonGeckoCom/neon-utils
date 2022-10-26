@@ -26,29 +26,42 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import unittest
-import sys
-import os
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from neon_utils.web_utils import *
+from ovos_utils.log import LOG
 
 
-class WebUtilTests(unittest.TestCase):
-    def test_scrape_page_for_links(self):
-        try:
-            links = scrape_page_for_links("neon.ai")
-            self.assertIsInstance(links, dict)
-            self.assertIn("about us", links.keys())
-            # TODO: Update test to validate absolute and relative URL paths
-            # Relative href
-            self.assertIn(links["about us"], ("https://neon.ai/aboutus", "http://neon.ai/aboutus"))
+def start_systemd_service(service: callable, **kwargs):
+    """
+    Start a Neon Core module with systemd wrappers to report process lifecycle
+    """
+    try:
+        import sdnotify
+    except ImportError:
+        LOG.exception(f'sdnotify not installed! '
+                      f'Starting service without systemd hooks')
+        service(**kwargs)
+        return
+    notifier = sdnotify.SystemdNotifier()
 
-            # # Absolute href
-            # self.assertIn(links["get started"], ("https://neon.ai/getstarted", "http://neon.ai/getstarted"))
-        except ConnectTimeout:
-            LOG.error("Github testing breaks here")
+    def on_ready():
+        notifier.notify('READY=1')
+        notifier.notify('STATUS=Ready')
 
+    def on_stopping():
+        notifier.notify('STOPPING=1')
+        notifier.notify('STATUS=Stopping')
 
-if __name__ == '__main__':
-    unittest.main()
+    def on_error(err: str):
+        if err.isnumeric():
+            notifier.notify(f'ERRNO={err}')
+        else:
+            notifier.notify(f'ERRNO=1')
+
+    def on_alive():
+        notifier.notify('STATUS=Starting')
+
+    def on_started():
+        notifier.notify('STATUS=Started')
+
+    service(ready_hook=on_ready, error_hook=on_error,
+            stopping_hook=on_stopping, alive_hook=on_alive,
+            started_hook=on_started, **kwargs)
