@@ -329,8 +329,8 @@ def parse_skill_readme_file(readme_path: str) -> dict:
         if section == "examples":
             if not any((ln.startswith('-'), ln.startswith('*'))):
                 return None
-            parsed = clean_quotes(ln.lstrip('-').lstrip('*').lower().strip())
-            if parsed.split(maxsplit=1)[0] == "neon":
+            parsed = clean_quotes(ln.lstrip('-').lstrip('*').strip())
+            if parsed.split(maxsplit=1)[0].lower() == "neon":
                 return parsed.split(maxsplit=1)[1]
             else:
                 return parsed
