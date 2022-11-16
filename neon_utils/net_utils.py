@@ -116,6 +116,7 @@ def check_port_is_open(addr: str, port: int) -> bool:
     :returns: True if the port is reachable, else False
     """
     test_connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    test_connection.settimeout(5)
     status = test_connection.connect_ex((addr, port))
     return status == 0
 

@@ -465,6 +465,7 @@ def _init_ovos_conf(name: str):
     """
     from ovos_config.meta import get_ovos_config
     ovos_conf = get_ovos_config()
+    original_conf = deepcopy(ovos_conf)
     ovos_conf.setdefault('module_overrides', {})
     ovos_conf.setdefault('submodule_mappings', {})
 
@@ -509,37 +510,39 @@ def _init_ovos_conf(name: str):
         with open(ovos_path, "w+") as f:
             json.dump(config_to_write, f, indent=4)
 
-    # Note that the below block reloads modules in a specific order due to
-    # imports within ovos_config and mycroft.configuration
-    import ovos_config
-    importlib.reload(ovos_config.locations)
-    from ovos_config.meta import get_ovos_config
-    ovos_conf = get_ovos_config()  # Load the full stack for /etc overrides
-    if ovos_conf["module_overrides"]["neon_core"].get("default_config_path") \
-        and ovos_config.locations.DEFAULT_CONFIG != \
-            ovos_conf["module_overrides"]["neon_core"]["default_config_path"]:
-        ovos_config.locations.DEFAULT_CONFIG = \
-            ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
+    if ovos_conf != original_conf:
+        LOG.debug("Force reload of all configuration references")
+        # Note that the below block reloads modules in a specific order due to
+        # imports within ovos_config and mycroft.configuration
+        import ovos_config
+        importlib.reload(ovos_config.locations)
+        from ovos_config.meta import get_ovos_config
+        ovos_conf = get_ovos_config()  # Load the full stack for /etc overrides
+        if ovos_conf["module_overrides"]["neon_core"].get("default_config_path") \
+            and ovos_config.locations.DEFAULT_CONFIG != \
+                ovos_conf["module_overrides"]["neon_core"]["default_config_path"]:
+            ovos_config.locations.DEFAULT_CONFIG = \
+                ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
 
-        # Default config changed, remove any cached configuration
-        del ovos_config.config.Configuration
-        del ovos_config.Configuration
+            # Default config changed, remove any cached configuration
+            del ovos_config.config.Configuration
+            del ovos_config.Configuration
 
-    import ovos_config.models
-    importlib.reload(ovos_config.models)
-    importlib.reload(ovos_config.config)
-    importlib.reload(ovos_config)
+        import ovos_config.models
+        importlib.reload(ovos_config.models)
+        importlib.reload(ovos_config.config)
+        importlib.reload(ovos_config)
 
-    try:
-        import mycroft.configuration
-        import mycroft.configuration.locations
-        import mycroft.configuration.config
-        del mycroft.configuration.Configuration
-        importlib.reload(mycroft.configuration.locations)
-        importlib.reload(mycroft.configuration.config)
-        importlib.reload(mycroft.configuration)
-    except Exception as e:
-        LOG.error(f"Failed to override mycroft.configuration: {e}")
+        try:
+            import mycroft.configuration
+            import mycroft.configuration.locations
+            import mycroft.configuration.config
+            del mycroft.configuration.Configuration
+            importlib.reload(mycroft.configuration.locations)
+            importlib.reload(mycroft.configuration.config)
+            importlib.reload(mycroft.configuration)
+        except Exception as e:
+            LOG.error(f"Failed to override mycroft.configuration: {e}")
 
 
 def _validate_config_env():
