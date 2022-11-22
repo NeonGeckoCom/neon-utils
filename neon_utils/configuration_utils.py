@@ -886,7 +886,8 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     :returns: dict formatted to match mycroft.conf spec
     """
     from neon_utils.parse_utils import clean_quotes
-    if not (location['lat'] and location['lng']):
+    if not any((location['lat'], location['lng'],
+                location['city'], location['tz'])):
         LOG.debug('Neon config empty, return core value')
         return _safe_mycroft_config().get('location')
     try:
