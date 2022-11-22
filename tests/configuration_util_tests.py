@@ -761,6 +761,25 @@ class ConfigurationUtilTests(unittest.TestCase):
         location = get_mycroft_compatible_location(user_config["location"])
         self.assertIsInstance(location["timezone"]["offset"], float)
 
+        # Incomplete user locations
+        location = {
+            'lat': None,
+            'lng': None,
+            'city': None,
+            'state': None,
+            'country': None,
+            'tz': None,
+            'utc': None
+        }
+        location['tz'] = 'America/Los_Angeles'
+        self.assertIsInstance(get_mycroft_compatible_location(location), dict)
+        location['tz'] = None
+        location['city'] = 'Renton'
+        self.assertIsInstance(get_mycroft_compatible_location(location), dict)
+        location['city'] = None
+        location['lat'] = '47.4799078'
+        location['lng'] = '-122.2034496'
+        self.assertIsInstance(get_mycroft_compatible_location(location), dict)
         shutil.move(old_user_info, ngi_user_info)
 
     def test_get_user_config_from_mycroft_conf(self):

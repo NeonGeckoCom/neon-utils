@@ -902,7 +902,8 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     # except Exception as e:
     #     LOG.exception(e)
     #     parsed_location = None
-    if location.get("country", '').lower() == "united states":
+    if location.get("country") and \
+            location.get("country").lower() == "united states":
         location["country_code"] = "us"
 
     if location.get('utc'):
@@ -912,6 +913,8 @@ def get_mycroft_compatible_location(location: dict) -> dict:
             offset = float(location["utc"])
         except ValueError:
             offset = 0.0
+    else:
+        offset = 0.0
 
     try:
         lat = float(lat)
