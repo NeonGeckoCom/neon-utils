@@ -902,15 +902,16 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     # except Exception as e:
     #     LOG.exception(e)
     #     parsed_location = None
-    if location["country"].lower() == "united states":
+    if location.get("country", '').lower() == "united states":
         location["country_code"] = "us"
 
-    try:
-        offset = float(clean_quotes(location["utc"]))
-    except TypeError:
-        offset = float(location["utc"])
-    except ValueError:
-        offset = 0.0
+    if location.get('utc'):
+        try:
+            offset = float(clean_quotes(location["utc"]))
+        except TypeError:
+            offset = float(location["utc"])
+        except ValueError:
+            offset = 0.0
 
     try:
         lat = float(lat)
