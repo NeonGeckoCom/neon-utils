@@ -891,6 +891,10 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     :returns: dict formatted to match mycroft.conf spec
     """
     from neon_utils.parse_utils import clean_quotes
+    if not any((location['lat'], location['lng'],
+                location['city'], location['tz'])):
+        LOG.debug('Neon config empty, return core value')
+        return _safe_mycroft_config().get('location')
     try:
         lat = clean_quotes(location['lat'])
         lng = clean_quotes(location['lng'])
@@ -903,14 +907,18 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     # except Exception as e:
     #     LOG.exception(e)
     #     parsed_location = None
-    if location["country"].lower() == "united states":
+    if location.get("country") and \
+            location.get("country").lower() == "united states":
         location["country_code"] = "us"
 
-    try:
-        offset = float(clean_quotes(location["utc"]))
-    except TypeError:
-        offset = float(location["utc"])
-    except ValueError:
+    if location.get('utc'):
+        try:
+            offset = float(clean_quotes(location["utc"]))
+        except TypeError:
+            offset = float(location["utc"])
+        except ValueError:
+            offset = 0.0
+    else:
         offset = 0.0
 
     try:

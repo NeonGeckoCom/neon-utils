@@ -60,6 +60,10 @@ class PatchedMycroftSkill(MycroftSkill):
 
     @property
     def location(self):
+        """
+        Backwards-compatible location property. Returns core location config if
+        user location isn't specified.
+        """
         return get_mycroft_compatible_location(get_user_prefs()["location"])
 
     @property
