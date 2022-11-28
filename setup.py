@@ -28,14 +28,20 @@
 
 import setuptools
 
-from os import path
+from os import path, environ
 
 
 def get_requirements(requirements_filename: str):
-    requirements_file = path.join(path.abspath(path.dirname(__file__)), "requirements", requirements_filename)
+    requirements_file = path.join(path.abspath(path.dirname(__file__)),
+                                  "requirements", requirements_filename)
     with open(requirements_file, 'r', encoding='utf-8') as r:
         requirements = r.readlines()
-    requirements = [r.strip() for r in requirements if r.strip() and not r.strip().startswith("#")]
+    requirements = [r.strip() for r in requirements
+                    if r.strip() and not r.strip().startswith("#")]
+    if 'MYCROFT_LOOSE_REQUIREMENTS' in environ:
+        print('USING LOOSE REQUIREMENTS!')
+        requirements = [r.replace('==', '>=').replace('~=', '>=')
+                        for r in requirements]
     return requirements
 
 
@@ -62,7 +68,8 @@ setuptools.setup(
     url="https://github.com/neongeckocom/neon-skill-utils",
     packages=setuptools.find_packages(),
     package_data={'': ['*.yml'],
-                  'neon_utils': ['res/precise_models/*', 'res/snd/*', 'res/text/*/*.voc', 'res/text/*/*.dialog',
+                  'neon_utils': ['res/precise_models/*', 'res/snd/*',
+                                 'res/text/*/*.voc', 'res/text/*/*.dialog',
                                  'res/ui/*.qml', 'res/ui/*.png', 'res/*']
                   },
     include_package_data=True,
