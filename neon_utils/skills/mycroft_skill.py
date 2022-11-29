@@ -166,7 +166,7 @@ class PatchedMycroftSkill(MycroftSkill):
                 LOG.debug(f"Skill speak! {data}")
             LOG.debug(msg_to_emit.msg_type)
 
-            if wait and check_for_signal("neon_speak_api"):
+            if wait and check_for_signal("neon_speak_api", -1):
                 msg_to_emit.data['speak_ident'] = str(time.time())
                 self.bus.wait_for_response(msg_to_emit,
                                            msg_to_emit.data['speak_ident'],
