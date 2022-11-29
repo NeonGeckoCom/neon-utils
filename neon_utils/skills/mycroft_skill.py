@@ -36,7 +36,7 @@ from typing import Optional
 from json_database import JsonStorage
 from mycroft_bus_client.message import Message
 
-from neon_utils.signal_utils import wait_for_signal_clear
+from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message, resolve_message
@@ -166,8 +166,7 @@ class PatchedMycroftSkill(MycroftSkill):
                 LOG.debug(f"Skill speak! {data}")
             LOG.debug(msg_to_emit.msg_type)
 
-            if wait and self.config_core.get('signal',
-                                             {}).get('speak_bus_api'):
+            if wait and check_for_signal("neon_speak_api"):
                 msg_to_emit.data['speak_ident'] = str(time.time())
                 self.bus.wait_for_response(msg_to_emit,
                                            msg_to_emit.data['speak_ident'],
