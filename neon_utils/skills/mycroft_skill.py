@@ -297,12 +297,14 @@ class PatchedMycroftSkill(MycroftSkill):
                     LOG.info("No user response")
                     return None
             else:
-                if validator(response):
-                    return response
-
                 # catch user saying 'cancel'
                 if is_cancel(response):
                     return None
+                validated = validator(response)
+                # returns the validated value or the response
+                # (backwards compat)
+                if validated is not False and validated is not None:
+                    return response if validated is True else validated
 
             num_fails += 1
             if 0 < num_retries < num_fails:

@@ -357,7 +357,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         t.join(30)
         self.assertIsNone(test_results[valid_message.context["username"]])
 
-    def test_get_response_validator_pass(self):
+    def test_get_response_validator_return_utterance(self):
+        # returns utterance if validotor return value is True
         def handle_speak(_):
             check_for_signal("isSpeaking")
             spoken.set()
@@ -394,6 +395,83 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertTrue(test_results["validator"])
         self.assertEqual(test_results[valid_message.context["username"]],
                          valid_message.data["utterances"][0])
+
+    def test_get_response_validator_return_value_1(self):
+        def handle_speak(_):
+            check_for_signal("isSpeaking")
+            spoken.set()
+
+        def is_valid(_):
+            test_results["validator"] = True
+            return valid_return
+
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            resp = s.get_response(test_dialog, validator=is_valid,
+                                  message=Message(
+                                      "converse_message", {},
+                                      {"username": "valid_converse_user"}))
+            test_results[idx] = resp
+
+        test_results = dict()
+        valid_return = datetime.datetime(2022,11,29,0,0)
+        spoken = Event()
+        test_dialog = "testing get response multi user."
+        valid_message = Message("recognizer_loop:utterance",
+                                {"utterances": ["today"]},
+                                {"timing": {},
+                                 "username": "valid_converse_user"})
+
+        skill = get_test_mycroft_skill({"speak": handle_speak})
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
+        t.start()
+        spoken.wait(30)
+        sleep(1)
+        skill.converse(valid_message)
+        t.join(30)
+        self.assertTrue(test_results["validator"])
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_return)
+
+    def test_get_response_validator_return_value_2(self):
+        # validator should also accept faulty values that ar not None/False
+        def handle_speak(_):
+            check_for_signal("isSpeaking")
+            spoken.set()
+
+        def is_valid(_):
+            test_results["validator"] = True
+            return valid_return
+
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            resp = s.get_response(test_dialog, validator=is_valid,
+                                  message=Message(
+                                      "converse_message", {},
+                                      {"username": "valid_converse_user"}))
+            test_results[idx] = resp
+
+        test_results = dict()
+        valid_return = 0
+        spoken = Event()
+        test_dialog = "testing get response multi user."
+        valid_message = Message("recognizer_loop:utterance",
+                                {"utterances": ["got zero items"]},
+                                {"timing": {},
+                                 "username": "valid_converse_user"})
+
+        skill = get_test_mycroft_skill({"speak": handle_speak})
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
+        t.start()
+        spoken.wait(30)
+        sleep(1)
+        skill.converse(valid_message)
+        t.join(30)
+        self.assertTrue(test_results["validator"])
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_return)
 
     def test_get_response_validator_fail(self):
         def handle_speak(_):
