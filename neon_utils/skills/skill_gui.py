@@ -29,12 +29,14 @@
 from os.path import join
 from neon_utils.logger import LOG
 from neon_utils.file_utils import resolve_neon_resource_file
-from mycroft.enclosure.gui import SkillGUI as _SkillGUI
+from ovos_utils.gui import GUIInterface
 
 
-class SkillGUI(_SkillGUI):
+# TODO: Can this override be deprecated/changes merged to upstream?
+class SkillGUI(GUIInterface):
     def __init__(self, skill):
-        super().__init__(skill)
+        super().__init__(skill.skill_id, skill.bus)
+        self.skill = skill
         self.serving_http = skill.config_core["skills"].get(
             "run_gui_file_server", False)
 
