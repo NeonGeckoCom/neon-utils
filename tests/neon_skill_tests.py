@@ -35,7 +35,7 @@ import unittest
 from multiprocessing import Event
 from os.path import join
 from threading import Thread
-from time import sleep
+from time import sleep, time
 
 import pytest
 from mock.mock import patch, MagicMock
@@ -347,6 +347,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                                    "username": "invalid_converse_user"})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
+        skill._get_response_timeout = 5
         t = Thread(target=skill_response_thread,
                    args=(skill, valid_message.context["username"]),
                    daemon=True)
@@ -559,6 +560,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertEqual(test_results[valid_message.context["username"]],
                          valid_message.data["utterances"][0])
 
+# TODO: test get_response with `speak_bus_api`
+
     def test_speak_simple_valid(self):
         handle_speak = Mock()
         utterance = "test to speak"
@@ -735,6 +738,46 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         message.context.pop('source')
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
+
+    def test_speak_wait(self):
+        from neon_utils.signal_utils import create_signal, check_for_signal, \
+            wait_for_signal_clear
+        create_signal("neon_speak_api")
+        message: Message = None
+
+        def on_speak(msg):
+            def handler(msg):
+                nonlocal message
+                message = msg
+                sleep(1)
+                skill.bus.emit(Message(msg.data.get('speak_ident')))
+                sleep(1)
+                check_for_signal("isSpeaking")
+            Thread(target=handler, args=(msg,), daemon=True).start()
+
+        skill = get_test_mycroft_skill(
+            {"speak": on_speak})
+
+        # Test wait with speak API
+        speak_time = time()
+        create_signal("isSpeaking")  # Mock signal create
+        skill.speak('test', wait=True)
+        # Make sure we actually waited
+        self.assertGreaterEqual(time(), speak_time + 1)
+        self.assertLessEqual(time(), speak_time + 2)
+        self.assertTrue(check_for_signal("neon_speak_api", -1))
+        self.assertIsInstance(message, Message)
+        self.assertIsInstance(message.data['speak_ident'], str)
+
+        wait_for_signal_clear('isSpeaking')  # Wait for first test to finish
+        # Test wait with signals
+        self.assertTrue(check_for_signal("neon_speak_api"))
+        speak_time = time()
+        create_signal("isSpeaking")  # Mock signal create
+        skill.speak('test', wait=True)
+        # Make sure we actually waited
+        self.assertGreaterEqual(time(), speak_time + 2)
+        self.assertFalse(check_for_signal("neon_speak_api", -1))
 
     # TODO: Test settings load
 
