@@ -35,7 +35,7 @@ from mycroft_bus_client import Message
 from ovos_utils.log import LOG
 
 from neon_utils.message_utils import get_message_user, dig_for_message
-from neon_utils.skills import NeonSkill
+from neon_utils.skills.neon_skill import NeonSkill
 
 
 class KioskSkill(NeonSkill):
@@ -50,29 +50,29 @@ class KioskSkill(NeonSkill):
         """
         return 60
 
-    @abstractmethod
     @property
+    @abstractmethod
     def greeting_dialog(self) -> str:
         """
         Specify a dialog to speak on interaction start
         """
 
-    @abstractmethod
     @property
+    @abstractmethod
     def goodbye_dialog(self) -> str:
         """
         Specify a dialog to speak when an interaction ends cleanly
         """
 
-    @abstractmethod
     @property
+    @abstractmethod
     def timeout_dialog(self) -> str:
         """
         Specify a dialog to speak when an interaction ends after some timeout
         """
 
-    @abstractmethod
     @property
+    @abstractmethod
     def error_dialog(self) -> str:
         """
         Specify a dialog to speak on unhandled errors
@@ -117,9 +117,11 @@ class KioskSkill(NeonSkill):
         'stop' or if the skill decides to end interaction.
         :param message: Message associated with request
         """
+        self.handle_end_interaction(message)
         self.speak_dialog(self.goodbye_dialog)
         user = get_message_user(message)
         self._active_users.pop(user)
+        self.cancel_scheduled_event(f'{self.skill_id}:timeout_{user}')
 
     @abstractmethod
     def handle_end_interaction(self, message: Message):
@@ -168,10 +170,11 @@ class KioskSkill(NeonSkill):
         """
         Schedule some event to handle no response from a particular user
         """
-        timeout_time = datetime.datetime.now(self.sys_tz) + \
-            datetime.timedelta(seconds=self.timeout_seconds)
         user = get_message_user(message)
-        event_name = f'timeout_{user}'
+        timeout_time = datetime.datetime.fromtimestamp(
+            self._active_users[user]) + \
+            datetime.timedelta(seconds=self.timeout_seconds)
+        event_name = f'{self.skill_id}:timeout_{user}'
         self.schedule_event(self._handle_timeout, timeout_time, message.data,
                             event_name, message.context)
 
@@ -188,7 +191,7 @@ class KioskSkill(NeonSkill):
 
     def stop(self):
         message = dig_for_message()
-        user = get_message_user(message)
+        user = get_message_user(message) if message else "local"
         if user in self._active_users:
             self.end_interaction(message)
 

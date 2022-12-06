@@ -166,6 +166,110 @@ class SkillObjectTests(unittest.TestCase):
         self.assertEqual(skill.name, "Test Instructor Skill")
 
 
+class KioskSkillTests(unittest.TestCase):
+    skill = create_skill(TestKioskSkill)
+
+    def setUp(self) -> None:
+        self.skill.setup_new_interaction = Mock(return_value=True)
+        self.skill.handle_new_interaction = Mock()
+        self.skill.handle_end_interaction = Mock()
+        self.skill.handle_user_utterance = Mock()
+        self.skill.speak_dialog = Mock()
+        self.skill.event_scheduler.schedule_event = Mock()
+
+    def test_kiosk_skill_init(self):
+        self.assertIsInstance(self.skill, MycroftSkill)
+        self.assertIsInstance(self.skill, NeonSkill)
+        self.assertEqual(self.skill.greeting_dialog, 'greeting')
+        self.assertEqual(self.skill.goodbye_dialog, 'goodbye')
+        self.assertEqual(self.skill.timeout_dialog, 'timeout')
+        self.assertEqual(self.skill.error_dialog, 'error')
+
+    def test_skill_timeout(self):
+        test_message = Message('test', {}, {'username': 'test_user'})
+
+        # Test Timeout
+        self.skill._timeout_seconds = 1
+        self.skill.start_interaction(test_message)
+        self.assertEqual(set(self.skill._active_users.keys()), {'test_user'})
+        self.skill.setup_new_interaction.assert_called_once_with(test_message)
+        self.skill.handle_new_interaction.assert_called_once_with(test_message)
+        self.skill.speak_dialog.assert_called_once_with(self.skill.greeting_dialog)
+        args = self.skill.event_scheduler.schedule_event.call_args
+        self.assertEqual(args[0][0], self.skill._handle_timeout)
+        self.assertIsInstance(args[0][1], datetime.datetime)
+        self.assertEqual(args[0][2], test_message.data)
+        self.assertEqual(args[0][3], f"{self.skill.skill_id}:timeout_test_user")
+        self.assertEqual(args[1]['context'], {**test_message.context,
+                                              **{'skill_id': self.skill.skill_id}})
+        expiration_message = Message(f'{self.skill.skill_id}:timeout_test_user',
+                                     test_message.data, args[1]['context'])
+        self.skill._handle_timeout(expiration_message)
+        self.skill.speak_dialog.assert_called_with(self.skill.timeout_dialog)
+        self.assertEqual(self.skill._active_users, dict())
+
+    def test_skill_error_handling(self):
+        test_message = Message('test', {}, {'username': 'test_user'})
+
+        # Test error handling
+        self.skill.handle_error(test_message)
+        self.skill.speak_dialog.assert_called_once_with(self.skill.error_dialog,
+                                                        message=test_message)
+
+    def test_skill_setup_failure(self):
+        test_message = Message('test', {}, {'username': 'test_user'})
+
+        # Test setup failure
+        self.skill.setup_new_interaction.return_value = False
+        self.skill.start_interaction(test_message)
+        self.skill.setup_new_interaction.assert_called_once_with(test_message)
+        self.assertEqual(self.skill._active_users, dict())
+
+    def test_skill_normal_interaction(self):
+        test_message = Message('test', {}, {'username': 'test_user'})
+
+        self.skill._timeout_seconds = 30
+        self.skill.start_interaction(test_message)
+        self.assertEqual(set(self.skill._active_users.keys()), {'test_user'})
+        self.skill.setup_new_interaction.assert_called_once_with(test_message)
+        self.skill.handle_new_interaction.assert_called_once_with(test_message)
+        self.skill.speak_dialog.assert_called_once_with(self.skill.greeting_dialog)
+
+        # Test simple converse
+        sleep(1)
+        converse_message = Message('converse', {}, {'username': 'test_user'})
+        self.assertTrue(self.skill.converse(converse_message))
+        self.skill.handle_user_utterance.assert_called_once_with(converse_message)
+        self.assertAlmostEqual(self.skill._active_users['test_user'], time(), 1)
+
+        # Test long-running converse handler
+        msg = None
+        event = Event()
+
+        def _handle_utterance(message):
+            nonlocal msg
+            msg = message
+            sleep(5)
+            event.set()
+
+        self.skill.handle_user_utterance = _handle_utterance
+        self.assertTrue(self.skill.converse(converse_message))
+        self.assertFalse(event.is_set())
+        event.wait(5)
+        finished_time = time()
+        self.assertEqual(msg, converse_message)
+        sleep(0.5)
+        self.assertAlmostEqual(self.skill._active_users['test_user'],
+                               finished_time, 1)
+
+        # Test end interaction
+        end_message = Message('end', {}, {'username': 'test_user'})
+        self.skill.end_interaction(end_message)
+        self.skill.handle_end_interaction.assert_called_once_with(end_message)
+        self.skill.speak_dialog.assert_called_with(self.skill.goodbye_dialog)
+        self.assertEqual(self.skill._active_users, dict())
+
+
 class PatchedMycroftSkillTests(unittest.TestCase):
     def test_get_response_simple(self):
         def handle_speak(_):

@@ -25,10 +25,11 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from mycroft_bus_client import Message
 
 from neon_utils.skills import CommonMessageSkill, CommonPlaySkill,\
     CommonQuerySkill, NeonFallbackSkill, NeonSkill, PatchedMycroftSkill,\
-    InstructorSkill
+    InstructorSkill, KioskSkill
 
 
 class TestCMS(CommonMessageSkill):
@@ -93,4 +94,42 @@ class TestInstructorSkill(InstructorSkill):
         pass
 
     def _get_instructions(self, *args, **kwargs):
+        pass
+
+
+class TestKioskSkill(KioskSkill):
+    def __init__(self):
+        super(TestKioskSkill, self).__init__()
+        self._timeout_seconds = 60
+
+    @property
+    def timeout_seconds(self) -> int:
+        return self._timeout_seconds
+
+    @property
+    def greeting_dialog(self) -> str:
+        return "greeting"
+
+    @property
+    def goodbye_dialog(self) -> str:
+        return "goodbye"
+
+    @property
+    def timeout_dialog(self) -> str:
+        return "timeout"
+
+    @property
+    def error_dialog(self) -> str:
+        return "error"
+
+    def setup_new_interaction(self, message: Message) -> bool:
+        pass
+
+    def handle_new_interaction(self, message: Message):
+        pass
+
+    def handle_end_interaction(self, message: Message):
+        pass
+
+    def handle_user_utterance(self, message: Message):
         pass
