@@ -26,6 +26,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import inspect
 import ovos_utils.signal
 
 from time import time, sleep
@@ -86,10 +87,13 @@ def init_signal_bus(bus: MessageBusClient):
 
 def init_signal_handlers():
     """
-    Initialize the proper signal methods dependent on the Signal Manager being available.
-    Any previously imported methods will not be affected by calls to this method, but imports of `signal_utils` are.
-    i.e. `from neon_utils.signal_utils import check_for_signal`, `check_for_signal` is not changed,
-         `import neon_utils.signal_utils`, `neon_utils.signal_utils.check_for_signal` is changed.
+    Initialize the proper signal methods dependent on the Signal Manager
+    being available. Any previously imported methods will not be affected by
+    calls to this method, but imports of `signal_utils` are.
+    i.e. `from neon_utils.signal_utils import check_for_signal`,
+     `check_for_signal` is not changed.
+     `import neon_utils.signal_utils`,
+     `neon_utils.signal_utils.check_for_signal` is changed.
     """
     global _create_signal
     global _check_for_signal
@@ -150,9 +154,15 @@ def _manager_create_signal(signal_name: str, *_, **__) -> bool:
     :param signal_name: named signal to create
     :return: True if signal exists
     """
+    call = inspect.stack()[1]
+    module = inspect.getmodule(call.frame)
+    name = module.__name__ if module else call.filename
     stat = _BUS.wait_for_response(Message("neon.create_signal",
-                                          {"signal_name": signal_name}),
-                                  f"neon.create_signal.{signal_name}", 10) or Message('')
+                                          {"signal_name": signal_name},
+                                          {"origin_module": name,
+                                           "origin_line": call.lineno}),
+                                  f"neon.create_signal.{signal_name}", 10) or \
+        Message('')
     return stat.data.get("is_set")
 
 
@@ -160,21 +170,30 @@ def _manager_check_for_signal(signal_name: str, sec_lifetime: int = 0, *_, **__)
     """
     Backwards-compatible method for checking for a signal
     :param signal_name: name of signal to check
-    :param sec_lifetime: max age of signal in seconds before clearing it and returning False
+    :param sec_lifetime: max age of signal in seconds before clearing it and
+        returning False
     :return: True if signal exists
     """
+    call = inspect.stack()[1]
+    module = inspect.getmodule(call.frame)
+    name = module.__name__ if module else call.filename
     stat = _BUS.wait_for_response(Message("neon.check_for_signal",
                                           {"signal_name": signal_name,
-                                           "sec_lifetime": sec_lifetime}),
-                                  f"neon.check_for_signal.{signal_name}", 10) or Message('')
+                                           "sec_lifetime": sec_lifetime},
+                                          {"origin_module": name,
+                                           "origin_line": call.lineno}),
+                                  f"neon.check_for_signal.{signal_name}",
+                                  10) or Message('')
     return stat.data.get("is_set")
 
 
-def _manager_wait_for_signal_create(signal_name: str, timeout: int = 30) -> bool:
+def _manager_wait_for_signal_create(signal_name: str,
+                                    timeout: int = 30) -> bool:
     """
     Block until the specified signal is set or timeout is reached
     :param signal_name: name of signal to check
-    :param timeout: max seconds to wait for signal to be created, Default is 30 seconds
+    :param timeout: max seconds to wait for signal to be created,
+        Default is 30 seconds
     :return: True if signal exists
     """
     timeout = _MAX_TIMEOUT if timeout > _MAX_TIMEOUT else timeout  # Cap wait
@@ -182,7 +201,8 @@ def _manager_wait_for_signal_create(signal_name: str, timeout: int = 30) -> bool
     stat = _BUS.wait_for_response(Message("neon.wait_for_signal_create",
                                           {"signal_name": signal_name,
                                            "timeout": timeout}),
-                                  f"neon.wait_for_signal_create.{signal_name}", bus_wait_time)
+                                  f"neon.wait_for_signal_create.{signal_name}",
+                                  bus_wait_time)
     return stat.data.get("is_set")
 
 
@@ -190,7 +210,8 @@ def _manager_wait_for_signal_clear(signal_name: str, timeout: int = 30) -> bool:
     """
     Block until the specified signal is cleared or timeout is reached
     :param signal_name: name of signal to check
-    :param timeout: max seconds to wait for signal to be created, Default is 30 seconds
+    :param timeout: max seconds to wait for signal to be created,
+        Default is 30 seconds
     :return: True if signal exists
     """
     timeout = _MAX_TIMEOUT if timeout > _MAX_TIMEOUT else timeout  # Cap wait
@@ -198,7 +219,8 @@ def _manager_wait_for_signal_clear(signal_name: str, timeout: int = 30) -> bool:
     stat = _BUS.wait_for_response(Message("neon.wait_for_signal_clear",
                                           {"signal_name": signal_name,
                                            "timeout": timeout}),
-                                  f"neon.wait_for_signal_clear.{signal_name}", bus_wait_time)
+                                  f"neon.wait_for_signal_clear.{signal_name}",
+                                  bus_wait_time)
     return stat.data.get("is_set")
 
 
