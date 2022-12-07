@@ -154,7 +154,7 @@ def _manager_create_signal(signal_name: str, *_, **__) -> bool:
     :param signal_name: named signal to create
     :return: True if signal exists
     """
-    call = inspect.stack()[1]
+    call = inspect.stack()[2]
     module = inspect.getmodule(call.frame)
     name = module.__name__ if module else call.filename
     stat = _BUS.wait_for_response(Message("neon.create_signal",
@@ -174,7 +174,7 @@ def _manager_check_for_signal(signal_name: str, sec_lifetime: int = 0, *_, **__)
         returning False
     :return: True if signal exists
     """
-    call = inspect.stack()[1]
+    call = inspect.stack()[2]
     module = inspect.getmodule(call.frame)
     name = module.__name__ if module else call.filename
     stat = _BUS.wait_for_response(Message("neon.check_for_signal",
