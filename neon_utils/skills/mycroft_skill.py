@@ -152,7 +152,8 @@ class PatchedMycroftSkill(MycroftSkill):
             data = {"utterance": utterance,
                     "expect_response": expect_response,
                     "meta": meta,
-                    "speaker": speaker}
+                    "speaker": speaker,
+                    "speak_ident": str(time.time())}
 
             if message.context.get("cc_data", {}).get("emit_response"):
                 msg_to_emit = message.reply("skills:execute.response", data,
@@ -167,7 +168,6 @@ class PatchedMycroftSkill(MycroftSkill):
             LOG.debug(msg_to_emit.msg_type)
 
             if wait and check_for_signal("neon_speak_api", -1):
-                msg_to_emit.data['speak_ident'] = str(time.time())
                 self.bus.wait_for_response(msg_to_emit,
                                            msg_to_emit.data['speak_ident'],
                                            self._speak_timeout)
