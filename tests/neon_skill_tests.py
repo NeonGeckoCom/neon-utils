@@ -1103,26 +1103,34 @@ class SkillGuiTests(unittest.TestCase):
         real_method = self.skill.find_resource
         self.skill.find_resource = _find_resource
 
+        # Local skill resource file
         self.skill_gui.serving_http = False
-        urls = self.skill_gui._pages2uri(["test_page1", "test_page2"])
-        self.assertEqual(urls, ["file://skill_id/ui/test_page1",
-                                "file://skill_id/ui/test_page2"])
+        urls = self.skill_gui._pages2uri(["test_page1.qml", "test_page2.qml"])
+        self.assertEqual(urls, ["file://skill_id/ui/test_page1.qml",
+                                "file://skill_id/ui/test_page2.qml"])
 
+        # Local ovos core resource file
+        urls = self.skill_gui._pages2uri(["SYSTEM_UrlFrame.qml"])
+        self.assertEqual(len(urls), 1)
+        self.assertTrue(os.path.isfile(urls[0].replace("file://", "", 1)), urls)
+
+        # Remote URL
         self.skill_gui.config = {
             "remote-server": "remote_url"
         }
-        urls = self.skill_gui._pages2uri(["test_page1", "test_page2"])
-        self.assertEqual(urls, ["remote_url/skill_id/ui/test_page1",
-                                "remote_url/skill_id/ui/test_page2"])
+        urls = self.skill_gui._pages2uri(["test_page1.qml", "test_page2.qml"])
+        self.assertEqual(urls, ["remote_url/skill_id/ui/test_page1.qml",
+                                "remote_url/skill_id/ui/test_page2.qml"])
 
         self.skill_gui.serving_http = True
-        urls = self.skill_gui._pages2uri(["SYSTEM_Test1", "SYSTEM_Test2"])
-        self.assertEqual(urls, ["file://remote_url/system/ui/SYSTEM_Test1",
-                                "file://remote_url/system/ui/SYSTEM_Test2"])
+        urls = self.skill_gui._pages2uri(["SYSTEM_Test1.qml",
+                                          "SYSTEM_Test2.qml"])
+        self.assertEqual(urls, ["file://remote_url/system/ui/SYSTEM_Test1.qml",
+                                "file://remote_url/system/ui/SYSTEM_Test2.qml"])
 
-        urls = self.skill_gui._pages2uri(["test_page1", "test_page2"])
-        self.assertEqual(urls, ["file://remote_url/skills/skill_id/ui/test_page1",
-                                "file://remote_url/skills/skill_id/ui/test_page2"])
+        urls = self.skill_gui._pages2uri(["test_page1.qml", "test_page2.qml"])
+        self.assertEqual(urls, ["file://remote_url/skills/skill_id/ui/test_page1.qml",
+                                "file://remote_url/skills/skill_id/ui/test_page2.qml"])
 
         self.skill.find_resource = real_method
 

@@ -27,6 +27,9 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from os.path import join
+
+from ovos_workshop.resource_files import resolve_resource_file
+
 from neon_utils.logger import LOG
 from neon_utils.file_utils import resolve_neon_resource_file
 from mycroft.enclosure.gui import SkillGUI as _SkillGUI
@@ -47,6 +50,8 @@ class SkillGUI(_SkillGUI):
                     page = f"{self.remote_url}/system/ui/{name}"
                 else:
                     page = resolve_neon_resource_file(join('ui', name))
+                    if not page:
+                        page = resolve_resource_file(join('ui', name))
             else:
                 page = self.skill.find_resource(name, 'ui')
                 if self.serving_http:
