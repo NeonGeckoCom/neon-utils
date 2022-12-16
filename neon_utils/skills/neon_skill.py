@@ -37,6 +37,7 @@ from mycroft_bus_client.message import Message
 from typing import Optional, List, Any
 from dateutil.tz import gettz
 from ovos_utils.gui import is_gui_connected
+from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
 
 from neon_utils.configuration_utils import is_neon_core
@@ -447,3 +448,21 @@ class NeonSkill(MycroftSkill):
         self.lru_cache.clear()
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
         return
+
+    def register_chat_handler(self, name: str, method: callable):
+        self.add_event(f'chat.{self.skill_id}.{name}', method)
+
+    def _register_decorated(self):
+        for attr_name in get_non_properties(self):
+            method = getattr(self, attr_name)
+            if hasattr(method, 'intents'):
+                for intent in getattr(method, 'intents'):
+                    self.register_intent(intent, method)
+
+            if hasattr(method, 'intent_files'):
+                for intent_file in getattr(method, 'intent_files'):
+                    self.register_intent_file(intent_file, method)
+
+            if hasattr(method, 'chat_handler'):
+                self.register_chat_handler(getattr(method, 'chat_handler'),
+                                           method)
