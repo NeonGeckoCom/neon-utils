@@ -51,7 +51,7 @@ from neon_utils.user_utils import get_user_prefs
 
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
+        MycroftSkill.__init__(self, name, bus, use_settings)
         self.gui = SkillGUI(self)
         # TODO: Should below defaults be global config?
         # allow skills to specify timeout overrides per-skill
