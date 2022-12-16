@@ -450,7 +450,7 @@ class NeonSkill(MycroftSkill):
         return
 
     def register_chat_handler(self, name: str, method: callable):
-        self.add_event(f'chat.{self.skill_id}.{name}', method)
+        self.add_event(f'chat.{name}', method)
 
     def _register_decorated(self):
         for attr_name in get_non_properties(self):
