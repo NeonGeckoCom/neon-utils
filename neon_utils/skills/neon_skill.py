@@ -450,7 +450,22 @@ class NeonSkill(MycroftSkill):
         return
 
     def register_chat_handler(self, name: str, method: callable):
-        self.add_event(f'chat.{name}', method)
+        """
+        Register a chat handler entrypoint. Decorated methods must
+        return a string response that will be emitted as a response to the
+        incoming Message.
+        :param name: name of the chat handler
+        :param method: method to handle incoming chat Messages
+        """
+
+        def wrapped_handler(message):
+            response = method(message)
+            self.bus.emit(message.response(data={'response': response}))
+
+        self.add_event(f'chat.{name}', wrapped_handler)
+        msg = dig_for_message() or Message("",
+                                           context={'skill_id': self.skill_id})
+        self.bus.emit(msg.forward("register_chat_handler", {'name': name}))
 
     def _register_decorated(self):
         for attr_name in get_non_properties(self):
