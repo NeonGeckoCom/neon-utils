@@ -25,11 +25,18 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 from mycroft_bus_client import Message
 
 from neon_utils.skills import CommonMessageSkill, CommonPlaySkill,\
     CommonQuerySkill, NeonFallbackSkill, NeonSkill, PatchedMycroftSkill,\
     InstructorSkill, KioskSkill
+
+import importlib
+import mycroft.skills
+mycroft.skills.mycroft_skill.MycroftSkill = PatchedMycroftSkill
+importlib.reload(mycroft.skills.fallback_skill)
+from mycroft.skills.fallback_skill import FallbackSkill
 
 
 class TestCMS(CommonMessageSkill):
@@ -95,6 +102,16 @@ class TestInstructorSkill(InstructorSkill):
 
     def _get_instructions(self, *args, **kwargs):
         pass
+
+
+class TestMycroftFallbackSkill(FallbackSkill):
+    """
+    Test case for the Mycroft HomeAssistantSkill
+    """
+    def __init__(self):
+        from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
+        MycroftSkill.__init__(self)
+        super().__init__(name="TestSkill")
 
 
 class TestKioskSkill(KioskSkill):
