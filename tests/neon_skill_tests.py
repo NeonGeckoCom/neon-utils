@@ -31,19 +31,15 @@ import os
 import shutil
 import sys
 import unittest
+import pytest
 
 from multiprocessing import Event
 from os.path import join
 from threading import Thread
 from time import sleep, time
-
-import pytest
-from mock.mock import patch, MagicMock
-from mycroft_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 from mock import Mock
 
-from mycroft.skills.fallback_skill import FallbackSkill
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
@@ -123,7 +119,7 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, NeonFallbackSkill)
-        self.assertIsInstance(skill, FallbackSkill)
+        # self.assertIsInstance(skill, FallbackSkill)
         self.assertEqual(skill.name, "Test Fallback Skill")
 
     def test_neon_skill_init(self):
