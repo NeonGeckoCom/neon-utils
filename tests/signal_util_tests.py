@@ -116,6 +116,24 @@ class SignalUtilsTests(unittest.TestCase):
         TestSignalManager(self.test_bus)
         self.assertTrue(neon_utils.signal_utils.check_signal_manager_available())
 
+    def test_signal_manager_message_context(self):
+        msg = None
+
+        def on_create(message):
+            nonlocal msg
+            msg = message
+
+        TestSignalManager(self.test_bus)
+        neon_utils.signal_utils.init_signal_handlers()
+        self.test_bus.once("neon.create_signal", on_create)
+        from neon_utils.signal_utils import create_signal
+        create_signal("test_signal")
+        self.assertIsInstance(msg, Message)
+        self.assertEqual(msg.data, {'signal_name': 'test_signal'})
+        self.assertEqual(msg.context,
+                         {'origin_module': 'tests.signal_util_tests',
+                          'origin_line': 130})
+
     def test_signal_utils_manager_available(self):
         TestSignalManager(self.test_bus)
         neon_utils.signal_utils.init_signal_handlers()
