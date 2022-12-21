@@ -270,6 +270,22 @@ class KioskSkillTests(unittest.TestCase):
         self.skill.speak_dialog.assert_called_with(self.skill.goodbye_dialog)
         self.assertEqual(self.skill._active_users, dict())
 
+    def test_skill_stop(self):
+        real_converse = self.skill._handle_converse
+        self.skill._handle_converse = Mock()
+
+        test_message = Message('test', {"utterance": "stop"}, {'username': 'test_user'})
+
+        self.skill._timeout_seconds = 30
+        self.skill.start_interaction(test_message)
+        self.assertEqual(set(self.skill._active_users.keys()), {'test_user'})
+
+        self.skill.converse(test_message)
+        self.skill._handle_converse.assert_not_called()
+        self.assertNotIn("test_user", self.skill._active_users.keys())
+
+        self.skill._handle_converse = real_converse
+
 
 class PatchedMycroftSkillTests(unittest.TestCase):
     def test_get_response_simple(self):
