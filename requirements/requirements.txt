@@ -6,6 +6,5 @@ nltk~=3.5
 pyyaml~=5.4
 ovos-lingua-franca~=0.4
 ovos_utils~=0.0.6
-neon_mq_connector~=0.2,>=0.5.1
 geopy~=2.1
 ovos-config~=0.0,>=0.0.3
