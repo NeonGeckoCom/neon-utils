@@ -64,5 +64,6 @@ class SkillGUI(_SkillGUI):
                 else:
                     page_urls.append("file://" + page)
             else:
-                raise FileNotFoundError("Unable to find page: {}".format(name))
+                # Unresolved files, try base implementation
+                return super()._pages2uri(page_names)
         return page_urls
