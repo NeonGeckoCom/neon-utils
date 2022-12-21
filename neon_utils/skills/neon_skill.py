@@ -460,7 +460,8 @@ class NeonSkill(MycroftSkill):
 
         def wrapped_handler(message):
             response = method(message)
-            self.bus.emit(message.response(data={'response': response}))
+            self.bus.emit(message.response(data={'response': response},
+                                           context={'skill_id': self.skill_id}))
 
         self.add_event(f'chat.{name}', wrapped_handler)
         msg = dig_for_message() or Message("",

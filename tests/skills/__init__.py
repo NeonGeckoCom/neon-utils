@@ -114,6 +114,17 @@ class TestMycroftFallbackSkill(FallbackSkill):
         super().__init__(name="TestSkill")
 
 
+class TestChatSkill(NeonSkill):
+    from neon_utils.skills import chat_handler
+
+    def __init__(self):
+        super().__init__(name="Test Neon Chat Skill")
+
+    @chat_handler("Test Bot")
+    def handle_chat_message(self, message: Message):
+        return message.data.get("test_response")
+
+
 class TestKioskSkill(KioskSkill):
     def __init__(self):
         super(TestKioskSkill, self).__init__()
