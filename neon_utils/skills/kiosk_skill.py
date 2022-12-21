@@ -149,12 +149,15 @@ class KioskSkill(NeonSkill):
 
     def converse(self, message: Message = None):
         user = get_message_user(message)
-        if user not in self._active_users:
-            return False
-        else:
+        if user in self._active_users:
+            if self.voc_match(message.data.get('utterance'), 'stop'):
+                self.bus.emit(message.forward("mycroft.stop"))
+                return True
+            LOG.debug(f"Consuming utterance from {user}")
             Thread(target=self._handle_converse, args=(message,),
                    daemon=True).start()
             return True
+        return False
 
     def _handle_converse(self, message: Message):
         """
