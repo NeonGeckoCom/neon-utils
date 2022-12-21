@@ -287,6 +287,33 @@ class KioskSkillTests(unittest.TestCase):
         self.skill._handle_converse = real_converse
 
 
+class ChatSkillTests(unittest.TestCase):
+    def test_skill_init(self):
+        msg: Message = None
+
+        def handle_register(message):
+            nonlocal msg
+            msg = message
+
+        BUS.once("register_chat_handler", handle_register)
+
+        # Test decorator registration
+        skill = create_skill(TestChatSkill)
+        self.assertIsInstance(msg, Message)
+        self.assertEqual(msg.data['name'], "Test Bot")
+        self.assertEqual(msg.context['skill_id'], skill.skill_id)
+
+        # Test decorated method
+        test_message = Message("chat.Test Bot", {"test_response": "nothing"},
+                               {'test': True})
+        resp = BUS.wait_for_response(test_message)
+        self.assertEqual(resp.msg_type, f'{test_message.msg_type}.response')
+        self.assertEqual(resp.data,
+                         {'response': test_message.data['test_response']})
+        self.assertEqual(resp.context, {'test': True,
+                                        'skill_id': skill.skill_id})
+
+
 class PatchedMycroftSkillTests(unittest.TestCase):
     def test_get_response_simple(self):
         def handle_speak(_):
