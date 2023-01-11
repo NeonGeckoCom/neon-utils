@@ -59,12 +59,15 @@ def apply_local_user_profile_updates(updated_profile: dict,
     :param updated_profile: new profile values to write
     :param user_config: configuration object to update
     """
+    global _DEFAULT_USER_CONFIG
     for section, settings in updated_profile.items():
         # section in user, brands, units, etc.
         for key, val in settings.items():
             user_config[section][key] = val
     user_config.write_changes()
     LOG.info(f"Updated YML Profile at {user_config.file_path}")
+    if user_config.content != _DEFAULT_USER_CONFIG:
+        _DEFAULT_USER_CONFIG = user_config.content
 
 
 @resolve_message
