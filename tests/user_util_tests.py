@@ -77,6 +77,9 @@ class UserUtilTests(unittest.TestCase):
                                        "user_util_test_config")
         os.environ["NEON_CONFIG_PATH"] = test_config_dir
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
+        import importlib
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
         from neon_utils.user_utils import get_default_user_config
         user_config = get_default_user_config()
         self.assertFalse(os.path.isfile(os.path.join(test_config_dir,
@@ -148,6 +151,9 @@ class UserUtilTests(unittest.TestCase):
                                        "user_util_test_config")
         os.environ["NEON_CONFIG_PATH"] = test_config_dir
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
+        import importlib
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
         from neon_utils.user_utils import get_default_user_config
         user_config = get_default_user_config()
         self.assertFalse(os.path.isfile(os.path.join(test_config_dir,
