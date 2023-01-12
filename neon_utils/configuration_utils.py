@@ -922,8 +922,11 @@ def get_mycroft_compatible_location(location: dict) -> dict:
         offset = 0.0
 
     try:
-        lat = float(lat)
-        lng = float(lng)
+        if not (lat and lng):
+            LOG.debug("No lat/lng to parse")
+        else:
+            lat = float(lat)
+            lng = float(lng)
     except Exception as e:
         LOG.exception(e)
 
