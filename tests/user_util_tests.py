@@ -34,8 +34,6 @@ from threading import Event
 
 from mycroft_bus_client import Message
 
-from neon_utils.configuration_utils import get_neon_user_config
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
@@ -152,6 +150,7 @@ class UserUtilTests(unittest.TestCase):
         os.environ["NEON_CONFIG_PATH"] = test_config_dir
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
         import importlib
+        from neon_utils.configuration_utils import get_neon_user_config
         from neon_utils import user_utils
         importlib.reload(user_utils)
         from neon_utils.user_utils import get_default_user_config

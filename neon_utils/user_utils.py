@@ -67,6 +67,7 @@ def apply_local_user_profile_updates(updated_profile: dict,
     user_config.write_changes()
     LOG.info(f"Updated YML Profile at {user_config.file_path}")
     if user_config.content != _DEFAULT_USER_CONFIG:
+        LOG.info("Updating default user config")
         _DEFAULT_USER_CONFIG = user_config.content
 
 
