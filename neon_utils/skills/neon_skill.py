@@ -455,7 +455,7 @@ class NeonSkill(MycroftSkill):
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
         return
 
-    def register_chat_handler(self, name: str, method: callable):
+    def _register_chat_handler(self, name: str, method: callable):
         """
         Register a chat handler entrypoint. Decorated methods must
         return a string response that will be emitted as a response to the
@@ -486,5 +486,5 @@ class NeonSkill(MycroftSkill):
                     self.register_intent_file(intent_file, method)
 
             if hasattr(method, 'chat_handler'):
-                self.register_chat_handler(getattr(method, 'chat_handler'),
-                                           method)
+                self._register_chat_handler(getattr(method, 'chat_handler'),
+                                            method)

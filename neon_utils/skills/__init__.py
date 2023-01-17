@@ -40,6 +40,7 @@ def chat_handler(name):
     """
     Decorator to mark a method as a chatbot endpoint
     """
+    # TODO: Consider how to refactor this to use SkillAPI
 
     def real_decorator(func):
         func.chat_handler = name
