@@ -31,5 +31,18 @@ from .common_play_skill import CommonPlaySkill
 from .common_query_skill import CommonQuerySkill
 from .neon_fallback_skill import NeonFallbackSkill
 from .instructor_skill import InstructorSkill
+from .kiosk_skill import KioskSkill
 from .neon_skill import NeonSkill
 from .mycroft_skill import PatchedMycroftSkill
+
+
+def chat_handler(name):
+    """
+    Decorator to mark a method as a chatbot endpoint
+    """
+    # TODO: Consider how to refactor this to use SkillAPI
+
+    def real_decorator(func):
+        func.chat_handler = name
+        return func
+    return real_decorator

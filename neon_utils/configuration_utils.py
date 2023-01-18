@@ -458,10 +458,11 @@ def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
     return None
 
 
-def _init_ovos_conf(name: str):
+def _init_ovos_conf(name: str, force_reload: bool = False):
     """
     Perform a one-time init of ovos.conf for the calling module
     :param name: Name of calling module to configure to use `neon.yaml`
+    :param force_reload: If true, force reload of configuration modules
     """
     from ovos_config.meta import get_ovos_config
     ovos_conf = get_ovos_config()
@@ -510,7 +511,7 @@ def _init_ovos_conf(name: str):
         with open(ovos_path, "w+") as f:
             json.dump(config_to_write, f, indent=4)
 
-    if ovos_conf != original_conf:
+    if force_reload or ovos_conf != original_conf:
         LOG.debug("Force reload of all configuration references")
         # Note that the below block reloads modules in a specific order due to
         # imports within ovos_config and mycroft.configuration
@@ -545,11 +546,12 @@ def _init_ovos_conf(name: str):
             LOG.error(f"Failed to override mycroft.configuration: {e}")
 
 
-def _validate_config_env():
+def _validate_config_env() -> bool:
     """
     Check that XDG_CONFIG_HOME and NEON_CONFIG_PATH match for compatibility. If
     config path isn't writable, relocate files to a valid directory and update
-    envvars
+    envvars.
+    :return: True if configuration files were moved
     """
     neon_spec = os.getenv("NEON_CONFIG_PATH")
     xdg_spec = os.getenv("XDG_CONFIG_HOME")
@@ -561,7 +563,7 @@ def _validate_config_env():
     elif xdg_spec:
         LOG.debug("Setting NEON_CONFIG_PATH for backwards-compat")
         os.environ["NEON_CONFIG_PATH"] = join(xdg_spec, "neon")
-        return
+        return False
     elif neon_spec:
         # Path to Neon config spec'd (probably Docker)
         LOG.info(f"NEON_CONFIG_PATH={neon_spec}")
@@ -571,16 +573,17 @@ def _validate_config_env():
             LOG.warning(f"NEON_CONFIG_PATH set, "
                         f"updating XDG_CONFIG_HOME to {xdg}")
             os.environ["XDG_CONFIG_HOME"] = xdg
-            return
+            return False
     else:
         # No path configured, just set Neon spec to default XDG
         LOG.info("Setting NEON_CONFIG_PATH to xdg default ~/.config/neon")
         os.environ["NEON_CONFIG_PATH"] = expanduser("~/.config/neon")
-        return
+        return False
 
     # Paths like '/config' can't be translated to XDG, just move files
     from glob import glob
     real_config_path = get_config_dir()
+    moved = False
     if neon_spec != real_config_path:
         LOG.warning("NEON_CONFIG_PATH is not XDG-compatible. "
                     "copying config")
@@ -589,9 +592,11 @@ def _validate_config_env():
                                                '.json', '.conf'))):
                 shutil.copy2(file, join(real_config_path, basename(file)))
                 LOG.info(f"Copied {file} to {real_config_path}")
+                moved = True
             else:
                 LOG.debug(f"Ignoring non-config {file}")
     os.environ["NEON_CONFIG_PATH"] = real_config_path
+    return moved
 
 
 def _check_legacy_config() -> str:
@@ -614,7 +619,7 @@ def init_config_dir():
     old_config_file = _check_legacy_config()
 
     # Ensure envvars are consistent and valid (read/writeable)
-    _validate_config_env()
+    force_reload = _validate_config_env()
     if isfile(old_config_file):
         new_config_path = get_config_dir()
         if isfile(join(new_config_path, "neon.yaml")):
@@ -640,7 +645,7 @@ def init_config_dir():
     name = mod.__name__.split('.')[0] if mod else ''
 
     # Ensure `ovos.conf` specifies this module as using `neon.yaml`
-    _init_ovos_conf(name)
+    _init_ovos_conf(name, force_reload)
 
 
 def get_config_dir():
@@ -886,6 +891,10 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     :returns: dict formatted to match mycroft.conf spec
     """
     from neon_utils.parse_utils import clean_quotes
+    if not any((location['lat'], location['lng'],
+                location['city'], location['tz'])):
+        LOG.debug('Neon config empty, return core value')
+        return _safe_mycroft_config().get('location')
     try:
         lat = clean_quotes(location['lat'])
         lng = clean_quotes(location['lng'])
@@ -898,19 +907,26 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     # except Exception as e:
     #     LOG.exception(e)
     #     parsed_location = None
-    if location["country"].lower() == "united states":
+    if location.get("country") and \
+            location.get("country").lower() == "united states":
         location["country_code"] = "us"
 
-    try:
-        offset = float(clean_quotes(location["utc"]))
-    except TypeError:
-        offset = float(location["utc"])
-    except ValueError:
+    if location.get('utc'):
+        try:
+            offset = float(clean_quotes(location["utc"]))
+        except TypeError:
+            offset = float(location["utc"])
+        except ValueError:
+            offset = 0.0
+    else:
         offset = 0.0
 
     try:
-        lat = float(lat)
-        lng = float(lng)
+        if not (lat and lng):
+            LOG.debug("No lat/lng to parse")
+        else:
+            lat = float(lat)
+            lng = float(lng)
     except Exception as e:
         LOG.exception(e)
 

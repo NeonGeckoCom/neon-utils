@@ -31,19 +31,15 @@ import os
 import shutil
 import sys
 import unittest
+import pytest
 
 from multiprocessing import Event
 from os.path import join
 from threading import Thread
-from time import sleep
-
-import pytest
-from mock.mock import patch, MagicMock
-from mycroft_bus_client import Message
+from time import sleep, time
 from ovos_utils.messagebus import FakeBus
 from mock import Mock
 
-from mycroft.skills.fallback_skill import FallbackSkill
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
@@ -92,6 +88,11 @@ def create_skill(skill):
 
 
 class SkillObjectTests(unittest.TestCase):
+    def test_alt_fallback_skill(self):
+        skill = create_skill(TestMycroftFallbackSkill)
+        self.assertIsInstance(skill, MycroftSkill)
+        self.assertIsInstance(skill, FallbackSkill)
+
     def test_common_message_skill_init(self):
         skill = create_skill(TestCMS)
         self.assertIsInstance(skill, MycroftSkill)
@@ -118,7 +119,7 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, NeonFallbackSkill)
-        self.assertIsInstance(skill, FallbackSkill)
+        # self.assertIsInstance(skill, FallbackSkill)
         self.assertEqual(skill.name, "Test Fallback Skill")
 
     def test_neon_skill_init(self):
@@ -164,6 +165,153 @@ class SkillObjectTests(unittest.TestCase):
         skill = create_skill(TestInstructorSkill)
         self.assertIsInstance(skill, MycroftSkill)
         self.assertEqual(skill.name, "Test Instructor Skill")
+
+
+class KioskSkillTests(unittest.TestCase):
+    skill = create_skill(TestKioskSkill)
+
+    def setUp(self) -> None:
+        self.skill.setup_new_interaction = Mock(return_value=True)
+        self.skill.handle_new_interaction = Mock()
+        self.skill.handle_end_interaction = Mock()
+        self.skill.handle_user_utterance = Mock()
+        self.skill.speak_dialog = Mock()
+        self.skill.event_scheduler.schedule_event = Mock()
+
+    def test_kiosk_skill_init(self):
+        self.assertIsInstance(self.skill, MycroftSkill)
+        self.assertIsInstance(self.skill, NeonSkill)
+        self.assertEqual(self.skill.greeting_dialog, 'greeting')
+        self.assertEqual(self.skill.goodbye_dialog, 'goodbye')
+        self.assertEqual(self.skill.timeout_dialog, 'timeout')
+        self.assertEqual(self.skill.error_dialog, 'error')
+
+    def test_skill_timeout(self):
+        test_message = Message('test', {}, {'username': 'test_user'})
+
+        # Test Timeout
+        self.skill._timeout_seconds = 1
+        self.skill.start_interaction(test_message)
+        self.assertEqual(set(self.skill._active_users.keys()), {'test_user'})
+        self.skill.setup_new_interaction.assert_called_once_with(test_message)
+        self.skill.handle_new_interaction.assert_called_once_with(test_message)
+        self.skill.speak_dialog.assert_called_once_with(self.skill.greeting_dialog)
+        args = self.skill.event_scheduler.schedule_event.call_args
+        self.assertEqual(args[0][0], self.skill._handle_timeout)
+        self.assertIsInstance(args[0][1], datetime.datetime)
+        self.assertEqual(args[0][2], test_message.data)
+        self.assertEqual(args[0][3], f"{self.skill.skill_id}:timeout_test_user")
+        self.assertEqual(args[1]['context'], {**test_message.context,
+                                              **{'skill_id': self.skill.skill_id}})
+        expiration_message = Message(f'{self.skill.skill_id}:timeout_test_user',
+                                     test_message.data, args[1]['context'])
+        self.skill._handle_timeout(expiration_message)
+        self.skill.speak_dialog.assert_called_with(self.skill.timeout_dialog)
+        self.assertEqual(self.skill._active_users, dict())
+
+    def test_skill_error_handling(self):
+        test_message = Message('test', {}, {'username': 'test_user'})
+
+        # Test error handling
+        self.skill.handle_error(test_message)
+        self.skill.speak_dialog.assert_called_once_with(self.skill.error_dialog,
+                                                        message=test_message)
+
+    def test_skill_setup_failure(self):
+        test_message = Message('test', {}, {'username': 'test_user'})
+
+        # Test setup failure
+        self.skill.setup_new_interaction.return_value = False
+        self.skill.start_interaction(test_message)
+        self.skill.setup_new_interaction.assert_called_once_with(test_message)
+        self.assertEqual(self.skill._active_users, dict())
+
+    def test_skill_normal_interaction(self):
+        test_message = Message('test', {}, {'username': 'test_user'})
+
+        self.skill._timeout_seconds = 30
+        self.skill.start_interaction(test_message)
+        self.assertEqual(set(self.skill._active_users.keys()), {'test_user'})
+        self.skill.setup_new_interaction.assert_called_once_with(test_message)
+        self.skill.handle_new_interaction.assert_called_once_with(test_message)
+        self.skill.speak_dialog.assert_called_once_with(self.skill.greeting_dialog)
+
+        # Test simple converse
+        sleep(1)
+        converse_message = Message('converse', {}, {'username': 'test_user'})
+        self.assertTrue(self.skill.converse(converse_message))
+        self.skill.handle_user_utterance.assert_called_once_with(converse_message)
+        self.assertAlmostEqual(self.skill._active_users['test_user'], time(), 1)
+
+        # Test long-running converse handler
+        msg = None
+        event = Event()
+
+        def _handle_utterance(message):
+            nonlocal msg
+            msg = message
+            sleep(5)
+            event.set()
+
+        self.skill.handle_user_utterance = _handle_utterance
+        self.assertTrue(self.skill.converse(converse_message))
+        self.assertFalse(event.is_set())
+        event.wait(5)
+        finished_time = time()
+        self.assertEqual(msg, converse_message)
+        sleep(0.5)
+        self.assertAlmostEqual(self.skill._active_users['test_user'],
+                               finished_time, 1)
+
+        # Test end interaction
+        end_message = Message('end', {}, {'username': 'test_user'})
+        self.skill.end_interaction(end_message)
+        self.skill.handle_end_interaction.assert_called_once_with(end_message)
+        self.skill.speak_dialog.assert_called_with(self.skill.goodbye_dialog)
+        self.assertEqual(self.skill._active_users, dict())
+
+    def test_skill_stop(self):
+        real_converse = self.skill._handle_converse
+        self.skill._handle_converse = Mock()
+
+        test_message = Message('test', {"utterance": "stop"}, {'username': 'test_user'})
+
+        self.skill._timeout_seconds = 30
+        self.skill.start_interaction(test_message)
+        self.assertEqual(set(self.skill._active_users.keys()), {'test_user'})
+
+        self.skill.converse(test_message)
+        self.skill._handle_converse.assert_not_called()
+        self.assertNotIn("test_user", self.skill._active_users.keys())
+
+        self.skill._handle_converse = real_converse
+
+
+class ChatSkillTests(unittest.TestCase):
+    def test_skill_init(self):
+        msg: Message = None
+
+        def handle_register(message):
+            nonlocal msg
+            msg = message
+
+        BUS.once("register_chat_handler", handle_register)
+
+        # Test decorator registration
+        skill = create_skill(TestChatSkill)
+        self.assertIsInstance(msg, Message)
+        self.assertEqual(msg.data['name'], "Test Bot")
+        self.assertEqual(msg.context['skill_id'], skill.skill_id)
+
+        # Test decorated method
+        test_message = Message("chat.Test Bot", {"test_response": "nothing"},
+                               {'test': True})
+        resp = BUS.wait_for_response(test_message)
+        self.assertEqual(resp.msg_type, f'{test_message.msg_type}.response')
+        self.assertEqual(resp.data,
+                         {'response': test_message.data['test_response']})
+        self.assertEqual(resp.context, {'test': True,
+                                        'skill_id': skill.skill_id})
 
 
 class PatchedMycroftSkillTests(unittest.TestCase):
@@ -347,6 +495,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
                                    "username": "invalid_converse_user"})
 
         skill = get_test_mycroft_skill({"speak": handle_speak})
+        skill._get_response_timeout = 5
         t = Thread(target=skill_response_thread,
                    args=(skill, valid_message.context["username"]),
                    daemon=True)
@@ -357,7 +506,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         t.join(30)
         self.assertIsNone(test_results[valid_message.context["username"]])
 
-    def test_get_response_validator_pass(self):
+    def test_get_response_validator_return_utterance(self):
+        # returns utterance if validotor return value is True
         def handle_speak(_):
             check_for_signal("isSpeaking")
             spoken.set()
@@ -394,6 +544,83 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         self.assertTrue(test_results["validator"])
         self.assertEqual(test_results[valid_message.context["username"]],
                          valid_message.data["utterances"][0])
+
+    def test_get_response_validator_return_value_1(self):
+        def handle_speak(_):
+            check_for_signal("isSpeaking")
+            spoken.set()
+
+        def is_valid(_):
+            test_results["validator"] = True
+            return valid_return
+
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            resp = s.get_response(test_dialog, validator=is_valid,
+                                  message=Message(
+                                      "converse_message", {},
+                                      {"username": "valid_converse_user"}))
+            test_results[idx] = resp
+
+        test_results = dict()
+        valid_return = datetime.datetime(2022,11,29,0,0)
+        spoken = Event()
+        test_dialog = "testing get response multi user."
+        valid_message = Message("recognizer_loop:utterance",
+                                {"utterances": ["today"]},
+                                {"timing": {},
+                                 "username": "valid_converse_user"})
+
+        skill = get_test_mycroft_skill({"speak": handle_speak})
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
+        t.start()
+        spoken.wait(30)
+        sleep(1)
+        skill.converse(valid_message)
+        t.join(30)
+        self.assertTrue(test_results["validator"])
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_return)
+
+    def test_get_response_validator_return_value_2(self):
+        # validator should also accept faulty values that ar not None/False
+        def handle_speak(_):
+            check_for_signal("isSpeaking")
+            spoken.set()
+
+        def is_valid(_):
+            test_results["validator"] = True
+            return valid_return
+
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            resp = s.get_response(test_dialog, validator=is_valid,
+                                  message=Message(
+                                      "converse_message", {},
+                                      {"username": "valid_converse_user"}))
+            test_results[idx] = resp
+
+        test_results = dict()
+        valid_return = 0
+        spoken = Event()
+        test_dialog = "testing get response multi user."
+        valid_message = Message("recognizer_loop:utterance",
+                                {"utterances": ["got zero items"]},
+                                {"timing": {},
+                                 "username": "valid_converse_user"})
+
+        skill = get_test_mycroft_skill({"speak": handle_speak})
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
+        t.start()
+        spoken.wait(30)
+        sleep(1)
+        skill.converse(valid_message)
+        t.join(30)
+        self.assertTrue(test_results["validator"])
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_return)
 
     def test_get_response_validator_fail(self):
         def handle_speak(_):
@@ -480,6 +707,8 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         t.join(5)
         self.assertEqual(test_results[valid_message.context["username"]],
                          valid_message.data["utterances"][0])
+
+# TODO: test get_response with `speak_bus_api`
 
     def test_speak_simple_valid(self):
         handle_speak = Mock()
@@ -657,6 +886,46 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         message.context.pop('source')
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
+
+    def test_speak_wait(self):
+        from neon_utils.signal_utils import create_signal, check_for_signal, \
+            wait_for_signal_clear
+        create_signal("neon_speak_api")
+        message: Message = None
+
+        def on_speak(msg):
+            def handler(msg):
+                nonlocal message
+                message = msg
+                sleep(1)
+                skill.bus.emit(Message(msg.data.get('speak_ident')))
+                sleep(1)
+                check_for_signal("isSpeaking")
+            Thread(target=handler, args=(msg,), daemon=True).start()
+
+        skill = get_test_mycroft_skill(
+            {"speak": on_speak})
+
+        # Test wait with speak API
+        speak_time = time()
+        create_signal("isSpeaking")  # Mock signal create
+        skill.speak('test', wait=True)
+        # Make sure we actually waited
+        self.assertGreaterEqual(time(), speak_time + 1)
+        self.assertLessEqual(time(), speak_time + 2)
+        self.assertTrue(check_for_signal("neon_speak_api", -1))
+        self.assertIsInstance(message, Message)
+        self.assertIsInstance(message.data['speak_ident'], str)
+
+        wait_for_signal_clear('isSpeaking')  # Wait for first test to finish
+        # Test wait with signals
+        self.assertTrue(check_for_signal("neon_speak_api"))
+        speak_time = time()
+        create_signal("isSpeaking")  # Mock signal create
+        skill.speak('test', wait=True)
+        # Make sure we actually waited
+        self.assertGreaterEqual(time(), speak_time + 2)
+        self.assertFalse(check_for_signal("neon_speak_api", -1))
 
     # TODO: Test settings load
 

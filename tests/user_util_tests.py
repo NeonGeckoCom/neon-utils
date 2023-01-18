@@ -34,7 +34,6 @@ from threading import Event
 
 from mycroft_bus_client import Message
 
-
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 
@@ -76,6 +75,9 @@ class UserUtilTests(unittest.TestCase):
                                        "user_util_test_config")
         os.environ["NEON_CONFIG_PATH"] = test_config_dir
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
+        import importlib
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
         from neon_utils.user_utils import get_default_user_config
         user_config = get_default_user_config()
         self.assertFalse(os.path.isfile(os.path.join(test_config_dir,
@@ -141,6 +143,48 @@ class UserUtilTests(unittest.TestCase):
                          valid_profile)
         updated.wait(5)
         self.assertEqual(update_message.data["profile"], valid_profile)
+
+    def test_update_default_config_on_profile_creation(self):
+        test_config_dir = os.path.join(os.path.dirname(__file__),
+                                       "user_util_test_config")
+        os.environ["NEON_CONFIG_PATH"] = test_config_dir
+        os.environ["XDG_CONFIG_HOME"] = test_config_dir
+        import importlib
+        from neon_utils.configuration_utils import get_neon_user_config
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
+        from neon_utils.user_utils import get_default_user_config
+        user_config = get_default_user_config()
+        self.assertFalse(os.path.isfile(os.path.join(test_config_dir,
+                                                     "ngi_user_info.yml")))
+        self.assertIsInstance(user_config, dict)
+
+        from neon_utils.user_utils import update_user_profile, \
+            apply_local_user_profile_updates
+        from ovos_utils.messagebus import FakeBus
+        bus = FakeBus()
+
+        def on_profile_update(msg):
+            # Mock behavior handled in IntentService
+            updated_profile = msg.data.get("profile")
+            apply_local_user_profile_updates(updated_profile,
+                                             get_neon_user_config())
+
+        bus.on("neon.profile_update", on_profile_update)
+        local_user = get_neon_user_config()
+        local_user['user']['username'] = 'local'
+        message = Message("test", {}, {"username": local_user['user']['username'],
+                                       "user_profiles": [local_user.content]})
+        update_user_profile({"user": {"first_name": "Test",
+                                      "last_name": "User"}}, message, bus)
+
+        self.assertEqual(get_default_user_config()['user']['first_name'],
+                         'Test')
+        self.assertEqual(get_default_user_config()['user']['last_name'], 'User')
+
+        os.remove(local_user.file_path)
+        os.environ.pop("NEON_CONFIG_PATH")
+        os.environ.pop("XDG_CONFIG_HOME")
 
     def test_apply_user_profile_updates(self):
         from neon_utils.user_utils import apply_local_user_profile_updates

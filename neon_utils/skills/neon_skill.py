@@ -37,6 +37,7 @@ from mycroft_bus_client.message import Message
 from typing import Optional, List, Any
 from dateutil.tz import gettz
 from ovos_utils.gui import is_gui_connected
+from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
 
 from neon_utils.configuration_utils import is_neon_core
@@ -44,16 +45,22 @@ from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
 from neon_utils.message_utils import dig_for_message, resolve_message
 from neon_utils.cache_utils import LRUCache
-from neon_utils.mq_utils import send_mq_request
 from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.user_utils import get_user_prefs
 from mycroft.skills.settings import save_settings
 
 try:
+    from neon_utils.mq_utils import send_mq_request
+except ImportError:
+    LOG.warning("MQ Dependencies not installed")
+    send_mq_request = None
+
+try:
     from ovos_plugin_manager.language import OVOSLangDetectionFactory, \
         OVOSLangTranslationFactory
-except ImportError as e:
+except ImportError:
+    LOG.warning("Language Dependencies not installed")
     OVOSLangDetectionFactory, OVOSLangTranslationFactory = None, None
 
 # TODO if accepted, make changes to QASkill and WikipediaSkill
@@ -331,7 +338,7 @@ class NeonSkill(MycroftSkill):
         if not email_addr and message:
             email_addr = get_user_prefs(message)["user"].get("email")
 
-        if email_addr:
+        if email_addr and send_mq_request:
             LOG.info("Send email via Neon Server")
             request_data = {"recipient": email_addr,
                             "subject": title,
@@ -447,3 +454,37 @@ class NeonSkill(MycroftSkill):
         self.lru_cache.clear()
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
         return
+
+    def _register_chat_handler(self, name: str, method: callable):
+        """
+        Register a chat handler entrypoint. Decorated methods must
+        return a string response that will be emitted as a response to the
+        incoming Message.
+        :param name: name of the chat handler
+        :param method: method to handle incoming chat Messages
+        """
+
+        def wrapped_handler(message):
+            response = method(message)
+            self.bus.emit(message.response(data={'response': response},
+                                           context={'skill_id': self.skill_id}))
+
+        self.add_event(f'chat.{name}', wrapped_handler)
+        msg = dig_for_message() or Message("",
+                                           context={'skill_id': self.skill_id})
+        self.bus.emit(msg.forward("register_chat_handler", {'name': name}))
+
+    def _register_decorated(self):
+        for attr_name in get_non_properties(self):
+            method = getattr(self, attr_name)
+            if hasattr(method, 'intents'):
+                for intent in getattr(method, 'intents'):
+                    self.register_intent(intent, method)
+
+            if hasattr(method, 'intent_files'):
+                for intent_file in getattr(method, 'intent_files'):
+                    self.register_intent_file(intent_file, method)
+
+            if hasattr(method, 'chat_handler'):
+                self._register_chat_handler(getattr(method, 'chat_handler'),
+                                            method)

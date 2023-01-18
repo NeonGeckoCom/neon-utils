@@ -40,13 +40,13 @@ units:
   # imperial, metric
 
 location:
-  lat: '47.4799078'
-  lng: '-122.2034496'
-  city: Renton
-  state: Washington
-  country: United States
-  tz: America/Los_Angeles
-  utc: '-8.0'
+  lat:
+  lng:
+  city:
+  state:
+  country:
+  tz:
+  utc:
 
 response_mode:
   speed_mode: quick

@@ -29,11 +29,15 @@
 import logging
 import uuid
 
-from threading import Event
-from pika.channel import Channel
-from pika.exceptions import ProbableAccessDeniedError, StreamLostError
-from neon_mq_connector.connector import MQConnector
-from ovos_config.config import Configuration
+try:
+    from threading import Event
+    from pika.channel import Channel
+    from pika.exceptions import ProbableAccessDeniedError, StreamLostError
+    from neon_mq_connector.connector import MQConnector
+    from ovos_config.config import Configuration
+except ImportError:
+    raise ImportError("MQ dependencies not available,"
+                      " pip install neon-utils[network]")
 
 from neon_utils.logger import LOG
 from neon_utils.socket_utils import b64_to_dict

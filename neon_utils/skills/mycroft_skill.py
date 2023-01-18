@@ -36,7 +36,7 @@ from typing import Optional
 from json_database import JsonStorage
 from mycroft_bus_client.message import Message
 
-from neon_utils.signal_utils import wait_for_signal_clear
+from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
 from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message, resolve_message
@@ -51,7 +51,7 @@ from neon_utils.user_utils import get_user_prefs
 
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        super(PatchedMycroftSkill, self).__init__(name, bus, use_settings)
+        MycroftSkill.__init__(self, name, bus, use_settings)
         self.gui = SkillGUI(self)
         # TODO: Should below defaults be global config?
         # allow skills to specify timeout overrides per-skill
@@ -60,6 +60,10 @@ class PatchedMycroftSkill(MycroftSkill):
 
     @property
     def location(self):
+        """
+        Backwards-compatible location property. Returns core location config if
+        user location isn't specified.
+        """
         return get_mycroft_compatible_location(get_user_prefs()["location"])
 
     @property
@@ -148,7 +152,8 @@ class PatchedMycroftSkill(MycroftSkill):
             data = {"utterance": utterance,
                     "expect_response": expect_response,
                     "meta": meta,
-                    "speaker": speaker}
+                    "speaker": speaker,
+                    "speak_ident": str(time.time())}
 
             if message.context.get("cc_data", {}).get("emit_response"):
                 msg_to_emit = message.reply("skills:execute.response", data,
@@ -161,14 +166,20 @@ class PatchedMycroftSkill(MycroftSkill):
                                              "source": ["audio"]})
                 LOG.debug(f"Skill speak! {data}")
             LOG.debug(msg_to_emit.msg_type)
-            self.bus.emit(msg_to_emit)
+
+            if wait and check_for_signal("neon_speak_api", -1):
+                self.bus.wait_for_response(msg_to_emit,
+                                           msg_to_emit.data['speak_ident'],
+                                           self._speak_timeout)
+            else:
+                self.bus.emit(msg_to_emit)
+                if wait and not message.context.get("klat_data"):
+                    LOG.debug("Using legacy isSpeaking signal")
+                    wait_for_signal_clear('isSpeaking')
+
         else:
             LOG.warning("Null utterance passed to speak")
             LOG.warning(f"{self.name} | message={message}")
-
-        if wait and not message.context.get("klat_data"):
-            # TODO: Refactor to wait for event emit
-            wait_for_signal_clear('isSpeaking')
 
     @resolve_message
     def speak_dialog(self, key, data=None, expect_response=False, wait=False,
@@ -262,10 +273,8 @@ class PatchedMycroftSkill(MycroftSkill):
             dialog = self.dialog_renderer.render(dialog, data)
 
         if dialog:
-            self.speak(dialog, expect_response=True, wait=False,
-                       message=message, private=True)
-        else:
-            self.bus.emit(message.forward('mycroft.mic.listen'))
+            self.speak(dialog, wait=True, message=message, private=True)
+        self.bus.emit(message.forward('mycroft.mic.listen'))
         return self._wait_response(is_cancel, validator, on_fail_fn,
                                    num_retries, message, user)
 
@@ -293,12 +302,14 @@ class PatchedMycroftSkill(MycroftSkill):
                     LOG.info("No user response")
                     return None
             else:
-                if validator(response):
-                    return response
-
                 # catch user saying 'cancel'
                 if is_cancel(response):
                     return None
+                validated = validator(response)
+                # returns the validated value or the response
+                # (backwards compat)
+                if validated is not False and validated is not None:
+                    return response if validated is True else validated
 
             num_fails += 1
             if 0 < num_retries < num_fails:
@@ -323,17 +334,6 @@ class PatchedMycroftSkill(MycroftSkill):
             str: user's response or None on a timeout
         """
         event = Event()
-        finished_speaking = Event()
-
-        # TODO: get_response should be event-based instead of signals
-        def _wait_while_speaking():
-            if wait_for_signal_clear("isSpeaking", self._speak_timeout):
-                LOG.error("Still speaking after 30s")
-            else:
-                # Handle a second prompt after ended speech
-                time.sleep(0.5)
-                wait_for_signal_clear("isSpeaking", self._speak_timeout)
-            finished_speaking.set()
 
         def converse(message):
             resp_user = get_message_user(message) or "local"
@@ -341,7 +341,6 @@ class PatchedMycroftSkill(MycroftSkill):
                 utterances = message.data.get("utterances")
                 converse.response = utterances[0] if utterances else None
                 event.set()
-                finished_speaking.set()
                 LOG.info(f"Got response: {converse.response}")
                 return True
             LOG.debug(f"Ignoring input from: {resp_user}")
@@ -353,11 +352,6 @@ class PatchedMycroftSkill(MycroftSkill):
         default_converse = self.converse
         self.converse = converse
 
-        t = Thread(target=_wait_while_speaking, daemon=True)
-        t.start()
-
-        finished_speaking.wait(self._speak_timeout)
-        t.join(0)
         if not event.wait(self._get_response_timeout):
             LOG.warning("Timed out waiting for user response")
         self.converse = default_converse
