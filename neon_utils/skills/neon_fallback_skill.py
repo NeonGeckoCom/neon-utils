@@ -35,3 +35,7 @@ class NeonFallbackSkill(FallbackSkill, NeonSkill):
     Class that extends the NeonSkill and FallbackSkill classes to provide NeonSkill functionality to any
     Fallback skill subclassing this class.
     """
+    def __init__(self, *args, **kwargs):
+        NeonSkill.__init__(self, *args, **kwargs)
+        FallbackSkill.__init__(self, *args, **kwargs)
+
