@@ -35,6 +35,8 @@ from threading import Event, Thread
 from typing import Optional
 from json_database import JsonStorage
 from mycroft_bus_client.message import Message
+from ovos_workshop.skills.mycroft_skill import MycroftSkill
+from ovos_utils.skills.settings import get_local_settings
 
 from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
 from neon_utils.skills.skill_gui import SkillGUI
@@ -42,10 +44,6 @@ from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message, resolve_message
 from neon_utils.configuration_utils import dict_update_keys, \
     parse_skill_default_settings, get_mycroft_compatible_location
-
-from mycroft.skills import MycroftSkill
-from mycroft.skills.settings import get_local_settings
-
 from neon_utils.user_utils import get_user_prefs
 
 

@@ -27,7 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from neon_utils.skills.neon_skill import NeonSkill
-from mycroft.skills.fallback_skill import FallbackSkill
+from ovos_workshop.skills.fallback import FallbackSkill
 
 
 class NeonFallbackSkill(FallbackSkill, NeonSkill):

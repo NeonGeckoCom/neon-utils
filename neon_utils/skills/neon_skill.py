@@ -39,6 +39,7 @@ from dateutil.tz import gettz
 from ovos_utils.gui import is_gui_connected
 from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
+from ovos_utils.skills.settings import save_settings
 
 from neon_utils.configuration_utils import is_neon_core
 from neon_utils.location_utils import to_system_time
@@ -48,7 +49,6 @@ from neon_utils.cache_utils import LRUCache
 from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.user_utils import get_user_prefs
-from mycroft.skills.settings import save_settings
 
 try:
     from neon_utils.mq_utils import send_mq_request
