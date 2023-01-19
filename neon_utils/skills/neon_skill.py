@@ -46,7 +46,7 @@ from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
 from neon_utils.message_utils import dig_for_message, resolve_message
 from neon_utils.cache_utils import LRUCache
-from neon_utils.skills.mycroft_skill import PatchedMycroftSkill as MycroftSkill
+from neon_utils.skills.mycroft_skill import PatchedMycroftSkill
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.user_utils import get_user_prefs
 
@@ -73,9 +73,9 @@ DEFAULT_SPEED_MODE = "thoughtful"
 CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 
-class NeonSkill(MycroftSkill):
+class NeonSkill(PatchedMycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        MycroftSkill.__init__(self, name, bus, use_settings)
+        PatchedMycroftSkill.__init__(self, name, bus, use_settings)
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
