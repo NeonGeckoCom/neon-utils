@@ -37,5 +37,9 @@ class NeonFallbackSkill(FallbackSkill, NeonSkill):
     """
     def __init__(self, *args, **kwargs):
         NeonSkill.__init__(self, *args, **kwargs)
-        FallbackSkill.__init__(self, *args, **kwargs)
+
+        #  list of fallback handlers registered by this instance
+        self.instance_fallback_handlers = []
+        # "skill_id": priority (int)  overrides
+        self.fallback_config = self.config_core["skills"].get("fallbacks", {})
 
