@@ -28,9 +28,11 @@
 
 from neon_utils.skills.neon_skill import NeonSkill
 from ovos_workshop.skills.fallback import FallbackSkill
+from ovos_workshop.skills.ovos import OVOSSkill
+from ovos_utils.intents import IntentLayers
 
 
-class NeonFallbackSkill(FallbackSkill, NeonSkill):
+class NeonFallbackSkill(FallbackSkill, NeonSkill, OVOSSkill):
     """
     Class that extends the NeonSkill and FallbackSkill classes to provide NeonSkill functionality to any
     Fallback skill subclassing this class.
@@ -38,6 +40,14 @@ class NeonFallbackSkill(FallbackSkill, NeonSkill):
     def __init__(self, *args, **kwargs):
         NeonSkill.__init__(self, *args, **kwargs)
 
+        # Manual init of OVOSSkill
+        self.private_settings = None
+        self._threads = []
+        self._original_converse = self.converse
+        self.intent_layers = IntentLayers()
+        self.audio_service = None
+
+        # Manual init of FallbackSkill
         #  list of fallback handlers registered by this instance
         self.instance_fallback_handlers = []
         # "skill_id": priority (int)  overrides

@@ -35,7 +35,7 @@ from threading import Event, Thread
 from typing import Optional
 from json_database import JsonStorage
 from mycroft_bus_client.message import Message
-from ovos_workshop.skills.ovos import OVOSSkill
+from ovos_workshop.skills.mycroft_skill import MycroftSkill
 from ovos_utils.skills.settings import get_local_settings
 
 from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
@@ -47,9 +47,9 @@ from neon_utils.configuration_utils import dict_update_keys, \
 from neon_utils.user_utils import get_user_prefs
 
 
-class PatchedMycroftSkill(OVOSSkill):
+class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, use_settings=True):
-        OVOSSkill.__init__(self, name, bus, use_settings)
+        MycroftSkill.__init__(self, name, bus, use_settings)
         self.gui = SkillGUI(self)
         # TODO: Should below defaults be global config?
         # allow skills to specify timeout overrides per-skill
