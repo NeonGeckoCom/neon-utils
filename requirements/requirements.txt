@@ -7,5 +7,5 @@ pyyaml~=5.4
 ovos-lingua-franca~=0.4
 ovos_utils~=0.0.6
 geopy~=2.1
-ovos-config~=0.0,>=0.0.3
-ovos-workshop>=0.0.10a5
+ovos-config~=0.0.3
+ovos-workshop~=0.0.10
