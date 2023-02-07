@@ -506,6 +506,103 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         t.join(30)
         self.assertIsNone(test_results[valid_message.context["username"]])
 
+    def test_get_response_retried_no_dialog(self):
+        def handle_speak(_):
+            check_for_signal("isSpeaking")
+            spoken.set()
+
+        def handle_failed(_):
+            failed.set()
+
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            resp = s.get_response(test_dialog, num_retries=1,
+                                  on_fail=handle_failed, message=Message(
+                "converse_message", {}, {"username": "valid_converse_user"}))
+            test_results[idx] = resp
+
+        test_results = dict()
+        spoken = Event()
+        failed = Event()
+        test_dialog = "testing get response multi user."
+        valid_message = Message("recognizer_loop:utterance",
+                                {"utterances": ["testing one", "testing 1",
+                                                "resting one"]},
+                                {"timing": {},
+                                 "username": "valid_converse_user"})
+        invalid_message = Message("recognizer_loop:utterance",
+                                  {"utterances": ["invalid return"]},
+                                  {"timing": {},
+                                   "username": "invalid_converse_user"})
+
+        skill = get_test_mycroft_skill({"speak": handle_speak})
+        skill._get_response_timeout = 5
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
+        t.start()
+
+        self.assertTrue(spoken.wait(30))
+        sleep(1)  # TODO: This is patching a race condition in _wait_response
+        skill.converse(invalid_message)
+        failed.wait(5)
+        sleep(1)  # TODO: This is patching a race condition in _wait_response
+        skill.converse(valid_message)
+
+        self.assertTrue(failed.is_set())
+        t.join(30)
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_message.data["utterances"][0])
+
+    def test_get_response_retried_with_dialog(self):
+        def handle_speak(_):
+            check_for_signal("isSpeaking")
+            spoken.set()
+
+        def handle_failed(_):
+            failed.set()
+            return "test speech"
+
+        def skill_response_thread(s: MycroftSkill, idx: str):
+            resp = s.get_response(test_dialog, num_retries=1,
+                                  on_fail=handle_failed, message=Message(
+                "converse_message", {}, {"username": "valid_converse_user"}))
+            test_results[idx] = resp
+
+        test_results = dict()
+        spoken = Event()
+        failed = Event()
+        test_dialog = "testing get response multi user."
+        valid_message = Message("recognizer_loop:utterance",
+                                {"utterances": ["testing one", "testing 1",
+                                                "resting one"]},
+                                {"timing": {},
+                                 "username": "valid_converse_user"})
+        invalid_message = Message("recognizer_loop:utterance",
+                                  {"utterances": ["invalid return"]},
+                                  {"timing": {},
+                                   "username": "invalid_converse_user"})
+
+        skill = get_test_mycroft_skill({"speak": handle_speak})
+        skill._get_response_timeout = 5
+        t = Thread(target=skill_response_thread,
+                   args=(skill, valid_message.context["username"]),
+                   daemon=True)
+        t.start()
+
+        self.assertTrue(spoken.wait(30))
+        spoken.clear()
+        sleep(1)  # TODO: This is patching a race condition in _wait_response
+        skill.converse(invalid_message)
+        failed.wait(5)
+        spoken.wait(30)
+        sleep(1)  # TODO: This is patching a race condition in _wait_response
+        skill.converse(valid_message)
+
+        self.assertTrue(failed.is_set())
+        t.join(30)
+        self.assertEqual(test_results[valid_message.context["username"]],
+                         valid_message.data["utterances"][0])
+
     def test_get_response_validator_return_utterance(self):
         # returns utterance if validotor return value is True
         def handle_speak(_):
