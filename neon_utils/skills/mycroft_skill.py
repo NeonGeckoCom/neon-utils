@@ -64,10 +64,6 @@ class PatchedMycroftSkill(MycroftSkill):
         """
         return get_mycroft_compatible_location(get_user_prefs()["location"])
 
-    @property
-    def _secondary_langs(self):
-        return get_user_prefs()["speech"]["alt_languages"]
-
     def _init_settings(self):
         """
         Extends the default method to handle settingsmeta defaults locally
