@@ -64,10 +64,6 @@ class PatchedMycroftSkill(MycroftSkill):
         """
         return get_mycroft_compatible_location(get_user_prefs()["location"])
 
-    @property
-    def _secondary_langs(self):
-        return get_user_prefs()["speech"]["alt_languages"]
-
     def _init_settings(self):
         """
         Extends the default method to handle settingsmeta defaults locally
@@ -293,34 +289,44 @@ class PatchedMycroftSkill(MycroftSkill):
         while True:
             response = self.__get_response(user)
 
-            if response is None:
-                # if nothing said, prompt one more time
+            if response is None:  # No Response
+                # if nothing said, only prompt one more time
                 num_none_fails = 1 if num_retries < 0 else num_retries
+                LOG.debug(f"num_none_fails={num_none_fails}|"
+                          f"num_fails={num_fails}")
                 if num_fails >= num_none_fails:
                     LOG.info("No user response")
                     return None
-            else:
+            else:  # Some response
                 # catch user saying 'cancel'
                 if is_cancel(response):
+                    LOG.info("User cancelled")
                     return None
                 validated = validator(response)
                 # returns the validated value or the response
                 # (backwards compat)
                 if validated is not False and validated is not None:
+                    LOG.debug(f"Returning validated response")
                     return response if validated is True else validated
-
+                LOG.debug(f"User response not validated: {response}")
+            # Unvalidated or no response
             num_fails += 1
             if 0 < num_retries < num_fails:
+                LOG.info(f"Failed ({num_fails}) through all retries "
+                         f"({num_retries})")
                 return None
 
+            # Validation failed, retry
             line = on_fail(response)
             if line:
-                self.speak(line, expect_response=True)
-            else:
-                msg = message.reply('mycroft.mic.listen') or \
-                      Message('mycroft.mic.listen',
-                              context={"skill_id": self.skill_id})
-                self.bus.emit(msg)
+                LOG.debug(f"Speaking failure dialog: {line}")
+                self.speak(line, wait=True, message=message, private=True)
+
+            LOG.debug("Listen for another response")
+            msg = message.reply('mycroft.mic.listen') or \
+                Message('mycroft.mic.listen',
+                        context={"skill_id": self.skill_id})
+            self.bus.emit(msg)
 
     def __get_response(self, user="local"):
         """
