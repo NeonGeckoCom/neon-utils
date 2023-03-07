@@ -73,16 +73,12 @@ class UserUtilTests(unittest.TestCase):
     def test_get_default_user_config_from_mycroft_conf(self):
         test_config_dir = os.path.join(os.path.dirname(__file__),
                                        "user_util_test_config")
-        # os.environ["NEON_CONFIG_PATH"] = test_config_dir
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
-        import importlib
-        import ovos_config
-        from neon_utils import user_utils
-        from neon_utils import configuration_utils
-        importlib.reload(ovos_config.meta)
-        importlib.reload(ovos_config.locations)
-        importlib.reload(configuration_utils)
-        importlib.reload(user_utils)
+        from os.path import join
+        from ovos_config.config import Configuration, LocalConf
+        Configuration.xdg_configs.insert(0, LocalConf(join(test_config_dir,
+                                                           'mycroft',
+                                                           'mycroft.conf')))
         from neon_utils.user_utils import get_default_user_config
         user_config = get_default_user_config()
         self.assertFalse(os.path.isfile(os.path.join(test_config_dir,
@@ -97,7 +93,6 @@ class UserUtilTests(unittest.TestCase):
                           "state": 'Washington',
                           "country": "United States"})
 
-        os.environ.pop("NEON_CONFIG_PATH")
         os.environ.pop("XDG_CONFIG_HOME")
 
     def test_update_user_profile(self):
