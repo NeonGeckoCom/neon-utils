@@ -75,10 +75,9 @@ class UserUtilTests(unittest.TestCase):
                                        "user_util_test_config")
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
         from os.path import join
-        from ovos_config.config import Configuration, LocalConf
-        Configuration.xdg_configs.insert(0, LocalConf(join(test_config_dir,
-                                                           'mycroft',
-                                                           'mycroft.conf')))
+        import ovos_config.locations
+        ovos_config.locations.USER_CONFIG = join(test_config_dir, 'mycroft',
+                                                 'mycroft.conf')
         from neon_utils.user_utils import get_default_user_config
         user_config = get_default_user_config()
         self.assertFalse(os.path.isfile(os.path.join(test_config_dir,
