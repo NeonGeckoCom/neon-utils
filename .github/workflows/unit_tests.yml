@@ -59,6 +59,15 @@ jobs:
         run: |
           sudo chown -R nobody:nogroup tests/configuration/unwritable_path
 
+      - name: Test User Utils
+        run: |
+          pytest tests/user_util_tests.py --doctest-modules --junitxml=tests/user-util-test-results.xml
+      - name: Upload user utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: user-util-test-results
+          path: tests/user-util-test-results.xml
+
       - name: Test Parse Utils
         run: |
           pytest tests/parse_util_tests.py --doctest-modules --junitxml=tests/parse-util-test-results.xml
@@ -202,15 +211,6 @@ jobs:
         with:
           name: messagebus-util-test-results
           path: tests/messagebus-util-test-results.xml
-
-      - name: Test User Utils
-        run: |
-          pytest tests/user_util_tests.py --doctest-modules --junitxml=tests/user-util-test-results.xml
-      - name: Upload user utils test results
-        uses: actions/upload-artifact@v2
-        with:
-          name: user-util-test-results
-          path: tests/user-util-test-results.xml
 
       - name: Test Language Utils
         run: |

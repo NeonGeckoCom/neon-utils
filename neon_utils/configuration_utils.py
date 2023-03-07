@@ -810,6 +810,7 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
                            os.path.join(os.path.dirname(__file__),
                                         "default_configurations")).content)
     mycroft_config = MycroftUserConfig()
+    LOG.info(f"Initializing mycroft config at {mycroft_config.path}")
     user_config["speech"]["stt_language"] = mycroft_config.get("lang", "en-us")
     user_config["speech"]["tts_language"] = mycroft_config.get("lang", "en-us")
     user_config["speech"]["alt_languages"] = \

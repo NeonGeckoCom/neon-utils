@@ -73,11 +73,13 @@ class UserUtilTests(unittest.TestCase):
     def test_get_default_user_config_from_mycroft_conf(self):
         test_config_dir = os.path.join(os.path.dirname(__file__),
                                        "user_util_test_config")
-        os.environ["NEON_CONFIG_PATH"] = test_config_dir
+        # os.environ["NEON_CONFIG_PATH"] = test_config_dir
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
         import importlib
+        import ovos_config.models
         from neon_utils import user_utils
         from neon_utils import configuration_utils
+        importlib.reload(ovos_config.models)
         importlib.reload(configuration_utils)
         importlib.reload(user_utils)
         from neon_utils.user_utils import get_default_user_config
