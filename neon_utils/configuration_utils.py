@@ -833,6 +833,9 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
             "tz": mycroft_config["location"]["timezone"]["code"],
             "utc": str(round(mycroft_config["location"]["timezone"]["offset"]
                              / 3600000, 1))}
+    else:
+        LOG.error(f"No location in config: {mycroft_config.path}")
+        user_config["location"] = {}
     return user_config
 
 
