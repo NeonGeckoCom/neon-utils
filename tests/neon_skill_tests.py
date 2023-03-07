@@ -1048,9 +1048,9 @@ class NeonSkillTests(unittest.TestCase):
         import neon_utils.user_utils
         importlib.reload(neon_utils.user_utils)
 
-        # from ovos_config.models import MycroftUserConfig
-        # assert MycroftUserConfig().path == join(cls.config_dir,
-        #                                         "mycroft", "mycroft.conf")
+        from ovos_config.models import MycroftUserConfig
+        assert MycroftUserConfig().path == join(cls.config_dir,
+                                                "mycroft", "mycroft.conf")
 
         cls.skill = TestSkill()
         # Mock the skill_loader process
