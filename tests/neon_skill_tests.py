@@ -1043,8 +1043,8 @@ class NeonSkillTests(unittest.TestCase):
 
         import ovos_config.models
         importlib.reload(ovos_config.models)
-        # importlib.reload(ovos_config.config)
-        # importlib.reload(ovos_config)
+        importlib.reload(ovos_config.config)
+        importlib.reload(ovos_config)
 
         cls.skill = TestSkill()
         # Mock the skill_loader process
