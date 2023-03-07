@@ -74,10 +74,15 @@ class UserUtilTests(unittest.TestCase):
         test_config_dir = os.path.join(os.path.dirname(__file__),
                                        "user_util_test_config")
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
-        from os.path import join
-        import ovos_config.locations
-        ovos_config.locations.USER_CONFIG = join(test_config_dir, 'mycroft',
-                                                 'mycroft.conf')
+        import importlib
+        import ovos_config
+        importlib.reload(ovos_config.locations)
+
+        import ovos_config.models
+        importlib.reload(ovos_config.models)
+        importlib.reload(ovos_config.config)
+        # importlib.reload(ovos_config)
+
         from ovos_config.models import MycroftUserConfig
         self.assertEqual(MycroftUserConfig().path,
                          ovos_config.locations.USER_CONFIG)
