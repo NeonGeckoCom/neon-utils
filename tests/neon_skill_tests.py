@@ -1037,6 +1037,15 @@ class NeonSkillTests(unittest.TestCase):
 
         bus = FakeBus()
         os.environ["XDG_CONFIG_HOME"] = cls.config_dir
+        import importlib
+        import ovos_config
+        importlib.reload(ovos_config.locations)
+
+        import ovos_config.models
+        importlib.reload(ovos_config.models)
+        # importlib.reload(ovos_config.config)
+        # importlib.reload(ovos_config)
+
         cls.skill = TestSkill()
         # Mock the skill_loader process
         if hasattr(cls.skill, "_startup"):

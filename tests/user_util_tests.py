@@ -81,7 +81,7 @@ class UserUtilTests(unittest.TestCase):
 
         import ovos_config.models
         importlib.reload(ovos_config.models)
-        importlib.reload(ovos_config.config)
+        # importlib.reload(ovos_config.config)
         # importlib.reload(ovos_config)
 
         from ovos_config.models import MycroftUserConfig
