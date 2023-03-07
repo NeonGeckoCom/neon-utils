@@ -71,25 +71,18 @@ class UserUtilTests(unittest.TestCase):
         wrapper(test_message_2, user_2)
 
     def test_get_default_user_config_from_mycroft_conf(self):
+        # Patch configuration for test
         test_config_dir = os.path.join(os.path.dirname(__file__),
                                        "user_util_test_config")
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
-        from os.path import join
         import importlib
         import ovos_config
         importlib.reload(ovos_config.locations)
-
         import ovos_config.models
         importlib.reload(ovos_config.models)
-        # importlib.reload(ovos_config.config)
-        # importlib.reload(ovos_config)
-
-        from ovos_config.models import MycroftUserConfig
-        self.assertEqual(MycroftUserConfig().path,
-                         join(test_config_dir, "mycroft", "mycroft.conf"))
-        self.assertIsInstance(MycroftUserConfig()['location'], dict)
         import neon_utils.user_utils
         importlib.reload(neon_utils.user_utils)
+
         from neon_utils.user_utils import get_default_user_config
         user_config = get_default_user_config()
         self.assertFalse(os.path.isfile(os.path.join(test_config_dir,

@@ -1037,20 +1037,6 @@ class NeonSkillTests(unittest.TestCase):
 
         bus = FakeBus()
         os.environ["XDG_CONFIG_HOME"] = cls.config_dir
-        # import importlib
-        # import ovos_config
-        # importlib.reload(ovos_config.locations)
-        #
-        # import ovos_config.models
-        # importlib.reload(ovos_config.models)
-        # # importlib.reload(ovos_config.config)
-        # # importlib.reload(ovos_config)
-        # import neon_utils.user_utils
-        # importlib.reload(neon_utils.user_utils)
-        #
-        # from ovos_config.models import MycroftUserConfig
-        # assert MycroftUserConfig().path == join(cls.config_dir,
-        #                                         "mycroft", "mycroft.conf")
 
         cls.skill = TestSkill()
         # Mock the skill_loader process
