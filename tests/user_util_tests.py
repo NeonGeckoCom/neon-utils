@@ -75,7 +75,9 @@ class UserUtilTests(unittest.TestCase):
         test_config_dir = os.path.join(os.path.dirname(__file__),
                                        "user_util_test_config")
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
-
+        import importlib
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
         from neon_utils.user_utils import get_default_user_config
         user_config = get_default_user_config()
         self.assertFalse(os.path.isfile(os.path.join(test_config_dir,
