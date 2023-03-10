@@ -26,18 +26,16 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime
-from typing import Optional, Union
-
 import pendulum
 
-from dateutil.tz import tzlocal, gettz
+from datetime import datetime
+from typing import Optional, Union
+from dateutil.tz import tzlocal
 from geopy.exc import GeocoderServiceError
-
 from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
-
-from neon_utils.logger import LOG
+from re import sub
+from ovos_utils.log import LOG
 
 
 def get_full_location(address: Union[str, tuple],
@@ -57,7 +55,12 @@ def get_full_location(address: Union[str, tuple],
         else:
             location = nominatim.reverse(address, addressdetails=True,
                                          language=lang)
-        return location.raw
+
+        dict_location = location.raw
+        dict_location['address']['country'] = sub(f'[0-9]', '',
+                                                  dict_location['address'].
+                                                  get('country'))
+        return dict_location
     except GeocoderServiceError as e:
         LOG.error(e)
     except Exception as e:
