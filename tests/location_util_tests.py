@@ -32,23 +32,28 @@ import sys
 import os
 import unittest
 
+from dateutil.tz import gettz
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.location_utils import *
 
 
 class LocationUtilTests(unittest.TestCase):
     def test_get_coordinates_complete(self):
-        coords = get_coordinates({"city": "Kirkland", "state": "Washington", "country": "United States"})
+        coords = get_coordinates({"city": "Kirkland", "state": "Washington",
+                                  "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
 
     def test_get_coordinates_no_city(self):
-        coords = get_coordinates({"state": "Washington", "country": "United States"})
+        coords = get_coordinates({"state": "Washington",
+                                  "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
 
     def test_get_coordinates_no_state(self):
-        coords = get_coordinates({"city": "Seattle", "country": "United States"})
+        coords = get_coordinates({"city": "Seattle",
+                                  "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
 
@@ -62,7 +67,8 @@ class LocationUtilTests(unittest.TestCase):
         lng = -122.3300624
         location = get_location(lat, lng)
         self.assertEqual(len(location), 4)
-        self.assertEqual(location, ("Seattle", "King County", "Washington", "United States"))
+        self.assertEqual(location, ("Seattle", "King County", "Washington",
+                                    "United States"))
 
     def test_get_timezone_from_coords(self):
         lat = 47.6038321
