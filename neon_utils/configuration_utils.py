@@ -810,6 +810,7 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
                            os.path.join(os.path.dirname(__file__),
                                         "default_configurations")).content)
     mycroft_config = MycroftUserConfig()
+    LOG.debug(f"Initializing mycroft config at {mycroft_config.path}")
     user_config["speech"]["stt_language"] = mycroft_config.get("lang", "en-us")
     user_config["speech"]["tts_language"] = mycroft_config.get("lang", "en-us")
     user_config["speech"]["alt_languages"] = \
@@ -832,6 +833,9 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
             "tz": mycroft_config["location"]["timezone"]["code"],
             "utc": str(round(mycroft_config["location"]["timezone"]["offset"]
                              / 3600000, 1))}
+    else:
+        LOG.warning(f"No location in config: {mycroft_config.path}")
+        user_config["location"] = {}
     return user_config
 
 
@@ -891,8 +895,8 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     :returns: dict formatted to match mycroft.conf spec
     """
     from neon_utils.parse_utils import clean_quotes
-    if not any((location['lat'], location['lng'],
-                location['city'], location['tz'])):
+    if not any((location.get('lat'), location.get('lng'),
+                location.get('city'), location.get('tz'))):
         LOG.debug('Neon config empty, return core value')
         return _safe_mycroft_config().get('location')
     try:

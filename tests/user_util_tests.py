@@ -71,9 +71,9 @@ class UserUtilTests(unittest.TestCase):
         wrapper(test_message_2, user_2)
 
     def test_get_default_user_config_from_mycroft_conf(self):
+        # Patch configuration for test
         test_config_dir = os.path.join(os.path.dirname(__file__),
                                        "user_util_test_config")
-        os.environ["NEON_CONFIG_PATH"] = test_config_dir
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
         import importlib
         from neon_utils import user_utils
@@ -92,7 +92,6 @@ class UserUtilTests(unittest.TestCase):
                           "state": 'Washington',
                           "country": "United States"})
 
-        os.environ.pop("NEON_CONFIG_PATH")
         os.environ.pop("XDG_CONFIG_HOME")
 
     def test_update_user_profile(self):

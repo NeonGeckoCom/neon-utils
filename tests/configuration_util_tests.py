@@ -670,8 +670,8 @@ class ConfigurationUtilTests(unittest.TestCase):
 
         user_config = get_neon_user_config(CONFIG_PATH)
 
-        with self.assertRaises(KeyError):
-            get_mycroft_compatible_location(user_config.content)
+        # with self.assertRaises(KeyError):
+        #     get_mycroft_compatible_location(user_config.content)
 
         # Default mycroft.conf
         location = get_mycroft_compatible_location(user_config["location"])
@@ -780,6 +780,10 @@ class ConfigurationUtilTests(unittest.TestCase):
         location['lat'] = '47.4799078'
         location['lng'] = '-122.2034496'
         self.assertIsInstance(get_mycroft_compatible_location(location), dict)
+
+        # Empty Mycroft config location
+        self.assertIsInstance(get_mycroft_compatible_location({}), dict)
+
         shutil.move(old_user_info, ngi_user_info)
 
     def test_get_user_config_from_mycroft_conf(self):
