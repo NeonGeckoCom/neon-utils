@@ -899,6 +899,9 @@ def get_mycroft_compatible_location(location: dict) -> dict:
                 location.get('city'), location.get('tz'))):
         LOG.debug('Neon config empty, return core value')
         return _safe_mycroft_config().get('location')
+
+    location.setdefault('lat', None)
+    location.setdefault('lng', None)
     try:
         lat = clean_quotes(location['lat'])
         lng = clean_quotes(location['lng'])
