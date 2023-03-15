@@ -900,8 +900,27 @@ def get_mycroft_compatible_location(location: dict) -> dict:
         LOG.debug('Neon config empty, return core value')
         return _safe_mycroft_config().get('location')
 
-    location.setdefault('lat', None)
-    location.setdefault('lng', None)
+    if not all((location.get('lat'), location.get('lng'),
+                location.get('city'), location.get('state'),
+                location.get('country'), location.get('tz'))):
+        LOG.warning(f"Missing keys in location config: {location.keys()}")
+        default_config = _safe_mycroft_config().get('location')
+        location.setdefault('lat',
+                            default_config['location'].get('coordinate',
+                                                           {}).get('latitude'))
+        location.setdefault('lng',
+                            default_config['location'].get('coordinate',
+                                                           {}).get('longitude'))
+        location.setdefault('city',
+                            default_config['location'].get('city',
+                                                           {}).get('name'))
+        location.setdefault('state',
+                            default_config['location']
+                            .get('city', {}).get('state', {}).get('name'))
+        location.setdefault('country',
+                            default_config['location']
+                            .get('city', {}).get('state', {})
+                            .get("country", {}).get('name'))
     try:
         lat = clean_quotes(location['lat'])
         lng = clean_quotes(location['lng'])

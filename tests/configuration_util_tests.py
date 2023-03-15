@@ -784,6 +784,12 @@ class ConfigurationUtilTests(unittest.TestCase):
         # Empty Mycroft config location
         self.assertIsInstance(get_mycroft_compatible_location({}), dict)
 
+        # Incomplete user profile
+        user_location = {'tz': 'America/Los_Angeles'}
+        location = get_mycroft_compatible_location(user_location)
+        self.assertIsInstance(location, dict)
+        self.assertEqual(location['timezone']['code'], user_location['tz'])
+
         shutil.move(old_user_info, ngi_user_info)
 
     def test_get_user_config_from_mycroft_conf(self):
