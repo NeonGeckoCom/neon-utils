@@ -906,20 +906,18 @@ def get_mycroft_compatible_location(location: dict) -> dict:
         LOG.warning(f"Missing keys in location config: {location.keys()}")
         default_config = _safe_mycroft_config().get('location')
         location.setdefault('lat',
-                            default_config['location'].get('coordinate',
-                                                           {}).get('latitude'))
+                            default_config.get('coordinate',
+                                               {}).get('latitude'))
         location.setdefault('lng',
-                            default_config['location'].get('coordinate',
-                                                           {}).get('longitude'))
+                            default_config.get('coordinate',
+                                               {}).get('longitude'))
         location.setdefault('city',
-                            default_config['location'].get('city',
-                                                           {}).get('name'))
+                            default_config.get('city', {}).get('name'))
         location.setdefault('state',
-                            default_config['location']
-                            .get('city', {}).get('state', {}).get('name'))
+                            default_config.get('city', {}).get('state',
+                                                               {}).get('name'))
         location.setdefault('country',
-                            default_config['location']
-                            .get('city', {}).get('state', {})
+                            default_config.get('city', {}).get('state', {})
                             .get("country", {}).get('name'))
     try:
         lat = clean_quotes(location['lat'])
