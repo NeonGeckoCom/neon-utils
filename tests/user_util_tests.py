@@ -25,10 +25,11 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
+import shutil
 import sys
 import os
 import unittest
+from os.path import join, dirname
 from copy import deepcopy
 from threading import Event
 
@@ -203,6 +204,21 @@ class UserUtilTests(unittest.TestCase):
         os.remove(os.path.join(config_object.path,
                                f".{config_object.name}.tmp"))
         os.remove(config_object.file_path)
+
+    def test_get_default_user_config(self):
+        os.environ['XDG_CONFIG_HOME'] = join(dirname(__file__), "test_config")
+        from neon_utils.user_utils import get_default_user_config
+        import neon_utils.user_utils
+        neon_utils.user_utils._DEFAULT_USER_CONFIG = None
+        user_config = get_default_user_config()
+        self.assertEqual(set(user_config.keys()),
+                         {'user', 'brands', 'location', 'units', 'speech',
+                          'response_mode', 'privacy'})
+        self.assertEqual(set(user_config['location'].keys()),
+                         {'lat', 'lng', 'city', 'state', 'country', 'tz',
+                          'utc'})
+        shutil.rmtree(os.environ['XDG_CONFIG_HOME'])
+        os.environ.pop("XDG_CONFIG_HOME")
 
 
 if __name__ == '__main__':
