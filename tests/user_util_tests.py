@@ -77,6 +77,9 @@ class UserUtilTests(unittest.TestCase):
                                        "user_util_test_config")
         os.environ["XDG_CONFIG_HOME"] = test_config_dir
         import importlib
+        import ovos_config
+        importlib.reload(ovos_config.locations)
+        importlib.reload(ovos_config.models)
         from neon_utils import user_utils
         importlib.reload(user_utils)
         from neon_utils.user_utils import get_default_user_config
