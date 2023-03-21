@@ -168,6 +168,13 @@ class ParseUtilTests(unittest.TestCase):
         tagged_with_exclusion = format_speak_tags("Don't<speak>Speak This.</speak>But Not this.", False)
         self.assertEqual(tagged_with_exclusion, valid_output)
 
+    def test_validate_email(self):
+        from neon_utils.parse_utils import validate_email
+        valid = "developers@neon.ai"
+        self.assertEqual(validate_email(valid), valid)
+        self.assertEqual(validate_email(f" {valid} "), valid)
+        self.assertEqual(validate_email("developers @ neon. ai"), valid)
+
 
 if __name__ == '__main__':
     unittest.main()
