@@ -175,6 +175,11 @@ class ParseUtilTests(unittest.TestCase):
         self.assertEqual(validate_email(f" {valid} "), valid)
         self.assertEqual(validate_email("developers @ neon. ai"), valid)
 
+        self.assertEqual(validate_email(" not an email address"), "")
+        self.assertEqual(validate_email("test@neon"), "")
+        self.assertEqual(validate_email("test@neon. "), "")
+        self.assertEqual(validate_email("neon.ai"), "")
+
 
 if __name__ == '__main__':
     unittest.main()
