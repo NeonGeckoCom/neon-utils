@@ -835,7 +835,6 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
                              / 3600000, 1))}
     else:
         LOG.warning(f"No location in config: {mycroft_config.path}")
-        user_config["location"] = {}
     return user_config
 
 
