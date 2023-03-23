@@ -228,3 +228,23 @@ def transliteration(transcription: str, text: str, lang: str) -> (str, str):
             return text
     else:
         return text
+
+
+def validate_email(email_addr: str) -> str:
+    """
+    Check if the passed string is a valid email address and try to parse it
+    into one.
+    :param email_addr: email address to validate
+    :returns: Validated email address or an empty string
+    """
+    email_rx = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,7}\b'
+    if re.fullmatch(email_rx, email_addr):
+        return email_addr
+
+    if ' ' in email_addr:
+        LOG.info(f"Removing whitespace from email address")
+        email_addr = email_addr.replace(' ', '')
+        if re.fullmatch(email_rx, email_addr):
+            return email_addr
+
+    return ""
