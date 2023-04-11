@@ -48,7 +48,7 @@ def get_full_location(address: Union[str, tuple],
         None if service is not available
     """
     try:
-        nominatim = Nominatim(user_agent="neon-ai", timeout=5)
+        nominatim = Nominatim(user_agent="neon-ai", timeout=10)
         if isinstance(address, str):
             location = nominatim.geocode(address, addressdetails=True,
                                          language=lang)
@@ -74,7 +74,7 @@ def get_coordinates(gps_loc: dict) -> (float, float):
     :param gps_loc: dict of "city", "state", "country"
     :return: lat, lng float values
     """
-    coordinates = Nominatim(user_agent="neon-ai", timeout=5)
+    coordinates = Nominatim(user_agent="neon-ai", timeout=10)
     try:
         location = coordinates.geocode(gps_loc)
         LOG.debug(f"{location}")
@@ -95,7 +95,7 @@ def get_location(lat, lng) -> (str, str, str, str):
     :return: city, county, state, country
     """
     try:
-        address = Nominatim(user_agent="neonai", timeout=5)
+        address = Nominatim(user_agent="neon-ai", timeout=10)
     except GeocoderServiceError as e:
         LOG.error(e)
         return None
@@ -106,7 +106,9 @@ def get_location(lat, lng) -> (str, str, str, str):
     LOG.debug(f"{location}")
     LOG.debug(f"{location.raw}")
     LOG.debug(f"{location.raw.get('address')}")
-    city = location.raw.get('address').get('city') or location.raw.get('address').get('town')
+    city = location.raw.get('address').get('city') or \
+        location.raw.get('address').get('town') or \
+        location.raw.get('address').get('village')
     county = location.raw.get('address').get('county')
     state = location.raw.get('address').get('state')
     country = location.raw.get('address').get('country')
@@ -128,7 +130,8 @@ def get_timezone(lat, lng) -> (str, float):
 
 def to_system_time(dt: datetime) -> datetime:
     """
-    Converts a timezone aware or timezone naiive datetime object to a datetime object in the system tz
+    Converts a timezone aware or timezone naiive datetime object to a datetime
+    object in the system tz
     :param dt: datetime object to convert
     :return: timezone aware datetime object that can be scheduled
     """
