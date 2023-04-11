@@ -38,6 +38,9 @@ from re import sub
 from ovos_utils.log import LOG
 
 
+_NOMINATIM_DOMAIN = "https://geocode.maps.co/"
+
+
 def get_full_location(address: Union[str, tuple],
                       lang: Optional[str] = None) -> Optional[dict]:
     """
@@ -48,7 +51,8 @@ def get_full_location(address: Union[str, tuple],
         None if service is not available
     """
     try:
-        nominatim = Nominatim(user_agent="neon-ai", timeout=10)
+        nominatim = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
+                              timeout=10)
         if isinstance(address, str):
             location = nominatim.geocode(address, addressdetails=True,
                                          language=lang)
@@ -74,7 +78,8 @@ def get_coordinates(gps_loc: dict) -> (float, float):
     :param gps_loc: dict of "city", "state", "country"
     :return: lat, lng float values
     """
-    coordinates = Nominatim(user_agent="neon-ai", timeout=10)
+    coordinates = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
+                            timeout=10)
     try:
         location = coordinates.geocode(gps_loc)
         LOG.debug(f"{location}")
@@ -95,7 +100,8 @@ def get_location(lat, lng) -> (str, str, str, str):
     :return: city, county, state, country
     """
     try:
-        address = Nominatim(user_agent="neon-ai", timeout=10)
+        address = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
+                            timeout=10)
     except GeocoderServiceError as e:
         LOG.error(e)
         return None
