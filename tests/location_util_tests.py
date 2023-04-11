@@ -127,6 +127,19 @@ class LocationUtilTests(unittest.TestCase):
                          "United States")
         self.assertEqual(location_from_coords['address']['country_code'], "us")
 
+    def test_set_nominatim_domain(self):
+        from neon_utils.location_utils import set_nominatim_domain, \
+            _NOMINATIM_DOMAIN
+        self.assertIsInstance(_NOMINATIM_DOMAIN, str)
+
+        set_nominatim_domain("https://geocode.maps.co")
+        from neon_utils.location_utils import _NOMINATIM_DOMAIN
+        self.assertEqual(_NOMINATIM_DOMAIN, "geocode.maps.co")
+
+        set_nominatim_domain("nominatim.openstreetmap.org")
+        from neon_utils.location_utils import _NOMINATIM_DOMAIN
+        self.assertEqual(_NOMINATIM_DOMAIN, "nominatim.openstreetmap.org")
+
 
 if __name__ == '__main__':
     unittest.main()

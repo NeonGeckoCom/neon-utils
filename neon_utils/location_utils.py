@@ -41,6 +41,17 @@ from ovos_utils.log import LOG
 _NOMINATIM_DOMAIN = "geocode.maps.co"
 
 
+def set_nominatim_domain(domain: str):
+    """
+    Configure the Nominatim domain to use for location requests
+    :param domain: Nominatim domain to use for location lookups
+    """
+    global _NOMINATIM_DOMAIN
+    if domain.startswith("http"):
+        domain = domain.split('/')[2]
+    _NOMINATIM_DOMAIN = domain
+
+
 def get_full_location(address: Union[str, tuple],
                       lang: Optional[str] = None) -> Optional[dict]:
     """
