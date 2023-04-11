@@ -48,7 +48,7 @@ def get_full_location(address: Union[str, tuple],
         None if service is not available
     """
     try:
-        nominatim = Nominatim(user_agent="neon-ai")
+        nominatim = Nominatim(user_agent="neon-ai", timeout=5)
         if isinstance(address, str):
             location = nominatim.geocode(address, addressdetails=True,
                                          language=lang)
@@ -74,14 +74,16 @@ def get_coordinates(gps_loc: dict) -> (float, float):
     :param gps_loc: dict of "city", "state", "country"
     :return: lat, lng float values
     """
-    coordinates = Nominatim(user_agent="neon-ai")
+    coordinates = Nominatim(user_agent="neon-ai", timeout=5)
     try:
         location = coordinates.geocode(gps_loc)
         LOG.debug(f"{location}")
         return location.latitude, location.longitude
+    except GeocoderServiceError as e:
+        LOG.error(e)
     except Exception as x:
-        LOG.error(x)
-        return -1, -1
+        LOG.exception(x)
+    return -1, -1
 
 
 def get_location(lat, lng) -> (str, str, str, str):
@@ -92,7 +94,14 @@ def get_location(lat, lng) -> (str, str, str, str):
     :param lng: longitude
     :return: city, county, state, country
     """
-    address = Nominatim(user_agent="neon-ai")
+    try:
+        address = Nominatim(user_agent="neonai", timeout=5)
+    except GeocoderServiceError as e:
+        LOG.error(e)
+        return None
+    except Exception as x:
+        LOG.exception(x)
+        return None
     location = address.reverse([lat, lng], language="en-US")
     LOG.debug(f"{location}")
     LOG.debug(f"{location.raw}")
