@@ -26,43 +26,41 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from datetime import datetime
-
-import sys
-import os
 import unittest
 
-from dateutil.tz import gettz
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from neon_utils.location_utils import *
+from datetime import datetime
+from dateutil.tz import gettz, tzlocal
 
 
 class LocationUtilTests(unittest.TestCase):
     def test_get_coordinates_complete(self):
+        from neon_utils.location_utils import get_coordinates
+
+        # Complete location
         coords = get_coordinates({"city": "Kirkland", "state": "Washington",
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
 
-    def test_get_coordinates_no_city(self):
+        # No city specified
         coords = get_coordinates({"state": "Washington",
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
 
-    def test_get_coordinates_no_state(self):
+        # No state specified
         coords = get_coordinates({"city": "Seattle",
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
 
-    def test_get_coordinates_no_ccountry(self):
+        # No country specified
         coords = get_coordinates({"state": "Washington", "city": "Renton"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
 
     def test_get_location_from_coords(self):
+        from neon_utils.location_utils import get_location
         lat = 47.6038321
         lng = -122.3300624
         location = get_location(lat, lng)
@@ -71,6 +69,7 @@ class LocationUtilTests(unittest.TestCase):
                                     "United States"))
 
     def test_get_timezone_from_coords(self):
+        from neon_utils.location_utils import get_timezone
         lat = 47.6038321
         lng = -122.3300624
         timezone, offset = get_timezone(lat, lng)
@@ -80,6 +79,7 @@ class LocationUtilTests(unittest.TestCase):
         self.assertIn(offset, (-7.0, -8.0))
 
     def test_to_system_time(self):
+        from neon_utils.location_utils import to_system_time
         tz_aware_dt = datetime.now(gettz("America/NewYork"))
         system_dt = to_system_time(tz_aware_dt)
         self.assertEqual(system_dt.tzinfo, tzlocal())
@@ -96,6 +96,7 @@ class LocationUtilTests(unittest.TestCase):
         self.assertEqual(tz_naiive_dt.timestamp(), system_dt.timestamp())
 
     def test_get_full_location(self):
+        from neon_utils.location_utils import get_full_location
         location_en = get_full_location("Seattle, Washington")
         self.assertIsInstance(location_en, dict)
         self.assertIsInstance(location_en['lat'], str)
