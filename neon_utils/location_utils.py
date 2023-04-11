@@ -38,7 +38,7 @@ from re import sub
 from ovos_utils.log import LOG
 
 
-_NOMINATIM_DOMAIN = "https://geocode.maps.co/"
+_NOMINATIM_DOMAIN = "geocode.maps.co"
 
 
 def get_full_location(address: Union[str, tuple],
