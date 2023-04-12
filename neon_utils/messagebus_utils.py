@@ -27,7 +27,8 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from threading import Event
-from mycroft_bus_client import MessageBusClient
+# from mycroft_bus_client import MessageBusClient
+from ovos_bus_client import MessageBusClient
 from ovos_config import Configuration
 
 
