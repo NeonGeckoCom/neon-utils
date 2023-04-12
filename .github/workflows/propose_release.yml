@@ -18,4 +18,4 @@ jobs:
     uses: neongeckocom/.github/.github/workflows/pull_master.yml@master
     with:
       pr_reviewer: neonreviewers
-      pr_assignee: ${{ workflow_dispatch.sender }}
+      pr_assignee: ${{ github.actor }}
