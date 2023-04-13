@@ -9,9 +9,11 @@ on:
       - 'version.py'
 
 jobs:
-  build_and_publish_pypi:
-    uses: neongeckocom/.github/.github/workflows/publish_alpha_release.yml@master
+  publish_alpha_release:
+    uses: neongeckocom/.github/.github/workflows/publish_alpha_release.yml@FEAT_ChangelogAction
     secrets: inherit
     with:
       version_file: "version.py"
       setup_py: "setup.py"
+      publish_prerelease: True
+      update_changelog: True
