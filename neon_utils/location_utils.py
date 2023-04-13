@@ -38,6 +38,20 @@ from re import sub
 from ovos_utils.log import LOG
 
 
+_NOMINATIM_DOMAIN = "geocode.maps.co"
+
+
+def set_nominatim_domain(domain: str):
+    """
+    Configure the Nominatim domain to use for location requests
+    :param domain: Nominatim domain to use for location lookups
+    """
+    global _NOMINATIM_DOMAIN
+    if domain.startswith("http"):
+        domain = domain.split('/')[2]
+    _NOMINATIM_DOMAIN = domain
+
+
 def get_full_location(address: Union[str, tuple],
                       lang: Optional[str] = None) -> Optional[dict]:
     """
@@ -48,7 +62,8 @@ def get_full_location(address: Union[str, tuple],
         None if service is not available
     """
     try:
-        nominatim = Nominatim(user_agent="neon-ai")
+        nominatim = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
+                              timeout=10)
         if isinstance(address, str):
             location = nominatim.geocode(address, addressdetails=True,
                                          language=lang)
@@ -74,14 +89,17 @@ def get_coordinates(gps_loc: dict) -> (float, float):
     :param gps_loc: dict of "city", "state", "country"
     :return: lat, lng float values
     """
-    coordinates = Nominatim(user_agent="neon-ai")
+    coordinates = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
+                            timeout=10)
     try:
         location = coordinates.geocode(gps_loc)
         LOG.debug(f"{location}")
         return location.latitude, location.longitude
+    except GeocoderServiceError as e:
+        LOG.error(e)
     except Exception as x:
-        LOG.error(x)
-        return -1, -1
+        LOG.exception(x)
+    return -1, -1
 
 
 def get_location(lat, lng) -> (str, str, str, str):
@@ -92,12 +110,22 @@ def get_location(lat, lng) -> (str, str, str, str):
     :param lng: longitude
     :return: city, county, state, country
     """
-    address = Nominatim(user_agent="neon-ai")
+    try:
+        address = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
+                            timeout=10)
+    except GeocoderServiceError as e:
+        LOG.error(e)
+        return None
+    except Exception as x:
+        LOG.exception(x)
+        return None
     location = address.reverse([lat, lng], language="en-US")
     LOG.debug(f"{location}")
     LOG.debug(f"{location.raw}")
     LOG.debug(f"{location.raw.get('address')}")
-    city = location.raw.get('address').get('city') or location.raw.get('address').get('town')
+    city = location.raw.get('address').get('city') or \
+        location.raw.get('address').get('town') or \
+        location.raw.get('address').get('village')
     county = location.raw.get('address').get('county')
     state = location.raw.get('address').get('state')
     country = location.raw.get('address').get('country')
@@ -119,7 +147,8 @@ def get_timezone(lat, lng) -> (str, float):
 
 def to_system_time(dt: datetime) -> datetime:
     """
-    Converts a timezone aware or timezone naiive datetime object to a datetime object in the system tz
+    Converts a timezone aware or timezone naiive datetime object to a datetime
+    object in the system tz
     :param dt: datetime object to convert
     :return: timezone aware datetime object that can be scheduled
     """
