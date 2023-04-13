@@ -13,7 +13,7 @@ jobs:
   update_version:
     uses: neongeckocom/.github/.github/workflows/propose_semver_release.yml@master
     with:
-      branch: ${{ inputs.branch }}
+      branch: ${{ github.ref_name }}
       release_type: ${{ inputs.release_type }}
       update_changelog: True
   pull_changes:
