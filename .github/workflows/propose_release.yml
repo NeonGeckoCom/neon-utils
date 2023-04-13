@@ -17,8 +17,11 @@ jobs:
       release_type: ${{ inputs.release_type }}
       update_changelog: True
   pull_changes:
-    # TODO: Changelog in PR description
     uses: neongeckocom/.github/.github/workflows/pull_master.yml@master
+    needs: update_version
     with:
       pr_reviewer: neonreviewers
       pr_assignee: ${{ github.actor }}
+      pr_draft: false
+      pr_title: ${{ needs.update_version.outputs.version }}
+      pr_body: ${{ needs.update_version.outputs.changelog }}
