@@ -93,6 +93,9 @@ def get_packaged_core_version() -> str:
     Returns:
         Version of the installed core package
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This method is deprecated and will be "
+                f"removed in neon_utils 2.0")
     if importlib.util.find_spec("neon-core"):
         return get_package_version_spec("neon-core")
     elif importlib.util.find_spec("mycroft-core"):
@@ -110,10 +113,14 @@ def get_neon_core_version() -> str:
         0.0 if no release info is found
     """
     try:
+        from neon_core.version import __version__
+        return __version__
+    except ImportError:
+        pass
+    try:
         return get_packaged_core_version()
     except ImportError:
         pass
-
     return "0.0"
 
 
@@ -122,7 +129,9 @@ def get_core_root():
     Depreciated 2020.09.01
     :return:
     """
-    LOG.warning(f"This method is depreciated, "
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This method is depreciated and will be "
+                f"removed in neon_utils 2.0, "
                 f"please update to use get_neon_core_root()")
     return get_mycroft_core_root()
 
@@ -134,6 +143,9 @@ def get_neon_core_root():
     Returns:
         Path to the 'neon_core' directory
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This method is deprecated and will be "
+                f"removed in neon_utils 2.0")
     site = sysconfig.get_paths()['platlib']
     if exists(join(site, 'neon_core')):
         return join(site, 'neon_core')
@@ -156,6 +168,9 @@ def get_mycroft_core_root():
     Returns:
         Path to the core directory containing 'mycroft'
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This method is deprecated and will be "
+                f"removed in neon_utils 2.0")
     site = sysconfig.get_paths()['platlib']
     if exists(join(site, 'mycroft')):
         return site
