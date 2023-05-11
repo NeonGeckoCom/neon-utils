@@ -368,7 +368,7 @@ class NeonSkill(PatchedMycroftSkill):
         if isinstance(when, int) or isinstance(when, float):
             from datetime import datetime as dt, timedelta
             when = to_system_time(dt.now(self.sys_tz)) + timedelta(seconds=when)
-            LOG.info(f"Made a datetime: {when}")
+            LOG.debug(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
     def request_check_timeout(self, time_wait: int,
