@@ -39,7 +39,7 @@ def clean_quotes(raw_utt: str) -> str:
     :param raw_utt: Input string to be cleaned
     :return: string with all paired quote characters removed
     """
-    if not raw_utt:
+    if raw_utt is None:
         raise ValueError("Expected a string and got None")
     if not isinstance(raw_utt, str):
         raise TypeError(f"{raw_utt} is not a string!")
@@ -87,8 +87,8 @@ def clean_filename(raw_name: str, to_lowercase: bool = False) -> str:
     :param to_lowercase: cast string to lowercase
     :return: cleaned file basename
     """
-    if not raw_name:
-        raise ValueError
+    if raw_name is None:
+        raise ValueError("Expected a string and got None")
     invalid_chars = ('/', '\\', '*', '~', ':', '"', '<', '>', '|', '?')
     name = raw_name
     for char in invalid_chars:
@@ -104,9 +104,10 @@ def clean_transcription(raw_string: str) -> str:
     :param raw_string: Input string to be cleaned
     :return: Cleaned string of alphas
     """
-    if not raw_string:
-        raise ValueError
-    parsed = raw_string.lower().replace('%', ' percent').replace('.', ' ').replace('?', '').replace('-', ' ').strip()
+    if raw_string is None:
+        raise ValueError("Expected a string and got None")
+    parsed = raw_string.lower().replace('%', ' percent').replace('.', ' ')\
+        .replace('?', '').replace('-', ' ').strip()
     # TODO: Cleanup to alpha string (replace all chars)
     return parsed
 
@@ -115,7 +116,8 @@ def get_phonemes(phrase: str) -> str:
     """
     Gets phonemes for the requested phrase
     :param phrase: String phrase for which to get phonemes
-    :return: ARPAbet phonetic representation (https://en.wikipedia.org/wiki/ARPABET)
+    :return: ARPAbet phonetic representation
+        (https://en.wikipedia.org/wiki/ARPABET)
     """
     download_path = os.path.expanduser("~/.local/share/neon")
     if not os.path.isdir(download_path):
@@ -134,21 +136,21 @@ def get_phonemes(phrase: str) -> str:
 
 def format_speak_tags(sentence: str, include_tags: bool = True) -> str:
     """
-    Cleans up SSML tags for speech synthesis and ensures the phrase is wrapped in 'speak' tags and any excluded text is
-    removed.
-    Args:
-        sentence: Input sentence to be spoken
-        include_tags: Flag to include <speak> tags in returned string
-    Returns:
-        Cleaned sentence to pass to TTS
+    Cleans up SSML tags for speech synthesis and ensures the phrase is wrapped
+    in 'speak' tags and any excluded text is removed.
+    :param sentence: Input sentence to be spoken
+    :param include_tags: Flag to include <speak> tags in returned string
+    :return: Cleaned sentence to pass to TTS
     """
     # Wrap sentence in speak tag if no tags present
     if "<speak>" not in sentence and "</speak>" not in sentence:
         to_speak = f"<speak>{sentence}</speak>"
-    # Assume speak starts at the beginning of the sentence if a closing speak tag is found
+    # Assume speak starts at the beginning of the sentence
+    # if a closing speak tag is found
     elif "<speak>" not in sentence:
         to_speak = f"<speak>{sentence}"
-    # Assume speak ends at the end of the sentence if an opening speak tag is found
+    # Assume speak ends at the end of the sentence
+    # if an opening speak tag is found
     elif "</speak>" not in sentence:
         to_speak = f"{sentence}</speak>"
     else:
@@ -176,7 +178,7 @@ def normalize_string_to_speak(to_speak: str) -> str:
     :param to_speak: String to speak
     :return: string with any invalid characters removed and punctuation added
     """
-    if not to_speak:
+    if to_speak is None:
         raise ValueError("Expected a string and got None")
     if not isinstance(to_speak, str):
         raise TypeError(f"{to_speak} is not a string!")
@@ -187,10 +189,10 @@ def normalize_string_to_speak(to_speak: str) -> str:
     return f"{to_speak}."
 
 
-def transliteration(transcription: str, text: str, lang: str) -> (str, str):
+def transliteration(transcription: str, text: str, lang: str) -> str:
     '''
     Transliterates string from transcription provided by stt plugins
-    Transliterates string if transcribed string length equals filename text length
+    Transliterates string if transcribed string length equals filename length
     :param transcription: input text to transliterate
     :param text: input text from audio filename
     :param lang: language of input audio -> ISO-639-1 code
@@ -202,10 +204,12 @@ def transliteration(transcription: str, text: str, lang: str) -> (str, str):
         translit_dict = {'a': ['ą'], 'c': ['ć'], 'e': ['ę'], 'n': ['ń'],
                          'o': ['ó'], 's': ['ś'], 'z': ['ź', 'ż'], 'l': ['ł']}
     elif lang == 'fr':
-        translit_dict = {'c': ['ç'], 'e': ['é', 'ê', 'è', 'ë'], 'a': ['â', 'à'], 'i': ['î', 'ì', 'ï'],
-                         'o': ['ô', 'ò'], 'u': ['û', 'ù', 'ü']}
+        translit_dict = {'c': ['ç'], 'e': ['é', 'ê', 'è', 'ë'], 'a': ['â', 'à'],
+                         'i': ['î', 'ì', 'ï'], 'o': ['ô', 'ò'],
+                         'u': ['û', 'ù', 'ü']}
     elif lang == 'es':
-        translit_dict = {'a': ['á'], 'i': ['í'], 'e': ['é'], 'n': ['ñ'], 'o': ['ó'], 'u': ['ú', 'ü']}
+        translit_dict = {'a': ['á'], 'i': ['í'], 'e': ['é'], 'n': ['ñ'],
+                         'o': ['ó'], 'u': ['ú', 'ü']}
     elif lang == 'de':
         translit_dict = {'a': ['ä'], 's': ['ß'], 'o': ['ö'], 'u': ['ü']}
     transcription = re.sub("`|'|-", "", transcription)
