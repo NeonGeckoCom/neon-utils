@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a3) (2023-05-12)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a2...1.5.0a3)
+
+**Merged pull requests:**
+
+- Better argument validation in `parse_utils` [\#445](https://github.com/NeonGeckoCom/neon-utils/pull/445) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a2) (2023-05-11)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a1...1.5.0a2)
