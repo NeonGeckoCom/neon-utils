@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a4) (2023-05-16)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a3...1.5.0a4)
+
+**Merged pull requests:**
+
+- Update Skill classes to support arbitrary kwargs passed at init [\#446](https://github.com/NeonGeckoCom/neon-utils/pull/446) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a3) (2023-05-12)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a2...1.5.0a3)
