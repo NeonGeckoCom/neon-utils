@@ -84,8 +84,8 @@ class CommonPlaySkill(NeonSkill, ABC):
     mycroft-playback-control skill and no special vocab for starting playback
     is needed.
     """
-    def __init__(self, name=None, bus=None):
-        super().__init__(name, bus)
+    def __init__(self, name=None, bus=None, **kwargs):
+        super().__init__(name, bus, **kwargs)
         self.audioservice = None
         self.play_service_string = None
 
