@@ -34,8 +34,8 @@ from neon_utils.skills.neon_skill import NeonSkill
 class InstructorSkill(NeonSkill):
     """This skill acts as an interface for other instruction-oriented skills"""
 
-    def __init__(self, name: str = ''):
-        super(InstructorSkill, self).__init__(name=name)
+    def __init__(self, name: str = '', **kwargs):
+        super(InstructorSkill, self).__init__(name=name, **kwargs)
 
     @abstractmethod
     def _access_data_source(self, *args, **kwargs):

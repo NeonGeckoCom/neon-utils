@@ -45,8 +45,8 @@ class CommonMessageSkill(NeonSkill, ABC):
     Skills must implement 'CMS_match_query_phrase'
     This skill works with Communcation skill which handles intent matching and skill selection
     """
-    def __init__(self, name=None, bus=None):
-        super().__init__(name, bus)
+    def __init__(self, name=None, bus=None, **kwargs):
+        super().__init__(name, bus, **kwargs)
 
     def bind(self, bus):
         if bus:
