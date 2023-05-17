@@ -26,6 +26,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import tracemalloc
+
+from typing import Optional
 from ovos_utils.log import LOG
 
 
@@ -65,3 +68,73 @@ def start_systemd_service(service: callable, **kwargs):
     service(ready_hook=on_ready, error_hook=on_error,
             stopping_hook=on_stopping, alive_hook=on_alive,
             started_hook=on_started, **kwargs)
+
+
+def start_malloc(config: dict = None, stack_depth: int = 1,
+                 force: bool = False) -> bool:
+    """
+    Start malloc trace if configured
+    :param config: dict Configuration
+    :param stack_depth: depth to track memory usage
+    :param force: if True, start tracemalloc regardless of configuration
+    :returns: True if malloc started
+    """
+    if force:
+        LOG.info("Requested unconditional malloc start")
+        tracemalloc.start(stack_depth)
+        return True
+    if not config:
+        from ovos_config.config import Configuration
+        config = Configuration()
+    if config.get('debug'):
+        LOG.info(f"Debug enabled; starting tracemalloc")
+        tracemalloc.start(stack_depth)
+        return True
+    return False
+
+
+def snapshot_malloc() -> Optional[tracemalloc.Snapshot]:
+    """
+    Capture and return a tracemalloc Snapshot if tracemalloc is started
+    """
+    try:
+        LOG.debug("Capturing malloc snapshot")
+        return tracemalloc.take_snapshot()
+    except RuntimeError:
+        LOG.debug("No tracemalloc trace")
+    except Exception as e:
+        LOG.exception(e)
+    return None
+
+
+def print_malloc(snapshot: tracemalloc.Snapshot, limit: int = 8,
+                 filter_traces: bool = False):
+    """
+    Log a malloc snapshot
+    :param snapshot: Snapshot to evaluate
+    :param limit: number of traces to log
+    :param filter_traces: if True, remove importlib and unknown stack traces
+    """
+    LOG.debug(f"Processing snapshot")
+    if filter_traces:
+        snapshot = snapshot.filter_traces((
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+            tracemalloc.Filter(False, "<unknown>"),
+        ))
+    top_stats = snapshot.statistics('traceback')
+
+    LOG.info(f"Top {limit} memory users")
+    for index, stat in enumerate(top_stats[:limit], 1):
+        frame = stat.traceback[0]
+        LOG.info(f"#{index}: {frame.filename}:{frame.lineno}: "
+                 f"{stat.size / 1048576} MiB")
+        for frame in stat.traceback[1:]:
+            LOG.info(f'    {frame.filename}:{frame.lineno}')
+
+    other = top_stats[limit:]
+    if other:
+        size = sum(stat.size for stat in other)
+        LOG.info(f"{len(other)} other:{size / 1048576} MiB")
+    total = sum(stat.size for stat in top_stats)
+    LOG.info(f"Total allocated size: {total / 1048576} MiB")
