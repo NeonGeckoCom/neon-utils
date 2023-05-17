@@ -101,7 +101,7 @@ def snapshot_malloc() -> Optional[tracemalloc.Snapshot]:
     return None
 
 
-def print_malloc(snapshot: tracemalloc.Snapshot, limit: int = 10,
+def print_malloc(snapshot: tracemalloc.Snapshot, limit: int = 8,
                  filter_traces: bool = False):
     """
     Log a malloc snapshot
