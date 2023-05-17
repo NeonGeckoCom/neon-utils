@@ -28,10 +28,11 @@
 
 from os.path import isfile, join
 from mycroft_bus_client import Message, MessageBusClient
+from ovos_config.locations import get_xdg_config_save_path
 
 from neon_utils.message_utils import resolve_message, get_message_user
 from neon_utils.configuration_utils import NGIConfig, get_neon_user_config, \
-    dict_update_keys, dict_make_equal_keys, get_config_dir, \
+    dict_update_keys, dict_make_equal_keys, \
     get_user_config_from_mycroft_conf
 from neon_utils.logger import LOG
 
@@ -45,7 +46,7 @@ def get_default_user_config() -> dict:
     """
     global _DEFAULT_USER_CONFIG
     if not _DEFAULT_USER_CONFIG:
-        if isfile(join(get_config_dir(), "ngi_user_info.yml")):
+        if isfile(join(get_xdg_config_save_path(), "ngi_user_info.yml")):
             _DEFAULT_USER_CONFIG = get_neon_user_config().content
         else:
             _DEFAULT_USER_CONFIG = get_user_config_from_mycroft_conf()

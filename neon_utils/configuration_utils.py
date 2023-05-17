@@ -43,6 +43,7 @@ from contextlib import suppress
 
 from ovos_utils.json_helper import load_commented_json
 from ovos_utils.xdg_utils import xdg_config_home
+from ovos_config.locations import get_xdg_config_save_path
 from typing import Optional
 from combo_lock import NamedLock
 
@@ -59,7 +60,7 @@ class NGIConfig:
 
     def __init__(self, name, path=None, force_reload: bool = False):
         self.name = name
-        self.path = path or get_config_dir()
+        self.path = path or get_xdg_config_save_path()
         lock_filename = join(self.path, f".{self.name}.lock")
         self.lock = NamedLock(lock_filename)
         self._pending_write = False
@@ -435,6 +436,9 @@ def _get_legacy_config_dir(sys_path: Optional[list] = None) -> Optional[str]:
     :param sys_path: Optional list to override `sys.path`
     :return: path to save config to if one is found, else None
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     sys_path = sys_path or sys.path
     for p in [path for path in sys_path if sys_path]:
         if re.match(".*/lib/python.*/site-packages", p):
@@ -464,6 +468,7 @@ def _init_ovos_conf(name: str, force_reload: bool = False):
     :param name: Name of calling module to configure to use `neon.yaml`
     :param force_reload: If true, force reload of configuration modules
     """
+    # TODO: Port and import from ovos_config directly
     from ovos_config.meta import get_ovos_config
     ovos_conf = get_ovos_config()
     original_conf = deepcopy(ovos_conf)
@@ -553,8 +558,11 @@ def _validate_config_env() -> bool:
     envvars.
     :return: True if configuration files were moved
     """
+    # TODO: Remove `NEON_CONFIG_PATH` handling in 2.0.0
     neon_spec = os.getenv("NEON_CONFIG_PATH")
     xdg_spec = os.getenv("XDG_CONFIG_HOME")
+    if neon_spec:
+        LOG.warning(f"`NEON_CONFIG_PATH` is deprecated. Use `XDG_CONFIG_HOME`")
 
     if neon_spec and xdg_spec:
         LOG.warning("Configuration over-defined. Using XDG spec")
@@ -582,7 +590,7 @@ def _validate_config_env() -> bool:
 
     # Paths like '/config' can't be translated to XDG, just move files
     from glob import glob
-    real_config_path = get_config_dir()
+    real_config_path = get_xdg_config_save_path()
     moved = False
     if neon_spec != real_config_path:
         LOG.warning("NEON_CONFIG_PATH is not XDG-compatible. "
@@ -603,8 +611,9 @@ def _check_legacy_config() -> str:
     """
     Return the path to valid legacy core configuration
     """
+    # TODO: Remove in 2.0.0
     os.environ["NEON_CONFIG_PATH"] = os.getenv("NEON_CONFIG_PATH") or \
-        get_config_dir()
+        get_xdg_config_save_path()
     return join(os.getenv("NEON_CONFIG_PATH"), "ngi_local_conf.yml")
 
 
@@ -621,7 +630,8 @@ def init_config_dir():
     # Ensure envvars are consistent and valid (read/writeable)
     force_reload = _validate_config_env()
     if isfile(old_config_file):
-        new_config_path = get_config_dir()
+        LOG.error(f"Configuration at: {old_config_file} is deprecated!")
+        new_config_path = get_xdg_config_save_path()
         if isfile(join(new_config_path, "neon.yaml")):
             LOG.error("Config already exists, skipping migration")
         else:
@@ -654,7 +664,10 @@ def get_config_dir():
     creating it if it doesn't exist.
     Returns: Path to configuration or else default
     """
-    config_path = join(xdg_config_home(), "neon")
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
+    config_path = get_xdg_config_save_path()
     LOG.debug(config_path)
     if not isdir(config_path):
         LOG.info(f"Creating config directory: {config_path}")
@@ -875,6 +888,9 @@ def is_neon_core() -> bool:
     Returns:
         True if core is Neon, else False
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     import importlib.util
     if importlib.util.find_spec("neon_core"):
         return True
@@ -977,7 +993,7 @@ def get_mycroft_compatible_config(mycroft_only=False,
         return default_config
     speech = _get_neon_speech_config(neon_config_path)
     user = get_neon_user_config(neon_config_path) if \
-        isfile(join(neon_config_path or get_config_dir(),
+        isfile(join(neon_config_path or get_xdg_config_save_path(),
                     "ngi_user_info.yml")) else \
         NGIConfig("default_user_conf", os.path.join(os.path.dirname(__file__),
                                                     "default_configurations"))
@@ -1078,7 +1094,9 @@ def create_config_from_setup_params(path=None) -> dict:
     Returns:
         NGIConfig object generated from environment vars
     """
-
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     dev_mode = (os.environ.get("devMode") or "false") == "true"
     # auto_run = os.environ.get("autoStart") or "false" == "true"
     auto_update = (os.environ.get("autoUpdate") or "false") == "true"
@@ -1136,6 +1154,9 @@ def migrate_ngi_config(old_config_path: str = None,
     :param old_config_path: path to ngi_local_conf.yml file to read
     :param new_config_path: path to output yaml file to write
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     old_config_path = expanduser(old_config_path or _get_legacy_config_dir())
     if not isfile(old_config_path):
         old_config_path = join(old_config_path, "ngi_local_conf.yml")
@@ -1163,6 +1184,9 @@ def parse_skill_default_settings(settings_meta: dict) -> dict:
     settingsmeta.json
     :return: parsed dict of default settings keys/values
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     if not isinstance(settings_meta, dict):
         LOG.error(settings_meta)
         raise TypeError(f"Expected a dict, got: {type(settings_meta)}")
@@ -1191,11 +1215,15 @@ def _make_loaded_config_safe(config: dict) -> dict:
     :returns: dict containing only primitive objects
         (list, dict, str, float, etc.)
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     return json.loads(json.dumps(config))
 
 
 # TODO: Below methods are all deprecated and retained only for backwards-compat
 def get_neon_auth_config(*args, **kwargs):
+    # TODO: Remove in 2.0.0
     LOG.error("This method is deprecated")
     return {"api_services": {}}
 
@@ -1206,6 +1234,9 @@ def _get_neon_lang_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used by Language Detector and Translator modules
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     import inspect
     call = inspect.stack()[1]
     module = inspect.getmodule(call.frame)
@@ -1228,6 +1259,9 @@ def _get_neon_tts_config(neon_config_path=None) -> dict:
     Returns:
     dict of TTS-related configuration
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     return _get_neon_local_config(neon_config_path).get("tts") or {}
 
 
@@ -1237,6 +1271,9 @@ def _get_neon_speech_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for listener in neon_speech
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     mycroft = _safe_mycroft_config()
     local_config = _get_neon_local_config(neon_config_path)
     # for section in local_config.content:
@@ -1290,6 +1327,9 @@ def _get_neon_bus_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for a messagebus client
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     mycroft = _safe_mycroft_config().get("websocket", {})
     neon = _get_neon_local_config(neon_config_path).get("websocket", {})
     merged = {**mycroft, **neon}
@@ -1305,6 +1345,9 @@ def _get_neon_audio_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for the Audio module
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     mycroft = _safe_mycroft_config()
     local_config = _get_neon_local_config(neon_config_path)
     neon_audio = local_config.get("audioService", {})
@@ -1331,6 +1374,9 @@ def _get_neon_api_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for the Mycroft API module
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     core_config = _get_neon_local_config(neon_config_path)
     api_config = deepcopy(core_config.get("api", {}))
     api_config["metrics"] = core_config.get("prefFlags", {}).get("metrics", False)
@@ -1348,6 +1394,9 @@ def _get_neon_skills_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for the Mycroft Skills module
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     core_config = _get_neon_local_config(neon_config_path)
     mycroft_config = _safe_mycroft_config()
     neon_skills = deepcopy(core_config.get("skills", {}))
@@ -1410,9 +1459,12 @@ def _get_neon_transcribe_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for the Neon transcription module
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     local_config = _get_neon_local_config(neon_config_path)
     user_config = get_neon_user_config(neon_config_path) if \
-        isfile(join(neon_config_path or get_config_dir(),
+        isfile(join(neon_config_path or get_xdg_config_save_path(),
                     "ngi_user_info.yml")) else {}
     neon_transcribe_config = dict()
     neon_transcribe_config["transcript_dir"] = \
@@ -1428,6 +1480,9 @@ def _get_neon_gui_config(neon_config_path=None) -> dict:
     Returns:
         dict of config params used for the Neon gui module
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     local_config = _get_neon_local_config(neon_config_path)
     gui_config = dict(local_config.get("gui", {}))
     gui_config["base_port"] = gui_config.get("port")
@@ -1440,12 +1495,18 @@ def _safe_mycroft_config() -> dict:
     Returns:
         dict mycroft configuration
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     from ovos_config.config import Configuration
     config = Configuration()
     return dict(config)
 
 
 def _get_neon_yaml_config() -> dict:
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     from ovos_config.meta import get_ovos_config
     from ovos_config.locations import get_xdg_config_save_path
     from ovos_utils.json_helper import merge_dict
@@ -1478,7 +1539,10 @@ def _get_neon_auth_config(path: Optional[str] = None) -> dict:
     Returns:
         NGIConfig object with authentication config
     """
-    if isfile(join(path or get_config_dir(), "ngi_auth_vars.yml")):
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
+    if isfile(join(path or get_xdg_config_save_path(), "ngi_auth_vars.yml")):
         try:
             auth_config = NGIConfig("ngi_auth_vars", path)
         except PermissionError:
@@ -1526,6 +1590,9 @@ def _move_config_sections(user_config, local_config):
         user_config (NGIConfig): user configuration object
         local_config (NGIConfig): local configuration object
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     depreciated_user_configs = ("interface", "listener", "skills", "session", "tts", "stt", "logs", "device")
     try:
         if any([d in user_config.content for d in depreciated_user_configs]):
@@ -1562,6 +1629,9 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     Returns:
         NGIConfig object with local config
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     import inspect
     call = inspect.stack()[1]
     module = inspect.getmodule(call.frame)
@@ -1569,7 +1639,7 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     LOG.warning("This reference is deprecated - "
                 f"{name}:{call.lineno}")
     try:
-        if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
+        if isfile(join(path or get_xdg_config_save_path(), "ngi_local_conf.yml")):
             local_config = NGIConfig("ngi_local_conf", path)
         else:
             local_config = NGIConfig("ngi_local_conf", "/tmp/neon")
@@ -1582,7 +1652,7 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     if len(local_config.content) == 0:
         LOG.info(f"Created Empty Local Config at {local_config.path}")
 
-    if isfile(join(path or get_config_dir(), "ngi_user_info.yml")):
+    if isfile(join(path or get_xdg_config_save_path(), "ngi_user_info.yml")):
         user_config = NGIConfig("ngi_user_info", path)
         _move_config_sections(user_config, local_config)
 
@@ -1601,6 +1671,9 @@ def _populate_read_only_config(path: Optional[str], config_filename: str,
     :param loaded_config: Loaded config object to populate with RO config
     :return: True if RO config was copied to new location, else False
     """
+    # TODO: Remove in 2.0.0
+    LOG.warning(f"This reference is deprecated and will be "
+                f"removed in neon_utils 2.0")
     # Handle reading unwritable config contents into new empty config
     requested_file = \
         os.path.abspath(join(path or

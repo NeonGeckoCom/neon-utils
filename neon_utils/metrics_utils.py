@@ -89,7 +89,9 @@ def report_metric(name: str, **kwargs):
     :param kwargs: Arbitrary data to include with metric report
     """
     try:
-        send_mq_request("/neon_metrics", {**{"name": name}, **kwargs}, "neon_metrics_input", expect_response=False)
+        send_mq_request("/neon_metrics",
+                        {**{"name": name}, **kwargs},
+                        "neon_metrics_input", expect_response=False)
         return True
     except Exception as e:
         LOG.error(e)
@@ -103,7 +105,8 @@ def announce_connection():
                 "name": dict(Configuration()).get("device_name") or "unknown",
                 "host": gethostname(),
                 "ver": get_neon_core_version()}
-        send_mq_request("/neon_metrics", data, "neon_connections_input", expect_response=False)
+        send_mq_request("/neon_metrics", data, "neon_connections_input",
+                        expect_response=False)
         return True
     except Exception as e:
         LOG.error(e)

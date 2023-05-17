@@ -80,29 +80,17 @@ class NeonSkill(PatchedMycroftSkill):
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
         self._gui_connected = False
-        self.sys_tz = gettz()
+        self._sys_tz = gettz()
 
         try:
             import neon_core
-            self.neon_core = True
+            self._neon_core = True
         except ImportError:
-            self.neon_core = False
+            self._neon_core = False
 
-        self.actions_to_confirm = dict()
-
-        # TODO: Consider moving to properties to avoid unused init? DM
-        try:
-            if not OVOSLangDetectionFactory:
-                LOG.info("OPM not available, skipping language plugin load")
-                self.lang_detector, self.translator = None, None
-            else:
-                self.lang_detector = \
-                    OVOSLangDetectionFactory.create(self.config_core)
-                self.translator = \
-                    OVOSLangTranslationFactory.create(self.config_core)
-        except ValueError as x:
-            LOG.error(f"Configured lang plugins not available: {x}")
-            self.lang_detector, self.translator = None, None
+        self._actions_to_confirm = dict()
+        self._lang_detector = None
+        self._translator = None
 
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
@@ -110,10 +98,48 @@ class NeonSkill(PatchedMycroftSkill):
                             name="neon.load_cache_on_disk")
 
     @property
+    def neon_core(self):
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
+        return self._neon_core
+
+    @property
+    def sys_tz(self):
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
+        return self._sys_tz
+
+    @property
+    def actions_to_confirm(self):
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
+        return self._actions_to_confirm
+
+    @property
+    def lang_detector(self):
+        if not self._lang_detector and OVOSLangDetectionFactory:
+            self._lang_detector = \
+                OVOSLangDetectionFactory.create(self.config_core)
+        return self._lang_detector
+
+    @property
+    def translator(self):
+        if not self._translator and OVOSLangTranslationFactory:
+            self._translator = \
+                OVOSLangTranslationFactory.create(self.config_core)
+        return self._translator
+
+    @property
     def skill_mode(self) -> str:
         """
         Determine the "speed mode" requested by the user
         """
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
         return get_user_prefs(dig_for_message()).get(
             'response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
 
@@ -122,6 +148,9 @@ class NeonSkill(PatchedMycroftSkill):
         """
         Determine how long the skill should extend CommonSkill request timeouts
         """
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
         return SPEED_MODE_EXTENSION_TIME.get(self.skill_mode) or 10
 
     @property
@@ -140,6 +169,9 @@ class NeonSkill(PatchedMycroftSkill):
 
     @property
     def ngi_settings(self):
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
         return self.preference_skill()
 
     @resolve_message
@@ -150,6 +182,9 @@ class NeonSkill(PatchedMycroftSkill):
         :param message: Message associated with request
         :return: dict of skill preferences
         """
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
         return get_user_prefs(
             message).get("skills", {}).get(self.skill_id) or self.settings
 
@@ -161,6 +196,9 @@ class NeonSkill(PatchedMycroftSkill):
             Should follow {section: {key: val}} format
         :param message: Message associated with request
         """
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
         from neon_utils.user_utils import update_user_profile
 
         try:
@@ -192,7 +230,8 @@ class NeonSkill(PatchedMycroftSkill):
             else:
                 save_settings(self.file_system.path, self.settings)
 
-    def send_with_audio(self, text_shout, audio_file, message, lang="en-us", private=False, speaker=None):
+    def send_with_audio(self, text_shout, audio_file, message, lang="en-us",
+                        private=False, speaker=None):
         """
         Sends a Neon response with the passed text phrase and audio file
         :param text_shout: (str) Text to shout
@@ -223,38 +262,13 @@ class NeonSkill(PatchedMycroftSkill):
                                       {"responses": responses,
                                        "speaker": speaker}))
 
-    @resolve_message
-    def neon_must_respond(self, message: Message = None) -> bool:
-        """
-        Checks if Neon must respond to an utterance (i.e. a server request)
-        :param message: message associated with user request
-        :returns: True if Neon must provide a response to this request
-        """
-        if not message:
-            return False
-        if "klat_data" in message.context:
-            title = message.context.get("klat_data", {}).get("title", "")
-            LOG.debug(message.data.get("utterance"))
-            if message.data.get("utterance", "").startswith(
-                    "Welcome to your private conversation"):
-                return False
-            if title.startswith("!PRIVATE:"):
-                if ',' in title:
-                    users = title.split(':')[1].split(',')
-                    for idx, val in enumerate(users):
-                        users[idx] = val.strip()
-                    if len(users) == 2 and "Neon" in users:
-                        # Private with Neon
-                        # LOG.debug("DM: Private Conversation with Neon")
-                        return True
-                    elif message.data.get("utterance",
-                                          "").lower().startswith("neon"):
-                        # Message starts with "neon", must respond
-                        return True
-                else:
-                    # Solo Private
-                    return True
-        return False
+    @staticmethod
+    def neon_must_respond(message: Message = None) -> bool:
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
+        from neon_utils.message_utils import neon_must_respond
+        return neon_must_respond(message)
 
     def voc_match(self, utt, voc_filename, lang=None, exact=False):
         # TODO: This should be addressed in vocab resolver classes
@@ -314,6 +328,9 @@ class NeonSkill(PatchedMycroftSkill):
             name (str): Name of metric. Must use only letters and hyphens
             data (dict): JSON dictionary to report. Must be valid JSON
         """
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
         combined = deepcopy(data)
         combined["name"] = name
         self.bus.emit(Message("neon.metric", combined))
@@ -378,7 +395,9 @@ class NeonSkill(PatchedMycroftSkill):
         :param time_wait: Time in seconds to wait before deactivating intent
         :param intent_to_check: list of intents to disable
         """
-        # TODO: Consider unit tests or deprecation of this method DM
+        # TODO: Remove in 2.0.0
+        LOG.warning(f"This reference is deprecated and will be "
+                    f"removed in neon_utils 2.0")
         LOG.debug(time_wait)
         LOG.debug(intent_to_check)
         if isinstance(intent_to_check, str):
@@ -452,7 +471,8 @@ class NeonSkill(PatchedMycroftSkill):
         data_load = self.lru_cache.jsonify()
         self.update_cached_data(filename=filename, new_element=data_load)
         self.lru_cache.clear()
-        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET, name="neon.load_cache_on_disk")
+        self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET,
+                            name="neon.load_cache_on_disk")
         return
 
     def _register_chat_handler(self, name: str, method: callable):
