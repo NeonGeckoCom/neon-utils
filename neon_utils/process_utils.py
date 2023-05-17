@@ -70,9 +70,11 @@ def start_systemd_service(service: callable, **kwargs):
             started_hook=on_started, **kwargs)
 
 
-def start_malloc(config: dict = None) -> bool:
+def start_malloc(config: dict = None, stack_depth: int = 1) -> bool:
     """
     Start malloc trace if configured
+    :param config: dict Configuration
+    :param stack_depth: depth to track memory usage
     :returns: True if malloc started
     """
     if not config:
@@ -80,7 +82,7 @@ def start_malloc(config: dict = None) -> bool:
         config = Configuration()
     if config.get('debug'):
         LOG.info(f"Debug enabled; starting tracemalloc")
-        tracemalloc.start()
+        tracemalloc.start(stack_depth)
         return True
     return False
 
@@ -100,30 +102,29 @@ def snapshot_malloc() -> Optional[tracemalloc.Snapshot]:
 
 
 def print_malloc(snapshot: tracemalloc.Snapshot, limit: int = 10,
-                 trace_limit: int = 2):
+                 filter_traces: bool = False):
     """
     Log a malloc snapshot
     :param snapshot: Snapshot to evaluate
     :param limit: number of traces to log
-    :param trace_limit: maximum number of stack entries per trace to log
+    :param filter_traces: if True, remove importlib and unknown stack traces
     """
-    import linecache
-    snapshot = snapshot.filter_traces((
-        tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
-        tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
-        tracemalloc.Filter(False, "<unknown>"),
-    ))
+    LOG.debug(f"Processing snapshot")
+    if filter_traces:
+        snapshot = snapshot.filter_traces((
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+            tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+            tracemalloc.Filter(False, "<unknown>"),
+        ))
     top_stats = snapshot.statistics('traceback')
 
-    LOG.info(f"Top {limit} lines")
+    LOG.info(f"Top {limit} memory users")
     for index, stat in enumerate(top_stats[:limit], 1):
         frame = stat.traceback[0]
         LOG.info(f"#{index}: {frame.filename}:{frame.lineno}: "
                  f"{stat.size / 1048576} MiB")
-        for frame in stat.traceback[0:trace_limit]:
-            line = linecache.getline(frame.filename, frame.lineno).strip()
-            if line:
-                LOG.info(f'    {line}')
+        for frame in stat.traceback[1:]:
+            LOG.info(f'    {frame.filename}:{frame.lineno}')
 
     other = top_stats[limit:]
     if other:
