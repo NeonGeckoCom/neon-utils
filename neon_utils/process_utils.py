@@ -26,6 +26,9 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import tracemalloc
+
+from typing import Optional
 from ovos_utils.log import LOG
 
 
@@ -65,3 +68,66 @@ def start_systemd_service(service: callable, **kwargs):
     service(ready_hook=on_ready, error_hook=on_error,
             stopping_hook=on_stopping, alive_hook=on_alive,
             started_hook=on_started, **kwargs)
+
+
+def start_malloc(config: dict = None) -> bool:
+    """
+    Start malloc trace if configured
+    :returns: True if malloc started
+    """
+    if not config:
+        from ovos_config.config import Configuration
+        config = Configuration()
+    if config.get('debug'):
+        LOG.info(f"Debug enabled; starting tracemalloc")
+        tracemalloc.start()
+        return True
+    return False
+
+
+def snapshot_malloc() -> Optional[tracemalloc.Snapshot]:
+    """
+    Capture and return a tracemalloc Snapshot if tracemalloc is started
+    """
+    try:
+        LOG.debug("Capturing malloc snapshot")
+        return tracemalloc.take_snapshot()
+    except RuntimeError:
+        LOG.debug("No tracemalloc trace")
+    except Exception as e:
+        LOG.exception(e)
+    return None
+
+
+def print_malloc(snapshot: tracemalloc.Snapshot, limit: int = 10,
+                 trace_limit: int = 2):
+    """
+    Log a malloc snapshot
+    :param snapshot: Snapshot to evaluate
+    :param limit: number of traces to log
+    :param trace_limit: maximum number of stack entries per trace to log
+    """
+    import linecache
+    snapshot = snapshot.filter_traces((
+        tracemalloc.Filter(False, "<frozen importlib._bootstrap>"),
+        tracemalloc.Filter(False, "<frozen importlib._bootstrap_external>"),
+        tracemalloc.Filter(False, "<unknown>"),
+    ))
+    top_stats = snapshot.statistics('traceback')
+
+    LOG.info(f"Top {limit} lines")
+    for index, stat in enumerate(top_stats[:limit], 1):
+        frame = stat.traceback[0]
+        LOG.info(f"#{index}: {frame.filename}:{frame.lineno}: "
+                 f"{stat.size / 1048576} MiB")
+        for frame in stat.traceback[0:trace_limit]:
+            line = linecache.getline(frame.filename, frame.lineno).strip()
+            if line:
+                LOG.info(f'    {line}')
+
+    other = top_stats[limit:]
+    if other:
+        size = sum(stat.size for stat in other)
+        LOG.info(f"{len(other)} other:{size / 1048576} MiB")
+    total = sum(stat.size for stat in top_stats)
+    LOG.info(f"Total allocated size: {total / 1048576} MiB")
