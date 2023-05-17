@@ -70,13 +70,19 @@ def start_systemd_service(service: callable, **kwargs):
             started_hook=on_started, **kwargs)
 
 
-def start_malloc(config: dict = None, stack_depth: int = 1) -> bool:
+def start_malloc(config: dict = None, stack_depth: int = 1,
+                 force: bool = False) -> bool:
     """
     Start malloc trace if configured
     :param config: dict Configuration
     :param stack_depth: depth to track memory usage
+    :param force: if True, start tracemalloc regardless of configuration
     :returns: True if malloc started
     """
+    if force:
+        LOG.info("Requested unconditional malloc start")
+        tracemalloc.start(stack_depth)
+        return True
     if not config:
         from ovos_config.config import Configuration
         config = Configuration()
