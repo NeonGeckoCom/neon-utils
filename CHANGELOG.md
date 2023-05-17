@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a5) (2023-05-17)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a4...1.5.0a5)
+
+**Merged pull requests:**
+
+- Add utilities to trace memory allocation [\#447](https://github.com/NeonGeckoCom/neon-utils/pull/447) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a4) (2023-05-16)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a3...1.5.0a4)
