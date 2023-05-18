@@ -28,11 +28,12 @@
 
 import tracemalloc
 
+from threading import Event
 from typing import Optional
 from ovos_utils.log import LOG
 
 
-_malloc_event = None
+_malloc_event = Event()
 
 
 def start_systemd_service(service: callable, **kwargs):
@@ -53,11 +54,10 @@ def start_systemd_service(service: callable, **kwargs):
         notifier.notify('STATUS=Ready')
 
     def on_stopping():
-        if _malloc_event:
-            try:
-                _malloc_event.set()
-            except Exception as e:
-                LOG.error(e)
+        try:
+            _malloc_event.set()
+        except Exception as e:
+            LOG.error(e)
         notifier.notify('STOPPING=1')
         notifier.notify('STATUS=Stopping')
 
@@ -159,9 +159,7 @@ def print_malloc(snapshot: tracemalloc.Snapshot, limit: int = 8,
 
 
 def _log_malloc(interval_seconds: int):
-    from threading import Event
-    global _malloc_event
-    _malloc_event = Event()
+    _malloc_event.clear()
     while not _malloc_event.wait(interval_seconds):
         print_malloc(snapshot_malloc(), filter_traces=True)
     LOG.info(f"Stopping malloc logging")
