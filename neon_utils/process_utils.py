@@ -32,6 +32,9 @@ from typing import Optional
 from ovos_utils.log import LOG
 
 
+_malloc_event = None
+
+
 def start_systemd_service(service: callable, **kwargs):
     """
     Start a Neon Core module with systemd wrappers to report process lifecycle
@@ -50,6 +53,11 @@ def start_systemd_service(service: callable, **kwargs):
         notifier.notify('STATUS=Ready')
 
     def on_stopping():
+        if _malloc_event:
+            try:
+                _malloc_event.set()
+            except Exception as e:
+                LOG.error(e)
         notifier.notify('STOPPING=1')
         notifier.notify('STATUS=Stopping')
 
@@ -86,7 +94,17 @@ def start_malloc(config: dict = None, stack_depth: int = 1,
     if not config:
         from ovos_config.config import Configuration
         config = Configuration()
+    if config.get('debugging') and config['debugging'].get('tracemalloc'):
+        LOG.info(f"starting tracemalloc")
+        tracemalloc.start(stack_depth)
+        if config['debugging'].get('log_malloc'):
+            interval_minutes = config['debugging'].get('log_interval_minutes',
+                                                       60)
+            _log_malloc(interval_minutes * 60)
+        return True
     if config.get('debug'):
+        LOG.warning("To continue using `tracemalloc`, set "
+                    "`config['debugging']['tracemalloc'] = True")
         LOG.info(f"Debug enabled; starting tracemalloc")
         tracemalloc.start(stack_depth)
         return True
@@ -138,3 +156,12 @@ def print_malloc(snapshot: tracemalloc.Snapshot, limit: int = 8,
         LOG.info(f"{len(other)} other:{size / 1048576} MiB")
     total = sum(stat.size for stat in top_stats)
     LOG.info(f"Total allocated size: {total / 1048576} MiB")
+
+
+def _log_malloc(interval_seconds: int):
+    from threading import Event
+    global _malloc_event
+    _malloc_event = Event()
+    while not _malloc_event.wait(interval_seconds):
+        print_malloc(snapshot_malloc(), filter_traces=True)
+    LOG.info(f"Stopping malloc logging")
