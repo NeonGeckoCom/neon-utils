@@ -28,7 +28,7 @@
 
 import tracemalloc
 
-from threading import Event
+from threading import Event, Thread
 from typing import Optional
 from ovos_utils.log import LOG
 
@@ -97,7 +97,10 @@ def start_malloc(config: dict = None, stack_depth: int = 1,
         if config['debugging'].get('log_malloc'):
             interval_minutes = config['debugging'].get('log_interval_minutes',
                                                        60)
-            _log_malloc(interval_minutes * 60)
+            thread = Thread(target=_log_malloc,
+                            args=((interval_minutes * 60),),
+                            daemon=True)
+            thread.start()
         return True
     if config.get('debug'):
         LOG.warning("To continue using `tracemalloc`, set "
