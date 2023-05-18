@@ -488,11 +488,11 @@ def _init_ovos_conf(name: str, force_reload: bool = False):
     if default_config_path:
         module_config['default_config_path'] = default_config_path
 
-    init_module_config(name, "neon", module_config)
+    init_module_config(name, "neon_core", module_config)
     if name == "neon_core":
         # Also configure neon_core.skills.skill_manager
         init_module_config("neon_core.skills.skill_manager",
-                           "neon", module_config)
+                           "neon_core", module_config)
 
 
 def _validate_config_env() -> bool:
