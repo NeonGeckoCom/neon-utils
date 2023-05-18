@@ -87,14 +87,11 @@ def start_malloc(config: dict = None, stack_depth: int = 1,
     :param force: if True, start tracemalloc regardless of configuration
     :returns: True if malloc started
     """
-    if force:
-        LOG.info("Requested unconditional malloc start")
-        tracemalloc.start(stack_depth)
-        return True
     if not config:
         from ovos_config.config import Configuration
         config = Configuration()
-    if config.get('debugging') and config['debugging'].get('tracemalloc'):
+    if force or config.get('debugging') and \
+            config['debugging'].get('tracemalloc'):
         LOG.info(f"starting tracemalloc")
         tracemalloc.start(stack_depth)
         if config['debugging'].get('log_malloc'):
@@ -148,7 +145,7 @@ def print_malloc(snapshot: tracemalloc.Snapshot, limit: int = 8,
         LOG.info(f"#{index}: {frame.filename}:{frame.lineno}: "
                  f"{stat.size / 1048576} MiB")
         for frame in stat.traceback[1:]:
-            LOG.info(f'    {frame.filename}:{frame.lineno}')
+            LOG.debug(f'{frame.filename}:{frame.lineno}')
 
     other = top_stats[limit:]
     if other:
