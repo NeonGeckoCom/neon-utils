@@ -34,6 +34,7 @@ from ovos_utils.log import LOG
 
 
 _malloc_event = Event()
+_malloc_thread = None
 
 
 def start_systemd_service(service: callable, **kwargs):
@@ -55,7 +56,7 @@ def start_systemd_service(service: callable, **kwargs):
 
     def on_stopping():
         try:
-            _malloc_event.set()
+            stop_malloc()
         except Exception as e:
             LOG.error(e)
         notifier.notify('STOPPING=1')
@@ -97,10 +98,11 @@ def start_malloc(config: dict = None, stack_depth: int = 1,
         if config['debugging'].get('log_malloc'):
             interval_minutes = config['debugging'].get('log_interval_minutes',
                                                        60)
-            thread = Thread(target=_log_malloc,
-                            args=((interval_minutes * 60),),
-                            daemon=True)
-            thread.start()
+            global _malloc_thread
+            _malloc_thread = Thread(target=_log_malloc,
+                                    args=((interval_minutes * 60),),
+                                    daemon=True)
+            _malloc_thread.start()
         return True
     if config.get('debug'):
         LOG.warning("To continue using `tracemalloc`, set "
@@ -109,6 +111,16 @@ def start_malloc(config: dict = None, stack_depth: int = 1,
         tracemalloc.start(stack_depth)
         return True
     return False
+
+
+def stop_malloc():
+    """
+    Stop tracemalloc logging if active
+    """
+    if _malloc_thread:
+        LOG.debug(f"Stopping malloc logging")
+        _malloc_event.set()
+        _malloc_thread.join()
 
 
 def snapshot_malloc() -> Optional[tracemalloc.Snapshot]:
