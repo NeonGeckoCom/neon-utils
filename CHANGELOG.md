@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a7) (2023-05-19)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a6...1.5.0a7)
+
+**Merged pull requests:**
+
+- Update Pyyaml dependency to allow 6.0 [\#450](https://github.com/NeonGeckoCom/neon-utils/pull/450) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a6) (2023-05-19)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a5...1.5.0a6)
