@@ -3,8 +3,7 @@ combo-lock~=0.2
 pendulum~=2.1
 timezonefinder~=5.2
 nltk~=3.5
-pyyaml~=6.0
-# TODO: Loosen above spec to allow 5.4?
+pyyaml>=5.4,<7.0
 ovos-lingua-franca~=0.4
 ovos_utils~=0.0.30
 geopy~=2.1
