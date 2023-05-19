@@ -32,12 +32,6 @@ from neon_utils.skills import CommonMessageSkill, CommonPlaySkill,\
     CommonQuerySkill, NeonFallbackSkill, NeonSkill, PatchedMycroftSkill,\
     InstructorSkill, KioskSkill
 
-import importlib
-# import mycroft.skills
-# mycroft.skills.mycroft_skill.MycroftSkill = PatchedMycroftSkill
-# importlib.reload(mycroft.skills.fallback_skill)
-# from mycroft.skills.fallback_skill import FallbackSkill
-
 
 class TestCMS(CommonMessageSkill):
     def __init__(self):

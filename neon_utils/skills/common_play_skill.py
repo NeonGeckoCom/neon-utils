@@ -46,7 +46,7 @@ from abc import ABC, abstractmethod
 from ovos_bus_client import Message
 from neon_utils.skills.neon_skill import NeonSkill
 
-from mycroft.skills.audioservice import AudioService
+from ovos_utils.skills.audioservice import AudioServiceInterface as AudioService
 
 
 class CPSMatchLevel(Enum):
