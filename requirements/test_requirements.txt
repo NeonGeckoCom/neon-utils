@@ -2,7 +2,7 @@ pytest
 pytest-timeout
 pytest-cov
 mock
-# ovos-core~=0.0.7,>=0.0.8a21
+ovos-core~=0.0.7,>=0.0.8a21
 ovos-plugin-manager~=0.0.18
 ovos-skills-manager
 neon-lang-plugin-libretranslate

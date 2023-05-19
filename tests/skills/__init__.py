@@ -32,6 +32,10 @@ from neon_utils.skills import CommonMessageSkill, CommonPlaySkill,\
     CommonQuerySkill, NeonFallbackSkill, NeonSkill, PatchedMycroftSkill,\
     InstructorSkill, KioskSkill
 
+import ovos_workshop.skills.ovos
+ovos_workshop.skills.ovos.MycroftSkill = PatchedMycroftSkill
+from ovos_workshop.skills.fallback import FallbackSkill
+
 
 class TestCMS(CommonMessageSkill):
     def __init__(self):
