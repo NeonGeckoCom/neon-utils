@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a8](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a8) (2023-05-24)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a7...1.5.0a8)
+
+**Merged pull requests:**
+
+- Move config init to ovos-config [\#448](https://github.com/NeonGeckoCom/neon-utils/pull/448) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a7) (2023-05-19)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a6...1.5.0a7)
