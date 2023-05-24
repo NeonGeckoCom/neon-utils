@@ -494,6 +494,17 @@ def _init_ovos_conf(name: str, force_reload: bool = False):
         init_module_config("neon_core.skills.skill_manager",
                            "neon_core", module_config)
 
+    try:
+        import mycroft.configuration
+        import mycroft.configuration.locations
+        import mycroft.configuration.config
+        del mycroft.configuration.Configuration
+        importlib.reload(mycroft.configuration.locations)
+        importlib.reload(mycroft.configuration.config)
+        importlib.reload(mycroft.configuration)
+    except Exception as e:
+        LOG.error(f"Failed to override mycroft.configuration: {e}")
+
 
 def _validate_config_env() -> bool:
     """
