@@ -482,17 +482,21 @@ def _init_ovos_conf(name: str, force_reload: bool = False):
         default_config_path = None
 
     module_config = {
+        "xdg": True,
         "base_folder": "neon",
         "config_filename": "neon.yaml"
     }
     if default_config_path:
         module_config['default_config_path'] = default_config_path
 
-    init_module_config(name, "neon_core", module_config)
-    if name == "neon_core":
-        # Also configure neon_core.skills.skill_manager
-        init_module_config("neon_core.skills.skill_manager",
-                           "neon_core", module_config)
+    try:
+        init_module_config(name, "neon_core", module_config)
+        if name == "neon_core":
+            # Also configure neon_core.skills.skill_manager
+            init_module_config("neon_core.skills.skill_manager",
+                               "neon_core", module_config)
+    except RuntimeError:
+        LOG.exception(f"Failed to init config module_config={module_config}")
 
     try:
         import mycroft.configuration
