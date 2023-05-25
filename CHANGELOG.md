@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a9](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a9) (2023-05-25)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a8...1.5.0a9)
+
+**Merged pull requests:**
+
+- Resolve configuration re-init bugs [\#452](https://github.com/NeonGeckoCom/neon-utils/pull/452) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a8](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a8) (2023-05-24)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a7...1.5.0a8)
