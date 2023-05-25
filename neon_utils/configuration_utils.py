@@ -482,6 +482,7 @@ def _init_ovos_conf(name: str, force_reload: bool = False):
         default_config_path = None
 
     module_config = {
+        "xdg": True,
         "base_folder": "neon",
         "config_filename": "neon.yaml"
     }
