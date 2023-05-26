@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a11](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a11) (2023-05-26)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a10...1.5.0a11)
+
+**Merged pull requests:**
+
+- Add call to `init_config_dir` in legacy setup config handling [\#454](https://github.com/NeonGeckoCom/neon-utils/pull/454) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a10](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a10) (2023-05-26)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a9...1.5.0a10)
