@@ -30,11 +30,7 @@ from neon_utils.skills.neon_skill import NeonSkill
 from ovos_workshop.skills.ovos import OVOSSkill
 from ovos_utils.intents import IntentLayers
 from ovos_workshop.skills.layers import IntentLayers
-
-try:
-    from ovos_workshop.skills.fallback import FallbackSkillV1 as FallbackSkill
-except ImportError:
-    from ovos_workshop.skills.fallback import FallbackSkill
+from ovos_workshop.skills.fallback import FallbackSkill
 
 
 class NeonFallbackSkill(FallbackSkill, NeonSkill, OVOSSkill):
@@ -44,7 +40,6 @@ class NeonFallbackSkill(FallbackSkill, NeonSkill, OVOSSkill):
     """
     def __init__(self, *args, **kwargs):
         NeonSkill.__init__(self, *args, **kwargs)
-        FallbackSkill.__init__(self, *args, **kwargs)
 
         # Manual init of OVOSSkill
         self.private_settings = None
