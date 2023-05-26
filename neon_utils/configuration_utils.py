@@ -1042,6 +1042,7 @@ def create_config_from_setup_params(path=None) -> dict:
     Returns:
         NGIConfig object generated from environment vars
     """
+    init_config_dir()
 
     dev_mode = (os.environ.get("devMode") or "false") == "true"
     # auto_run = os.environ.get("autoStart") or "false" == "true"
