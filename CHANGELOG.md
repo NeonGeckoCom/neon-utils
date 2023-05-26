@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a10](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a10) (2023-05-26)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a9...1.5.0a10)
+
+**Merged pull requests:**
+
+- Add call to init `FallbackSkill` from `ovos_workshop` [\#453](https://github.com/NeonGeckoCom/neon-utils/pull/453) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a9](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a9) (2023-05-25)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a8...1.5.0a9)
