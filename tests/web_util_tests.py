@@ -42,10 +42,10 @@ class WebUtilTests(unittest.TestCase):
             self.assertIn("about us", links.keys())
             # TODO: Update test to validate absolute and relative URL paths
             # Relative href
-            self.assertIn(links["about us"], ("https://neon.ai/aboutus", "http://neon.ai/aboutus"))
-
-            # # Absolute href
-            # self.assertIn(links["get started"], ("https://neon.ai/getstarted", "http://neon.ai/getstarted"))
+            self.assertIn(links["about us"],
+                          ("https://neon.ai/aboutus",
+                           "http://neon.ai/aboutus",
+                           "https://neon.ai/index.php/aboutus"))
         except ConnectTimeout:
             LOG.error("Github testing breaks here")
 
