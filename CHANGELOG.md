@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a12](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a12) (2023-06-03)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a11...1.5.0a12)
+
+**Merged pull requests:**
+
+- Remove backwards-compat. `debug` config handling [\#455](https://github.com/NeonGeckoCom/neon-utils/pull/455) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a11](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a11) (2023-05-26)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a10...1.5.0a11)
