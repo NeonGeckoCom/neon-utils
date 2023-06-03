@@ -33,7 +33,7 @@ import os
 from copy import deepcopy
 from functools import wraps
 from json_database import JsonStorage
-from mycroft_bus_client.message import Message
+from ovos_bus_client.message import Message
 from typing import Optional, List, Any
 from dateutil.tz import gettz
 from ovos_utils.gui import is_gui_connected

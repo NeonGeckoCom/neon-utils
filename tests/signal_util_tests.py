@@ -34,7 +34,7 @@ from threading import Event
 from os.path import join, dirname
 
 import ovos_utils.signal
-from mycroft_bus_client import Message
+from ovos_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -202,7 +202,7 @@ class SignalUtilsTests(unittest.TestCase):
                          ovos_utils.signal.check_for_signal)
 
     def test_check_signal_manager_available_lazy_load_bus(self):
-        from mycroft_bus_client import MessageBusClient
+        from ovos_bus_client import MessageBusClient
         from neon_utils.signal_utils import check_signal_manager_available
         neon_utils.signal_utils._BUS = None
         neon_utils.signal_utils.check_signal_manager_available()

@@ -31,7 +31,7 @@ import datetime
 from abc import abstractmethod
 from threading import Thread
 from time import time
-from mycroft_bus_client import Message
+from ovos_bus_client import Message
 from ovos_utils.log import LOG
 
 from neon_utils.message_utils import get_message_user, dig_for_message

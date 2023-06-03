@@ -30,7 +30,7 @@ import sys
 import os
 import unittest
 
-from mycroft_bus_client import MessageBusClient
+from ovos_bus_client import MessageBusClient
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 

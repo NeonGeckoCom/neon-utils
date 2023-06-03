@@ -30,7 +30,7 @@ import inspect
 import ovos_utils.signal
 
 from time import time, sleep
-from mycroft_bus_client import MessageBusClient, Message
+from ovos_bus_client import MessageBusClient, Message
 from neon_utils.logger import LOG
 
 _BUS: MessageBusClient = None
