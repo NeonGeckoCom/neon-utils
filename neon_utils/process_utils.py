@@ -104,12 +104,6 @@ def start_malloc(config: dict = None, stack_depth: int = 1,
                                     daemon=True)
             _malloc_thread.start()
         return True
-    if config.get('debug'):
-        LOG.warning("To continue using `tracemalloc`, set "
-                    "`config['debugging']['tracemalloc'] = True")
-        LOG.info(f"Debug enabled; starting tracemalloc")
-        tracemalloc.start(stack_depth)
-        return True
     return False
 
 
