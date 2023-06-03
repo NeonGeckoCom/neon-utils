@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.0a13](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a13) (2023-06-03)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a12...1.5.0a13)
+
+**Merged pull requests:**
+
+- Refactor messagebus client package [\#456](https://github.com/NeonGeckoCom/neon-utils/pull/456) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.0a12](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a12) (2023-06-03)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a11...1.5.0a12)
