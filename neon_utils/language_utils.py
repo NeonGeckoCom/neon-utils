@@ -27,7 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from collections import namedtuple
-from mycroft_bus_client import Message
+from ovos_bus_client import Message
 from neon_utils.messagebus_utils import get_messagebus
 try:
     from lingua_franca.internal import get_supported_langs

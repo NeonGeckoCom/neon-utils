@@ -27,7 +27,7 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from os.path import isfile, join
-from mycroft_bus_client import Message, MessageBusClient
+from ovos_bus_client import Message, MessageBusClient
 
 from neon_utils.message_utils import resolve_message, get_message_user
 from neon_utils.configuration_utils import NGIConfig, get_neon_user_config, \

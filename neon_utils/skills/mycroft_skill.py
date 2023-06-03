@@ -34,7 +34,7 @@ import yaml
 from threading import Event, Thread
 from typing import Optional
 from json_database import JsonStorage
-from mycroft_bus_client.message import Message
+from ovos_bus_client.message import Message
 from ovos_workshop.skills.mycroft_skill import MycroftSkill
 from ovos_utils.skills.settings import get_local_settings
 

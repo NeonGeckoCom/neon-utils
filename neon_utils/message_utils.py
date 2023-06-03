@@ -32,7 +32,7 @@ import inspect
 from enum import Enum
 from time import time
 from typing import Optional, Union
-from mycroft_bus_client import Message
+from ovos_bus_client import Message
 from neon_utils.logger import LOG
 
 

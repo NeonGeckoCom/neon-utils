@@ -43,7 +43,7 @@
 import re
 from enum import Enum, IntEnum
 from abc import ABC, abstractmethod
-from mycroft_bus_client import Message
+from ovos_bus_client import Message
 from neon_utils.skills.neon_skill import NeonSkill
 
 from mycroft.skills.audioservice import AudioService
