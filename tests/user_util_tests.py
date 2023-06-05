@@ -33,7 +33,7 @@ from os.path import join, dirname
 from copy import deepcopy
 from threading import Event
 
-from mycroft_bus_client import Message
+from ovos_bus_client import Message
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 

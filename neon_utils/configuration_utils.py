@@ -464,86 +464,50 @@ def _init_ovos_conf(name: str, force_reload: bool = False):
     :param name: Name of calling module to configure to use `neon.yaml`
     :param force_reload: If true, force reload of configuration modules
     """
-    from ovos_config.meta import get_ovos_config
-    ovos_conf = get_ovos_config()
-    original_conf = deepcopy(ovos_conf)
-    ovos_conf.setdefault('module_overrides', {})
-    ovos_conf.setdefault('submodule_mappings', {})
+    from ovos_config.utils import init_module_config
 
-    if "neon_core" not in ovos_conf['module_overrides']:
-        ovos_conf['module_overrides']['neon_core'] = {
-            "base_folder": "neon",
-            "config_filename": "neon.yaml"
-        }
+    from neon_utils.packaging_utils import get_neon_core_root
+    try:
+        default_config_dir = join(get_neon_core_root(), "configuration")
+        if isfile(join(default_config_dir, "neon.yaml")):
+            default_config_path = join(default_config_dir, "neon.yaml")
+        elif isfile(join(default_config_dir, "neon.conf")):
+            default_config_path = join(default_config_dir, "neon.conf")
+        else:
+            LOG.warning(f"No neon_core default config found in "
+                        f"{default_config_dir}")
+            default_config_path = None
+    except Exception as e:
+        LOG.error(e)
+        default_config_path = None
 
-    if not ovos_conf.get('module_overrides',
-                         {}).get("neon_core", {}).get("default_config_path"):
-        from neon_utils.packaging_utils import get_neon_core_root
-        try:
-            default_config_dir = join(get_neon_core_root(), "configuration")
-            if isfile(join(default_config_dir, "neon.yaml")):
-                default_config_path = join(default_config_dir, "neon.yaml")
-            elif isfile(join(default_config_dir, "neon.conf")):
-                default_config_path = join(default_config_dir, "neon.conf")
-            else:
-                LOG.warning(f"No neon_core default config found in "
-                            f"{default_config_dir}")
-                default_config_path = None
-            if default_config_path:
-                ovos_conf["module_overrides"]["neon_core"][
-                    "default_config_path"] = default_config_path
-        except Exception as e:
-            LOG.error(e)
+    module_config = {
+        "xdg": True,
+        "base_folder": "neon",
+        "config_filename": "neon.yaml"
+    }
+    if default_config_path:
+        module_config['default_config_path'] = default_config_path
 
-    if name != "__main__" and name not in ovos_conf['submodule_mappings']:
-        ovos_conf['submodule_mappings'][name] = 'neon_core'
-        LOG.warning(f"Calling module ({name}) now configured to use neon.yaml")
+    try:
+        init_module_config(name, "neon_core", module_config)
         if name == "neon_core":
-            ovos_conf['submodule_mappings']['neon_core.skills.skill_manager'] \
-                = 'neon_core'
+            # Also configure neon_core.skills.skill_manager
+            init_module_config("neon_core.skills.skill_manager",
+                               "neon_core", module_config)
+    except RuntimeError:
+        LOG.exception(f"Failed to init config module_config={module_config}")
 
-        ovos_path = join(xdg_config_home(), "OpenVoiceOS", "ovos.conf")
-        os.makedirs(dirname(ovos_path), exist_ok=True)
-        config_to_write = {
-            "module_overrides": ovos_conf.get('module_overrides'),
-            "submodule_mappings": ovos_conf.get('submodule_mappings')
-        }
-        with open(ovos_path, "w+") as f:
-            json.dump(config_to_write, f, indent=4)
-
-    if force_reload or ovos_conf != original_conf:
-        LOG.debug("Force reload of all configuration references")
-        # Note that the below block reloads modules in a specific order due to
-        # imports within ovos_config and mycroft.configuration
-        import ovos_config
-        importlib.reload(ovos_config.locations)
-        from ovos_config.meta import get_ovos_config
-        ovos_conf = get_ovos_config()  # Load the full stack for /etc overrides
-        if ovos_conf["module_overrides"]["neon_core"].get("default_config_path") \
-            and ovos_config.locations.DEFAULT_CONFIG != \
-                ovos_conf["module_overrides"]["neon_core"]["default_config_path"]:
-            ovos_config.locations.DEFAULT_CONFIG = \
-                ovos_conf["module_overrides"]["neon_core"]["default_config_path"]
-
-            # Default config changed, remove any cached configuration
-            del ovos_config.config.Configuration
-            del ovos_config.Configuration
-
-        import ovos_config.models
-        importlib.reload(ovos_config.models)
-        importlib.reload(ovos_config.config)
-        importlib.reload(ovos_config)
-
-        try:
-            import mycroft.configuration
-            import mycroft.configuration.locations
-            import mycroft.configuration.config
-            del mycroft.configuration.Configuration
-            importlib.reload(mycroft.configuration.locations)
-            importlib.reload(mycroft.configuration.config)
-            importlib.reload(mycroft.configuration)
-        except Exception as e:
-            LOG.error(f"Failed to override mycroft.configuration: {e}")
+    try:
+        import mycroft.configuration
+        import mycroft.configuration.locations
+        import mycroft.configuration.config
+        del mycroft.configuration.Configuration
+        importlib.reload(mycroft.configuration.locations)
+        importlib.reload(mycroft.configuration.config)
+        importlib.reload(mycroft.configuration)
+    except Exception as e:
+        LOG.error(f"Failed to override mycroft.configuration: {e}")
 
 
 def _validate_config_env() -> bool:
@@ -1078,6 +1042,7 @@ def create_config_from_setup_params(path=None) -> dict:
     Returns:
         NGIConfig object generated from environment vars
     """
+    init_config_dir()
 
     dev_mode = (os.environ.get("devMode") or "false") == "true"
     # auto_run = os.environ.get("autoStart") or "false" == "true"

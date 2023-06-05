@@ -33,7 +33,7 @@ import os
 from copy import deepcopy
 from functools import wraps
 from json_database import JsonStorage
-from mycroft_bus_client.message import Message
+from ovos_bus_client.message import Message
 from typing import Optional, List, Any
 from dateutil.tz import gettz
 from ovos_utils.gui import is_gui_connected
@@ -74,8 +74,8 @@ CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 
 class NeonSkill(PatchedMycroftSkill):
-    def __init__(self, name=None, bus=None, use_settings=True):
-        PatchedMycroftSkill.__init__(self, name, bus, use_settings)
+    def __init__(self, name=None, bus=None, use_settings=True, **kwargs):
+        PatchedMycroftSkill.__init__(self, name, bus, use_settings, **kwargs)
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
@@ -368,7 +368,7 @@ class NeonSkill(PatchedMycroftSkill):
         if isinstance(when, int) or isinstance(when, float):
             from datetime import datetime as dt, timedelta
             when = to_system_time(dt.now(self.sys_tz)) + timedelta(seconds=when)
-            LOG.info(f"Made a datetime: {when}")
+            LOG.debug(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
     def request_check_timeout(self, time_wait: int,

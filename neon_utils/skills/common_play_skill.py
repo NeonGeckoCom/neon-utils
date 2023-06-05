@@ -43,7 +43,7 @@
 import re
 from enum import Enum, IntEnum
 from abc import ABC, abstractmethod
-from mycroft_bus_client import Message
+from ovos_bus_client import Message
 from neon_utils.skills.neon_skill import NeonSkill
 
 from mycroft.skills.audioservice import AudioService
@@ -84,8 +84,8 @@ class CommonPlaySkill(NeonSkill, ABC):
     mycroft-playback-control skill and no special vocab for starting playback
     is needed.
     """
-    def __init__(self, name=None, bus=None):
-        super().__init__(name, bus)
+    def __init__(self, name=None, bus=None, **kwargs):
+        super().__init__(name, bus, **kwargs)
         self.audioservice = None
         self.play_service_string = None
 
