@@ -90,7 +90,7 @@ class CommonPlaySkill(NeonSkill, ABC):
         self.play_service_string = None
 
         # "MusicServiceSkill" -> "Music Service"
-        spoken = name or self.__class__.__name__
+        spoken = kwargs.get("name") or args[0] or self.__class__.__name__
         self.spoken_name = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>",
                                   spoken.replace("Skill", ""))
         # NOTE: Derived skills will likely want to override self.spoken_name
