@@ -118,7 +118,7 @@ class NeonSkill(PatchedMycroftSkill):
         return self._lang_detector
 
     @property
-    def lang_translator(self):
+    def translator(self):
         if not self._translator and OVOSLangTranslationFactory:
             try:
                 self._translator = \
