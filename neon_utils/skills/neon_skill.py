@@ -80,34 +80,52 @@ class NeonSkill(PatchedMycroftSkill):
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
         self._gui_connected = False
-        self.sys_tz = gettz()
 
         try:
             import neon_core
-            self.neon_core = True
+            self._neon_core = True
         except ImportError:
-            self.neon_core = False
+            self._neon_core = False
 
         self.actions_to_confirm = dict()
 
-        # TODO: Consider moving to properties to avoid unused init? DM
-        try:
-            if not OVOSLangDetectionFactory:
-                LOG.info("OPM not available, skipping language plugin load")
-                self.lang_detector, self.translator = None, None
-            else:
-                self.lang_detector = \
-                    OVOSLangDetectionFactory.create(self.config_core)
-                self.translator = \
-                    OVOSLangTranslationFactory.create(self.config_core)
-        except ValueError as x:
-            LOG.error(f"Configured lang plugins not available: {x}")
-            self.lang_detector, self.translator = None, None
+        self._lang_detector = None
+        self._translator = None
 
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET,
                             name="neon.load_cache_on_disk")
+
+    @property
+    def sys_tz(self):
+        return gettz()
+
+    @property
+    def neon_core(self):
+        LOG.warning(f"This reference is deprecated and will be removed in "
+                    f"2.0.0")
+        return self._neon_core
+
+    @property
+    def lang_detector(self):
+        if not self._lang_detector and OVOSLangDetectionFactory:
+            try:
+                self._lang_detector = \
+                    OVOSLangDetectionFactory.create(self.config_core)
+            except ValueError as x:
+                LOG.error(f"Configured lang plugins not available: {x}")
+        return self._lang_detector
+
+    @property
+    def lang_translator(self):
+        if not self._translator and OVOSLangTranslationFactory:
+            try:
+                self._translator = \
+                    OVOSLangTranslationFactory.create(self.config_core)
+            except ValueError as x:
+                LOG.error(f"Configured lang plugins not available: {x}")
+        return self._translator
 
     @property
     def skill_mode(self) -> str:
