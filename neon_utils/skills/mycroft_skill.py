@@ -69,8 +69,7 @@ class PatchedMycroftSkill(MycroftSkill):
         Extends the default method to handle settingsmeta defaults locally
         """
         super()._init_settings()
-        skill_settings = get_local_settings(self._settings_path,
-                                            self.name)
+        skill_settings = get_local_settings(self._settings_path)
         settings_from_disk = dict(skill_settings)
         self.settings = dict_update_keys(skill_settings,
                                          self._read_default_settings())
