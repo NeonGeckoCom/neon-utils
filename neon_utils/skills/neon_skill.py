@@ -96,25 +96,25 @@ class NeonSkill(PatchedMycroftSkill):
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET,
                             name="neon.load_cache_on_disk")
 
-    @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
     @property
+    @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
     def sys_tz(self):
         return gettz()
 
-    @deprecated("Nothing should depend on `neon_core` vs other cores", "2.0.0")
     @property
+    @deprecated("Nothing should depend on `neon_core` vs other cores", "2.0.0")
     def neon_core(self):
         return self._neon_core
 
+    @property
     @deprecated("Skills should track this internally or use converse",
                 "2.0.0")
-    @property
     def actions_to_confirm(self) -> dict:
         return self._actions_to_confirm
 
+    @actions_to_confirm.setter
     @deprecated("Skills should track this internally or use converse",
                 "2.0.0")
-    @actions_to_confirm.setter
     def actions_to_confirm(self, val: dict):
         self._actions_to_confirm = val
 
