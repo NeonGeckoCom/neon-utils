@@ -42,6 +42,7 @@ from collections.abc import MutableMapping
 from contextlib import suppress
 
 from ovos_utils.json_helper import load_commented_json
+from ovos_utils.log import deprecated, log_deprecation
 from ovos_utils.xdg_utils import xdg_config_home
 from typing import Optional
 from combo_lock import NamedLock
@@ -589,7 +590,7 @@ def init_config_dir():
         if isfile(join(new_config_path, "neon.yaml")):
             LOG.error("Config already exists, skipping migration")
         else:
-            LOG.warning(f"Migrating legacy config: {old_config_file}")
+            log_deprecation(f"Deprecated config at {old_config_file}", "2.0.0")
             migrate_ngi_config(old_config_file,
                                join(new_config_path, "neon.yaml"))
             LOG.info(f"Wrote new config: {join(new_config_path, 'neon.yaml')}")
@@ -612,13 +613,16 @@ def init_config_dir():
     _init_ovos_conf(name, force_reload)
 
 
+@deprecated("Use `ovos_config.locations.get_xdg_config_save_path` directly",
+            "2.0.0")
 def get_config_dir():
     """
     Get a default directory in which to find Neon configuration files,
     creating it if it doesn't exist.
     Returns: Path to configuration or else default
     """
-    config_path = join(xdg_config_home(), "neon")
+    from ovos_config.locations import get_xdg_config_save_path
+    config_path = get_xdg_config_save_path()
     LOG.debug(config_path)
     if not isdir(config_path):
         LOG.info(f"Creating config directory: {config_path}")
@@ -832,6 +836,7 @@ def get_neon_user_config(path: Optional[str] = None) -> NGIConfig:
     return user_config
 
 
+@deprecated("Nothing should depend on `neon_core` package", "2.0.0")
 def is_neon_core() -> bool:
     """
     Checks for neon-specific packages to determine if
@@ -1034,6 +1039,7 @@ def write_mycroft_compatible_config(file_to_write: str = None) -> str:
     return file_path
 
 
+@deprecated("Legacy setup support will be deprecated", "2.0.0")
 def create_config_from_setup_params(path=None) -> dict:
     """
     Populate a (probably) new local config with setup parameters
@@ -1094,6 +1100,7 @@ def create_config_from_setup_params(path=None) -> dict:
     return config_patch
 
 
+@deprecated("Legacy configuration support will be deprecated", "2.0.0")
 def migrate_ngi_config(old_config_path: str = None,
                        new_config_path: str = None):
     """
@@ -1121,6 +1128,7 @@ def migrate_ngi_config(old_config_path: str = None,
     LOG.warning(f"Migrated old config to: {new_config_path}")
 
 
+@deprecated("Skill default settings out of scope for this package", "2.0.0")
 def parse_skill_default_settings(settings_meta: dict) -> dict:
     """
     Parses default skill settings from settingsmeta file contents
@@ -1149,6 +1157,7 @@ def parse_skill_default_settings(settings_meta: dict) -> dict:
             raise e
 
 
+@deprecated("Legacy configuration support will be deprecated", "2.0.0")
 def _make_loaded_config_safe(config: dict) -> dict:
     """
     Ensure the entire passed config object is json-serializable
@@ -1160,23 +1169,18 @@ def _make_loaded_config_safe(config: dict) -> dict:
 
 
 # TODO: Below methods are all deprecated and retained only for backwards-compat
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def get_neon_auth_config(*args, **kwargs):
-    LOG.error("This method is deprecated")
     return {"api_services": {}}
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_lang_config(neon_config_path=None) -> dict:
     """
     Get a language config for language utilities
     Returns:
         dict of config params used by Language Detector and Translator modules
     """
-    import inspect
-    call = inspect.stack()[1]
-    module = inspect.getmodule(call.frame)
-    name = module.__name__ if module else call.filename
-    LOG.warning("This reference is deprecated - "
-                f"{name}:{call.lineno}")
     lang_config = deepcopy(_get_neon_local_config(neon_config_path).content.get("language", {}))
     lang_config["internal"] = lang_config.pop("core_lang", "en-us")
     lang_config["boost"] = lang_config.get("boost", False)
@@ -1187,6 +1191,7 @@ def _get_neon_lang_config(neon_config_path=None) -> dict:
     return merged_language
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_tts_config(neon_config_path=None) -> dict:
     """
     Get a configuration dict for TTS
@@ -1196,6 +1201,7 @@ def _get_neon_tts_config(neon_config_path=None) -> dict:
     return _get_neon_local_config(neon_config_path).get("tts") or {}
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_speech_config(neon_config_path=None) -> dict:
     """
     Get a configuration dict for listener. Merge any values from Mycroft config if missing from Neon.
@@ -1249,6 +1255,7 @@ def _get_neon_speech_config(neon_config_path=None) -> dict:
             }
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_bus_config(neon_config_path=None) -> dict:
     """
     Get a configuration dict for the messagebus. Merge any values from Mycroft config if missing from Neon.
@@ -1263,6 +1270,7 @@ def _get_neon_bus_config(neon_config_path=None) -> dict:
     return merged
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_audio_config(neon_config_path=None) -> dict:
     """
     Get a configuration dict for the audio module.
@@ -1289,6 +1297,7 @@ def _get_neon_audio_config(neon_config_path=None) -> dict:
             "language": _get_neon_lang_config()}
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_api_config(neon_config_path=None) -> dict:
     """
     Get a configuration dict for the api module.
@@ -1306,6 +1315,7 @@ def _get_neon_api_config(neon_config_path=None) -> dict:
     return merged
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_skills_config(neon_config_path=None) -> dict:
     """
     Get a configuration dict for the skills module.
@@ -1369,6 +1379,7 @@ def _get_neon_skills_config(neon_config_path=None) -> dict:
     return skills_config
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_transcribe_config(neon_config_path=None) -> dict:
     """
     Get a configuration dict for the transcription module.
@@ -1387,6 +1398,7 @@ def _get_neon_transcribe_config(neon_config_path=None) -> dict:
     return neon_transcribe_config
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_gui_config(neon_config_path=None) -> dict:
     """
     Get a configuration dict for the gui module.
@@ -1399,6 +1411,7 @@ def _get_neon_gui_config(neon_config_path=None) -> dict:
     return gui_config
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _safe_mycroft_config() -> dict:
     """
     Safe reference to mycroft config that always returns a dict
@@ -1410,6 +1423,7 @@ def _safe_mycroft_config() -> dict:
     return dict(config)
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_yaml_config() -> dict:
     from ovos_config.meta import get_ovos_config
     from ovos_config.locations import get_xdg_config_save_path
@@ -1434,6 +1448,7 @@ def _get_neon_yaml_config() -> dict:
     return config
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_auth_config(path: Optional[str] = None) -> dict:
     """
     Returns a dict authentication configuration and handles populating values
@@ -1484,6 +1499,7 @@ def _get_neon_auth_config(path: Optional[str] = None) -> dict:
         return auth_config
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _move_config_sections(user_config, local_config):
     """
     Temporary method to handle one-time migration of user_config params to local_config
@@ -1518,6 +1534,7 @@ def _move_config_sections(user_config, local_config):
         pass
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     """
     Returns a dict local configuration and handles any
@@ -1527,12 +1544,6 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     Returns:
         NGIConfig object with local config
     """
-    import inspect
-    call = inspect.stack()[1]
-    module = inspect.getmodule(call.frame)
-    name = module.__name__ if module else call.filename
-    LOG.warning("This reference is deprecated - "
-                f"{name}:{call.lineno}")
     try:
         if isfile(join(path or get_config_dir(), "ngi_local_conf.yml")):
             local_config = NGIConfig("ngi_local_conf", path)
@@ -1556,6 +1567,7 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     return local_config
 
 
+@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _populate_read_only_config(path: Optional[str], config_filename: str,
                                loaded_config: NGIConfig) -> bool:
     """

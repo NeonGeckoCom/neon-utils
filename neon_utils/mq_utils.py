@@ -29,6 +29,8 @@
 import logging
 import uuid
 
+from ovos_utils.log import deprecated
+
 try:
     from threading import Event
     from pika.channel import Channel
@@ -65,15 +67,19 @@ class NeonMQHandler(MQConnector):
             parameters=self.get_connection_params(vhost))
 
 
+@deprecated("Use `neon_mq_connector.client.send_mq_request`", "2.0.0")
 def get_mq_response(vhost: str, request_data: dict, target_queue: str,
                     response_queue: str = None, timeout: int = 30) -> dict:
     # TODO: Remove in v1.0.0 DM
-    LOG.warning(f"This method has been deprecated, please use: `send_mq_request`")
-    return send_mq_request(vhost, request_data, target_queue, response_queue, timeout, True)
+    return send_mq_request(vhost, request_data, target_queue, response_queue,
+                           timeout, True)
 
 
+# TODO: Mark deprecation after stable neon_mq_connector release
+# @deprecated("Use `neon_mq_connector.client.send_mq_request`", "2.0.0")
 def send_mq_request(vhost: str, request_data: dict, target_queue: str,
-                    response_queue: str = None, timeout: int = 30, expect_response: bool = True) -> dict:
+                    response_queue: str = None, timeout: int = 30,
+                    expect_response: bool = True) -> dict:
     """
     Sends a request to the MQ server and returns the response.
     :param vhost: vhost to target

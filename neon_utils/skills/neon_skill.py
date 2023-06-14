@@ -40,7 +40,7 @@ from ovos_utils.gui import is_gui_connected
 from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
 from ovos_utils.skills.settings import save_settings
-
+from ovos_utils.log import deprecated
 from neon_utils.configuration_utils import is_neon_core
 from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
@@ -87,7 +87,7 @@ class NeonSkill(PatchedMycroftSkill):
         except ImportError:
             self._neon_core = False
 
-        self.actions_to_confirm = dict()
+        self._actions_to_confirm = dict()
 
         self._lang_detector = None
         self._translator = None
@@ -98,14 +98,26 @@ class NeonSkill(PatchedMycroftSkill):
                             name="neon.load_cache_on_disk")
 
     @property
+    @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
     def sys_tz(self):
         return gettz()
 
     @property
+    @deprecated("Nothing should depend on `neon_core` vs other cores", "2.0.0")
     def neon_core(self):
-        LOG.warning(f"This reference is deprecated and will be removed in "
-                    f"2.0.0")
         return self._neon_core
+
+    @property
+    @deprecated("Skills should track this internally or use converse",
+                "2.0.0")
+    def actions_to_confirm(self) -> dict:
+        return self._actions_to_confirm
+
+    @actions_to_confirm.setter
+    @deprecated("Skills should track this internally or use converse",
+                "2.0.0")
+    def actions_to_confirm(self, val: dict):
+        self._actions_to_confirm = val
 
     @property
     def lang_detector(self):
@@ -128,6 +140,7 @@ class NeonSkill(PatchedMycroftSkill):
         return self._translator
 
     @property
+    @deprecated("This is now configured in CommonQuery", "2.0.0")
     def skill_mode(self) -> str:
         """
         Determine the "speed mode" requested by the user
@@ -136,6 +149,7 @@ class NeonSkill(PatchedMycroftSkill):
             'response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
 
     @property
+    @deprecated("This is now configured in CommonQuery", "2.0.0")
     def extension_time(self) -> int:
         """
         Determine how long the skill should extend CommonSkill request timeouts
@@ -143,6 +157,7 @@ class NeonSkill(PatchedMycroftSkill):
         return SPEED_MODE_EXTENSION_TIME.get(self.skill_mode) or 10
 
     @property
+    @deprecated("Always emit GUI events for the GUI module to manage", "2.0.0")
     def gui_enabled(self) -> bool:
         """
         If True, skill should display GUI pages
@@ -157,10 +172,12 @@ class NeonSkill(PatchedMycroftSkill):
             return True
 
     @property
+    @deprecated("reference `self.settings` directly", "2.0.0")
     def ngi_settings(self):
         return self.preference_skill()
 
     @resolve_message
+    @deprecated("reference `self.settings` directly", "2.0.0")
     def preference_skill(self, message=None) -> dict:
         """
         Returns the skill settings configuration
@@ -172,6 +189,8 @@ class NeonSkill(PatchedMycroftSkill):
             message).get("skills", {}).get(self.skill_id) or self.settings
 
     @resolve_message
+    @deprecated("implement `neon_utils.user_utils.update_user_profile`",
+                "2.0.0")
     def update_profile(self, new_preferences: dict, message: Message = None):
         """
         Updates a user profile with the passed new_preferences
@@ -210,7 +229,8 @@ class NeonSkill(PatchedMycroftSkill):
             else:
                 save_settings(self.file_system.path, self.settings)
 
-    def send_with_audio(self, text_shout, audio_file, message, lang="en-us", private=False, speaker=None):
+    def send_with_audio(self, text_shout, audio_file, message, lang="en-us",
+                        private=False, speaker=None):
         """
         Sends a Neon response with the passed text phrase and audio file
         :param text_shout: (str) Text to shout
@@ -241,38 +261,15 @@ class NeonSkill(PatchedMycroftSkill):
                                       {"responses": responses,
                                        "speaker": speaker}))
 
-    @resolve_message
+    @deprecated("implement `neon_utils.user_utils.neon_must_respond`", "2.0.0")
     def neon_must_respond(self, message: Message = None) -> bool:
         """
         Checks if Neon must respond to an utterance (i.e. a server request)
         :param message: message associated with user request
         :returns: True if Neon must provide a response to this request
         """
-        if not message:
-            return False
-        if "klat_data" in message.context:
-            title = message.context.get("klat_data", {}).get("title", "")
-            LOG.debug(message.data.get("utterance"))
-            if message.data.get("utterance", "").startswith(
-                    "Welcome to your private conversation"):
-                return False
-            if title.startswith("!PRIVATE:"):
-                if ',' in title:
-                    users = title.split(':')[1].split(',')
-                    for idx, val in enumerate(users):
-                        users[idx] = val.strip()
-                    if len(users) == 2 and "Neon" in users:
-                        # Private with Neon
-                        # LOG.debug("DM: Private Conversation with Neon")
-                        return True
-                    elif message.data.get("utterance",
-                                          "").lower().startswith("neon"):
-                        # Message starts with "neon", must respond
-                        return True
-                else:
-                    # Solo Private
-                    return True
-        return False
+        from neon_utils.message_utils import neon_must_respond
+        return neon_must_respond(message)
 
     def voc_match(self, utt, voc_filename, lang=None, exact=False):
         # TODO: This should be addressed in vocab resolver classes
@@ -389,6 +386,7 @@ class NeonSkill(PatchedMycroftSkill):
             LOG.debug(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
+    @deprecated("This method is deprecated", "2.0.0")
     def request_check_timeout(self, time_wait: int,
                               intent_to_check: List[str]):
         """
