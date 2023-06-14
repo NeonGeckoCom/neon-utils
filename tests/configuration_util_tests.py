@@ -921,6 +921,7 @@ class ConfigurationUtilTests(unittest.TestCase):
     def test_validate_config_env(self):
         from neon_utils.configuration_utils import _validate_config_env
         os.environ["XDG_CONFIG_HOME"] = ""
+        os.environ["OVOS_CONFIG_BASE_FOLDER"] = "neon"
 
         # Valid default path
         _validate_config_env()
@@ -967,6 +968,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         shutil.rmtree("/tmp/neon_config")
 
         os.environ.pop("XDG_CONFIG_HOME")
+        os.environ.pop("OVOS_CONFIG_BASE_FOLDER")
 
     def test_migrate_ngi_config(self):
         from neon_utils.configuration_utils import migrate_ngi_config
