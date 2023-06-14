@@ -96,25 +96,25 @@ class NeonSkill(PatchedMycroftSkill):
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET,
                             name="neon.load_cache_on_disk")
 
-    @property
     @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
+    @property
     def sys_tz(self):
         return gettz()
 
-    @property
     @deprecated("Nothing should depend on `neon_core` vs other cores", "2.0.0")
+    @property
     def neon_core(self):
         return self._neon_core
 
-    @property
     @deprecated("Skills should track this internally or use converse",
                 "2.0.0")
+    @property
     def actions_to_confirm(self) -> dict:
         return self._actions_to_confirm
 
-    @actions_to_confirm.setter
     @deprecated("Skills should track this internally or use converse",
                 "2.0.0")
+    @actions_to_confirm.setter
     def actions_to_confirm(self, val: dict):
         self._actions_to_confirm = val
 
@@ -175,8 +175,8 @@ class NeonSkill(PatchedMycroftSkill):
     def ngi_settings(self):
         return self.preference_skill()
 
-    @resolve_message
     @deprecated("reference `self.settings` directly", "2.0.0")
+    @resolve_message
     def preference_skill(self, message=None) -> dict:
         """
         Returns the skill settings configuration
@@ -187,9 +187,9 @@ class NeonSkill(PatchedMycroftSkill):
         return get_user_prefs(
             message).get("skills", {}).get(self.skill_id) or self.settings
 
-    @resolve_message
     @deprecated("implement `neon_utils.user_utils.update_user_profile`",
                 "2.0.0")
+    @resolve_message
     def update_profile(self, new_preferences: dict, message: Message = None):
         """
         Updates a user profile with the passed new_preferences
