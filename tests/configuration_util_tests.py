@@ -357,11 +357,13 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertTrue(os.path.isdir(config_path))
 
         # Valid override
+        os.environ["OVOS_CONFIG_BASE_FOLDER"] = "neon"
         os.environ["XDG_CONFIG_HOME"] = expanduser("~/")
         config_path = get_config_dir()
         self.assertEqual(config_path, expanduser("~/neon"))
         self.assertTrue(os.path.isdir(config_path))
         os.environ.pop("XDG_CONFIG_HOME")
+        os.environ.pop("OVOS_CONFIG_BASE_FOLDER")
         self.assertIsNone(os.getenv("XDG_CONFIG_HOME"))
 
     def test_delete_recursive_dictionary_keys(self):
@@ -637,6 +639,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         from neon_utils.configuration_utils import init_config_dir
         ro_dir = os.path.join(ROOT_DIR, "configuration", "unwritable_path")
         config_dir = os.path.join(ROOT_DIR, "configuration", "test")
+        os.environ["OVOS_CONFIG_BASE_FOLDER"] = "neon"
         os.environ["NEON_CONFIG_PATH"] = ro_dir
         os.environ["XDG_CONFIG_HOME"] = config_dir
         init_config_dir()
@@ -659,6 +662,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         init_ovos_conf.assert_called_once()
         shutil.rmtree(os.environ.pop("XDG_CONFIG_HOME"))
         os.environ.pop("NEON_CONFIG_PATH")
+        os.environ.pop("OVOS_CONFIG_BASE_FOLDER")
 
     def test_get_mycroft_compatible_location(self):
         from neon_utils.configuration_utils import \
