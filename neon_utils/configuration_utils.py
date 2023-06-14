@@ -59,8 +59,9 @@ class NGIConfig:
     # configuration_locks = dict()
 
     def __init__(self, name, path=None, force_reload: bool = False):
+        from ovos_config.locations import get_xdg_config_save_path
         self.name = name
-        self.path = path or get_config_dir()
+        self.path = path or get_xdg_config_save_path()
         lock_filename = join(self.path, f".{self.name}.lock")
         self.lock = NamedLock(lock_filename)
         self._pending_write = False
@@ -1567,7 +1568,6 @@ def _get_neon_local_config(path: Optional[str] = None) -> NGIConfig:
     return local_config
 
 
-@deprecated("Configuration moved to `ovos_config.Configuration`", "2.0.0")
 def _populate_read_only_config(path: Optional[str], config_filename: str,
                                loaded_config: NGIConfig) -> bool:
     """

@@ -175,8 +175,8 @@ class NeonSkill(PatchedMycroftSkill):
     def ngi_settings(self):
         return self.preference_skill()
 
-    @deprecated("reference `self.settings` directly", "2.0.0")
     @resolve_message
+    @deprecated("reference `self.settings` directly", "2.0.0")
     def preference_skill(self, message=None) -> dict:
         """
         Returns the skill settings configuration
@@ -187,9 +187,10 @@ class NeonSkill(PatchedMycroftSkill):
         return get_user_prefs(
             message).get("skills", {}).get(self.skill_id) or self.settings
 
+
+    @resolve_message
     @deprecated("implement `neon_utils.user_utils.update_user_profile`",
                 "2.0.0")
-    @resolve_message
     def update_profile(self, new_preferences: dict, message: Message = None):
         """
         Updates a user profile with the passed new_preferences
