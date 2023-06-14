@@ -41,7 +41,6 @@ from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
 from ovos_utils.skills.settings import save_settings
 from ovos_utils.log import deprecated
-from neon_utils.configuration_utils import is_neon_core
 from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
 from neon_utils.message_utils import dig_for_message, resolve_message
@@ -307,13 +306,14 @@ class NeonSkill(PatchedMycroftSkill):
         else:
             return False
 
+    @deprecated("WW status can be queried via messagebus", "2.0.0")
     def neon_in_request(self, message: Message) -> bool:
         """
         Checks if the utterance is intended for Neon.
         Server utilizes current conversation, otherwise wake-word status
         and message "Neon" parameter used
         """
-        if not is_neon_core():
+        if not self._neon_core:
             return True
 
         from neon_utils.message_utils import request_for_neon
