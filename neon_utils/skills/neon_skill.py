@@ -171,8 +171,8 @@ class NeonSkill(PatchedMycroftSkill):
             LOG.exception(x)
             return True
 
-    @deprecated("reference `self.settings` directly", "2.0.0")
     @property
+    @deprecated("reference `self.settings` directly", "2.0.0")
     def ngi_settings(self):
         return self.preference_skill()
 
