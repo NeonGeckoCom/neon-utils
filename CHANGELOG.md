@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a3) (2023-06-15)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a2...1.5.1a3)
+
+**Merged pull requests:**
+
+- Resolve deprecation warnings [\#460](https://github.com/NeonGeckoCom/neon-utils/pull/460) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a2) (2023-06-15)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a1...1.5.1a2)
