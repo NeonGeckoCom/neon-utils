@@ -31,7 +31,6 @@ from time import time, strftime
 
 from neon_utils.logger import LOG
 from neon_utils.mq_utils import send_mq_request
-from neon_utils.packaging_utils import get_neon_core_version
 
 
 # TODO: Enable metric reporting DM
@@ -89,7 +88,8 @@ def report_metric(name: str, **kwargs):
     :param kwargs: Arbitrary data to include with metric report
     """
     try:
-        send_mq_request("/neon_metrics", {**{"name": name}, **kwargs}, "neon_metrics_input", expect_response=False)
+        send_mq_request("/neon_metrics", {**{"name": name}, **kwargs},
+                        "neon_metrics_input", expect_response=False)
         return True
     except Exception as e:
         LOG.error(e)
@@ -98,12 +98,14 @@ def report_metric(name: str, **kwargs):
 
 def announce_connection():
     try:
+        from neon_core.version import __version__
         from ovos_config.config import Configuration
         data = {"time": strftime('%Y-%m-%d %H:%M:%S'),
                 "name": dict(Configuration()).get("device_name") or "unknown",
                 "host": gethostname(),
-                "ver": get_neon_core_version()}
-        send_mq_request("/neon_metrics", data, "neon_connections_input", expect_response=False)
+                "ver": __version__}
+        send_mq_request("/neon_metrics", data, "neon_connections_input",
+                        expect_response=False)
         return True
     except Exception as e:
         LOG.error(e)

@@ -81,6 +81,14 @@ class PatchedMycroftSkill(MycroftSkill):
                     json.dump(self.settings, f, indent=4)
         self._initial_settings = dict(self.settings)
 
+    def _init_settings_manager(self):
+        try:
+            from ovos_workshop.settings import SkillSettingsManager
+            self.settings_manager = SkillSettingsManager(self)
+        except ImportError:
+            super()._init_settings_manager()
+
+
     def _read_default_settings(self):
         yaml_path = os.path.join(self.root_dir, "settingsmeta.yml")
         json_path = os.path.join(self.root_dir, "settingsmeta.json")

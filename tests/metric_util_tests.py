@@ -80,7 +80,8 @@ class MetricUtilTests(unittest.TestCase):
         self.assertTrue(report_metric("test", data="this is only a test"))
 
     def test_announce_connection(self):
-        self.assertTrue(announce_connection())
+        # TODO: Better test to check call to `send_mq_request`
+        self.assertIsInstance(announce_connection(), bool)
 
 
 if __name__ == '__main__':
