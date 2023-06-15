@@ -40,8 +40,7 @@ from ovos_utils.gui import is_gui_connected
 from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
 from ovos_utils.skills.settings import save_settings
-
-from neon_utils.configuration_utils import is_neon_core
+from ovos_utils.log import deprecated
 from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
 from neon_utils.message_utils import dig_for_message, resolve_message
@@ -74,35 +73,23 @@ CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 
 class NeonSkill(PatchedMycroftSkill):
-    def __init__(self, name=None, bus=None, use_settings=True, **kwargs):
-        PatchedMycroftSkill.__init__(self, name, bus, use_settings, **kwargs)
+    def __init__(self, name=None, bus=None, **kwargs):
+        PatchedMycroftSkill.__init__(self, name, bus, **kwargs)
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
         self._gui_connected = False
-        self.sys_tz = gettz()
 
         try:
             import neon_core
-            self.neon_core = True
+            self._neon_core = True
         except ImportError:
-            self.neon_core = False
+            self._neon_core = False
 
-        self.actions_to_confirm = dict()
+        self._actions_to_confirm = dict()
 
-        # TODO: Consider moving to properties to avoid unused init? DM
-        try:
-            if not OVOSLangDetectionFactory:
-                LOG.info("OPM not available, skipping language plugin load")
-                self.lang_detector, self.translator = None, None
-            else:
-                self.lang_detector = \
-                    OVOSLangDetectionFactory.create(self.config_core)
-                self.translator = \
-                    OVOSLangTranslationFactory.create(self.config_core)
-        except ValueError as x:
-            LOG.error(f"Configured lang plugins not available: {x}")
-            self.lang_detector, self.translator = None, None
+        self._lang_detector = None
+        self._translator = None
 
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
@@ -110,6 +97,50 @@ class NeonSkill(PatchedMycroftSkill):
                             name="neon.load_cache_on_disk")
 
     @property
+    # @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
+    def sys_tz(self):
+        # TODO: Is this deprecated?
+        return gettz()
+
+    @property
+    @deprecated("Nothing should depend on `neon_core` vs other cores", "2.0.0")
+    def neon_core(self):
+        return self._neon_core
+
+    @property
+    @deprecated("Skills should track this internally or use converse",
+                "2.0.0")
+    def actions_to_confirm(self) -> dict:
+        return self._actions_to_confirm
+
+    @actions_to_confirm.setter
+    @deprecated("Skills should track this internally or use converse",
+                "2.0.0")
+    def actions_to_confirm(self, val: dict):
+        self._actions_to_confirm = val
+
+    @property
+    def lang_detector(self):
+        if not self._lang_detector and OVOSLangDetectionFactory:
+            try:
+                self._lang_detector = \
+                    OVOSLangDetectionFactory.create(self.config_core)
+            except ValueError as x:
+                LOG.error(f"Configured lang plugins not available: {x}")
+        return self._lang_detector
+
+    @property
+    def translator(self):
+        if not self._translator and OVOSLangTranslationFactory:
+            try:
+                self._translator = \
+                    OVOSLangTranslationFactory.create(self.config_core)
+            except ValueError as x:
+                LOG.error(f"Configured lang plugins not available: {x}")
+        return self._translator
+
+    @property
+    @deprecated("This is now configured in CommonQuery", "2.0.0")
     def skill_mode(self) -> str:
         """
         Determine the "speed mode" requested by the user
@@ -118,6 +149,7 @@ class NeonSkill(PatchedMycroftSkill):
             'response_mode', {}).get('speed_mode') or DEFAULT_SPEED_MODE
 
     @property
+    @deprecated("This is now configured in CommonQuery", "2.0.0")
     def extension_time(self) -> int:
         """
         Determine how long the skill should extend CommonSkill request timeouts
@@ -125,6 +157,7 @@ class NeonSkill(PatchedMycroftSkill):
         return SPEED_MODE_EXTENSION_TIME.get(self.skill_mode) or 10
 
     @property
+    @deprecated("Always emit GUI events for the GUI module to manage", "2.0.0")
     def gui_enabled(self) -> bool:
         """
         If True, skill should display GUI pages
@@ -139,10 +172,11 @@ class NeonSkill(PatchedMycroftSkill):
             return True
 
     @property
+    @deprecated("reference `self.settings` directly", "2.0.0")
     def ngi_settings(self):
         return self.preference_skill()
 
-    @resolve_message
+    @deprecated("reference `self.settings` directly", "2.0.0")
     def preference_skill(self, message=None) -> dict:
         """
         Returns the skill settings configuration
@@ -150,10 +184,12 @@ class NeonSkill(PatchedMycroftSkill):
         :param message: Message associated with request
         :return: dict of skill preferences
         """
+        message = message or dig_for_message()
         return get_user_prefs(
             message).get("skills", {}).get(self.skill_id) or self.settings
 
-    @resolve_message
+    @deprecated("implement `neon_utils.user_utils.update_user_profile`",
+                "2.0.0")
     def update_profile(self, new_preferences: dict, message: Message = None):
         """
         Updates a user profile with the passed new_preferences
@@ -162,7 +198,7 @@ class NeonSkill(PatchedMycroftSkill):
         :param message: Message associated with request
         """
         from neon_utils.user_utils import update_user_profile
-
+        message = message or dig_for_message()
         try:
             update_user_profile(new_preferences, message, self.bus)
         except Exception as x:
@@ -192,7 +228,8 @@ class NeonSkill(PatchedMycroftSkill):
             else:
                 save_settings(self.file_system.path, self.settings)
 
-    def send_with_audio(self, text_shout, audio_file, message, lang="en-us", private=False, speaker=None):
+    def send_with_audio(self, text_shout, audio_file, message, lang="en-us",
+                        private=False, speaker=None):
         """
         Sends a Neon response with the passed text phrase and audio file
         :param text_shout: (str) Text to shout
@@ -223,38 +260,15 @@ class NeonSkill(PatchedMycroftSkill):
                                       {"responses": responses,
                                        "speaker": speaker}))
 
-    @resolve_message
+    @deprecated("implement `neon_utils.user_utils.neon_must_respond`", "2.0.0")
     def neon_must_respond(self, message: Message = None) -> bool:
         """
         Checks if Neon must respond to an utterance (i.e. a server request)
         :param message: message associated with user request
         :returns: True if Neon must provide a response to this request
         """
-        if not message:
-            return False
-        if "klat_data" in message.context:
-            title = message.context.get("klat_data", {}).get("title", "")
-            LOG.debug(message.data.get("utterance"))
-            if message.data.get("utterance", "").startswith(
-                    "Welcome to your private conversation"):
-                return False
-            if title.startswith("!PRIVATE:"):
-                if ',' in title:
-                    users = title.split(':')[1].split(',')
-                    for idx, val in enumerate(users):
-                        users[idx] = val.strip()
-                    if len(users) == 2 and "Neon" in users:
-                        # Private with Neon
-                        # LOG.debug("DM: Private Conversation with Neon")
-                        return True
-                    elif message.data.get("utterance",
-                                          "").lower().startswith("neon"):
-                        # Message starts with "neon", must respond
-                        return True
-                else:
-                    # Solo Private
-                    return True
-        return False
+        from neon_utils.message_utils import neon_must_respond
+        return neon_must_respond(message)
 
     def voc_match(self, utt, voc_filename, lang=None, exact=False):
         # TODO: This should be addressed in vocab resolver classes
@@ -292,13 +306,14 @@ class NeonSkill(PatchedMycroftSkill):
         else:
             return False
 
+    @deprecated("WW status can be queried via messagebus", "2.0.0")
     def neon_in_request(self, message: Message) -> bool:
         """
         Checks if the utterance is intended for Neon.
         Server utilizes current conversation, otherwise wake-word status
         and message "Neon" parameter used
         """
-        if not is_neon_core():
+        if not self._neon_core:
             return True
 
         from neon_utils.message_utils import request_for_neon
@@ -371,6 +386,7 @@ class NeonSkill(PatchedMycroftSkill):
             LOG.debug(f"Made a datetime: {when}")
         super().schedule_event(handler, when, data, name, context)
 
+    @deprecated("This method is deprecated", "2.0.0")
     def request_check_timeout(self, time_wait: int,
                               intent_to_check: List[str]):
         """

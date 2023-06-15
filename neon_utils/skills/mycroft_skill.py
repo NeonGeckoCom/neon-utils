@@ -48,8 +48,8 @@ from neon_utils.user_utils import get_user_prefs
 
 
 class PatchedMycroftSkill(MycroftSkill):
-    def __init__(self, name=None, bus=None, use_settings=True, **kwargs):
-        MycroftSkill.__init__(self, name, bus, use_settings, **kwargs)
+    def __init__(self, name=None, bus=None, *args, **kwargs):
+        MycroftSkill.__init__(self, name, bus, *args, **kwargs)
         self.gui = SkillGUI(self)
         # TODO: Should below defaults be global config?
         # allow skills to specify timeout overrides per-skill
@@ -69,8 +69,7 @@ class PatchedMycroftSkill(MycroftSkill):
         Extends the default method to handle settingsmeta defaults locally
         """
         super()._init_settings()
-        skill_settings = get_local_settings(self._settings_path,
-                                            self.name)
+        skill_settings = get_local_settings(self._settings_path)
         settings_from_disk = dict(skill_settings)
         self.settings = dict_update_keys(skill_settings,
                                          self._read_default_settings())

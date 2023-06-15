@@ -209,7 +209,6 @@ class UserUtilTests(unittest.TestCase):
         os.remove(config_object.file_path)
 
     def test_get_default_user_config(self):
-        os.environ['XDG_CONFIG_HOME'] = join(dirname(__file__), "test_config")
         from neon_utils.user_utils import get_default_user_config
         import neon_utils.user_utils
         neon_utils.user_utils._DEFAULT_USER_CONFIG = None
@@ -220,8 +219,6 @@ class UserUtilTests(unittest.TestCase):
         self.assertEqual(set(user_config['location'].keys()),
                          {'lat', 'lng', 'city', 'state', 'country', 'tz',
                           'utc'})
-        shutil.rmtree(os.environ['XDG_CONFIG_HOME'])
-        os.environ.pop("XDG_CONFIG_HOME")
 
 
 if __name__ == '__main__':
