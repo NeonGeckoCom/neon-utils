@@ -97,8 +97,9 @@ class NeonSkill(PatchedMycroftSkill):
                             name="neon.load_cache_on_disk")
 
     @property
-    @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
+    # @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
     def sys_tz(self):
+        # TODO: Is this deprecated?
         return gettz()
 
     @property
@@ -170,12 +171,11 @@ class NeonSkill(PatchedMycroftSkill):
             LOG.exception(x)
             return True
 
-    @property
     @deprecated("reference `self.settings` directly", "2.0.0")
+    @property
     def ngi_settings(self):
         return self.preference_skill()
 
-    @resolve_message
     @deprecated("reference `self.settings` directly", "2.0.0")
     def preference_skill(self, message=None) -> dict:
         """
@@ -184,11 +184,10 @@ class NeonSkill(PatchedMycroftSkill):
         :param message: Message associated with request
         :return: dict of skill preferences
         """
+        message = message or dig_for_message()
         return get_user_prefs(
             message).get("skills", {}).get(self.skill_id) or self.settings
 
-
-    @resolve_message
     @deprecated("implement `neon_utils.user_utils.update_user_profile`",
                 "2.0.0")
     def update_profile(self, new_preferences: dict, message: Message = None):
@@ -199,7 +198,7 @@ class NeonSkill(PatchedMycroftSkill):
         :param message: Message associated with request
         """
         from neon_utils.user_utils import update_user_profile
-
+        message = message or dig_for_message()
         try:
             update_user_profile(new_preferences, message, self.bus)
         except Exception as x:
