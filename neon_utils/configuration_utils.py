@@ -866,8 +866,9 @@ def get_mycroft_compatible_location(location: dict) -> dict:
     from neon_utils.parse_utils import clean_quotes
     if not any((location.get('lat'), location.get('lng'),
                 location.get('city'), location.get('tz'))):
+        from ovos_config.config import Configuration
         LOG.debug('Neon config empty, return core value')
-        return _safe_mycroft_config().get('location')
+        return Configuration().get('location')
 
     location.setdefault('lat', None)
     location.setdefault('lng', None)
