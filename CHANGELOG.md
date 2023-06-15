@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a5) (2023-06-15)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a4...1.5.1a5)
+
+**Merged pull requests:**
+
+- Update GH Automation to default branch [\#462](https://github.com/NeonGeckoCom/neon-utils/pull/462) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a4) (2023-06-15)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a3...1.5.1a4)
