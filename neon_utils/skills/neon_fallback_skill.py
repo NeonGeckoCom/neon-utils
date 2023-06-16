@@ -42,8 +42,6 @@ class NeonFallbackSkill(FallbackSkill, NeonSkill, OVOSSkill):
     Fallback skill subclassing this class.
     """
     def __init__(self, *args, **kwargs):
-        NeonSkill.__init__(self, *args, **kwargs)
-
         # Manual init of OVOSSkill
         self.private_settings = None
         self._threads = []
@@ -57,3 +55,4 @@ class NeonFallbackSkill(FallbackSkill, NeonSkill, OVOSSkill):
         # "skill_id": priority (int)  overrides
         self.fallback_config = self.config_core["skills"].get("fallbacks", {})
 
+        NeonSkill.__init__(self, *args, **kwargs)
