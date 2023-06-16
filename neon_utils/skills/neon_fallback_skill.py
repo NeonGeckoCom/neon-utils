@@ -38,8 +38,8 @@ except ImportError:
 
 class NeonFallbackSkill(FallbackSkill, NeonSkill, OVOSSkill):
     """
-    Class that extends the NeonSkill and FallbackSkill classes to provide NeonSkill functionality to any
-    Fallback skill subclassing this class.
+    Class that extends the NeonSkill and FallbackSkill classes to provide
+    NeonSkill functionality to any Fallback skill subclassing this class.
     """
     def __init__(self, *args, **kwargs):
         # Manual init of OVOSSkill
@@ -52,7 +52,6 @@ class NeonFallbackSkill(FallbackSkill, NeonSkill, OVOSSkill):
         # Manual init of FallbackSkill
         #  list of fallback handlers registered by this instance
         self.instance_fallback_handlers = []
+        NeonSkill.__init__(self, *args, **kwargs)
         # "skill_id": priority (int)  overrides
         self.fallback_config = self.config_core["skills"].get("fallbacks", {})
-
-        NeonSkill.__init__(self, *args, **kwargs)
