@@ -791,16 +791,21 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
         else "imperial"
 
     if core_config.get("location"):
-        user_config["location"] = {
-            "lat": str(core_config["location"]["coordinate"]["latitude"]),
-            "lng": str(core_config["location"]["coordinate"]["longitude"]),
-            "city": core_config["location"]["city"]["name"],
-            "state": core_config["location"]["city"]["state"]["name"],
-            "country": core_config["location"]["city"]["state"]
-            ["country"]["name"],
-            "tz": core_config["location"]["timezone"]["code"],
-            "utc": str(round(core_config["location"]["timezone"]["offset"]
-                             / 3600000, 1))}
+        loc = user_config["location"]
+        loc.setdefault('lat',
+                       str(core_config["location"]["coordinate"]["latitude"]))
+        loc.setdefault('lng',
+                       str(core_config["location"]["coordinate"]["longitude"]))
+        loc.setdefault('city', core_config["location"]["city"]["name"])
+        loc.setdefault('state',
+                       core_config["location"]["city"]["state"]["name"])
+        loc.setdefault('country', core_config["location"]["city"]["state"]
+                       ["country"]["name"])
+        loc.setdefault('tz', core_config["location"]["timezone"]["code"])
+        loc.setdefault('utc',
+                       str(round(core_config["location"]["timezone"]["offset"]
+                                 / 3600000, 1)))
+
     else:
         LOG.warning(f"No location in core configuration")
     return user_config
