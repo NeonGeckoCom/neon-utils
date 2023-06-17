@@ -285,12 +285,12 @@ class NeonSkill(PatchedMycroftSkill):
                 return super_return
 
         LOG.warning(f"`{voc_filename}` not found, checking in neon_core")
-        from mycroft.skills.skill_data import read_vocab_file
-        from itertools import chain
-        import re
         voc = resolve_neon_resource_file(f"text/{lang}/{voc_filename}.voc")
         if not voc:
             raise FileNotFoundError(voc)
+        from mycroft.skills.skill_data import read_vocab_file
+        from itertools import chain
+        import re
         vocab = read_vocab_file(voc)
         cache_key = lang + voc_filename
         self.voc_match_cache[cache_key] = list(chain(*vocab))

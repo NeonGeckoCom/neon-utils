@@ -773,37 +773,40 @@ def get_user_config_from_mycroft_conf(user_config: dict = None) -> dict:
     Populates user_config with values from mycroft.conf
     :returns: dict modified or created user config
     """
-    from ovos_config.models import MycroftUserConfig
+    from ovos_config.config import Configuration
     user_config = user_config or \
         deepcopy(NGIConfig("default_user_conf",
                            os.path.join(os.path.dirname(__file__),
                                         "default_configurations")).content)
-    mycroft_config = MycroftUserConfig()
-    LOG.debug(f"Initializing mycroft config at {mycroft_config.path}")
-    user_config["speech"]["stt_language"] = mycroft_config.get("lang", "en-us")
-    user_config["speech"]["tts_language"] = mycroft_config.get("lang", "en-us")
+    core_config = Configuration()
+    user_config["speech"]["stt_language"] = core_config.get("lang", "en-us")
+    user_config["speech"]["tts_language"] = core_config.get("lang", "en-us")
     user_config["speech"]["alt_languages"] = \
-        mycroft_config.get("secondary_langs", [])
+        core_config.get("secondary_langs", [])
     user_config["units"]["time"] = \
-        12 if mycroft_config.get("time_format", "half") == "half" else 24
-    user_config["units"]["date"] = mycroft_config.get("date_format") or "MDY"
+        12 if core_config.get("time_format", "half") == "half" else 24
+    user_config["units"]["date"] = core_config.get("date_format") or "MDY"
     user_config["units"]["measure"] = \
-        "metric" if mycroft_config.get("system_unit") == "metric" \
+        "metric" if core_config.get("system_unit") == "metric" \
         else "imperial"
 
-    if mycroft_config.get("location"):
-        user_config["location"] = {
-            "lat": str(mycroft_config["location"]["coordinate"]["latitude"]),
-            "lng": str(mycroft_config["location"]["coordinate"]["longitude"]),
-            "city": mycroft_config["location"]["city"]["name"],
-            "state": mycroft_config["location"]["city"]["state"]["name"],
-            "country": mycroft_config["location"]["city"]["state"]
-            ["country"]["name"],
-            "tz": mycroft_config["location"]["timezone"]["code"],
-            "utc": str(round(mycroft_config["location"]["timezone"]["offset"]
-                             / 3600000, 1))}
+    if core_config.get("location"):
+        loc = user_config["location"]
+        loc['lat'] = loc['lat'] or str(core_config["location"]["coordinate"]
+                                ["latitude"])
+        loc['lng'] = loc['lng'] or str(core_config["location"]["coordinate"]
+                                ["longitude"])
+        loc['city'] = loc['city'] or core_config["location"]["city"]["name"]
+        loc['state'] = loc['state'] or \
+            core_config["location"]["city"]["state"]["name"]
+        loc['country'] = loc['country'] or \
+            core_config["location"]["city"]["state"]["country"]["name"]
+        loc['tz'] = loc['tz'] or core_config["location"]["timezone"]["code"]
+        loc['utc'] = loc['utc'] or str(round(core_config["location"]["timezone"]
+                                       ["offset"] / 3600000, 1))
+
     else:
-        LOG.warning(f"No location in config: {mycroft_config.path}")
+        LOG.warning(f"No location in core configuration")
     return user_config
 
 
