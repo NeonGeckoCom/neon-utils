@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.5.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a6) (2023-06-17)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a5...1.5.1a6)
+
+**Merged pull requests:**
+
+- Troubleshoot ovos-workshop compat. [\#464](https://github.com/NeonGeckoCom/neon-utils/pull/464) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.5.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a5) (2023-06-15)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a4...1.5.1a5)
