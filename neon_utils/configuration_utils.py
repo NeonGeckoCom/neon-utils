@@ -581,6 +581,10 @@ def init_config_dir():
     configuration is loaded. Repeated calls or calls after configuration is
     loaded may lead to inconsistent behavior.
     """
+    if os.getenv("OVOS_CONFIG_BASE_FOLDER") == "neon" and \
+            os.getenv("OVOS_CONFIG_FILENAME"):
+        LOG.info("Configuration set via envvars")
+        return
 
     old_config_file = _check_legacy_config()
 
