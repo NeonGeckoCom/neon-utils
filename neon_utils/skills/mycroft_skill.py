@@ -39,7 +39,6 @@ from ovos_workshop.skills.mycroft_skill import MycroftSkill
 from ovos_utils.skills.settings import get_local_settings
 
 from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
-from neon_utils.skills.skill_gui import SkillGUI
 from neon_utils.logger import LOG
 from neon_utils.message_utils import get_message_user, dig_for_message, resolve_message
 from neon_utils.configuration_utils import dict_update_keys, \
@@ -50,7 +49,6 @@ from neon_utils.user_utils import get_user_prefs
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, *args, **kwargs):
         MycroftSkill.__init__(self, name, bus, *args, **kwargs)
-        self.gui = SkillGUI(self)
         # TODO: Should below defaults be global config?
         # allow skills to specify timeout overrides per-skill
         self._speak_timeout = 30
