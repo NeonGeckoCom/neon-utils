@@ -54,6 +54,9 @@ class PatchedMycroftSkill(MycroftSkill):
         self._speak_timeout = 30
         self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
 
+        if hasattr(self.gui, "ui_directories"):
+            self.gui.ui_directories['qt5'] = os.path.join(self.root_dir, "ui")
+
     @property
     def location(self):
         """
