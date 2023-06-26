@@ -38,12 +38,6 @@ from ovos_utils.signal import ensure_directory_exists
 
 from neon_utils.logger import LOG
 
-try:
-    from pydub import AudioSegment
-except ImportError:
-    LOG.warning("pydub not available, pip install neon-utils[audio]")
-    AudioSegment = None
-
 
 def encode_file_to_base64_string(path: str) -> str:
     """
@@ -113,7 +107,7 @@ def get_file_as_wav(audio_file: str, desired_sample_rate: int, desired_sample_wi
     Returns:
         Wave_read object encoded at the desired_sample_rate
     """
-
+    from pydub import AudioSegment
     audio_file = os.path.expanduser(audio_file)
     if not os.path.isfile(audio_file):
         raise FileNotFoundError
