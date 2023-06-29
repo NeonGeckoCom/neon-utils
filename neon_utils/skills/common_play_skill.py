@@ -84,13 +84,13 @@ class CommonPlaySkill(NeonSkill, ABC):
     mycroft-playback-control skill and no special vocab for starting playback
     is needed.
     """
-    def __init__(self, name=None, bus=None, **kwargs):
-        super().__init__(name, bus, **kwargs)
+    def __init__(self, *args, **kwargs):
+        NeonSkill.__init__(self, *args, **kwargs)
         self.audioservice = None
         self.play_service_string = None
 
         # "MusicServiceSkill" -> "Music Service"
-        spoken = name or self.__class__.__name__
+        spoken = kwargs.get("name") or args[0] or self.__class__.__name__
         self.spoken_name = re.sub(r"([a-z])([A-Z])", r"\g<1> \g<2>",
                                   spoken.replace("Skill", ""))
         # NOTE: Derived skills will likely want to override self.spoken_name

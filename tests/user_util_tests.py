@@ -25,14 +25,15 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-import shutil
+
 import sys
 import os
 import unittest
-from os.path import join, dirname
-from copy import deepcopy
-from threading import Event
 
+from copy import deepcopy
+from os.path import join
+from threading import Event
+from unittest.mock import patch
 from ovos_bus_client import Message
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -71,15 +72,15 @@ class UserUtilTests(unittest.TestCase):
         wrapper(test_message_1, user_1)
         wrapper(test_message_2, user_2)
 
-    def test_get_default_user_config_from_mycroft_conf(self):
+    @patch("ovos_config.config.Configuration")
+    def test_get_default_user_config_from_mycroft_conf(self, config):
+        from ovos_config.models import LocalConf
         # Patch configuration for test
         test_config_dir = os.path.join(os.path.dirname(__file__),
                                        "user_util_test_config")
-        os.environ["XDG_CONFIG_HOME"] = test_config_dir
+        config.return_value = LocalConf(join(test_config_dir, "mycroft",
+                                             "mycroft.conf"))
         import importlib
-        import ovos_config
-        importlib.reload(ovos_config.locations)
-        importlib.reload(ovos_config.models)
         from neon_utils import user_utils
         importlib.reload(user_utils)
         from neon_utils.user_utils import get_default_user_config
@@ -95,8 +96,6 @@ class UserUtilTests(unittest.TestCase):
                           "city": 'Kirkland',
                           "state": 'Washington',
                           "country": "United States"})
-
-        os.environ.pop("XDG_CONFIG_HOME")
 
     def test_update_user_profile(self):
         from neon_utils.user_utils import update_user_profile
@@ -209,7 +208,6 @@ class UserUtilTests(unittest.TestCase):
         os.remove(config_object.file_path)
 
     def test_get_default_user_config(self):
-        os.environ['XDG_CONFIG_HOME'] = join(dirname(__file__), "test_config")
         from neon_utils.user_utils import get_default_user_config
         import neon_utils.user_utils
         neon_utils.user_utils._DEFAULT_USER_CONFIG = None
@@ -220,8 +218,6 @@ class UserUtilTests(unittest.TestCase):
         self.assertEqual(set(user_config['location'].keys()),
                          {'lat', 'lng', 'city', 'state', 'country', 'tz',
                           'utc'})
-        shutil.rmtree(os.environ['XDG_CONFIG_HOME'])
-        os.environ.pop("XDG_CONFIG_HOME")
 
 
 if __name__ == '__main__':

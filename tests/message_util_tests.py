@@ -257,6 +257,33 @@ class MessageUtilTests(unittest.TestCase):
                           "execute_from_script": True
                           })
 
+    def test_neon_must_respond(self):
+        from neon_utils.message_utils import neon_must_respond
+        self.assertFalse(neon_must_respond())
+        private_message_solo = Message("", {},
+                                       {"klat_data": {
+                                           "title": "!PRIVATE:user"}})
+        private_message_neon = Message("", {},
+                                       {"klat_data": {
+                                           "title": "!PRIVATE:user,Neon"}})
+        private_message_neon_plus = \
+            Message("", {},
+                    {"klat_data": {"title": "!PRIVATE:user,Neon,user1"}})
+        public_message = Message("", {},
+                                 {"klat_data": {
+                                     "title": "Test Conversation"}})
+        first_message = Message("",
+                                {"utterance": "Welcome to your private "
+                                              "conversation with Neon"},
+                                {"klat_data": {
+                                    "title": "!PRIVATE:user"}})
+        self.assertFalse(neon_must_respond())
+        self.assertTrue(neon_must_respond(private_message_solo))
+        self.assertTrue(neon_must_respond(private_message_neon))
+        self.assertFalse(neon_must_respond(private_message_neon_plus))
+        self.assertFalse(neon_must_respond(public_message))
+        self.assertFalse(neon_must_respond(first_message))
+
 
 if __name__ == '__main__':
     unittest.main()

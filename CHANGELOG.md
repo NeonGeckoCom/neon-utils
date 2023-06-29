@@ -1,108 +1,60 @@
 # Changelog
 
-## [1.5.0a13](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a13) (2023-06-03)
+## [1.5.1a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a7) (2023-06-27)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a12...1.5.0a13)
-
-**Merged pull requests:**
-
-- Refactor messagebus client package [\#456](https://github.com/NeonGeckoCom/neon-utils/pull/456) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.0a12](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a12) (2023-06-03)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a11...1.5.0a12)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a6...1.5.1a7)
 
 **Merged pull requests:**
 
-- Remove backwards-compat. `debug` config handling [\#455](https://github.com/NeonGeckoCom/neon-utils/pull/455) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update Config Handling [\#466](https://github.com/NeonGeckoCom/neon-utils/pull/466) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.5.0a11](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a11) (2023-05-26)
+## [1.5.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a6) (2023-06-17)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a10...1.5.0a11)
-
-**Merged pull requests:**
-
-- Add call to `init_config_dir` in legacy setup config handling [\#454](https://github.com/NeonGeckoCom/neon-utils/pull/454) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.0a10](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a10) (2023-05-26)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a9...1.5.0a10)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a5...1.5.1a6)
 
 **Merged pull requests:**
 
-- Add call to init `FallbackSkill` from `ovos_workshop` [\#453](https://github.com/NeonGeckoCom/neon-utils/pull/453) ([NeonDaniel](https://github.com/NeonDaniel))
+- Troubleshoot ovos-workshop compat. [\#464](https://github.com/NeonGeckoCom/neon-utils/pull/464) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.5.0a9](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a9) (2023-05-25)
+## [1.5.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a5) (2023-06-15)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a8...1.5.0a9)
-
-**Merged pull requests:**
-
-- Resolve configuration re-init bugs [\#452](https://github.com/NeonGeckoCom/neon-utils/pull/452) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.0a8](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a8) (2023-05-24)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a7...1.5.0a8)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a4...1.5.1a5)
 
 **Merged pull requests:**
 
-- Move config init to ovos-config [\#448](https://github.com/NeonGeckoCom/neon-utils/pull/448) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update GH Automation to default branch [\#462](https://github.com/NeonGeckoCom/neon-utils/pull/462) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.5.0a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a7) (2023-05-19)
+## [1.5.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a4) (2023-06-15)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a6...1.5.0a7)
-
-**Merged pull requests:**
-
-- Update Pyyaml dependency to allow 6.0 [\#450](https://github.com/NeonGeckoCom/neon-utils/pull/450) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.0a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a6) (2023-05-19)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a5...1.5.0a6)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a3...1.5.1a4)
 
 **Merged pull requests:**
 
-- Add periodic malloc logging based on configuration [\#449](https://github.com/NeonGeckoCom/neon-utils/pull/449) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update dependencies and Test sdist publication [\#461](https://github.com/NeonGeckoCom/neon-utils/pull/461) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.5.0a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a5) (2023-05-17)
+## [1.5.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a3) (2023-06-15)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a4...1.5.0a5)
-
-**Merged pull requests:**
-
-- Add utilities to trace memory allocation [\#447](https://github.com/NeonGeckoCom/neon-utils/pull/447) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.0a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a4) (2023-05-16)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a3...1.5.0a4)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a2...1.5.1a3)
 
 **Merged pull requests:**
 
-- Update Skill classes to support arbitrary kwargs passed at init [\#446](https://github.com/NeonGeckoCom/neon-utils/pull/446) ([NeonDaniel](https://github.com/NeonDaniel))
+- Resolve deprecation warnings [\#460](https://github.com/NeonGeckoCom/neon-utils/pull/460) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.5.0a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a3) (2023-05-12)
+## [1.5.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a2) (2023-06-15)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a2...1.5.0a3)
-
-**Merged pull requests:**
-
-- Better argument validation in `parse_utils` [\#445](https://github.com/NeonGeckoCom/neon-utils/pull/445) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.0a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a2) (2023-05-11)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0a1...1.5.0a2)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a1...1.5.1a2)
 
 **Merged pull requests:**
 
-- Update core version checks and annotate deprecation [\#444](https://github.com/NeonGeckoCom/neon-utils/pull/444) ([NeonDaniel](https://github.com/NeonDaniel))
+- Resolve internal reference to deprecated function [\#459](https://github.com/NeonGeckoCom/neon-utils/pull/459) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.5.0a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.0a1) (2023-04-13)
+## [1.5.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a1) (2023-06-15)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.4.0...1.5.0a1)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0...1.5.1a1)
 
 **Merged pull requests:**
 
-- Implement Changelog Automation [\#442](https://github.com/NeonGeckoCom/neon-utils/pull/442) ([NeonDaniel](https://github.com/NeonDaniel))
+- Refactor skill init and properties for latest ovos-workshop compat. [\#458](https://github.com/NeonGeckoCom/neon-utils/pull/458) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 

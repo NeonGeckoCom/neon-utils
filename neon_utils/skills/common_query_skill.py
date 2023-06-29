@@ -77,8 +77,8 @@ class CommonQuerySkill(NeonSkill, ABC):
     This class works in conjunction with skill-query which collects
     answers from several skills presenting the best one available.
     """
-    def __init__(self, name=None, bus=None, **kwargs):
-        super().__init__(name, bus, **kwargs)
+    def __init__(self, *args, **kwargs):
+        NeonSkill.__init__(self, *args, **kwargs)
 
     def bind(self, bus):
         """Overrides the default bind method of MycroftSkill.
