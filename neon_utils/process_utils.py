@@ -63,6 +63,7 @@ def start_systemd_service(service: callable, **kwargs):
         notifier.notify('STATUS=Stopping')
 
     def on_error(err: str):
+        notifier.notify('STATUS=Error')
         if err.isnumeric():
             notifier.notify(f'ERRNO={err}')
         else:
