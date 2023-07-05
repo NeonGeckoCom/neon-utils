@@ -49,8 +49,9 @@ from neon_utils.user_utils import get_user_prefs
 
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, *args, **kwargs):
+        # TODO: Deprecate gui override
+        kwargs["gui"] = SkillGUI(self)
         MycroftSkill.__init__(self, name, bus, *args, **kwargs)
-        self.gui = SkillGUI(self)
         # TODO: Should below defaults be global config?
         # allow skills to specify timeout overrides per-skill
         self._speak_timeout = 30

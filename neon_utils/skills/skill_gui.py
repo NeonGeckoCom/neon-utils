@@ -29,7 +29,11 @@
 from os.path import join
 from neon_utils.logger import LOG
 from neon_utils.file_utils import resolve_neon_resource_file
-from mycroft.enclosure.gui import SkillGUI as _SkillGUI
+
+try:
+    from ovos_workshop.skills.base import SkillGUI as _SkillGUI
+except ImportError:
+    from mycroft.enclosure.gui import SkillGUI as _SkillGUI
 
 
 class SkillGUI(_SkillGUI):
@@ -39,6 +43,9 @@ class SkillGUI(_SkillGUI):
             "run_gui_file_server", False)
 
     def _pages2uri(self, page_names):
+        if not self.serving_http:
+            return _SkillGUI._pages2uri(self, page_names)
+        LOG.warning("Handling legacy GUI File Server")
         # Convert pages to full reference
         page_urls = []
         for name in page_names:
