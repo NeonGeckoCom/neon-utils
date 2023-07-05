@@ -75,9 +75,12 @@ def start_systemd_service(service: callable, **kwargs):
     def on_started():
         notifier.notify('STATUS=Started')
 
+    def watchdog():
+        notifier.notify('WATCHDOG=1')
+
     service(ready_hook=on_ready, error_hook=on_error,
             stopping_hook=on_stopping, alive_hook=on_alive,
-            started_hook=on_started, **kwargs)
+            started_hook=on_started, watchdog=watchdog, **kwargs)
 
 
 def start_malloc(config: dict = None, stack_depth: int = 1,
