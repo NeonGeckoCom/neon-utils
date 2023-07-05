@@ -74,7 +74,6 @@ CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 class NeonSkill(PatchedMycroftSkill):
     def __init__(self, name=None, bus=None, **kwargs):
-        PatchedMycroftSkill.__init__(self, name, bus, **kwargs)
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
@@ -90,6 +89,8 @@ class NeonSkill(PatchedMycroftSkill):
 
         self._lang_detector = None
         self._translator = None
+
+        PatchedMycroftSkill.__init__(self, name, bus, **kwargs)
 
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds

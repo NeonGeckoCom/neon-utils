@@ -27,8 +27,8 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from os.path import join
-from neon_utils.logger import LOG
 from neon_utils.file_utils import resolve_neon_resource_file
+from ovos_utils.log import LOG, log_deprecation
 
 try:
     from ovos_workshop.skills.base import SkillGUI as _SkillGUI
@@ -38,6 +38,8 @@ except ImportError:
 
 class SkillGUI(_SkillGUI):
     def __init__(self, skill):
+        log_deprecation("Implement `ovos_workshop.skills.base.SkillGUI`",
+                        "2.0.0")
         super().__init__(skill)
         self.serving_http = skill.config_core["skills"].get(
             "run_gui_file_server", False)
