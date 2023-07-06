@@ -87,7 +87,6 @@ class PatchedMycroftSkill(MycroftSkill):
         except ImportError:
             super()._init_settings_manager()
 
-
     def _read_default_settings(self):
         yaml_path = os.path.join(self.root_dir, "settingsmeta.yml")
         json_path = os.path.join(self.root_dir, "settingsmeta.json")
