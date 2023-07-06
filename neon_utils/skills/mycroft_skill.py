@@ -44,7 +44,6 @@ from neon_utils.message_utils import get_message_user, dig_for_message, resolve_
 from neon_utils.configuration_utils import dict_update_keys, \
     parse_skill_default_settings, get_mycroft_compatible_location
 from neon_utils.user_utils import get_user_prefs
-from neon_utils.skills.skill_gui import SkillGUI
 
 
 class PatchedMycroftSkill(MycroftSkill):
@@ -54,9 +53,6 @@ class PatchedMycroftSkill(MycroftSkill):
         # allow skills to specify timeout overrides per-skill
         self._speak_timeout = 30
         self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
-        self.gui = self.gui or SkillGUI(self)
-        if hasattr(self.gui, "ui_directories"):
-            self.gui.ui_directories['qt5'] = os.path.join(self.root_dir, "ui")
 
     @property
     def location(self):
@@ -84,12 +80,8 @@ class PatchedMycroftSkill(MycroftSkill):
         self._initial_settings = dict(self.settings)
 
     def _init_settings_manager(self):
-        try:
-            from ovos_workshop.settings import SkillSettingsManager
-            self.settings_manager = SkillSettingsManager(self)
-        except ImportError:
-            super()._init_settings_manager()
-
+        from ovos_workshop.settings import SkillSettingsManager
+        self.settings_manager = SkillSettingsManager(self)
 
     def _read_default_settings(self):
         yaml_path = os.path.join(self.root_dir, "settingsmeta.yml")

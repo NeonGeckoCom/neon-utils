@@ -29,11 +29,7 @@
 from os.path import join
 from ovos_utils.log import LOG, log_deprecation
 from neon_utils.file_utils import resolve_neon_resource_file
-
-try:
-    from ovos_workshop.skills.base import SkillGUI as _SkillGUI
-except ImportError:
-    from mycroft.enclosure.gui import SkillGUI as _SkillGUI
+from ovos_workshop.skills.base import SkillGUI as _SkillGUI
 
 
 class SkillGUI(_SkillGUI):

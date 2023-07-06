@@ -29,7 +29,7 @@
 from neon_utils import LOG
 from lingua_franca import parse, set_default_lang
 
-from mycroft.skills.core import MycroftSkill
+from ovos_workshop.skills.mycroft_skill import MycroftSkill
 
 
 def numeric_confirmation_validator(confirmation_num: str, lang: str = "en"):
