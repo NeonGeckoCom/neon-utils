@@ -1,60 +1,12 @@
 # Changelog
 
-## [1.5.1a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a7) (2023-06-27)
+## [1.6.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.1a1) (2023-07-06)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a6...1.5.1a7)
-
-**Merged pull requests:**
-
-- Update Config Handling [\#466](https://github.com/NeonGeckoCom/neon-utils/pull/466) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a6) (2023-06-17)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a5...1.5.1a6)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.0...1.6.1a1)
 
 **Merged pull requests:**
 
-- Troubleshoot ovos-workshop compat. [\#464](https://github.com/NeonGeckoCom/neon-utils/pull/464) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a5) (2023-06-15)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a4...1.5.1a5)
-
-**Merged pull requests:**
-
-- Update GH Automation to default branch [\#462](https://github.com/NeonGeckoCom/neon-utils/pull/462) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a4) (2023-06-15)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a3...1.5.1a4)
-
-**Merged pull requests:**
-
-- Update dependencies and Test sdist publication [\#461](https://github.com/NeonGeckoCom/neon-utils/pull/461) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a3) (2023-06-15)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a2...1.5.1a3)
-
-**Merged pull requests:**
-
-- Resolve deprecation warnings [\#460](https://github.com/NeonGeckoCom/neon-utils/pull/460) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a2) (2023-06-15)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.1a1...1.5.1a2)
-
-**Merged pull requests:**
-
-- Resolve internal reference to deprecated function [\#459](https://github.com/NeonGeckoCom/neon-utils/pull/459) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.5.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.5.1a1) (2023-06-15)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.5.0...1.5.1a1)
-
-**Merged pull requests:**
-
-- Refactor skill init and properties for latest ovos-workshop compat. [\#458](https://github.com/NeonGeckoCom/neon-utils/pull/458) ([NeonDaniel](https://github.com/NeonDaniel))
+- Deprecate SkillGUI override [\#465](https://github.com/NeonGeckoCom/neon-utils/pull/465) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
