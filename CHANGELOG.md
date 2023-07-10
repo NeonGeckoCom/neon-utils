@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.1a2) (2023-07-10)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.1a1...1.6.1a2)
+
+**Merged pull requests:**
+
+- Remove ovos core dependency [\#451](https://github.com/NeonGeckoCom/neon-utils/pull/451) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.6.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.1a1) (2023-07-06)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.0...1.6.1a1)
