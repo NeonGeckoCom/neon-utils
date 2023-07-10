@@ -2,6 +2,7 @@ pytest
 pytest-timeout
 pytest-cov
 mock
+# TODO: Deprecate ovos-core test dependency
 ovos-core~=0.0.7,>=0.0.8a21
 ovos-plugin-manager~=0.0.18
 ovos-skills-manager
