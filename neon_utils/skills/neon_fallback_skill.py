@@ -29,7 +29,7 @@
 from neon_utils.skills.neon_skill import NeonSkill
 from ovos_workshop.skills.ovos import OVOSSkill
 from ovos_utils.intents import IntentLayers
-from ovos_workshop.skills.layers import IntentLayers
+from ovos_workshop.decorators.layers import IntentLayers
 from ovos_workshop.skills.fallback import FallbackSkillV1 as FallbackSkill
 
 
