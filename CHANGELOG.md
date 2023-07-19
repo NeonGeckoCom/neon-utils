@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.1a3) (2023-07-19)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.1a2...1.6.1a3)
+
+**Merged pull requests:**
+
+- Update deprecated import to expected path [\#470](https://github.com/NeonGeckoCom/neon-utils/pull/470) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.6.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.1a2) (2023-07-10)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.1a1...1.6.1a2)
