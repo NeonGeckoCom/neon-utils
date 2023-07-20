@@ -288,7 +288,7 @@ class NeonSkill(PatchedMycroftSkill):
         voc = resolve_neon_resource_file(f"text/{lang}/{voc_filename}.voc")
         if not voc:
             raise FileNotFoundError(voc)
-        from mycroft.skills.skill_data import read_vocab_file
+        from ovos_utils.file_utils import read_vocab_file
         from itertools import chain
         import re
         vocab = read_vocab_file(voc)
