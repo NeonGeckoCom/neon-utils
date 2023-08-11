@@ -29,6 +29,7 @@
 import os
 import sys
 import unittest
+from unittest.mock import patch
 
 from ovos_utils.messagebus import FakeBus
 
@@ -45,10 +46,12 @@ class LanguageUtilTests(unittest.TestCase):
         import neon_utils.language_utils
         neon_utils.language_utils._bus = cls.bus
 
-    def test_get_supported_skills_langs(self):
+    @patch("neon_utils.language_utils.get_supported_langs")
+    def test_get_supported_skills_langs(self, lf_langs):
         from neon_utils.language_utils import get_supported_skills_langs, \
             _default_lang
 
+        lf_langs.return_value = ["en", "es", "fr", "pt", "de"]
         skill_langs = ['en', 'es', 'fr']
         native_langs = ['en']
         translate_langs = ['en', 'es', 'fr']
@@ -73,7 +76,16 @@ class LanguageUtilTests(unittest.TestCase):
         translate_langs.append('na')
         skill_langs.append('na')
         self.bus.once('neon.languages.skills', _skill_langs)
-        self.assertEqual(get_supported_skills_langs(True), {'en', 'es', 'fr'})
+        self.assertEqual(get_supported_skills_langs(True),
+                         {'en', 'es', 'fr', 'na'})
+
+        self.bus.once('neon.languages.skills', _skill_langs)
+        self.assertEqual(get_supported_skills_langs(False),
+                         {'en'})
+        native_langs.extend(['es', 'fr'])
+        self.bus.once('neon.languages.skills', _skill_langs)
+        self.assertEqual(get_supported_skills_langs(False),
+                         {'en', 'es', 'fr'})
 
     def test_get_supported_input_langs(self):
         from neon_utils.language_utils import get_supported_input_langs, \

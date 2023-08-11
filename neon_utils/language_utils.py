@@ -76,7 +76,7 @@ def get_supported_skills_langs(translation: bool = True) -> set:
     else:
         langs = msg.data.get('native_langs')
     langs = (lang.split('-')[0] for lang in langs)
-    return lf_langs & set(langs) if lf_langs else set(langs)
+    return lf_langs & set(langs) if lf_langs and not translation else set(langs)
 
 
 def get_supported_input_langs(skill_support: bool = True,
