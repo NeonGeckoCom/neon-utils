@@ -185,7 +185,7 @@ class LanguageUtilTests(unittest.TestCase):
         self.assertIsInstance(with_translate_langs, SupportedLanguages)
         self.assertEqual(with_translate_langs.tts, {'en', 'uk', 'es'})
         self.assertEqual(with_translate_langs.stt, {'en', 'es', 'pt'})
-        self.assertEqual(with_translate_langs.skills, {'en', 'es', 'fr'})
+        self.assertEqual(with_translate_langs.skills, {'en', 'es', 'fr', 'na'})
 
 
 if __name__ == '__main__':
