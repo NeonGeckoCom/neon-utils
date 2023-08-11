@@ -1,36 +1,12 @@
 # Changelog
 
-## [1.6.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.1a4) (2023-07-20)
+## [1.6.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.2a1) (2023-08-11)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.1a3...1.6.1a4)
-
-**Merged pull requests:**
-
-- Update dependencies to stable versions [\#471](https://github.com/NeonGeckoCom/neon-utils/pull/471) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.6.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.1a3) (2023-07-19)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.1a2...1.6.1a3)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.1...1.6.2a1)
 
 **Merged pull requests:**
 
-- Update deprecated import to expected path [\#470](https://github.com/NeonGeckoCom/neon-utils/pull/470) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.6.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.1a2) (2023-07-10)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.1a1...1.6.1a2)
-
-**Merged pull requests:**
-
-- Remove ovos core dependency [\#451](https://github.com/NeonGeckoCom/neon-utils/pull/451) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.6.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.1a1) (2023-07-06)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.0...1.6.1a1)
-
-**Merged pull requests:**
-
-- Deprecate SkillGUI override [\#465](https://github.com/NeonGeckoCom/neon-utils/pull/465) ([NeonDaniel](https://github.com/NeonDaniel))
+- Supported Languages bugfix and unit test [\#473](https://github.com/NeonGeckoCom/neon-utils/pull/473) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
