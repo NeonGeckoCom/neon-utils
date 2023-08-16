@@ -145,6 +145,7 @@ class PatchedMycroftSkill(MycroftSkill):
                     utterance = f"@{nick} {utterance}"
 
             data = {"utterance": utterance,
+                    "lang": self.lang,
                     "expect_response": expect_response,
                     "meta": meta,
                     "speaker": speaker,
