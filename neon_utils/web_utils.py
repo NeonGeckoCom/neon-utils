@@ -124,19 +124,17 @@ def scrape_page_for_links(url: str) -> dict:
                 href = None
 
             if href:
-                available_links[unicodedata.normalize('NFKD', i.text.rstrip()
-                                                      .replace(u'\u2013', '')
-                                                      .replace(u'\u201d', '')
-                                                      .replace(u'\u201c', '')
-                                                      .replace('"', "")
-                                                      .replace("'", "")
-                                                      .replace("&apos;", "")
-                                                      .lower())] = href
-                LOG.debug("found link: " + unicodedata.normalize("NFKD", i.text.rstrip().replace(u"\u2013", "")
-                                                                 .replace(u"\u201d", "").replace(u"\u201c", "")
-                                                                 .replace('"', "").replace("'", "")
-                                                                 .replace("&apos;", "").replace("\n", "").lower()))
-                LOG.debug("found href: " + href)
+                link_name = (
+                    unicodedata.normalize("NFKD",
+                                          i.text.rstrip().replace(u"\u2013", "")
+                                          .replace(u"\u201d", "")
+                                          .replace(u"\u201c", "")
+                                          .replace('"', "")
+                                          .replace("'", "")
+                                          .replace("&apos;", "")
+                                          .replace("\n", "").lower()))
+                available_links[link_name] = href
+                LOG.debug(f"found link={link_name}|href={href}")
 
         LOG.debug(available_links)
 
