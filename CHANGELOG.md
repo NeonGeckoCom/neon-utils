@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.2a3) (2023-08-22)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2a2...1.6.2a3)
+
+**Merged pull requests:**
+
+- Update logging for better readability [\#475](https://github.com/NeonGeckoCom/neon-utils/pull/475) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.6.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.2a2) (2023-08-16)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2a1...1.6.2a2)
