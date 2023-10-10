@@ -45,7 +45,7 @@ from ovos_utils.gui import is_gui_connected
 from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
 from ovos_utils.skills.settings import save_settings, get_local_settings
-from ovos_utils.log import deprecated
+from ovos_utils.log import deprecated, log_deprecation
 from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
 from neon_utils.message_utils import dig_for_message, resolve_message, get_message_user
@@ -53,6 +53,7 @@ from neon_utils.cache_utils import LRUCache
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.user_utils import get_user_prefs
 from ovos_workshop.skills.base import BaseSkill
+
 try:
     from neon_utils.mq_utils import send_mq_request
 except ImportError:
@@ -104,6 +105,22 @@ class NeonSkill(BaseSkill):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET,
                             name="neon.load_cache_on_disk")
+
+    @property
+    def settings_path(self):
+        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
+        try:
+            return super().settings_path
+        except AttributeError:
+            return super()._settings_path
+
+    @property
+    def resources(self):
+        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
+        try:
+            return super().resources
+        except AttributeError:
+            return super()._resources
 
     @property
     # @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
@@ -523,14 +540,6 @@ class NeonSkill(BaseSkill):
         from neon_utils.configuration_utils import get_mycroft_compatible_location
         return get_mycroft_compatible_location(get_user_prefs()["location"])
 
-    @property
-    def settings_path(self):
-        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
-        try:
-            return super().settings_path
-        except AttributeError:
-            return super()._settings_path
-
     def _init_settings(self):
         """
         Extends the default method to handle settingsmeta defaults locally
@@ -835,3 +844,51 @@ class NeonSkill(BaseSkill):
             LOG.warning("Timed out waiting for user response")
         self.converse = default_converse
         return converse.response
+
+    # renamed in base class for naming consistency
+    # refactored to use new resource utils
+    def translate(self, text: str, data: Optional[dict] = None):
+        """
+        Deprecated method for translating a dialog file.
+        use self._resources.render_dialog(text, data) instead
+        """
+        log_deprecation("Use `resources.render_dialog`", "2.0.0")
+        return self._resources.render_dialog(text, data)
+
+    # renamed in base class for naming consistency
+    # refactored to use new resource utils
+    def translate_namedvalues(self, name: str, delim: str = ','):
+        """
+        Deprecated method for translating a name/value file.
+        use self._resources.load_named_value_filetext, data) instead
+        """
+        log_deprecation("Use `resources.load_named_value_file`", "2.0.0")
+        return self._resources.load_named_value_file(name, delim)
+
+    # renamed in base class for naming consistency
+    # refactored to use new resource utils
+    def translate_list(self, list_name: str, data: Optional[dict] = None):
+        """
+        Deprecated method for translating a list.
+        use delf._resources.load_list_file(text, data) instead
+        """
+        log_deprecation("Use `resources.load_list_file`", "2.0.0")
+        return self._resources.load_list_file(list_name, data)
+
+    # renamed in base class for naming consistency
+    # refactored to use new resource utils
+    def translate_template(self, template_name: str,
+                           data: Optional[dict] = None):
+        """
+        Deprecated method for translating a template file
+        use delf._resources.template_file(text, data) instead
+        """
+        log_deprecation("Use `resources.template_file`", "2.0.0")
+        return self._resources.load_template_file(template_name, data)
+
+    def init_dialog(self, root_directory: Optional[str] = None):
+        """
+        DEPRECATED: use load_dialog_files instead
+        """
+        log_deprecation("Use `load_dialog_files`", "2.0.0")
+        self.load_dialog_files(root_directory)
