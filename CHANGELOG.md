@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.3a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a2) (2023-10-10)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a1...1.6.3a2)
+
+**Merged pull requests:**
+
+- Skill Compatibility [\#478](https://github.com/NeonGeckoCom/neon-utils/pull/478) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.6.3a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a1) (2023-10-10)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2...1.6.3a1)
