@@ -35,6 +35,7 @@ from threading import Event, Thread
 from typing import Optional
 from json_database import JsonStorage
 from ovos_bus_client.message import Message
+from ovos_utils.log import log_deprecation
 from ovos_workshop.skills.mycroft_skill import MycroftSkill
 from ovos_utils.skills.settings import get_local_settings
 
@@ -49,6 +50,8 @@ from neon_utils.user_utils import get_user_prefs
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, *args, **kwargs):
         MycroftSkill.__init__(self, name, bus, *args, **kwargs)
+        log_deprecation("This base class is deprecated. Implement either"
+                        "`NeonSkill` or `OVOSSkill`", "2.0.0")
         # TODO: Should below defaults be global config?
         # allow skills to specify timeout overrides per-skill
         self._speak_timeout = 30
@@ -80,6 +83,7 @@ class PatchedMycroftSkill(MycroftSkill):
         self._initial_settings = dict(self.settings)
 
     def _init_settings_manager(self):
+        # TODO: Same as upstream implementation?
         from ovos_workshop.settings import SkillSettingsManager
         self.settings_manager = SkillSettingsManager(self)
 
