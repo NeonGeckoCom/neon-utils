@@ -527,9 +527,9 @@ class NeonSkill(BaseSkill):
     def settings_path(self):
         # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
         try:
-            return BaseSkill.settings_path(self)
+            return super().settings_path
         except AttributeError:
-            return BaseSkill._settings_path(self)
+            return super()._settings_path
 
     def _init_settings(self):
         """

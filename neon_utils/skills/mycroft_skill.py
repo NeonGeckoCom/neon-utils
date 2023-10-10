@@ -61,9 +61,9 @@ class PatchedMycroftSkill(MycroftSkill):
     def settings_path(self):
         # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
         try:
-            return MycroftSkill.settings_path(self)
+            return super().settings_path
         except AttributeError:
-            return MycroftSkill._settings_path(self)
+            return super()._settings_path
 
     @property
     def location(self):
