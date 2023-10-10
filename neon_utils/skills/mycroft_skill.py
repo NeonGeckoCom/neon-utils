@@ -58,6 +58,14 @@ class PatchedMycroftSkill(MycroftSkill):
         self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
 
     @property
+    def settings_path(self):
+        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
+        if hasattr(super(), "settings_path"):
+            return MycroftSkill.settings_path
+        else:
+            return MycroftSkill._settings_path
+
+    @property
     def location(self):
         """
         Backwards-compatible location property. Returns core location config if
@@ -70,7 +78,7 @@ class PatchedMycroftSkill(MycroftSkill):
         Extends the default method to handle settingsmeta defaults locally
         """
         super()._init_settings()
-        skill_settings = get_local_settings(self._settings_path)
+        skill_settings = get_local_settings(self.settings_path)
         settings_from_disk = dict(skill_settings)
         self.settings = dict_update_keys(skill_settings,
                                          self._read_default_settings())
@@ -78,7 +86,7 @@ class PatchedMycroftSkill(MycroftSkill):
             if isinstance(self.settings, JsonStorage):
                 self.settings.store()
             else:
-                with open(self._settings_path, "w+") as f:
+                with open(self.settings_path, "w+") as f:
                     json.dump(self.settings, f, indent=4)
         self._initial_settings = dict(self.settings)
 
