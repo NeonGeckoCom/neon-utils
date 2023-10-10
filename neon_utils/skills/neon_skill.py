@@ -850,30 +850,30 @@ class NeonSkill(BaseSkill):
     def translate(self, text: str, data: Optional[dict] = None):
         """
         Deprecated method for translating a dialog file.
-        use self._resources.render_dialog(text, data) instead
+        use self.resources.render_dialog(text, data) instead
         """
         log_deprecation("Use `resources.render_dialog`", "2.0.0")
-        return self._resources.render_dialog(text, data)
+        return self.resources.render_dialog(text, data)
 
     # renamed in base class for naming consistency
     # refactored to use new resource utils
     def translate_namedvalues(self, name: str, delim: str = ','):
         """
         Deprecated method for translating a name/value file.
-        use self._resources.load_named_value_filetext, data) instead
+        use self.resources.load_named_value_filetext, data) instead
         """
         log_deprecation("Use `resources.load_named_value_file`", "2.0.0")
-        return self._resources.load_named_value_file(name, delim)
+        return self.resources.load_named_value_file(name, delim)
 
     # renamed in base class for naming consistency
     # refactored to use new resource utils
     def translate_list(self, list_name: str, data: Optional[dict] = None):
         """
         Deprecated method for translating a list.
-        use delf._resources.load_list_file(text, data) instead
+        use delf.resources.load_list_file(text, data) instead
         """
         log_deprecation("Use `resources.load_list_file`", "2.0.0")
-        return self._resources.load_list_file(list_name, data)
+        return self.resources.load_list_file(list_name, data)
 
     # renamed in base class for naming consistency
     # refactored to use new resource utils
@@ -881,10 +881,10 @@ class NeonSkill(BaseSkill):
                            data: Optional[dict] = None):
         """
         Deprecated method for translating a template file
-        use delf._resources.template_file(text, data) instead
+        use self.resources.template_file(text, data) instead
         """
         log_deprecation("Use `resources.template_file`", "2.0.0")
-        return self._resources.load_template_file(template_name, data)
+        return self.resources.load_template_file(template_name, data)
 
     def init_dialog(self, root_directory: Optional[str] = None):
         """
