@@ -1,28 +1,12 @@
 # Changelog
 
-## [1.6.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.2a3) (2023-08-22)
+## [1.6.3a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a1) (2023-10-10)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2a2...1.6.2a3)
-
-**Merged pull requests:**
-
-- Update logging for better readability [\#475](https://github.com/NeonGeckoCom/neon-utils/pull/475) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.6.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.2a2) (2023-08-16)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2a1...1.6.2a2)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2...1.6.3a1)
 
 **Merged pull requests:**
 
-- Troubleshooting spoken responses in a non-default language [\#474](https://github.com/NeonGeckoCom/neon-utils/pull/474) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.6.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.2a1) (2023-08-11)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.1...1.6.2a1)
-
-**Merged pull requests:**
-
-- Supported Languages bugfix and unit test [\#473](https://github.com/NeonGeckoCom/neon-utils/pull/473) ([NeonDaniel](https://github.com/NeonDaniel))
+- Emit handler complete event for CommonQuery skills [\#477](https://github.com/NeonGeckoCom/neon-utils/pull/477) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
