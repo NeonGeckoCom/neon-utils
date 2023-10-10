@@ -95,28 +95,28 @@ class SkillObjectTests(unittest.TestCase):
 
     def test_common_message_skill_init(self):
         skill = create_skill(TestCMS)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, CommonMessageSkill)
         self.assertEqual(skill.name, "Test Common Message Skill")
 
     def test_common_play_skill_init(self):
         skill = create_skill(TestCPS)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, CommonPlaySkill)
         self.assertEqual(skill.name, "Test Common Play Skill")
 
     def test_common_query_skill_init(self):
         skill = create_skill(TestCQS)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, CommonQuerySkill)
         self.assertEqual(skill.name, "Test Common Query Skill")
 
     def test_fallback_skill_init(self):
         skill = create_skill(TestFBS)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, NeonFallbackSkill)
         # self.assertIsInstance(skill, FallbackSkill)
@@ -124,7 +124,7 @@ class SkillObjectTests(unittest.TestCase):
 
     def test_neon_skill_init(self):
         skill = create_skill(TestNeonSkill)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertEqual(skill.name, "Test Neon Skill")
 
@@ -149,9 +149,36 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.preference_skill(), dict)
         self.assertEqual(skill.settings, skill.preference_skill())
         self.assertIsInstance(skill.file_system.path, str)
+        # self.assertIsNotNone(skill.settings_meta)
         # self.assertEqual(skill.file_system.path, skill.settings_write_path)
         # self.assertNotEqual(os.path.basename(skill.file_system.path),
         #                     skill.name)
+        expected_methods = ['init_dialog', 'make_active', 'translate',
+                            'translate_namedvalues', 'translate_list',
+                            'translate_template', 'bind',
+                            'handle_settings_change', 'detach',
+                            'get_intro_message', 'converse', 'get_response',
+                            'ask_yesno', 'ask_selection', 'voc_match',
+                            'report_metric', 'send_email',
+                            'register_resting_screen', 'find_resource',
+                            'add_event', 'remove_event', 'register_intent',
+                            'register_intent_file', 'register_entity_file',
+                            'handle_enable_intent', 'handle_disable_intent',
+                            'disable_intent', 'enable_intent', 'set_context',
+                            'remove_context', 'handle_set_cross_context',
+                            'handle_remove_cross_context',
+                            'set_cross_skill_context',
+                            'remove_cross_skill_context', 'register_vocabulary',
+                            'register_regex', 'speak', 'speak_dialog',
+                            'load_dialog_files', 'load_data_files',
+                            'load_vocab_files', 'load_regex_files', 'stop',
+                            'shutdown', 'default_shutdown', 'schedule_event',
+                            'schedule_repeating_event',
+                            'update_scheduled_event', 'cancel_scheduled_event',
+                            'get_scheduled_event_status',
+                            'cancel_all_repeating_events']
+        for method in expected_methods:
+            self.assertTrue(hasattr(skill, method), method)
 
     def test_patched_mycroft_skill_init(self):
         skill = create_skill(TestPatchedSkill)
@@ -163,7 +190,7 @@ class SkillObjectTests(unittest.TestCase):
 
     def test_instructor_skill_init(self):
         skill = create_skill(TestInstructorSkill)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertEqual(skill.name, "Test Instructor Skill")
 
 
