@@ -125,8 +125,8 @@ def init_signal_handlers():
         mycroft.util.signal.create_signal = _create_signal
         mycroft.util.signal.check_for_signal = _check_for_signal
         LOG.info(f"Overrode mycroft.util.signal methods")
-    except ImportError:
-        pass
+    except (ImportError, AttributeError) as e:
+        LOG.debug(e)
     except TypeError as e:
         # This comes from tests overriding MessageBusClient()
         LOG.error(e)
