@@ -35,6 +35,7 @@ from threading import Event, Thread
 from typing import Optional
 from json_database import JsonStorage
 from ovos_bus_client.message import Message
+from ovos_utils.log import log_deprecation
 from ovos_workshop.skills.mycroft_skill import MycroftSkill
 from ovos_utils.skills.settings import get_local_settings
 
@@ -49,10 +50,20 @@ from neon_utils.user_utils import get_user_prefs
 class PatchedMycroftSkill(MycroftSkill):
     def __init__(self, name=None, bus=None, *args, **kwargs):
         MycroftSkill.__init__(self, name, bus, *args, **kwargs)
+        log_deprecation("This base class is deprecated. Implement either"
+                        "`NeonSkill` or `OVOSSkill`", "2.0.0")
         # TODO: Should below defaults be global config?
         # allow skills to specify timeout overrides per-skill
         self._speak_timeout = 30
         self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
+
+    @property
+    def settings_path(self):
+        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
+        try:
+            return super().settings_path
+        except AttributeError:
+            return super()._settings_path
 
     @property
     def location(self):
@@ -67,7 +78,7 @@ class PatchedMycroftSkill(MycroftSkill):
         Extends the default method to handle settingsmeta defaults locally
         """
         super()._init_settings()
-        skill_settings = get_local_settings(self._settings_path)
+        skill_settings = get_local_settings(self.settings_path)
         settings_from_disk = dict(skill_settings)
         self.settings = dict_update_keys(skill_settings,
                                          self._read_default_settings())
@@ -75,11 +86,12 @@ class PatchedMycroftSkill(MycroftSkill):
             if isinstance(self.settings, JsonStorage):
                 self.settings.store()
             else:
-                with open(self._settings_path, "w+") as f:
+                with open(self.settings_path, "w+") as f:
                     json.dump(self.settings, f, indent=4)
         self._initial_settings = dict(self.settings)
 
     def _init_settings_manager(self):
+        # TODO: Same as upstream implementation?
         from ovos_workshop.settings import SkillSettingsManager
         self.settings_manager = SkillSettingsManager(self)
 
