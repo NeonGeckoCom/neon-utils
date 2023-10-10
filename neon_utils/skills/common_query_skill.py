@@ -156,6 +156,8 @@ class CommonQuerySkill(NeonSkill, ABC):
         data = message.data.get("callback_data")
         # Invoke derived class to provide playback data
         self.CQS_action(phrase, data)
+        self.bus.emit(message.forward("mycroft.skill.handler.complete",
+                                      {"handler": "common_query"}))
 
     @abstractmethod
     def CQS_match_query_phrase(self, phrase, message):
