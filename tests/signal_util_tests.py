@@ -130,9 +130,9 @@ class SignalUtilsTests(unittest.TestCase):
         create_signal("test_signal")
         self.assertIsInstance(msg, Message)
         self.assertEqual(msg.data, {'signal_name': 'test_signal'})
-        self.assertEqual(msg.context,
-                         {'origin_module': 'tests.signal_util_tests',
-                          'origin_line': 130})
+        self.assertEqual(msg.context['origin_module'],
+                         'tests.signal_util_tests')
+        self.assertEqual(msg.context['origin_line'], 130)
 
     def test_signal_utils_manager_available(self):
         TestSignalManager(self.test_bus)
