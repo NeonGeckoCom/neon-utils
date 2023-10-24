@@ -27,13 +27,13 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from neon_utils.skills.neon_skill import NeonSkill
-from ovos_workshop.skills.ovos import OVOSSkill
 from ovos_utils.intents import IntentLayers
 from ovos_workshop.decorators.layers import IntentLayers
 from ovos_workshop.skills.fallback import FallbackSkillV1 as FallbackSkill
 
 
-class NeonFallbackSkill(FallbackSkill, NeonSkill, OVOSSkill):
+# TODO: Consider deprecation and implementing ovos_workshop directly
+class NeonFallbackSkill(FallbackSkill, NeonSkill):
     """
     Class that extends the NeonSkill and FallbackSkill classes to provide
     NeonSkill functionality to any Fallback skill subclassing this class.
