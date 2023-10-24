@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.3a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a4) (2023-10-24)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a3...1.6.3a4)
+
+**Merged pull requests:**
+
+- Update Skill base classes [\#480](https://github.com/NeonGeckoCom/neon-utils/pull/480) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.6.3a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a3) (2023-10-10)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a2...1.6.3a3)
