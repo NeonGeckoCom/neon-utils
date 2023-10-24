@@ -37,16 +37,20 @@ from multiprocessing import Event
 from os.path import join
 from threading import Thread
 from time import sleep, time
+
+from ovos_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 from mock import Mock
 
+from neon_utils.skills import NeonSkill, CommonMessageSkill, CommonPlaySkill, CommonQuerySkill, NeonFallbackSkill
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
 from neon_utils.signal_utils import check_for_signal
-
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-from skills import *
+from skills import (PatchedMycroftSkill, TestCMS, TestCPS, TestCQS, TestFBS,
+                    TestPatchedSkill, TestInstructorSkill, TestChatSkill,
+                    TestNeonSkill, TestKioskSkill, TestMycroftFallbackSkill)
 
 MycroftSkill = PatchedMycroftSkill
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -337,8 +341,8 @@ class ChatSkillTests(unittest.TestCase):
         self.assertEqual(resp.msg_type, f'{test_message.msg_type}.response')
         self.assertEqual(resp.data,
                          {'response': test_message.data['test_response']})
-        self.assertEqual(resp.context, {'test': True,
-                                        'skill_id': skill.skill_id})
+        self.assertTrue(resp.context['test'])
+        self.assertEqual(resp.context['skill_id'], skill.skill_id)
 
 
 class PatchedMycroftSkillTests(unittest.TestCase):
@@ -1074,6 +1078,10 @@ class NeonSkillTests(unittest.TestCase):
             cls.skill.load_data_files()
             cls.skill.initialize()
 
+        cls.skill.config_core.setdefault('language', dict())
+        cls.skill.config_core['language']['detection_module'] = "libretranslate_detection_plug"
+        cls.skill.config_core['language']['translation_module'] = "libretranslate_plug"
+
     @classmethod
     def tearDownClass(cls) -> None:
         if os.path.isdir(cls.config_dir):
@@ -1088,6 +1096,10 @@ class NeonSkillTests(unittest.TestCase):
         self.assertIsInstance(self.skill.neon_core, bool)
         self.assertIsInstance(self.skill.skill_mode, str)
         self.assertIsInstance(self.skill.extension_time, int)
+        self.assertEqual(self.skill.config_core['language']['detection_module'],
+                         "libretranslate_detection_plug")
+        self.assertEqual(self.skill.config_core['language']['translation_module'],
+                         "libretranslate_plug")
         self.assertIsNotNone(self.skill.lang_detector)
         self.assertIsNotNone(self.skill.translator)
 
