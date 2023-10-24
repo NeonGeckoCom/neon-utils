@@ -29,11 +29,11 @@
 from neon_utils.skills.neon_skill import NeonSkill
 from ovos_utils.intents import IntentLayers
 from ovos_workshop.decorators.layers import IntentLayers
-from ovos_workshop.skills.fallback import FallbackSkillV1 as FallbackSkill
+from ovos_workshop.skills.fallback import FallbackSkillV1
 
 
 # TODO: Consider deprecation and implementing ovos_workshop directly
-class NeonFallbackSkill(FallbackSkill, NeonSkill):
+class NeonFallbackSkill(NeonSkill, FallbackSkillV1):
     """
     Class that extends the NeonSkill and FallbackSkill classes to provide
     NeonSkill functionality to any Fallback skill subclassing this class.
