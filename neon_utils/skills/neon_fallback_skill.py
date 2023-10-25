@@ -25,6 +25,7 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from ovos_utils import LOG
 
 from neon_utils.skills.neon_skill import NeonSkill
 from ovos_utils.intents import IntentLayers
@@ -50,8 +51,18 @@ class NeonFallbackSkill(NeonSkill, FallbackSkillV1):
         #  list of fallback handlers registered by this instance
         self.instance_fallback_handlers = []
         NeonSkill.__init__(self, *args, **kwargs)
+        LOG.debug(f"instance_handlers={self.instance_fallback_handlers}")
+        LOG.debug(f"class_handlers={FallbackSkillV1.fallback_handlers}")
 
     @property
     def fallback_config(self):
         # "skill_id": priority (int)  overrides
         return self.config_core["skills"].get("fallbacks", {})
+
+    def _register_decorated(self):
+        LOG.info("Registering decorated methods")
+        FallbackSkillV1._register_decorated(self)
+
+    def register_fallback(self, *args, **kwargs):
+        LOG.info("Registering fallback handler")
+        FallbackSkillV1.register_fallback(self, *args, **kwargs)
