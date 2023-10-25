@@ -43,6 +43,7 @@
 from abc import abstractmethod
 from os.path import dirname
 
+from ovos_utils.intents import IntentLayers
 from ovos_workshop.skills.common_query_skill import CQSMatchLevel, CQSVisualMatchLevel
 from ovos_workshop.skills.common_query_skill import CommonQuerySkill as _CQS
 from ovos_utils.file_utils import resolve_resource_file
@@ -81,6 +82,14 @@ class CommonQuerySkill(NeonSkill, _CQS):
             CQSMatchLevel.CATEGORY: 0.6,
             CQSMatchLevel.GENERAL: 0.5
         }
+
+        # Manual init of OVOSSkill
+        self.private_settings = None
+        self._threads = []
+        self._original_converse = self.converse
+        self.intent_layers = IntentLayers()
+        self.audio_service = None
+
         NeonSkill.__init__(self, *args, **kwargs)
 
         noise_words_filepath = f"text/{self.lang}/noise_words.list"
