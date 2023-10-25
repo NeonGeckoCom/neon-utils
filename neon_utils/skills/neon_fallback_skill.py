@@ -59,6 +59,11 @@ class NeonFallbackSkill(FallbackSkillV1, NeonSkill):
         # "skill_id": priority (int)  overrides
         return self.config_core["skills"].get("fallbacks", {})
 
+    @classmethod
+    def _register_fallback(cls, *args, **kwargs):
+        LOG.debug(f"register fallback")
+        FallbackSkillV1._register_fallback(*args, **kwargs)
+
     def _register_decorated(self):
         # Explicitly overridden to ensure the correct super call is made
         LOG.debug(f"Registering decorated methods for {self.skill_id}")
