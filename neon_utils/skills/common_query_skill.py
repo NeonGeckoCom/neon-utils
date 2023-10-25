@@ -43,7 +43,7 @@
 from abc import abstractmethod
 from os.path import dirname
 
-from ovos_utils.intents import IntentLayers
+from ovos_workshop.decorators.layers import IntentLayers
 from ovos_workshop.skills.common_query_skill import CQSMatchLevel, CQSVisualMatchLevel
 from ovos_workshop.skills.common_query_skill import CommonQuerySkill as _CQS
 from ovos_utils.file_utils import resolve_resource_file
