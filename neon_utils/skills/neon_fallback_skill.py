@@ -34,7 +34,7 @@ from ovos_workshop.skills.fallback import FallbackSkillV1
 
 
 # TODO: Consider deprecation and implementing ovos_workshop directly
-class NeonFallbackSkill(NeonSkill, FallbackSkillV1):
+class NeonFallbackSkill(FallbackSkillV1, NeonSkill):
     """
     Class that extends the NeonSkill and FallbackSkill classes to provide
     NeonSkill functionality to any Fallback skill subclassing this class.
@@ -60,9 +60,6 @@ class NeonFallbackSkill(NeonSkill, FallbackSkillV1):
         return self.config_core["skills"].get("fallbacks", {})
 
     def _register_decorated(self):
-        LOG.info("Registering decorated methods")
+        # Explicitly overridden to ensure the correct super call is made
+        LOG.debug(f"Registering decorated methods for {self.skill_id}")
         FallbackSkillV1._register_decorated(self)
-
-    def register_fallback(self, *args, **kwargs):
-        LOG.info("Registering fallback handler")
-        FallbackSkillV1.register_fallback(self, *args, **kwargs)
