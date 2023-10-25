@@ -43,6 +43,7 @@
 from abc import abstractmethod
 from os.path import dirname
 
+from ovos_workshop.decorators.layers import IntentLayers
 from ovos_workshop.skills.common_query_skill import CQSMatchLevel, CQSVisualMatchLevel
 from ovos_workshop.skills.common_query_skill import CommonQuerySkill as _CQS
 from ovos_utils.file_utils import resolve_resource_file
@@ -81,6 +82,14 @@ class CommonQuerySkill(NeonSkill, _CQS):
             CQSMatchLevel.CATEGORY: 0.6,
             CQSMatchLevel.GENERAL: 0.5
         }
+
+        # Manual init of OVOSSkill
+        self.private_settings = None
+        self._threads = []
+        self._original_converse = self.converse
+        self.intent_layers = IntentLayers()
+        self.audio_service = None
+
         NeonSkill.__init__(self, *args, **kwargs)
 
         noise_words_filepath = f"text/{self.lang}/noise_words.list"
@@ -136,6 +145,36 @@ class CommonQuerySkill(NeonSkill, _CQS):
         self.CQS_action(phrase, data)
         self.bus.emit(message.forward("mycroft.skill.handler.complete",
                                       {"handler": "common_query"}))
+
+    def __handle_question_query(self, message):
+        # Override ovos-workshop implementation that doesn't pass `message`
+        search_phrase = message.data["phrase"]
+
+        # First, notify the requestor that we are attempting to handle
+        # (this extends a timeout while this skill looks for a match)
+        self.bus.emit(message.response({"phrase": search_phrase,
+                                        "skill_id": self.skill_id,
+                                        "searching": True}))
+
+        # Now invoke the CQS handler to let the skill perform its search
+        result = self.CQS_match_query_phrase(search_phrase, message)
+
+        if result:
+            match = result[0]
+            level = result[1]
+            answer = result[2]
+            callback = result[3] if len(result) > 3 else None
+            confidence = self.__calc_confidence(match, search_phrase, level)
+            self.bus.emit(message.response({"phrase": search_phrase,
+                                            "skill_id": self.skill_id,
+                                            "answer": answer,
+                                            "callback_data": callback,
+                                            "conf": confidence}))
+        else:
+            # Signal we are done (can't handle it)
+            self.bus.emit(message.response({"phrase": search_phrase,
+                                            "skill_id": self.skill_id,
+                                            "searching": False}))
 
     @abstractmethod
     def CQS_match_query_phrase(self, phrase, message):

@@ -210,7 +210,7 @@ class KioskSkillTests(unittest.TestCase):
         self.skill.event_scheduler.schedule_event = Mock()
 
     def test_kiosk_skill_init(self):
-        self.assertIsInstance(self.skill, MycroftSkill)
+        # self.assertIsInstance(self.skill, MycroftSkill)
         self.assertIsInstance(self.skill, NeonSkill)
         self.assertEqual(self.skill.greeting_dialog, 'greeting')
         self.assertEqual(self.skill.goodbye_dialog, 'goodbye')

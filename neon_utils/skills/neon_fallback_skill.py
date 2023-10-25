@@ -25,6 +25,7 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from ovos_utils import LOG
 
 from neon_utils.skills.neon_skill import NeonSkill
 from ovos_utils.intents import IntentLayers
@@ -33,7 +34,7 @@ from ovos_workshop.skills.fallback import FallbackSkillV1
 
 
 # TODO: Consider deprecation and implementing ovos_workshop directly
-class NeonFallbackSkill(NeonSkill, FallbackSkillV1):
+class NeonFallbackSkill(FallbackSkillV1, NeonSkill):
     """
     Class that extends the NeonSkill and FallbackSkill classes to provide
     NeonSkill functionality to any Fallback skill subclassing this class.
@@ -50,8 +51,33 @@ class NeonFallbackSkill(NeonSkill, FallbackSkillV1):
         #  list of fallback handlers registered by this instance
         self.instance_fallback_handlers = []
         NeonSkill.__init__(self, *args, **kwargs)
+        LOG.debug(f"instance_handlers={self.instance_fallback_handlers}")
+        LOG.debug(f"class_handlers={FallbackSkillV1.fallback_handlers}")
 
     @property
     def fallback_config(self):
         # "skill_id": priority (int)  overrides
         return self.config_core["skills"].get("fallbacks", {})
+
+    @classmethod
+    def _register_fallback(cls, *args, **kwargs):
+        LOG.debug(f"register fallback")
+        FallbackSkillV1._register_fallback(*args, **kwargs)
+
+    def _register_decorated(self):
+        # Explicitly overridden to ensure the correct super call is made
+        LOG.debug(f"Registering decorated methods for {self.skill_id}")
+        try:
+            FallbackSkillV1._register_decorated(self)
+        except Exception as e:
+            LOG.error(e)
+            NeonSkill._register_decorated(self)
+            from ovos_utils.skills import get_non_properties
+            for attr_name in get_non_properties(self):
+                method = getattr(self, attr_name)
+                if hasattr(method, 'fallback_priority'):
+                    self.register_fallback(method, method.fallback_priority)
+
+    def register_fallback(self, *args, **kwargs):
+        LOG.debug(f"Registering fallback handler for {self.skill_id}")
+        FallbackSkillV1.register_fallback(self, *args, **kwargs)
