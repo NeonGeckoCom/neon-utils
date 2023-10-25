@@ -146,6 +146,35 @@ class CommonQuerySkill(NeonSkill, _CQS):
         self.bus.emit(message.forward("mycroft.skill.handler.complete",
                                       {"handler": "common_query"}))
 
+    def __handle_question_query(self, message):
+        search_phrase = message.data["phrase"]
+
+        # First, notify the requestor that we are attempting to handle
+        # (this extends a timeout while this skill looks for a match)
+        self.bus.emit(message.response({"phrase": search_phrase,
+                                        "skill_id": self.skill_id,
+                                        "searching": True}))
+
+        # Now invoke the CQS handler to let the skill perform its search
+        result = self.CQS_match_query_phrase(search_phrase, message)
+
+        if result:
+            match = result[0]
+            level = result[1]
+            answer = result[2]
+            callback = result[3] if len(result) > 3 else None
+            confidence = self.__calc_confidence(match, search_phrase, level)
+            self.bus.emit(message.response({"phrase": search_phrase,
+                                            "skill_id": self.skill_id,
+                                            "answer": answer,
+                                            "callback_data": callback,
+                                            "conf": confidence}))
+        else:
+            # Signal we are done (can't handle it)
+            self.bus.emit(message.response({"phrase": search_phrase,
+                                            "skill_id": self.skill_id,
+                                            "searching": False}))
+
     @abstractmethod
     def CQS_match_query_phrase(self, phrase, message):
         """Analyze phrase to see if it is a play-able phrase with this skill.
