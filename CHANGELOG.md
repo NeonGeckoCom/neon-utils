@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.6.3a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a5) (2023-10-25)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a4...1.6.3a5)
+
+**Merged pull requests:**
+
+- Troubleshooting Skill Class Init [\#481](https://github.com/NeonGeckoCom/neon-utils/pull/481) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.6.3a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a4) (2023-10-24)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a3...1.6.3a4)
