@@ -62,9 +62,17 @@ class NeonFallbackSkill(FallbackSkillV1, NeonSkill):
     def _register_decorated(self):
         # Explicitly overridden to ensure the correct super call is made
         LOG.debug(f"Registering decorated methods for {self.skill_id}")
-        NeonSkill._register_decorated(self)
-        from ovos_utils.skills import get_non_properties
-        for attr_name in get_non_properties(self):
-            method = getattr(self, attr_name)
-            if hasattr(method, 'fallback_priority'):
-                self.register_fallback(method, method.fallback_priority)
+        try:
+            FallbackSkillV1._register_decorated(self)
+        except Exception as e:
+            LOG.error(e)
+            NeonSkill._register_decorated(self)
+            from ovos_utils.skills import get_non_properties
+            for attr_name in get_non_properties(self):
+                method = getattr(self, attr_name)
+                if hasattr(method, 'fallback_priority'):
+                    self.register_fallback(method, method.fallback_priority)
+
+    def register_fallback(self, *args, **kwargs):
+        LOG.debug(f"Registering fallback handler for {self.skill_id}")
+        FallbackSkillV1.register_fallback(self, *args, **kwargs)
