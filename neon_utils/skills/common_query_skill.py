@@ -147,6 +147,7 @@ class CommonQuerySkill(NeonSkill, _CQS):
                                       {"handler": "common_query"}))
 
     def __handle_question_query(self, message):
+        # Override ovos-workshop implementation that doesn't pass `message`
         search_phrase = message.data["phrase"]
 
         # First, notify the requestor that we are attempting to handle
