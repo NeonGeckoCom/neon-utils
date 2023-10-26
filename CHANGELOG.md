@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.0](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.0) (2023-10-26)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a5...1.7.0)
+
+**Fixed bugs:**
+
+- \[BUG\] Got some error/warning when the skill initialize [\#463](https://github.com/NeonGeckoCom/neon-utils/issues/463)
+
 ## [1.6.3a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a5) (2023-10-25)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a4...1.6.3a5)
