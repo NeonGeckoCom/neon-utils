@@ -44,6 +44,8 @@ import re
 from enum import Enum, IntEnum
 from abc import ABC, abstractmethod
 from ovos_bus_client import Message
+from ovos_utils.log import log_deprecation
+
 from neon_utils.skills.neon_skill import NeonSkill
 
 from ovos_utils.skills.audioservice import AudioServiceInterface as AudioService
@@ -85,6 +87,9 @@ class CommonPlaySkill(NeonSkill, ABC):
     is needed.
     """
     def __init__(self, *args, **kwargs):
+        log_deprecation("This base class is deprecated. Implement "
+                        "`ovos_workshop.skills.common_play."
+                        "OVOSCommonPlaybackSkill`", "2.0.0")
         NeonSkill.__init__(self, *args, **kwargs)
         self.audioservice = None
         self.play_service_string = None

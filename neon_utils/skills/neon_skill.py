@@ -29,6 +29,11 @@
 import pathlib
 import pickle
 import os
+import time
+from threading import Event
+
+import yaml
+import json
 
 from copy import deepcopy
 from functools import wraps
@@ -39,15 +44,15 @@ from dateutil.tz import gettz
 from ovos_utils.gui import is_gui_connected
 from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
-from ovos_utils.skills.settings import save_settings
-from ovos_utils.log import deprecated
+from ovos_utils.skills.settings import save_settings, get_local_settings
+from ovos_utils.log import deprecated, log_deprecation
 from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
-from neon_utils.message_utils import dig_for_message, resolve_message
+from neon_utils.message_utils import dig_for_message, resolve_message, get_message_user
 from neon_utils.cache_utils import LRUCache
-from neon_utils.skills.mycroft_skill import PatchedMycroftSkill
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.user_utils import get_user_prefs
+from ovos_workshop.skills.base import BaseSkill
 
 try:
     from neon_utils.mq_utils import send_mq_request
@@ -72,9 +77,9 @@ DEFAULT_SPEED_MODE = "thoughtful"
 CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 
-class NeonSkill(PatchedMycroftSkill):
+class NeonSkill(BaseSkill):
     def __init__(self, name=None, bus=None, **kwargs):
-        PatchedMycroftSkill.__init__(self, name, bus, **kwargs)
+        BaseSkill.__init__(self, name, bus, **kwargs)
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
@@ -91,10 +96,31 @@ class NeonSkill(PatchedMycroftSkill):
         self._lang_detector = None
         self._translator = None
 
+        # TODO: Should below defaults be global config?
+        # allow skills to specify timeout overrides per-skill
+        self._speak_timeout = 30
+        self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
+
     def initialize(self):
         # schedule an event to load the cache on disk every CACHE_TIME_OFFSET seconds
         self.schedule_event(self._write_cache_on_disk, CACHE_TIME_OFFSET,
                             name="neon.load_cache_on_disk")
+
+    @property
+    def settings_path(self):
+        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
+        try:
+            return super().settings_path
+        except AttributeError:
+            return super()._settings_path
+
+    @property
+    def resources(self):
+        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
+        try:
+            return super().resources
+        except AttributeError:
+            return super()._resources
 
     @property
     # @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
@@ -504,3 +530,365 @@ class NeonSkill(PatchedMycroftSkill):
             if hasattr(method, 'chat_handler'):
                 self._register_chat_handler(getattr(method, 'chat_handler'),
                                             method)
+
+    @property
+    def location(self):
+        """
+        Backwards-compatible location property. Returns core location config if
+        user location isn't specified.
+        """
+        from neon_utils.configuration_utils import get_mycroft_compatible_location
+        return get_mycroft_compatible_location(get_user_prefs()["location"])
+
+    def _init_settings(self):
+        """
+        Extends the default method to handle settingsmeta defaults locally
+        """
+        from neon_utils.configuration_utils import dict_update_keys
+        super()._init_settings()
+        skill_settings = get_local_settings(self.settings_path)
+        settings_from_disk = dict(skill_settings)
+        self.settings = dict_update_keys(skill_settings,
+                                         self._read_default_settings())
+        if self.settings != settings_from_disk:
+            if isinstance(self.settings, JsonStorage):
+                self.settings.store()
+            else:
+                with open(self.settings_path, "w+") as f:
+                    json.dump(self.settings, f, indent=4)
+        self._initial_settings = dict(self.settings)
+
+    def _init_settings_manager(self):
+        # TODO: Same as upstream implementation?
+        from ovos_workshop.settings import SkillSettingsManager
+        self.settings_manager = SkillSettingsManager(self)
+
+    def _read_default_settings(self):
+        from neon_utils.configuration_utils import parse_skill_default_settings
+        yaml_path = os.path.join(self.root_dir, "settingsmeta.yml")
+        json_path = os.path.join(self.root_dir, "settingsmeta.json")
+        if os.path.isfile(yaml_path):
+            with open(yaml_path) as f:
+                self.settings_meta = yaml.safe_load(f) or dict()
+        elif os.path.isfile(json_path):
+            with open(json_path) as f:
+                self.settings_meta = json.load(f)
+        else:
+            return dict()
+        return parse_skill_default_settings(self.settings_meta)
+
+    @resolve_message
+    def speak(self, utterance, expect_response=False, wait=False, meta=None,
+              message=None, private=False, speaker=None):
+        """
+        Speak an utterance.
+        Arguments:
+            utterance (str):        sentence mycroft should speak
+            expect_response (bool): set to True if Mycroft should listen for a response immediately after
+                                    speaking the utterance.
+            wait (bool):            set to True to block while the text is being spoken.
+            meta:                   Information of what built the sentence.
+            message (Message):      message associated with the input that this speak is associated with
+            private (bool):         flag to indicate this message contains data that is private to the requesting user
+            speaker (dict):         dict containing language or voice data to override user preference values
+
+        """
+        from neon_utils.signal_utils import check_for_signal, wait_for_signal_clear
+        # registers the skill as being active
+        meta = meta or {}
+        meta['skill'] = self.name
+        self.enclosure.register(self.name)
+        if utterance:
+            if not message:
+                LOG.debug('message is None.')
+                message = Message("speak")
+            if not speaker:
+                speaker = message.data.get("speaker", None)
+
+            nick = get_message_user(message)
+
+            if private and message.context.get("klat_data"):
+                LOG.debug("Private Message")
+                title = message.context["klat_data"].get("title") or \
+                    "!PRIVATE:Neon"
+                need_at_sign = True
+                if title.startswith("!PRIVATE"):
+                    users = title.split(':')[1].split(',')
+                    for idx, val in enumerate(users):
+                        users[idx] = val.strip()
+                    if len(users) == 2 and "Neon" in users:
+                        need_at_sign = False
+                    elif len(users) == 1:
+                        need_at_sign = False
+                    elif nick.startswith("guest"):
+                        need_at_sign = False
+                if need_at_sign:
+                    LOG.debug("Send message to private cid!")
+                    utterance = f"@{nick} {utterance}"
+
+            data = {"utterance": utterance,
+                    "lang": self.lang,
+                    "expect_response": expect_response,
+                    "meta": meta,
+                    "speaker": speaker,
+                    "speak_ident": str(time.time())}
+
+            if message.context.get("cc_data", {}).get("emit_response"):
+                msg_to_emit = message.reply("skills:execute.response", data,
+                                            {"destination": ["skills"],
+                                             "source": ["skills"]})
+            else:
+                message.context.get("timing", {})["speech_start"] = time.time()
+                msg_to_emit = message.reply("speak", data,
+                                            {"destination": ["skills"],
+                                             "source": ["audio"]})
+                LOG.debug(f"Skill speak! {data}")
+            LOG.debug(msg_to_emit.msg_type)
+
+            if wait and check_for_signal("neon_speak_api", -1):
+                self.bus.wait_for_response(msg_to_emit,
+                                           msg_to_emit.data['speak_ident'],
+                                           self._speak_timeout)
+            else:
+                self.bus.emit(msg_to_emit)
+                if wait and not message.context.get("klat_data"):
+                    LOG.debug("Using legacy isSpeaking signal")
+                    wait_for_signal_clear('isSpeaking')
+
+        else:
+            LOG.warning("Null utterance passed to speak")
+            LOG.warning(f"{self.name} | message={message}")
+
+    @resolve_message
+    def speak_dialog(self, key, data=None, expect_response=False, wait=False,
+                     message=None, private=False, speaker=None):
+        """ Speak a random sentence from a dialog file.
+
+        Arguments:
+            :param key: dialog file key (e.g. "hello" to speak from the file
+                "locale/en-us/hello.dialog")
+            :param data: information used to populate key
+            :param expect_response: set to True if Mycroft should listen for a
+                response immediately after speaking.
+            :param wait: set to True to block while the text is being spoken.
+            :param message: associated message from request
+            :param private: private flag (server use only)
+            :param speaker: optional dict of speaker info to use
+        """
+        data = data or {}
+        LOG.debug(f"data={data}")
+        if self.dialog_renderer:  # TODO: Pass index (0) here to use non-random responses DM
+            to_speak = self.dialog_renderer.render(key, data)
+        else:
+            to_speak = key
+        self.speak(to_speak,
+                   expect_response, message=message, private=private,
+                   speaker=speaker, wait=wait, meta={'dialog': key,
+                                                     'data': data})
+
+    @resolve_message
+    def get_response(self, dialog: str = '', data: Optional[dict] = None,
+                     validator=None, on_fail=None, num_retries: int = -1,
+                     message: Optional[Message] = None) -> Optional[str]:
+        """
+        Gets a response from a user. Speaks the passed dialog file or string
+        and then optionally plays a listening confirmation sound and
+        starts listening if in wake words mode.
+        Wraps the default Mycroft method to add support for multiple users and
+        running without a wake word.
+
+        Arguments:
+            dialog (str): Optional dialog to speak to the user
+            data (dict): Data used to render the dialog
+            validator (any): Function with following signature
+                def validator(utterance):
+                    return utterance != "red"
+            on_fail (any): Dialog or function returning literal string
+                           to speak on invalid input.  For example:
+                def on_fail(utterance):
+                    return "nobody likes the color red, pick another"
+            num_retries (int): Times to ask user for input, -1 for infinite
+                NOTE: User can not respond and timeout or say "cancel" to stop
+            message (Message): Message associated with request
+
+        Returns:
+            str: User's reply or None if timed out or canceled
+        """
+        user = get_message_user(message) or "local" if message else "local"
+        data = data or {}
+
+        def on_fail_default(utterance):
+            fail_data = data.copy()
+            fail_data['utterance'] = utterance
+
+            if on_fail:
+                to_speak = on_fail
+            else:
+                to_speak = dialog
+            if self.dialog_renderer:
+                return self.dialog_renderer.render(to_speak, data)
+            else:
+                return to_speak
+
+        def is_cancel(utterance):
+            return self.voc_match(utterance, 'cancel')
+
+        def validator_default(utterance):
+            # accept anything except 'cancel'
+            return not is_cancel(utterance)
+
+        on_fail_fn = on_fail if callable(on_fail) else on_fail_default
+        validator = validator or validator_default
+
+        # Ensure we have a message to forward
+        message = message or dig_for_message()
+        if not message:
+            LOG.warning(f"Could not locate message associated with request!")
+            message = Message("get_response")
+
+        # If skill has dialog, render the input
+        if self.dialog_renderer:
+            dialog = self.dialog_renderer.render(dialog, data)
+
+        if dialog:
+            self.speak(dialog, wait=True, message=message, private=True)
+        self.bus.emit(message.forward('mycroft.mic.listen'))
+        return self._wait_response(is_cancel, validator, on_fail_fn,
+                                   num_retries, message, user)
+
+    def _wait_response(self, is_cancel, validator, on_fail, num_retries,
+                       message=None, user: str = None):
+        """
+        Loop until a valid response is received from the user or the retry
+        limit is reached.
+
+        Arguments:
+            is_cancel (callable): function checking cancel criteria
+            validator (callable): function checking for a valid response
+            on_fail (callable): function handling retries
+            message (Message): message associated with request
+        """
+        user = user or "local"
+        num_fails = 0
+        while True:
+            response = self.__get_response(user)
+
+            if response is None:  # No Response
+                # if nothing said, only prompt one more time
+                num_none_fails = 1 if num_retries < 0 else num_retries
+                LOG.debug(f"num_none_fails={num_none_fails}|"
+                          f"num_fails={num_fails}")
+                if num_fails >= num_none_fails:
+                    LOG.info("No user response")
+                    return None
+            else:  # Some response
+                # catch user saying 'cancel'
+                if is_cancel(response):
+                    LOG.info("User cancelled")
+                    return None
+                validated = validator(response)
+                # returns the validated value or the response
+                # (backwards compat)
+                if validated is not False and validated is not None:
+                    LOG.debug(f"Returning validated response")
+                    return response if validated is True else validated
+                LOG.debug(f"User response not validated: {response}")
+            # Unvalidated or no response
+            num_fails += 1
+            if 0 < num_retries < num_fails:
+                LOG.info(f"Failed ({num_fails}) through all retries "
+                         f"({num_retries})")
+                return None
+
+            # Validation failed, retry
+            line = on_fail(response)
+            if line:
+                LOG.debug(f"Speaking failure dialog: {line}")
+                self.speak(line, wait=True, message=message, private=True)
+
+            LOG.debug("Listen for another response")
+            msg = message.reply('mycroft.mic.listen') or \
+                Message('mycroft.mic.listen',
+                        context={"skill_id": self.skill_id})
+            self.bus.emit(msg)
+
+    def __get_response(self, user="local"):
+        """
+        Helper to get a response from the user
+
+        Arguments:
+            user (str): user associated with response
+        Returns:
+            str: user's response or None on a timeout
+        """
+        event = Event()
+
+        def converse(message):
+            resp_user = get_message_user(message) or "local"
+            if resp_user == user:
+                utterances = message.data.get("utterances")
+                converse.response = utterances[0] if utterances else None
+                event.set()
+                LOG.info(f"Got response: {converse.response}")
+                return True
+            LOG.debug(f"Ignoring input from: {resp_user}")
+            return False
+
+        # install a temporary conversation handler
+        self.make_active()
+        converse.response = None
+        default_converse = self.converse
+        self.converse = converse
+
+        if not event.wait(self._get_response_timeout):
+            LOG.warning("Timed out waiting for user response")
+        self.converse = default_converse
+        return converse.response
+
+    # renamed in base class for naming consistency
+    # refactored to use new resource utils
+    def translate(self, text: str, data: Optional[dict] = None):
+        """
+        Deprecated method for translating a dialog file.
+        use self.resources.render_dialog(text, data) instead
+        """
+        log_deprecation("Use `resources.render_dialog`", "2.0.0")
+        return self.resources.render_dialog(text, data)
+
+    # renamed in base class for naming consistency
+    # refactored to use new resource utils
+    def translate_namedvalues(self, name: str, delim: str = ','):
+        """
+        Deprecated method for translating a name/value file.
+        use self.resources.load_named_value_filetext, data) instead
+        """
+        log_deprecation("Use `resources.load_named_value_file`", "2.0.0")
+        return self.resources.load_named_value_file(name, delim)
+
+    # renamed in base class for naming consistency
+    # refactored to use new resource utils
+    def translate_list(self, list_name: str, data: Optional[dict] = None):
+        """
+        Deprecated method for translating a list.
+        use delf.resources.load_list_file(text, data) instead
+        """
+        log_deprecation("Use `resources.load_list_file`", "2.0.0")
+        return self.resources.load_list_file(list_name, data)
+
+    # renamed in base class for naming consistency
+    # refactored to use new resource utils
+    def translate_template(self, template_name: str,
+                           data: Optional[dict] = None):
+        """
+        Deprecated method for translating a template file
+        use self.resources.template_file(text, data) instead
+        """
+        log_deprecation("Use `resources.template_file`", "2.0.0")
+        return self.resources.load_template_file(template_name, data)
+
+    def init_dialog(self, root_directory: Optional[str] = None):
+        """
+        DEPRECATED: use load_dialog_files instead
+        """
+        log_deprecation("Use `load_dialog_files`", "2.0.0")
+        self.load_dialog_files(root_directory)

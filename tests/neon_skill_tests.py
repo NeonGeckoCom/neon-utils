@@ -37,16 +37,20 @@ from multiprocessing import Event
 from os.path import join
 from threading import Thread
 from time import sleep, time
+
+from ovos_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 from mock import Mock
 
+from neon_utils.skills import NeonSkill, CommonMessageSkill, CommonPlaySkill, CommonQuerySkill, NeonFallbackSkill
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.cache_utils import LRUCache
 from neon_utils.signal_utils import check_for_signal
-
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-from skills import *
+from skills import (PatchedMycroftSkill, TestCMS, TestCPS, TestCQS, TestFBS,
+                    TestPatchedSkill, TestInstructorSkill, TestChatSkill,
+                    TestNeonSkill, TestKioskSkill, TestMycroftFallbackSkill)
 
 MycroftSkill = PatchedMycroftSkill
 ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -95,28 +99,28 @@ class SkillObjectTests(unittest.TestCase):
 
     def test_common_message_skill_init(self):
         skill = create_skill(TestCMS)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, CommonMessageSkill)
         self.assertEqual(skill.name, "Test Common Message Skill")
 
     def test_common_play_skill_init(self):
         skill = create_skill(TestCPS)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, CommonPlaySkill)
         self.assertEqual(skill.name, "Test Common Play Skill")
 
     def test_common_query_skill_init(self):
         skill = create_skill(TestCQS)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, CommonQuerySkill)
         self.assertEqual(skill.name, "Test Common Query Skill")
 
     def test_fallback_skill_init(self):
         skill = create_skill(TestFBS)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, NeonFallbackSkill)
         # self.assertIsInstance(skill, FallbackSkill)
@@ -124,7 +128,7 @@ class SkillObjectTests(unittest.TestCase):
 
     def test_neon_skill_init(self):
         skill = create_skill(TestNeonSkill)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertIsInstance(skill, NeonSkill)
         self.assertEqual(skill.name, "Test Neon Skill")
 
@@ -149,9 +153,36 @@ class SkillObjectTests(unittest.TestCase):
         self.assertIsInstance(skill.preference_skill(), dict)
         self.assertEqual(skill.settings, skill.preference_skill())
         self.assertIsInstance(skill.file_system.path, str)
+        # self.assertIsNotNone(skill.settings_meta)
         # self.assertEqual(skill.file_system.path, skill.settings_write_path)
         # self.assertNotEqual(os.path.basename(skill.file_system.path),
         #                     skill.name)
+        expected_methods = ['init_dialog', 'make_active', 'translate',
+                            'translate_namedvalues', 'translate_list',
+                            'translate_template', 'bind',
+                            'handle_settings_change', 'detach',
+                            'get_intro_message', 'converse', 'get_response',
+                            'ask_yesno', 'ask_selection', 'voc_match',
+                            'report_metric', 'send_email',
+                            'register_resting_screen', 'find_resource',
+                            'add_event', 'remove_event', 'register_intent',
+                            'register_intent_file', 'register_entity_file',
+                            'handle_enable_intent', 'handle_disable_intent',
+                            'disable_intent', 'enable_intent', 'set_context',
+                            'remove_context', 'handle_set_cross_context',
+                            'handle_remove_cross_context',
+                            'set_cross_skill_context',
+                            'remove_cross_skill_context', 'register_vocabulary',
+                            'register_regex', 'speak', 'speak_dialog',
+                            'load_dialog_files', 'load_data_files',
+                            'load_vocab_files', 'load_regex_files', 'stop',
+                            'shutdown', 'default_shutdown', 'schedule_event',
+                            'schedule_repeating_event',
+                            'update_scheduled_event', 'cancel_scheduled_event',
+                            'get_scheduled_event_status',
+                            'cancel_all_repeating_events']
+        for method in expected_methods:
+            self.assertTrue(hasattr(skill, method), method)
 
     def test_patched_mycroft_skill_init(self):
         skill = create_skill(TestPatchedSkill)
@@ -163,7 +194,7 @@ class SkillObjectTests(unittest.TestCase):
 
     def test_instructor_skill_init(self):
         skill = create_skill(TestInstructorSkill)
-        self.assertIsInstance(skill, MycroftSkill)
+        # self.assertIsInstance(skill, MycroftSkill)
         self.assertEqual(skill.name, "Test Instructor Skill")
 
 
@@ -179,7 +210,7 @@ class KioskSkillTests(unittest.TestCase):
         self.skill.event_scheduler.schedule_event = Mock()
 
     def test_kiosk_skill_init(self):
-        self.assertIsInstance(self.skill, MycroftSkill)
+        # self.assertIsInstance(self.skill, MycroftSkill)
         self.assertIsInstance(self.skill, NeonSkill)
         self.assertEqual(self.skill.greeting_dialog, 'greeting')
         self.assertEqual(self.skill.goodbye_dialog, 'goodbye')
@@ -310,8 +341,8 @@ class ChatSkillTests(unittest.TestCase):
         self.assertEqual(resp.msg_type, f'{test_message.msg_type}.response')
         self.assertEqual(resp.data,
                          {'response': test_message.data['test_response']})
-        self.assertEqual(resp.context, {'test': True,
-                                        'skill_id': skill.skill_id})
+        self.assertTrue(resp.context['test'])
+        self.assertEqual(resp.context['skill_id'], skill.skill_id)
 
 
 class PatchedMycroftSkillTests(unittest.TestCase):
@@ -1047,6 +1078,10 @@ class NeonSkillTests(unittest.TestCase):
             cls.skill.load_data_files()
             cls.skill.initialize()
 
+        cls.skill.config_core.setdefault('language', dict())
+        cls.skill.config_core['language']['detection_module'] = "libretranslate_detection_plug"
+        cls.skill.config_core['language']['translation_module'] = "libretranslate_plug"
+
     @classmethod
     def tearDownClass(cls) -> None:
         if os.path.isdir(cls.config_dir):
@@ -1061,6 +1096,10 @@ class NeonSkillTests(unittest.TestCase):
         self.assertIsInstance(self.skill.neon_core, bool)
         self.assertIsInstance(self.skill.skill_mode, str)
         self.assertIsInstance(self.skill.extension_time, int)
+        self.assertEqual(self.skill.config_core['language']['detection_module'],
+                         "libretranslate_detection_plug")
+        self.assertEqual(self.skill.config_core['language']['translation_module'],
+                         "libretranslate_plug")
         self.assertIsNotNone(self.skill.lang_detector)
         self.assertIsNotNone(self.skill.translator)
 

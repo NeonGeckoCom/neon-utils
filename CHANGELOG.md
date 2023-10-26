@@ -1,28 +1,52 @@
 # Changelog
 
-## [1.6.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.2a3) (2023-08-22)
+## [1.7.0](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.0) (2023-10-26)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2a2...1.6.2a3)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a5...1.7.0)
 
-**Merged pull requests:**
+**Fixed bugs:**
 
-- Update logging for better readability [\#475](https://github.com/NeonGeckoCom/neon-utils/pull/475) ([NeonDaniel](https://github.com/NeonDaniel))
+- \[BUG\] Got some error/warning when the skill initialize [\#463](https://github.com/NeonGeckoCom/neon-utils/issues/463)
 
-## [1.6.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.2a2) (2023-08-16)
+## [1.6.3a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a5) (2023-10-25)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2a1...1.6.2a2)
-
-**Merged pull requests:**
-
-- Troubleshooting spoken responses in a non-default language [\#474](https://github.com/NeonGeckoCom/neon-utils/pull/474) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.6.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.2a1) (2023-08-11)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.1...1.6.2a1)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a4...1.6.3a5)
 
 **Merged pull requests:**
 
-- Supported Languages bugfix and unit test [\#473](https://github.com/NeonGeckoCom/neon-utils/pull/473) ([NeonDaniel](https://github.com/NeonDaniel))
+- Troubleshooting Skill Class Init [\#481](https://github.com/NeonGeckoCom/neon-utils/pull/481) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.6.3a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a4) (2023-10-24)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a3...1.6.3a4)
+
+**Merged pull requests:**
+
+- Update Skill base classes [\#480](https://github.com/NeonGeckoCom/neon-utils/pull/480) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.6.3a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a3) (2023-10-10)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a2...1.6.3a3)
+
+**Merged pull requests:**
+
+- Better exception handling around signal method patching [\#479](https://github.com/NeonGeckoCom/neon-utils/pull/479) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.6.3a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a2) (2023-10-10)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a1...1.6.3a2)
+
+**Merged pull requests:**
+
+- Skill Compatibility [\#478](https://github.com/NeonGeckoCom/neon-utils/pull/478) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.6.3a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a1) (2023-10-10)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2...1.6.3a1)
+
+**Merged pull requests:**
+
+- Emit handler complete event for CommonQuery skills [\#477](https://github.com/NeonGeckoCom/neon-utils/pull/477) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
