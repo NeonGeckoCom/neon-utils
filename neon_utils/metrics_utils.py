@@ -28,9 +28,7 @@
 
 from socket import gethostname
 from time import time, strftime
-
-from neon_utils.logger import LOG
-from neon_utils.mq_utils import send_mq_request
+from ovos_utils.log import LOG
 
 
 # TODO: Enable metric reporting DM
@@ -88,6 +86,7 @@ def report_metric(name: str, **kwargs):
     :param kwargs: Arbitrary data to include with metric report
     """
     try:
+        from neon_utils.mq_utils import send_mq_request
         send_mq_request("/neon_metrics", {**{"name": name}, **kwargs},
                         "neon_metrics_input", expect_response=False)
         return True
@@ -98,6 +97,7 @@ def report_metric(name: str, **kwargs):
 
 def announce_connection():
     try:
+        from neon_utils.mq_utils import send_mq_request
         from neon_core.version import __version__
         from ovos_config.config import Configuration
         data = {"time": strftime('%Y-%m-%d %H:%M:%S'),
