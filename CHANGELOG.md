@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a2) (2023-11-16)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a1...1.7.1a2)
+
+**Merged pull requests:**
+
+- Patch multiple native languages intent registration [\#484](https://github.com/NeonGeckoCom/neon-utils/pull/484) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.7.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a1) (2023-11-10)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.0...1.7.1a1)
