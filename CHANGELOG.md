@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a3) (2023-11-17)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a2...1.7.1a3)
+
+**Merged pull requests:**
+
+- Implement stopwatch metrics reporting with unit test [\#485](https://github.com/NeonGeckoCom/neon-utils/pull/485) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.7.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a2) (2023-11-16)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a1...1.7.1a2)
