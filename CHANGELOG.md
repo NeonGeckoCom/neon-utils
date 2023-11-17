@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a4) (2023-11-17)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a3...1.7.1a4)
+
+**Merged pull requests:**
+
+- Fix bug in default metrics bus handling [\#486](https://github.com/NeonGeckoCom/neon-utils/pull/486) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.7.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a3) (2023-11-17)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a2...1.7.1a3)
