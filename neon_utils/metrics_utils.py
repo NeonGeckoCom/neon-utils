@@ -69,7 +69,9 @@ class Stopwatch:
 
     def report(self):
         if self._metric and self._report:
-            self._bus = self._bus or MessageBusClient()
+            if not self._bus:
+                self._bus = MessageBusClient()
+                self._bus.run_in_thread()
             message = dig_for_message() or Message("")
             message.context['timestamp'] = time()
             self._bus.emit(message.forward("neon.metric",
