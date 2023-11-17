@@ -28,25 +28,28 @@
 
 from socket import gethostname
 from time import time, strftime
+from ovos_bus_client import Message, MessageBusClient
 from ovos_utils.log import LOG
 
+from neon_utils.message_utils import dig_for_message
 
-# TODO: Enable metric reporting DM
+
 class Stopwatch:
     """
     Provides a stopwatch object compatible with mycroft.metrics Stopwatch.
     """
 
-    def __init__(self, metric_name=None, allow_reporting=False):
+    def __init__(self, metric_name=None, allow_reporting=False, bus=None):
         """
         Create a stopwatch object with an optional metric_name
-        Args:
-            metric_name: name of the metric this stopwatch is measuring
-            allow_reporting: boolean flag to allow this stopwatch to report measured metrics
+        @param metric_name: name of the metric this stopwatch is measuring
+        @param allow_reporting: boolean flag to allow this stopwatch to report measured metrics
+        @param bus: MessageBusClient object to report metrics with
         """
         self._metric = metric_name
         self._report = allow_reporting
         self._context = dict()
+        self._bus = bus
         self.start_time = None
         self.time = None
 
@@ -55,16 +58,7 @@ class Stopwatch:
 
     def __exit__(self, typ, val, traceback):
         self.stop()
-        # self.report()
-
-    # def add_context(self, context: dict):
-    #     """
-    #     Add context to the measured metric.
-    #     Args:
-    #         context: dict of arbitrary data to add to this metric reporting
-    #     """
-    #     if self._metric:
-    #         self._context = context
+        self.report()
 
     def start(self):
         self.start_time = time()
@@ -73,10 +67,14 @@ class Stopwatch:
         self.time = time() - self.start_time
         return self.time
 
-    # def report(self):
-    #     if self._metric and self._report:
-    #         report_metric(self._metric, self._context)
-    #         self._context = dict()
+    def report(self):
+        if self._metric and self._report:
+            self._bus = self._bus or MessageBusClient()
+            message = dig_for_message() or Message("")
+            message.context['timestamp'] = time()
+            self._bus.emit(message.forward("neon.metric",
+                                           {"name": self._metric,
+                                            "duration": self.time}))
 
 
 def report_metric(name: str, **kwargs):
@@ -85,6 +83,7 @@ def report_metric(name: str, **kwargs):
     :param name: Name of the metric to report
     :param kwargs: Arbitrary data to include with metric report
     """
+    # TODO: Deprecate and move to PHAL plugin
     try:
         from neon_utils.mq_utils import send_mq_request
         send_mq_request("/neon_metrics", {**{"name": name}, **kwargs},
