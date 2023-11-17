@@ -58,7 +58,10 @@ class Stopwatch:
 
     def __exit__(self, typ, val, traceback):
         self.stop()
-        self.report()
+        try:
+            self.report()
+        except Exception as e:
+            LOG.exception(e)
 
     def start(self):
         self.start_time = time()
