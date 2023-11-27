@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a5) (2023-11-27)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a4...1.7.1a5)
+
+**Merged pull requests:**
+
+- Troubleshoot Location test failures [\#488](https://github.com/NeonGeckoCom/neon-utils/pull/488) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.7.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a4) (2023-11-17)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a3...1.7.1a4)
