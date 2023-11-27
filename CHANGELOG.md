@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.7.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a6) (2023-11-27)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a5...1.7.1a6)
+
+**Merged pull requests:**
+
+- Ensure skill responses to API inputs [\#487](https://github.com/NeonGeckoCom/neon-utils/pull/487) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.7.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a5) (2023-11-27)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a4...1.7.1a5)
