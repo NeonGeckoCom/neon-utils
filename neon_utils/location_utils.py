@@ -38,6 +38,7 @@ from re import sub
 from ovos_utils.log import LOG
 
 
+# geocode.maps.co nominatim.openstreetmap.org
 _NOMINATIM_DOMAIN = "geocode.maps.co"
 
 
