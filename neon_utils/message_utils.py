@@ -294,4 +294,7 @@ def neon_must_respond(message: Message = None) -> bool:
             else:
                 # Solo Private
                 return True
+    if message.context.get("client") in ("mana", "mq_api"):
+        # API requests should always return a response
+        return True
     return False
