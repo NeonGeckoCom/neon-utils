@@ -29,6 +29,8 @@
 import unittest
 
 from datetime import datetime
+from time import sleep
+
 from dateutil.tz import gettz, tzlocal
 
 
@@ -41,23 +43,27 @@ class LocationUtilTests(unittest.TestCase):
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
+        sleep(1)  # maps.co rate-limit
 
         # No city specified
         coords = get_coordinates({"state": "Washington",
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
+        sleep(1)  # maps.co rate-limit
 
         # No state specified
         coords = get_coordinates({"city": "Seattle",
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
+        sleep(1)  # maps.co rate-limit
 
         # No country specified
         coords = get_coordinates({"state": "Washington", "city": "Renton"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
+        sleep(1)  # maps.co rate-limit
 
     def test_get_location_from_coords(self):
         from neon_utils.location_utils import get_location
@@ -106,6 +112,7 @@ class LocationUtilTests(unittest.TestCase):
         self.assertEqual(location_en['address']['state'], "Washington")
         self.assertEqual(location_en['address']['country'], "United States")
         self.assertEqual(location_en['address']['country_code'], "us")
+        sleep(1)  # maps.co rate-limit
 
         location_es = get_full_location("Seattle, Washington", "es")
         self.assertEqual(location_es['lat'], location_en['lat'])
@@ -113,6 +120,7 @@ class LocationUtilTests(unittest.TestCase):
         self.assertEqual(location_es['address']['country'],
                          "Estados Unidos de América")
         self.assertEqual(location_en['address']['country_code'], "us")
+        sleep(1)  # maps.co rate-limit
 
         location_from_coords = get_full_location((location_en['lat'],
                                                   location_en['lon']))

@@ -1,52 +1,52 @@
 # Changelog
 
-## [1.7.0](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.0) (2023-10-26)
+## [1.7.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a6) (2023-11-27)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a5...1.7.0)
-
-**Fixed bugs:**
-
-- \[BUG\] Got some error/warning when the skill initialize [\#463](https://github.com/NeonGeckoCom/neon-utils/issues/463)
-
-## [1.6.3a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a5) (2023-10-25)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a4...1.6.3a5)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a5...1.7.1a6)
 
 **Merged pull requests:**
 
-- Troubleshooting Skill Class Init [\#481](https://github.com/NeonGeckoCom/neon-utils/pull/481) ([NeonDaniel](https://github.com/NeonDaniel))
+- Ensure skill responses to API inputs [\#487](https://github.com/NeonGeckoCom/neon-utils/pull/487) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.6.3a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a4) (2023-10-24)
+## [1.7.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a5) (2023-11-27)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a3...1.6.3a4)
-
-**Merged pull requests:**
-
-- Update Skill base classes [\#480](https://github.com/NeonGeckoCom/neon-utils/pull/480) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.6.3a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a3) (2023-10-10)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a2...1.6.3a3)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a4...1.7.1a5)
 
 **Merged pull requests:**
 
-- Better exception handling around signal method patching [\#479](https://github.com/NeonGeckoCom/neon-utils/pull/479) ([NeonDaniel](https://github.com/NeonDaniel))
+- Troubleshoot Location test failures [\#488](https://github.com/NeonGeckoCom/neon-utils/pull/488) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.6.3a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a2) (2023-10-10)
+## [1.7.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a4) (2023-11-17)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.3a1...1.6.3a2)
-
-**Merged pull requests:**
-
-- Skill Compatibility [\#478](https://github.com/NeonGeckoCom/neon-utils/pull/478) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.6.3a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.6.3a1) (2023-10-10)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.6.2...1.6.3a1)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a3...1.7.1a4)
 
 **Merged pull requests:**
 
-- Emit handler complete event for CommonQuery skills [\#477](https://github.com/NeonGeckoCom/neon-utils/pull/477) ([NeonDaniel](https://github.com/NeonDaniel))
+- Fix bug in default metrics bus handling [\#486](https://github.com/NeonGeckoCom/neon-utils/pull/486) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.7.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a3) (2023-11-17)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a2...1.7.1a3)
+
+**Merged pull requests:**
+
+- Implement stopwatch metrics reporting with unit test [\#485](https://github.com/NeonGeckoCom/neon-utils/pull/485) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.7.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a2) (2023-11-16)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a1...1.7.1a2)
+
+**Merged pull requests:**
+
+- Patch multiple native languages intent registration [\#484](https://github.com/NeonGeckoCom/neon-utils/pull/484) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.7.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a1) (2023-11-10)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.0...1.7.1a1)
+
+**Merged pull requests:**
+
+- Fix extra metrics utils import [\#483](https://github.com/NeonGeckoCom/neon-utils/pull/483) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 

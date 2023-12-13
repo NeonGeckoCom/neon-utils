@@ -31,6 +31,7 @@ from time import sleep
 import sys
 import os
 import unittest
+from unittest.mock import Mock
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.metrics_utils import *
@@ -75,6 +76,20 @@ class MetricUtilTests(unittest.TestCase):
         stopwatch = Stopwatch()
         self.assertIsNone(stopwatch._metric)
         self.assertFalse(stopwatch._report)
+
+    def test_stopwatch_report_metric(self):
+        from ovos_utils.messagebus import FakeBus
+        bus = FakeBus()
+        on_metric = Mock()
+        bus.on("neon.metric", on_metric)
+        stopwatch = Stopwatch("test", True, bus)
+        with stopwatch:
+            sleep(0.05)
+        on_metric.assert_called_once()
+        msg = on_metric.call_args[0][0]
+        self.assertEqual(msg.data['name'], "test")
+        self.assertIsInstance(msg.data['duration'], float)
+        self.assertIsInstance(msg.context['timestamp'], float)
 
     def test_report_metric(self):
         self.assertTrue(report_metric("test", data="this is only a test"))

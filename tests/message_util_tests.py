@@ -277,12 +277,17 @@ class MessageUtilTests(unittest.TestCase):
                                               "conversation with Neon"},
                                 {"klat_data": {
                                     "title": "!PRIVATE:user"}})
+        mq_api_message = Message("", {}, {"client": "mq_api"})
+        mana_api_message = Message("", {}, {"client": "mana"})
+
         self.assertFalse(neon_must_respond())
         self.assertTrue(neon_must_respond(private_message_solo))
         self.assertTrue(neon_must_respond(private_message_neon))
         self.assertFalse(neon_must_respond(private_message_neon_plus))
         self.assertFalse(neon_must_respond(public_message))
         self.assertFalse(neon_must_respond(first_message))
+        self.assertTrue(neon_must_respond(mq_api_message))
+        self.assertTrue(neon_must_respond(mana_api_message))
 
 
 if __name__ == '__main__':
