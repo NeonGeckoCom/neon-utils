@@ -897,9 +897,17 @@ class NeonSkill(BaseSkill):
                   handler_info: Optional[str] = None, once: bool = False,
                   speak_errors: bool = True):
         # TODO: Remove with ovos-workshop==0.0.13
-        if handler_info == "mycroft.skill.handler" and \
-                self.bus.emitter.listeners(name):
-            LOG.warning(f"Not re-registering intent handler {name}")
-            return
+        try:
+            # Patching FakeBus compat. with MessageBusClient
+            if hasattr(self.bus, "ee"):
+                emitter = self.bus.ee
+            else:
+                emitter = self.bus.emitter
+            if handler_info == "mycroft.skill.handler" and \
+                    emitter.listeners(name):
+                LOG.warning(f"Not re-registering intent handler {name}")
+                return
+        except Exception as e:
+            LOG.exception(e)
         BaseSkill.add_event(self, name, handler, handler_info, once,
                             speak_errors)

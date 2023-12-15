@@ -1,52 +1,12 @@
 # Changelog
 
-## [1.7.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a6) (2023-11-27)
+## [1.8.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.1a1) (2023-12-15)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a5...1.7.1a6)
-
-**Merged pull requests:**
-
-- Ensure skill responses to API inputs [\#487](https://github.com/NeonGeckoCom/neon-utils/pull/487) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.7.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a5) (2023-11-27)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a4...1.7.1a5)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.0...1.8.1a1)
 
 **Merged pull requests:**
 
-- Troubleshoot Location test failures [\#488](https://github.com/NeonGeckoCom/neon-utils/pull/488) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.7.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a4) (2023-11-17)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a3...1.7.1a4)
-
-**Merged pull requests:**
-
-- Fix bug in default metrics bus handling [\#486](https://github.com/NeonGeckoCom/neon-utils/pull/486) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.7.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a3) (2023-11-17)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a2...1.7.1a3)
-
-**Merged pull requests:**
-
-- Implement stopwatch metrics reporting with unit test [\#485](https://github.com/NeonGeckoCom/neon-utils/pull/485) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.7.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a2) (2023-11-16)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.1a1...1.7.1a2)
-
-**Merged pull requests:**
-
-- Patch multiple native languages intent registration [\#484](https://github.com/NeonGeckoCom/neon-utils/pull/484) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.7.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.7.1a1) (2023-11-10)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.7.0...1.7.1a1)
-
-**Merged pull requests:**
-
-- Fix extra metrics utils import [\#483](https://github.com/NeonGeckoCom/neon-utils/pull/483) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update `add_event` patching to work around FakeBus compat. [\#490](https://github.com/NeonGeckoCom/neon-utils/pull/490) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
