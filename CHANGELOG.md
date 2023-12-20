@@ -1,12 +1,12 @@
 # Changelog
 
-## [1.8.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.1a1) (2023-12-15)
+## [1.8.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.2a1) (2023-12-20)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.0...1.8.1a1)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.1...1.8.2a1)
 
 **Merged pull requests:**
 
-- Update `add_event` patching to work around FakeBus compat. [\#490](https://github.com/NeonGeckoCom/neon-utils/pull/490) ([NeonDaniel](https://github.com/NeonDaniel))
+- Better default profile handling [\#492](https://github.com/NeonGeckoCom/neon-utils/pull/492) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
