@@ -66,6 +66,15 @@ class UserUtilTests(unittest.TestCase):
         self.assertIn("address", user_2["user"])
         self.assertEqual(test_message_2.context['user_profiles'][1], user_2)
 
+        missing_profile = get_user_prefs(Message("", {},
+                                                 {"username": "test",
+                                                  "user_profiles": [{}]}))
+        self.assertEqual(missing_profile["user"]["username"], "test")
+        missing_profile_2 = get_user_prefs(Message("", {},
+                                                   {"username": "test2",
+                                                    "user_profiles": [{}]}))
+        self.assertEqual(missing_profile_2["user"]["username"], "test2")
+
         def wrapper(message, valid_dict):
             self.assertEqual(get_user_prefs(), valid_dict)
 

@@ -102,9 +102,13 @@ def get_user_prefs(message: Message = None) -> dict:
         return default_user_config
 
     for profile in message.context.get(profile_key):
-        if profile["user"]["username"] == username:
-            return dict(dict_update_keys(profile, default_user_config))
+        try:
+            if profile["user"]["username"] == username:
+                return dict(dict_update_keys(profile, default_user_config))
+        except KeyError:
+            LOG.error(f"Malformed profile in message context: {profile}")
     LOG.warning(f"No preferences found for {username} in {message.context}")
+    default_user_config['user']['username'] = username
     return default_user_config
 
 
