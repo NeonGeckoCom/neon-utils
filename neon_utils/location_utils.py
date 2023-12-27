@@ -39,7 +39,7 @@ from ovos_utils.log import LOG
 
 
 # geocode.maps.co nominatim.openstreetmap.org
-_NOMINATIM_DOMAIN = "geocode.maps.co"
+_NOMINATIM_DOMAIN = "nominatim.openstreetmap.org"
 
 
 def set_nominatim_domain(domain: str):
