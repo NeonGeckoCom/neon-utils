@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.2a2) (2023-12-27)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.2a1...1.8.2a2)
+
+**Merged pull requests:**
+
+- Use OpenStreetMap geocoder to work around maps.co API changes [\#493](https://github.com/NeonGeckoCom/neon-utils/pull/493) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.8.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.2a1) (2023-12-20)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.1...1.8.2a1)
