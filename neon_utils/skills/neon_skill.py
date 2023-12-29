@@ -107,22 +107,6 @@ class NeonSkill(BaseSkill):
                             name="neon.load_cache_on_disk")
 
     @property
-    def settings_path(self):
-        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
-        try:
-            return super().settings_path
-        except AttributeError:
-            return super()._settings_path
-
-    @property
-    def resources(self):
-        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
-        try:
-            return super().resources
-        except AttributeError:
-            return super()._resources
-
-    @property
     # @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
     def sys_tz(self):
         # TODO: Is this deprecated?
@@ -545,15 +529,15 @@ class NeonSkill(BaseSkill):
         Extends the default method to handle settingsmeta defaults locally
         """
         from neon_utils.configuration_utils import dict_update_keys
-        super()._init_settings()
+        BaseSkill._init_settings(self)
         settings_from_disk = dict(self.settings)
         self.settings = dict_update_keys(self.settings,
                                          self._read_default_settings())
         if self.settings != settings_from_disk:
             LOG.info("Updated default settings from skill metadata")
             self.settings.store()
-
-        self._initial_settings = dict(self.settings)
+            self._initial_settings = dict(self.settings)
+        LOG.info(f"Skill initialized with settings: {self.settings}")
 
     def _handle_converse_request(self, message: Message):
         # TODO: Remove patch after ovos-core 0.0.8
