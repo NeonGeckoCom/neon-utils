@@ -107,22 +107,6 @@ class NeonSkill(BaseSkill):
                             name="neon.load_cache_on_disk")
 
     @property
-    def settings_path(self):
-        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
-        try:
-            return super().settings_path
-        except AttributeError:
-            return super()._settings_path
-
-    @property
-    def resources(self):
-        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
-        try:
-            return super().resources
-        except AttributeError:
-            return super()._resources
-
-    @property
     # @deprecated("Call `dateutil.tz.gettz` directly", "2.0.0")
     def sys_tz(self):
         # TODO: Is this deprecated?
@@ -545,23 +529,24 @@ class NeonSkill(BaseSkill):
         Extends the default method to handle settingsmeta defaults locally
         """
         from neon_utils.configuration_utils import dict_update_keys
-        super()._init_settings()
-        skill_settings = get_local_settings(self.settings_path)
-        settings_from_disk = dict(skill_settings)
-        self.settings = dict_update_keys(skill_settings,
-                                         self._read_default_settings())
-        if self.settings != settings_from_disk:
-            if isinstance(self.settings, JsonStorage):
-                self.settings.store()
-            else:
-                with open(self.settings_path, "w+") as f:
-                    json.dump(self.settings, f, indent=4)
-        self._initial_settings = dict(self.settings)
+        BaseSkill._init_settings(self)
+        settings_from_disk = dict(self.settings)
+        dict_update_keys(self._settings, self._read_default_settings())
+        if self._settings != settings_from_disk:
+            LOG.info("Updated default settings from skill metadata")
+            self._settings.store()
+            self._initial_settings = dict(self._settings)
+        LOG.info(f"Skill initialized with settings: {self.settings}")
 
-    def _init_settings_manager(self):
-        # TODO: Same as upstream implementation?
-        from ovos_workshop.settings import SkillSettingsManager
-        self.settings_manager = SkillSettingsManager(self)
+    def _handle_converse_request(self, message: Message):
+        # TODO: Remove patch after ovos-core 0.0.8
+        if message.msg_type == "skill.converse.request" and \
+                message.data.get('skill_id') != self.skill_id:
+            # Legacy request not for Neon
+            return
+        if message.msg_type == "skill.converse.request":
+            message.msg_type = "neon.converse.request"
+        BaseSkill._handle_converse_request(self, message)
 
     def _read_default_settings(self):
         from neon_utils.configuration_utils import parse_skill_default_settings
