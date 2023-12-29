@@ -531,12 +531,11 @@ class NeonSkill(BaseSkill):
         from neon_utils.configuration_utils import dict_update_keys
         BaseSkill._init_settings(self)
         settings_from_disk = dict(self.settings)
-        self.settings = dict_update_keys(self.settings,
-                                         self._read_default_settings())
-        if self.settings != settings_from_disk:
+        dict_update_keys(self._settings, self._read_default_settings())
+        if self._settings != settings_from_disk:
             LOG.info("Updated default settings from skill metadata")
-            self.settings.store()
-            self._initial_settings = dict(self.settings)
+            self._settings.store()
+            self._initial_settings = dict(self._settings)
         LOG.info(f"Skill initialized with settings: {self.settings}")
 
     def _handle_converse_request(self, message: Message):
