@@ -1,20 +1,12 @@
 # Changelog
 
-## [1.8.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.2a2) (2023-12-27)
+## [1.8.3a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a1) (2023-12-29)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.2a1...1.8.2a2)
-
-**Merged pull requests:**
-
-- Use OpenStreetMap geocoder to work around maps.co API changes [\#493](https://github.com/NeonGeckoCom/neon-utils/pull/493) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.8.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.2a1) (2023-12-20)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.1...1.8.2a1)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.2...1.8.3a1)
 
 **Merged pull requests:**
 
-- Better default profile handling [\#492](https://github.com/NeonGeckoCom/neon-utils/pull/492) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update for ovos-workshop compat [\#495](https://github.com/NeonGeckoCom/neon-utils/pull/495) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
