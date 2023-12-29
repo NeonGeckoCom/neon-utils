@@ -546,22 +546,24 @@ class NeonSkill(BaseSkill):
         """
         from neon_utils.configuration_utils import dict_update_keys
         super()._init_settings()
-        skill_settings = get_local_settings(self.settings_path)
-        settings_from_disk = dict(skill_settings)
-        self.settings = dict_update_keys(skill_settings,
+        settings_from_disk = dict(self.settings)
+        self.settings = dict_update_keys(self.settings,
                                          self._read_default_settings())
         if self.settings != settings_from_disk:
-            if isinstance(self.settings, JsonStorage):
-                self.settings.store()
-            else:
-                with open(self.settings_path, "w+") as f:
-                    json.dump(self.settings, f, indent=4)
+            LOG.info("Updated default settings from skill metadata")
+            self.settings.store()
+
         self._initial_settings = dict(self.settings)
 
-    def _init_settings_manager(self):
-        # TODO: Same as upstream implementation?
-        from ovos_workshop.settings import SkillSettingsManager
-        self.settings_manager = SkillSettingsManager(self)
+    def _handle_converse_request(self, message: Message):
+        # TODO: Remove patch after ovos-core 0.0.8
+        if message.msg_type == "skill.converse.request" and \
+                message.data.get('skill_id') != self.skill_id:
+            # Legacy request not for Neon
+            return
+        if message.msg_type == "skill.converse.request":
+            message.msg_type = "neon.converse.request"
+        BaseSkill._handle_converse_request(self, message)
 
     def _read_default_settings(self):
         from neon_utils.configuration_utils import parse_skill_default_settings
