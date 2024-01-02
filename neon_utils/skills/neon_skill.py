@@ -52,7 +52,7 @@ from neon_utils.message_utils import dig_for_message, resolve_message, get_messa
 from neon_utils.cache_utils import LRUCache
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.user_utils import get_user_prefs
-from ovos_workshop.skills.base import BaseSkill
+from ovos_workshop.skills.ovos import OVOSSkill
 
 try:
     from neon_utils.mq_utils import send_mq_request
@@ -77,9 +77,9 @@ DEFAULT_SPEED_MODE = "thoughtful"
 CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
 
-class NeonSkill(BaseSkill):
+class NeonSkill(OVOSSkill):
     def __init__(self, name=None, bus=None, **kwargs):
-        BaseSkill.__init__(self, name, bus, **kwargs)
+        OVOSSkill.__init__(self, name, bus, **kwargs)
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")
         os.makedirs(self.cache_loc, exist_ok=True)
         self.lru_cache = LRUCache()
@@ -529,7 +529,7 @@ class NeonSkill(BaseSkill):
         Extends the default method to handle settingsmeta defaults locally
         """
         from neon_utils.configuration_utils import dict_update_keys
-        BaseSkill._init_settings(self)
+        OVOSSkill._init_settings(self)
         settings_from_disk = dict(self.settings)
         dict_update_keys(self._settings, self._read_default_settings())
         if self._settings != settings_from_disk:
@@ -546,7 +546,7 @@ class NeonSkill(BaseSkill):
             return
         if message.msg_type == "skill.converse.request":
             message.msg_type = "neon.converse.request"
-        BaseSkill._handle_converse_request(self, message)
+        OVOSSkill._handle_converse_request(self, message)
 
     def _read_default_settings(self):
         from neon_utils.configuration_utils import parse_skill_default_settings
@@ -894,5 +894,5 @@ class NeonSkill(BaseSkill):
                 return
         except Exception as e:
             LOG.exception(e)
-        BaseSkill.add_event(self, name, handler, handler_info, once,
+        OVOSSkill.add_event(self, name, handler, handler_info, once,
                             speak_errors)
