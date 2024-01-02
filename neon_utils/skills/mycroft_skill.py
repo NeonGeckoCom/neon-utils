@@ -31,7 +31,7 @@ import time
 import os.path
 import yaml
 
-from threading import Event, Thread
+from threading import Event
 from typing import Optional
 from json_database import JsonStorage
 from ovos_bus_client.message import Message

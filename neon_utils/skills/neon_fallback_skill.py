@@ -25,27 +25,29 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-from ovos_utils import LOG
 
-from neon_utils.skills.neon_skill import NeonSkill
-from ovos_utils.intents import IntentLayers
+from ovos_utils.log import LOG, log_deprecation
 from ovos_workshop.decorators.layers import IntentLayers
 from ovos_workshop.skills.fallback import FallbackSkillV1
 
+from neon_utils.skills.neon_skill import NeonSkill
 
-# TODO: Consider deprecation and implementing ovos_workshop directly
+
 class NeonFallbackSkill(FallbackSkillV1, NeonSkill):
     """
     Class that extends the NeonSkill and FallbackSkill classes to provide
     NeonSkill functionality to any Fallback skill subclassing this class.
     """
     def __init__(self, *args, **kwargs):
-        # Manual init of OVOSSkill
-        self.private_settings = None
-        self._threads = []
-        self._original_converse = self.converse
-        self.intent_layers = IntentLayers()
-        self.audio_service = None
+        log_deprecation("This class is deprecated. Implement "
+                        "`ovos_workshop.skills.fallback.FallbackSkill`",
+                        "2.0.0")
+        # # Manual init of OVOSSkill
+        # self.private_settings = None
+        # self._threads = []
+        # self._original_converse = self.converse
+        # self.intent_layers = IntentLayers()
+        # self.audio_service = None
 
         # Manual init of FallbackSkill
         #  list of fallback handlers registered by this instance
