@@ -31,19 +31,9 @@ from ovos_workshop.skills.fallback import FallbackSkillV1
 
 from neon_utils.skills.neon_skill import NeonSkill
 
-try:
-    from ovos_workshop.skills.fallback import _MetaFB
-except ImportError:
-    from ovos_workshop.skills.ovos import OVOSSkill
 
-    class _MetaFB(OVOSSkill):
-        """
-        Override metaclass for import compat.
-        """
-
-
-class _MutableFallback(type(OVOSSkill)):
-    """ To override isinstance checks we need to use a metaclass """
+class _MutableFallback(type(NeonSkill)):
+    """ Override for compat. with ovos-workshop until deprecation """
 
     def __instancecheck__(self, instance):
         if isinstance(instance, FallbackSkillV1):
