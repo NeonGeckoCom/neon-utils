@@ -27,13 +27,22 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from ovos_utils.log import LOG, log_deprecation
-from ovos_workshop.decorators.layers import IntentLayers
 from ovos_workshop.skills.fallback import FallbackSkillV1
 
 from neon_utils.skills.neon_skill import NeonSkill
 
+try:
+    from ovos_workshop.skills.fallback import _MetaFB
+except ImportError:
+    from ovos_workshop.skills.ovos import OVOSSkill
 
-class NeonFallbackSkill(FallbackSkillV1, NeonSkill):
+    class _MetaFB(OVOSSkill):
+        """
+        Override metaclass for import compat.
+        """
+
+
+class NeonFallbackSkill(_MetaFB, FallbackSkillV1, NeonSkill):
     """
     Class that extends the NeonSkill and FallbackSkill classes to provide
     NeonSkill functionality to any Fallback skill subclassing this class.
