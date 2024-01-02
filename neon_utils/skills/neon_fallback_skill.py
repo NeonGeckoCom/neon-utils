@@ -42,7 +42,16 @@ except ImportError:
         """
 
 
-class NeonFallbackSkill(_MetaFB, FallbackSkillV1, NeonSkill):
+class _MutableFallback(type(OVOSSkill)):
+    """ To override isinstance checks we need to use a metaclass """
+
+    def __instancecheck__(self, instance):
+        if isinstance(instance, FallbackSkillV1):
+            return True
+        return super().__instancecheck__(instance)
+
+
+class NeonFallbackSkill(FallbackSkillV1, NeonSkill, metaclass=_MutableFallback):
     """
     Class that extends the NeonSkill and FallbackSkill classes to provide
     NeonSkill functionality to any Fallback skill subclassing this class.
