@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.3a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a2) (2024-01-02)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a1...1.8.3a2)
+
+**Merged pull requests:**
+
+- Refactor and Deprecate NeonFallbackSkill [\#496](https://github.com/NeonGeckoCom/neon-utils/pull/496) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.8.3a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a1) (2023-12-29)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.2...1.8.3a1)
