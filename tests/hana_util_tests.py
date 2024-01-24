@@ -29,6 +29,11 @@ import json
 import unittest
 from os import remove
 from os.path import join, dirname, isfile
+from unittest.mock import patch
+
+
+valid_config = {}
+valid_headers = {}
 
 
 class HanaUtilTests(unittest.TestCase):
@@ -38,13 +43,24 @@ class HanaUtilTests(unittest.TestCase):
     neon_utils.hana_utils._client_config_path = test_path
 
     def tearDown(self) -> None:
+        global valid_config
+        global valid_headers
         import neon_utils.hana_utils
         if isfile(self.test_path):
             remove(self.test_path)
+        if neon_utils.hana_utils._client_config:
+            valid_config = neon_utils.hana_utils._client_config
+        if neon_utils.hana_utils._headers:
+            valid_headers = neon_utils.hana_utils._headers
         neon_utils.hana_utils._client_config = {}
         neon_utils.hana_utils._headers = {}
 
     def test_request_backend(self):
+        # Use a valid config and skip extra auth
+        import neon_utils.hana_utils
+        neon_utils.hana_utils._client_config = valid_config
+        neon_utils.hana_utils._headers = valid_headers
+
         server_config = {"backend_type": "hana",
                          "url": self.test_server}
         from neon_utils.hana_utils import request_backend
@@ -56,7 +72,7 @@ class HanaUtilTests(unittest.TestCase):
         self.assertIsInstance(resp['answer'], str)
         # TODO: Test invalid route, invalid request data
 
-    def test_get_token(self):
+    def test_00_get_token(self):
         from neon_utils.hana_utils import get_token
 
         # Test valid request
@@ -68,11 +84,23 @@ class HanaUtilTests(unittest.TestCase):
         self.assertEqual(credentials_on_disk, _client_config)
         # TODO: Test invalid request, rate-limited request
 
-    def test_refresh_token(self):
+    @patch("neon_utils.hana_utils.get_token")
+    def test_refresh_token(self, get_token):
+        import neon_utils.hana_utils
+
+        def _write_token(*_, **__):
+            with open(self.test_path, 'w+') as c:
+                json.dump(valid_config, c)
+            neon_utils.hana_utils._client_config = valid_config
+
         from neon_utils.hana_utils import refresh_token
+        get_token.side_effect = _write_token
+
+        self.assertFalse(isfile(self.test_path))
 
         # Test valid request (auth + refresh)
         refresh_token(self.test_server)
+        get_token.assert_called_once()
         from neon_utils.hana_utils import _client_config
         self.assertTrue(isfile(self.test_path))
         with open(self.test_path) as f:
@@ -81,6 +109,7 @@ class HanaUtilTests(unittest.TestCase):
 
         # Test refresh of existing token (no auth)
         refresh_token(self.test_server)
+        get_token.assert_called_once()
         with open(self.test_path) as f:
             new_credentials = json.load(f)
         self.assertNotEqual(credentials_on_disk, new_credentials)
