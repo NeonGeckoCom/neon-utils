@@ -63,164 +63,173 @@ jobs:
         run: |
           sudo chown -R nobody:nogroup tests/configuration/unwritable_path
 
-      - name: Test Utils
+      - name: Test Parse Utils
         run: |
-          pytest tests/ --doctest-modules --junitxml=tests/util-test-results.xml
-      - name: Upload utils test results
+          pytest tests/parse_util_tests.py --doctest-modules --junitxml=tests/parse-util-test-results.xml
+      - name: Upload parse utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: parse-util-test-results
+          path: tests/parse-util-test-results.xml
+
+      - name: Test Web Utils
+        run: |
+          pytest tests/web_util_tests.py --doctest-modules --junitxml=tests/web-util-test-results.xml
+      - name: Upload web utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: web-util-test-results
+          path: tests/web-util-test-results.xml
+
+      - name: Test Net Utils
+        run: |
+          pytest tests/net_util_tests.py --doctest-modules --junitxml=tests/net-util-test-results.xml
+      - name: Upload net utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: net-util-test-results
+          path: tests/net-util-test-results.xml
+
+      - name: Test Search Utils
+        run: |
+          pytest tests/search_util_tests.py --doctest-modules --junitxml=tests/search-util-test-results.xml
+      - name: Upload search utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: search-util-test-results
+          path: tests/search-util-test-results.xml
+
+      - name: Test Location Utils
+        run: |
+          pytest tests/location_util_tests.py --doctest-modules --junitxml=tests/location-util-test-results.xml
+      - name: Upload location utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: location-util-test-results
+          path: tests/location-util-test-results.xml
+
+      - name: Test Configuration Utils
+        run: |
+          pytest tests/configuration_util_tests.py --doctest-modules --junitxml=tests/configuration-util-test-results.xml
+      - name: Upload configuration utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: configuration-util-test-results
+          path: tests/configuration-util-test-results.xml
+
+      - name: Test Message Utils
+        run: |
+          pytest tests/message_util_tests.py --doctest-modules --junitxml=tests/message-util-test-results.xml
+      - name: Upload message utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: message-util-test-results
+          path: tests/message-util-test-results.xml
+
+      - name: Test Log Utils
+        run: |
+          pytest tests/log_util_tests.py --doctest-modules --junitxml=tests/log-util-test-results.xml
+      - name: Upload log utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: log-util-test-results
+          path: tests/log-util-test-results.xml
+
+      - name: Test Packaging Utils
+        run: |
+          pytest tests/packaging_util_tests.py --doctest-modules --junitxml=tests/packaging-util-test-results.xml
+      - name: Upload packaging utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: packaging-util-test-results
+          path: tests/packaging-util-test-results.xml
+
+      - name: Test Authentication Utils
+        run: |
+          pytest tests/authentication_util_tests.py --doctest-modules --junitxml=tests/authentication-util-test-results.xml
+      - name: Upload authentication utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: authentication-util-test-results
+          path: tests/authentication-util-test-results.xml
+
+      - name: Test Metric Utils
+        run: |
+          pytest tests/metric_util_tests.py --doctest-modules --junitxml=tests/metric-util-test-results.xml
+      - name: Upload metric utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: metric-util-test-results
+          path: tests/metric-util-test-results.xml
+
+      - name: Test Cache Utils
+        run: |
+          pytest tests/cache_util_tests.py --doctest-modules --junitxml=tests/cache-util-test-results.xml
+      - name: Upload cache utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: cache-util-test-results
+          path: tests/cache-util-test-results.xml
+
+      - name: Test MQ Utils
+        run: |
+          pytest tests/mq_util_tests.py --doctest-modules --junitxml=tests/mq-util-test-results.xml
+      - name: Upload MQ utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: mq-util-test-results
+          path: tests/mq-util-test-results.xml
+
+      - name: Test Validator Utils
+        run: |
+          pytest tests/validator_util_tests.py --doctest-modules --junitxml=tests/validator-util-test-results.xml
+      - name: Upload validator utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: validator-util-test-results
+          path: tests/validator-util-test-results.xml
+
+      - name: Test Signal Utils
+        run: |
+          pytest tests/signal_util_tests.py --doctest-modules --junitxml=tests/signal-util-test-results.xml
+      - name: Upload signal utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: signal-util-test-results
+          path: tests/signal-util-test-results.xml
+
+      - name: Test Messagebus Utils
+        run: |
+          pytest tests/messagebus_util_tests.py --doctest-modules --junitxml=tests/messagebus-util-test-results.xml
+      - name: Upload messagebus utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: messagebus-util-test-results
+          path: tests/messagebus-util-test-results.xml
+
+      - name: Test User Utils
+        run: |
+          pytest tests/user_util_tests.py --doctest-modules --junitxml=tests/user-util-test-results.xml
+      - name: Upload user utils test results
         uses: actions/upload-artifact@v2
         with:
           name: util-test-results
           path: tests/util-test-results.xml
-#
-#      - name: Test Web Utils
-#        run: |
-#          pytest tests/web_util_tests.py --doctest-modules --junitxml=tests/web-util-test-results.xml
-#      - name: Upload web utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: web-util-test-results
-#          path: tests/web-util-test-results.xml
-#
-#      - name: Test Net Utils
-#        run: |
-#          pytest tests/net_util_tests.py --doctest-modules --junitxml=tests/net-util-test-results.xml
-#      - name: Upload net utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: net-util-test-results
-#          path: tests/net-util-test-results.xml
-#
-#      - name: Test Search Utils
-#        run: |
-#          pytest tests/search_util_tests.py --doctest-modules --junitxml=tests/search-util-test-results.xml
-#      - name: Upload search utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: search-util-test-results
-#          path: tests/search-util-test-results.xml
-#
-#      - name: Test Location Utils
-#        run: |
-#          pytest tests/location_util_tests.py --doctest-modules --junitxml=tests/location-util-test-results.xml
-#      - name: Upload location utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: location-util-test-results
-#          path: tests/location-util-test-results.xml
-#
-#      - name: Test Configuration Utils
-#        run: |
-#          pytest tests/configuration_util_tests.py --doctest-modules --junitxml=tests/configuration-util-test-results.xml
-#      - name: Upload configuration utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: configuration-util-test-results
-#          path: tests/configuration-util-test-results.xml
-#
-#      - name: Test Message Utils
-#        run: |
-#          pytest tests/message_util_tests.py --doctest-modules --junitxml=tests/message-util-test-results.xml
-#      - name: Upload message utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: message-util-test-results
-#          path: tests/message-util-test-results.xml
-#
-#      - name: Test Log Utils
-#        run: |
-#          pytest tests/log_util_tests.py --doctest-modules --junitxml=tests/log-util-test-results.xml
-#      - name: Upload log utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: log-util-test-results
-#          path: tests/log-util-test-results.xml
-#
-#      - name: Test Packaging Utils
-#        run: |
-#          pytest tests/packaging_util_tests.py --doctest-modules --junitxml=tests/packaging-util-test-results.xml
-#      - name: Upload packaging utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: packaging-util-test-results
-#          path: tests/packaging-util-test-results.xml
-#
-#      - name: Test Authentication Utils
-#        run: |
-#          pytest tests/authentication_util_tests.py --doctest-modules --junitxml=tests/authentication-util-test-results.xml
-#      - name: Upload authentication utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: authentication-util-test-results
-#          path: tests/authentication-util-test-results.xml
-#
-#      - name: Test Metric Utils
-#        run: |
-#          pytest tests/metric_util_tests.py --doctest-modules --junitxml=tests/metric-util-test-results.xml
-#      - name: Upload metric utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: metric-util-test-results
-#          path: tests/metric-util-test-results.xml
-#
-#      - name: Test Cache Utils
-#        run: |
-#          pytest tests/cache_util_tests.py --doctest-modules --junitxml=tests/cache-util-test-results.xml
-#      - name: Upload cache utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: cache-util-test-results
-#          path: tests/cache-util-test-results.xml
-#
-#      - name: Test MQ Utils
-#        run: |
-#          pytest tests/mq_util_tests.py --doctest-modules --junitxml=tests/mq-util-test-results.xml
-#      - name: Upload MQ utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: mq-util-test-results
-#          path: tests/mq-util-test-results.xml
-#
-#      - name: Test Validator Utils
-#        run: |
-#          pytest tests/validator_util_tests.py --doctest-modules --junitxml=tests/validator-util-test-results.xml
-#      - name: Upload validator utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: validator-util-test-results
-#          path: tests/validator-util-test-results.xml
-#
-#      - name: Test Signal Utils
-#        run: |
-#          pytest tests/signal_util_tests.py --doctest-modules --junitxml=tests/signal-util-test-results.xml
-#      - name: Upload signal utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: signal-util-test-results
-#          path: tests/signal-util-test-results.xml
-#
-#      - name: Test Messagebus Utils
-#        run: |
-#          pytest tests/messagebus_util_tests.py --doctest-modules --junitxml=tests/messagebus-util-test-results.xml
-#      - name: Upload messagebus utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: messagebus-util-test-results
-#          path: tests/messagebus-util-test-results.xml
-#
-#      - name: Test User Utils
-#        run: |
-#          pytest tests/user_util_tests.py --doctest-modules --junitxml=tests/user-util-test-results.xml
-#      - name: Upload user utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: user-util-test-results
-#          path: tests/user-util-test-results.xml
-#
-#      - name: Test Language Utils
-#        run: |
-#          pytest tests/language_util_tests.py --doctest-modules --junitxml=tests/language-util-test-results.xml
-#      - name: Upload language utils test results
-#        uses: actions/upload-artifact@v2
-#        with:
-#          name: language-util-test-results
-#          path: tests/language-util-test-results.xml
+
+      - name: Test Web Utils
+        run: |
+          pytest tests/web_util_tests.py --doctest-modules --junitxml=tests/web-util-test-results.xml
+      - name: Upload web utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: web-util-test-results
+          path: tests/web-util-test-results.xml
+
+      - name: Test Hana Utils
+        run: |
+          pytest tests/hana_util_tests.py --doctest-modules --junitxml=tests/hana-util-test-results.xml
+      - name: Upload hana utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: hana-util-test-results
+          path: tests/hana-util-test-results.xml
