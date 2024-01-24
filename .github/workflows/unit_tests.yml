@@ -213,17 +213,17 @@ jobs:
       - name: Upload user utils test results
         uses: actions/upload-artifact@v2
         with:
-          name: util-test-results
-          path: tests/util-test-results.xml
+          name: user-util-test-results
+          path: tests/user-util-test-results.xml
 
-      - name: Test Web Utils
+      - name: Test Language Utils
         run: |
-          pytest tests/web_util_tests.py --doctest-modules --junitxml=tests/web-util-test-results.xml
-      - name: Upload web utils test results
+          pytest tests/language_util_tests.py --doctest-modules --junitxml=tests/language-util-test-results.xml
+      - name: Upload language utils test results
         uses: actions/upload-artifact@v2
         with:
-          name: web-util-test-results
-          path: tests/web-util-test-results.xml
+          name: language-util-test-results
+          path: tests/language-util-test-results.xml
 
       - name: Test Hana Utils
         run: |
