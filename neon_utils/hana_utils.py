@@ -59,14 +59,14 @@ def _init_client(backend_address: str):
             with open(_client_config_path) as f:
                 _client_config = json.load(f)
         else:
-            get_token(backend_address)
+            _get_token(backend_address)
 
     if not _headers:
         _headers = {"Authorization": f"Bearer {_client_config['access_token']}"}
 
 
-def get_token(backend_address: str, username: str = "guest",
-              password: str = "password"):
+def _get_token(backend_address: str, username: str = "guest",
+               password: str = "password"):
     """
     Get new auth tokens from the specified server. This will cache the returned
     token, overwriting any previous data at the cache path.
@@ -87,7 +87,7 @@ def get_token(backend_address: str, username: str = "guest",
         json.dump(_client_config, f, indent=2)
 
 
-def refresh_token(backend_address: str):
+def _refresh_token(backend_address: str):
     """
     Get new tokens from the specified server using an existing refresh token
     (if it exists). This will update the cached tokens and associated metadata.
@@ -127,10 +127,10 @@ def request_backend(endpoint: str, request_data: dict,
     _init_client(backend_address)
     if time() >= _client_config.get("expiration", 0):
         try:
-            refresh_token(backend_address)
+            _refresh_token(backend_address)
         except ServerException as e:
             LOG.error(e)
-            get_token(backend_address)
+            _get_token(backend_address)
     resp = requests.post(f"{backend_address}/{endpoint.lstrip('/')}",
                          json=request_data, headers=_headers)
     if resp.ok:

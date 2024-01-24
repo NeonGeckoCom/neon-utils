@@ -73,10 +73,10 @@ class HanaUtilTests(unittest.TestCase):
         # TODO: Test invalid route, invalid request data
 
     def test_00_get_token(self):
-        from neon_utils.hana_utils import get_token
+        from neon_utils.hana_utils import _get_token
 
         # Test valid request
-        get_token(self.test_server)
+        _get_token(self.test_server)
         from neon_utils.hana_utils import _client_config
         self.assertTrue(isfile(self.test_path))
         with open(self.test_path) as f:
@@ -93,13 +93,13 @@ class HanaUtilTests(unittest.TestCase):
                 json.dump(valid_config, c)
             neon_utils.hana_utils._client_config = valid_config
 
-        from neon_utils.hana_utils import refresh_token
+        from neon_utils.hana_utils import _refresh_token
         get_token.side_effect = _write_token
 
         self.assertFalse(isfile(self.test_path))
 
         # Test valid request (auth + refresh)
-        refresh_token(self.test_server)
+        _refresh_token(self.test_server)
         get_token.assert_called_once()
         from neon_utils.hana_utils import _client_config
         self.assertTrue(isfile(self.test_path))
@@ -108,7 +108,7 @@ class HanaUtilTests(unittest.TestCase):
         self.assertEqual(credentials_on_disk, _client_config)
 
         # Test refresh of existing token (no auth)
-        refresh_token(self.test_server)
+        _refresh_token(self.test_server)
         get_token.assert_called_once()
         with open(self.test_path) as f:
             new_credentials = json.load(f)
