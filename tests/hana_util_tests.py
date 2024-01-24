@@ -81,7 +81,7 @@ class HanaUtilTests(unittest.TestCase):
         self.assertEqual(credentials_on_disk, _client_config)
         # TODO: Test invalid request, rate-limited request
 
-    @patch("neon_utils.hana_utils.get_token")
+    @patch("neon_utils.hana_utils._get_token")
     def test_refresh_token(self, get_token):
         import neon_utils.hana_utils
 
