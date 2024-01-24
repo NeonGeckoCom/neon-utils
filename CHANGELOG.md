@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.3a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a3) (2024-01-24)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a2...1.8.3a3)
+
+**Merged pull requests:**
+
+- Add utilities for interfacing with Neon HANA [\#497](https://github.com/NeonGeckoCom/neon-utils/pull/497) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.8.3a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a2) (2024-01-02)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a1...1.8.3a2)
