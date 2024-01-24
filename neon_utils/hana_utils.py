@@ -109,30 +109,22 @@ def _refresh_token(backend_address: str):
 
 
 def request_backend(endpoint: str, request_data: dict,
-                    server_config: Optional[dict] = None) -> dict:
+                    server_url: str = _DEFAULT_BACKEND_URL) -> dict:
     """
     Make a request to a Hana backend server and return the json response
     @param endpoint: server endpoint to query
     @param request_data: dict data to send in request body
-    @param server_config: Configuration['server']. If None, this will be read
-        from configuration
+    @param server_url: Base URL of Hana server to query
     @returns: dict response
     """
-    if not server_config:
-        from ovos_config.config import Configuration
-        server_config = Configuration().get("server", {})
-    if server_config.get("backend_type") == "hana":
-        backend_address = server_config.get("url")
-    else:
-        backend_address = _DEFAULT_BACKEND_URL
-    _init_client(backend_address)
+    _init_client(server_url)
     if time() >= _client_config.get("expiration", 0):
         try:
-            _refresh_token(backend_address)
+            _refresh_token(server_url)
         except ServerException as e:
             LOG.error(e)
-            _get_token(backend_address)
-    resp = requests.post(f"{backend_address}/{endpoint.lstrip('/')}",
+            _get_token(server_url)
+    resp = requests.post(f"{server_url}/{endpoint.lstrip('/')}",
                          json=request_data, headers=_headers)
     if resp.ok:
         return resp.json()

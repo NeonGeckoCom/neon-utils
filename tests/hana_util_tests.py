@@ -60,14 +60,11 @@ class HanaUtilTests(unittest.TestCase):
         import neon_utils.hana_utils
         neon_utils.hana_utils._client_config = valid_config
         neon_utils.hana_utils._headers = valid_headers
-
-        server_config = {"backend_type": "hana",
-                         "url": self.test_server}
         from neon_utils.hana_utils import request_backend
         resp = request_backend("/neon/get_response",
                                {"lang_code": "en-us",
                                 "utterance": "who are you",
-                                "user_profile": {}}, server_config)
+                                "user_profile": {}}, self.test_server)
         self.assertEqual(resp['lang_code'], "en-us")
         self.assertIsInstance(resp['answer'], str)
         # TODO: Test invalid route, invalid request data
