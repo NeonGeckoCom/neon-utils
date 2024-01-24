@@ -224,3 +224,12 @@ jobs:
         with:
           name: language-util-test-results
           path: tests/language-util-test-results.xml
+
+      - name: Test Hana Utils
+        run: |
+          pytest tests/hana_util_tests.py --doctest-modules --junitxml=tests/hana-util-test-results.xml
+      - name: Upload hana utils test results
+        uses: actions/upload-artifact@v2
+        with:
+          name: hana-util-test-results
+          path: tests/hana-util-test-results.xml
