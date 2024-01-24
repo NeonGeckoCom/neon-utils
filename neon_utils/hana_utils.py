@@ -35,6 +35,7 @@ from typing import Optional
 from ovos_utils.log import LOG
 from ovos_utils.xdg_utils import xdg_cache_home
 
+_DEFAULT_BACKEND_URL = "https://hana.neonaialpha.com"
 _client_config = {}
 _client_config_path = join(xdg_cache_home(), "neon", "hana_token.json")
 _headers = {}
@@ -120,10 +121,10 @@ def request_backend(endpoint: str, request_data: dict,
     if not server_config:
         from ovos_config.config import Configuration
         server_config = Configuration().get("server", {})
-    if not server_config.get("backend_type") == "hana":
-        backend_address = "https://hana.neonaialpha.com"
-    else:
+    if server_config.get("backend_type") == "hana":
         backend_address = server_config.get("url")
+    else:
+        backend_address = _DEFAULT_BACKEND_URL
     _init_client(backend_address)
     if time() >= _client_config.get("expiration", 0):
         try:
