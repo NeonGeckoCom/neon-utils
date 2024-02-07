@@ -29,9 +29,9 @@
 import requests
 import json
 
-from os.path import join, isfile
+from os import makedirs
+from os.path import join, isfile, isdir, dirname
 from time import time
-from typing import Optional
 from ovos_utils.log import LOG
 from ovos_utils.xdg_utils import xdg_cache_home
 
@@ -84,6 +84,8 @@ def _get_token(backend_address: str, username: str = "guest",
         raise ServerException(f"Error logging into {backend_address}. "
                               f"{resp.status_code}: {resp.text}")
     _client_config = resp.json()
+    if not isdir(dirname(_client_config_path)):
+        makedirs(dirname(_client_config_path))
     with open(_client_config_path, "w+") as f:
         json.dump(_client_config, f, indent=2)
 
