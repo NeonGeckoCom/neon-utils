@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.3a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a4) (2024-02-07)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a3...1.8.3a4)
+
+**Merged pull requests:**
+
+- Fix directory errors in hana\_utils [\#500](https://github.com/NeonGeckoCom/neon-utils/pull/500) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.8.3a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a3) (2024-01-24)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a2...1.8.3a3)
