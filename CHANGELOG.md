@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.3a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a5) (2024-02-14)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a4...1.8.3a5)
+
+**Merged pull requests:**
+
+- feat: adds function for installing packages via pip [\#499](https://github.com/NeonGeckoCom/neon-utils/pull/499) ([dblencowe](https://github.com/dblencowe))
+
 ## [1.8.3a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a4) (2024-02-07)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a3...1.8.3a4)
