@@ -29,6 +29,7 @@
 import os
 import sys
 import unittest
+from unittest.mock import patch
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from neon_utils.packaging_utils import *
@@ -145,6 +146,28 @@ class PackagingUtilTests(unittest.TestCase):
         self.assertEqual(valid_spec, skill_spec)
 
     # TODO: Actually validate exception cases? DM
+        
+    def test_install_packages_from_pip(self):
+        import pip
+        from neon_utils.packaging_utils import install_packages_from_pip
+
+        with patch.object(pip, 'main', return_value=0) as mock_method:
+            test_result = install_packages_from_pip("neon-utils", ["pip-install-test"])
+        
+            args, kwargs = mock_method.call_args
+            self.assertEqual(0, test_result)
+            mock_method.assert_called_once_with(['install', '-r', args[0][2], '-c', args[0][4]])
+
+            with open(args[0][2], "r", encoding="utf8") as f:
+                line = f.readline()
+                self.assertEqual("pip-install-test\n", line)
+
+            mock_method.reset_mock()
+            test_result = install_packages_from_pip("neon-utils", ["pip-install-test", "pip-install-another"])
+
+            self.assertEqual(0, test_result)
+            mock_method.assert_called_once()
+
 
 
 if __name__ == '__main__':
