@@ -35,10 +35,14 @@ from time import time
 from ovos_utils.log import LOG
 from ovos_utils.xdg_utils import xdg_cache_home
 
-_DEFAULT_BACKEND_URL = "https://hana.neonaialpha.com"
+_DEFAULT_BACKEND_URL = "https://hana.neonaiservices.com"
 _client_config = {}
-_client_config_path = join(xdg_cache_home(), "neon", "hana_token.json")
 _headers = {}
+
+
+def _get_client_config_path(url: str = _DEFAULT_BACKEND_URL):
+    url_key = hash(url)
+    return join(xdg_cache_home(), "neon", f"hana_token_{url_key}.json")
 
 
 class ServerException(Exception):
@@ -56,8 +60,9 @@ def _init_client(backend_address: str):
     global _headers
 
     if not _client_config:
-        if isfile(_client_config_path):
-            with open(_client_config_path) as f:
+        client_config_path = _get_client_config_path(backend_address)
+        if isfile(client_config_path):
+            with open(client_config_path) as f:
                 _client_config = json.load(f)
         else:
             _get_token(backend_address)
@@ -84,9 +89,10 @@ def _get_token(backend_address: str, username: str = "guest",
         raise ServerException(f"Error logging into {backend_address}. "
                               f"{resp.status_code}: {resp.text}")
     _client_config = resp.json()
-    if not isdir(dirname(_client_config_path)):
-        makedirs(dirname(_client_config_path))
-    with open(_client_config_path, "w+") as f:
+    client_config_path = _get_client_config_path(backend_address)
+    if not isdir(dirname(client_config_path)):
+        makedirs(dirname(client_config_path))
+    with open(client_config_path, "w+") as f:
         json.dump(_client_config, f, indent=2)
 
 
@@ -106,7 +112,8 @@ def _refresh_token(backend_address: str):
         raise ServerException(f"Error updating token from {backend_address}. "
                               f"{update.status_code}: {update.text}")
     _client_config = update.json()
-    with open(_client_config_path, "w+") as f:
+    client_config_path = _get_client_config_path(backend_address)
+    with open(client_config_path, "w+") as f:
         json.dump(_client_config, f, indent=2)
 
 

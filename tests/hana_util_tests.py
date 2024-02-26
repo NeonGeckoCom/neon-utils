@@ -37,10 +37,8 @@ valid_headers = {}
 
 
 class HanaUtilTests(unittest.TestCase):
-    import neon_utils.hana_utils
     test_server = "https://hana.neonaialpha.com"
     test_path = join(dirname(__file__), "hana_test.json")
-    neon_utils.hana_utils._client_config_path = test_path
 
     def tearDown(self) -> None:
         global valid_config
@@ -55,7 +53,10 @@ class HanaUtilTests(unittest.TestCase):
         neon_utils.hana_utils._client_config = {}
         neon_utils.hana_utils._headers = {}
 
-    def test_request_backend(self):
+    @patch("neon_utils.hana_utils._get_client_config_path")
+    def test_request_backend(self, config_path):
+        config_path.return_value = self.test_path
+
         # Use a valid config and skip extra auth
         import neon_utils.hana_utils
         neon_utils.hana_utils._client_config = valid_config
@@ -69,7 +70,9 @@ class HanaUtilTests(unittest.TestCase):
         self.assertIsInstance(resp['answer'], str)
         # TODO: Test invalid route, invalid request data
 
-    def test_00_get_token(self):
+    @patch("neon_utils.hana_utils._get_client_config_path")
+    def test_00_get_token(self, config_path):
+        config_path.return_value = self.test_path
         from neon_utils.hana_utils import _get_token
 
         # Test valid request
@@ -81,8 +84,10 @@ class HanaUtilTests(unittest.TestCase):
         self.assertEqual(credentials_on_disk, _client_config)
         # TODO: Test invalid request, rate-limited request
 
+    @patch("neon_utils.hana_utils._get_client_config_path")
     @patch("neon_utils.hana_utils._get_token")
-    def test_refresh_token(self, get_token):
+    def test_refresh_token(self, get_token, config_path):
+        config_path.return_value = self.test_path
         import neon_utils.hana_utils
 
         def _write_token(*_, **__):
@@ -120,6 +125,13 @@ class HanaUtilTests(unittest.TestCase):
                             new_credentials['access_token'])
         self.assertNotEqual(credentials_on_disk['refresh_token'],
                             new_credentials['refresh_token'])
+
+    def test_config_path(self):
+        from neon_utils.hana_utils import _get_client_config_path
+        path_1 = _get_client_config_path("https://hana.neonaialpha.com")
+        default = _get_client_config_path()
+        self.assertNotEqual(path_1, default)
+        self.assertEqual(dirname(path_1), dirname(default))
 
         # TODO: Test invalid refresh
 
