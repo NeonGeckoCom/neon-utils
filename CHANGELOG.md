@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.8.3a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a6) (2024-02-26)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a5...1.8.3a6)
+
+**Merged pull requests:**
+
+- Update Hana utils to prep for release [\#501](https://github.com/NeonGeckoCom/neon-utils/pull/501) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.8.3a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a5) (2024-02-14)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a4...1.8.3a5)
