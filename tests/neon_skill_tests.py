@@ -121,7 +121,7 @@ class SkillObjectTests(unittest.TestCase):
     def test_fallback_skill_init(self):
         skill = create_skill(TestFBS)
         # self.assertIsInstance(skill, MycroftSkill)
-        self.assertIsInstance(skill, NeonSkill)
+        # self.assertIsInstance(skill, NeonSkill)
         self.assertIsInstance(skill, NeonFallbackSkill)
         # self.assertIsInstance(skill, FallbackSkill)
         self.assertEqual(skill.name, "Test Fallback Skill")

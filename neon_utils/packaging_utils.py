@@ -29,7 +29,8 @@
 import sys
 import re
 import importlib.util
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
+from tempfile import mkstemp
 
 import pkg_resources
 import sysconfig
@@ -265,3 +266,33 @@ def build_skill_spec(skill_dir: str) -> dict:
     skill_data = dict_merge(default_skill, skill_data)
     skill_data["requirements"]["python"].sort()
     return dict(dict_merge(skill_data, readme_data))
+
+def install_packages_from_pip(core_module: str, packages: List[str]) -> int:
+    """
+    Install a Python package using pip
+    :param core_module: string neon core module to install dependency for
+    :param packages: List(string) list of packages to install
+    :returns: int pip exit code
+    """
+    import pip
+    _, tmp_constraints_file = mkstemp()
+    _, tmp_requirements_file = mkstemp()
+
+    install_str = " ".join(packages)
+
+    with open(tmp_constraints_file, 'w', encoding="utf8") as f:
+        constraints = '\n'.join(get_package_dependencies(core_module))
+        f.write(constraints)
+        LOG.info(f"Constraints={constraints}")
+
+    with open(tmp_requirements_file, "w", encoding="utf8") as f:
+        for pkg in packages:
+            f.write(f"{pkg}\n")
+
+    LOG.info(f"Requested installation of plugins: {install_str}")
+    pip_args = ['install', '-r', tmp_requirements_file, '-c', tmp_constraints_file]
+    result = pip.main(pip_args) if hasattr(pip, 'main') else pip._internal.main(pip_args)
+    
+    if result != 0:
+        return result
+    return 0

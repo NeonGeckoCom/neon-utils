@@ -31,7 +31,7 @@ import time
 import os.path
 import yaml
 
-from threading import Event, Thread
+from threading import Event
 from typing import Optional
 from json_database import JsonStorage
 from ovos_bus_client.message import Message
@@ -58,14 +58,6 @@ class PatchedMycroftSkill(MycroftSkill):
         self._get_response_timeout = 15  # 10 for listener, 5 for STT, then timeout
 
     @property
-    def settings_path(self):
-        # TODO: Deprecate backwards-compat. wrapper after ovos-workshop 0.0.13
-        try:
-            return super().settings_path
-        except AttributeError:
-            return super()._settings_path
-
-    @property
     def location(self):
         """
         Backwards-compatible location property. Returns core location config if
@@ -89,11 +81,6 @@ class PatchedMycroftSkill(MycroftSkill):
                 with open(self.settings_path, "w+") as f:
                     json.dump(self.settings, f, indent=4)
         self._initial_settings = dict(self.settings)
-
-    def _init_settings_manager(self):
-        # TODO: Same as upstream implementation?
-        from ovos_workshop.settings import SkillSettingsManager
-        self.settings_manager = SkillSettingsManager(self)
 
     def _read_default_settings(self):
         yaml_path = os.path.join(self.root_dir, "settingsmeta.yml")
