@@ -1,52 +1,12 @@
 # Changelog
 
-## [1.8.3a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a6) (2024-02-26)
+## [1.9.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.1a1) (2024-03-01)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a5...1.8.3a6)
-
-**Merged pull requests:**
-
-- Update Hana utils to prep for release [\#501](https://github.com/NeonGeckoCom/neon-utils/pull/501) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.8.3a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a5) (2024-02-14)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a4...1.8.3a5)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.0...1.9.1a1)
 
 **Merged pull requests:**
 
-- feat: adds function for installing packages via pip [\#499](https://github.com/NeonGeckoCom/neon-utils/pull/499) ([dblencowe](https://github.com/dblencowe))
-
-## [1.8.3a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a4) (2024-02-07)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a3...1.8.3a4)
-
-**Merged pull requests:**
-
-- Fix directory errors in hana\_utils [\#500](https://github.com/NeonGeckoCom/neon-utils/pull/500) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.8.3a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a3) (2024-01-24)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a2...1.8.3a3)
-
-**Merged pull requests:**
-
-- Add utilities for interfacing with Neon HANA [\#497](https://github.com/NeonGeckoCom/neon-utils/pull/497) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.8.3a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a2) (2024-01-02)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.3a1...1.8.3a2)
-
-**Merged pull requests:**
-
-- Refactor and Deprecate NeonFallbackSkill [\#496](https://github.com/NeonGeckoCom/neon-utils/pull/496) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.8.3a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.8.3a1) (2023-12-29)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.8.2...1.8.3a1)
-
-**Merged pull requests:**
-
-- Update for ovos-workshop compat [\#495](https://github.com/NeonGeckoCom/neon-utils/pull/495) ([NeonDaniel](https://github.com/NeonDaniel))
+- Resovle optional dependency import error in skills module [\#503](https://github.com/NeonGeckoCom/neon-utils/pull/503) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
