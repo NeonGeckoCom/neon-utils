@@ -25,6 +25,8 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+import yaml
 import json
 import os
 import pathlib
@@ -35,10 +37,8 @@ from functools import wraps
 from threading import Event
 from typing import List, Any, Optional
 
-import yaml
 from dateutil.tz import gettz
 from json_database import JsonStorage
-from neon_mq_connector.utils.client_utils import send_mq_request
 from ovos_bus_client import Message
 from ovos_plugin_manager.language import OVOSLangDetectionFactory, OVOSLangTranslationFactory
 from ovos_utils.gui import is_gui_connected
@@ -351,6 +351,12 @@ class NeonFallbackSkill(FallbackSkillV1):
             attachments (dict): Optional dict of file names to Base64 encoded files
             message (Message): Optional message to get email from
         """
+        try:
+            from neon_utils.mq_utils import send_mq_request
+        except ImportError:
+            LOG.warning("MQ Dependencies not installed")
+            send_mq_request = None
+
         message = message or dig_for_message()
         if not email_addr and message:
             email_addr = get_user_prefs(message)["user"].get("email")
