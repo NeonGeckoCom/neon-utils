@@ -33,6 +33,8 @@ from enum import Enum
 from time import time
 from typing import Optional, Union
 from ovos_bus_client import Message
+from ovos_utils.log import deprecated
+
 from neon_utils.logger import LOG
 
 
@@ -263,6 +265,7 @@ def build_message(kind: Union[MessageKind, str], utt: str, message: Message,
                                               **added_context})
 
 
+@deprecated("Neon will always provide a response to API inputs.", "2.0.0")
 @resolve_message
 def neon_must_respond(message: Message = None) -> bool:
     """
