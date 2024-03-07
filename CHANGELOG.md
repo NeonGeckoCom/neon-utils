@@ -1,12 +1,12 @@
 # Changelog
 
-## [1.9.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.1a1) (2024-03-01)
+## [1.9.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a1) (2024-03-07)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.0...1.9.1a1)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.1...1.9.2a1)
 
 **Merged pull requests:**
 
-- Resovle optional dependency import error in skills module [\#503](https://github.com/NeonGeckoCom/neon-utils/pull/503) ([NeonDaniel](https://github.com/NeonDaniel))
+- Mark `neon_must_respond` method as deprecated [\#505](https://github.com/NeonGeckoCom/neon-utils/pull/505) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
