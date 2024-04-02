@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a2) (2024-04-02)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a1...1.9.2a2)
+
+**Merged pull requests:**
+
+- Loosen ovos-utils dependency to allow 0.1 [\#507](https://github.com/NeonGeckoCom/neon-utils/pull/507) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.9.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a1) (2024-03-07)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.1...1.9.2a1)
