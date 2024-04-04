@@ -48,7 +48,7 @@ from ovos_workshop.skills.common_query_skill import CQSMatchLevel, CQSVisualMatc
 from ovos_workshop.skills.common_query_skill import CommonQuerySkill as _CQS
 from ovos_workshop.decorators.compat import backwards_compat
 from ovos_utils.file_utils import resolve_resource_file
-from ovos_utils.log import log_deprecation
+from ovos_utils.log import log_deprecation, LOG
 from neon_utils.skills.neon_skill import NeonSkill
 
 
@@ -140,6 +140,7 @@ class CommonQuerySkill(NeonSkill, _CQS):
         Extracts phrase and data from message forward this to the skills
         CQS_action method.
         """
+        LOG.info(f"handling for ovos-core 0.0.7")
         if message.data["skill_id"] != self.skill_id:
             # Not for this skill!
             return
@@ -159,6 +160,7 @@ class CommonQuerySkill(NeonSkill, _CQS):
         to the `CQS_action` method.
         @param message: `question:action` message
         """
+        LOG.info(f"handling for ovos-core 0.0.8")
         if message.data["skill_id"] != self.skill_id:
             # Not for this skill!
             return
