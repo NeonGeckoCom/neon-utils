@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a3) (2024-04-04)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a2...1.9.2a3)
+
+**Merged pull requests:**
+
+- Add ovos-core 0.0.8 compat. for CommonQuery skills [\#508](https://github.com/NeonGeckoCom/neon-utils/pull/508) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.9.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a2) (2024-04-02)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a1...1.9.2a2)
