@@ -26,11 +26,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ovos_utils.log import LOG
-from neon_utils.log_aggregators import init_log_aggregators
+import sentry_sdk
 
-if LOG.name == 'OVOS':
-    LOG.name = 'neon-utils'
-# TODO: Deprecate this backwards-compat import in 2.0.0
+SENTRY_SDK_REQUIRED_KEYS = {'dsn'}
 
-init_log_aggregators()
+
+def init_sentry(config: dict):
+    missing_required_keys = SENTRY_SDK_REQUIRED_KEYS.difference(config.keys())
+    if missing_required_keys:
+        raise KeyError(f'Sentry SDK configuration missing required keys: {missing_required_keys}')
+    return sentry_sdk.init(**config)
