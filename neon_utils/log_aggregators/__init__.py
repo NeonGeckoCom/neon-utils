@@ -38,14 +38,10 @@ def init_log_aggregators():
     config = Configuration()
     for service_name, handler in _service_name_to_handler.items():
         service_config = _get_log_aggregator_config(config=config, name=service_name)
-        if not bool(service_config.get('enabled')):
+        if bool(service_config.get('enabled')):
             service_module = importlib.import_module('.', service_name)
             getattr(service_module, handler)(config=service_config)
 
 
 def _get_log_aggregator_config(config: dict, name: str):
     return config.get('logs', {}).get('aggregators', {}).get(name, {})
-
-
-if __name__ == '__main__':
-    init_log_aggregators()
