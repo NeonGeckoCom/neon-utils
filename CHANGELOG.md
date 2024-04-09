@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.9.2a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a4) (2024-04-09)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a3...1.9.2a4)
+
+**Merged pull requests:**
+
+- Update stopwatch to include error handling with unit tests [\#510](https://github.com/NeonGeckoCom/neon-utils/pull/510) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.9.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a3) (2024-04-04)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a2...1.9.2a3)
