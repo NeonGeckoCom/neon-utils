@@ -53,6 +53,10 @@ class MetricUtilTests(unittest.TestCase):
             sleep(sleep_time)
         self.assertEqual(round(stopwatch.time, 2), sleep_time)
 
+        stopwatch = Stopwatch()
+        stopwatch.stop()
+        self.assertIsNone(stopwatch.time)
+
     def test_stopwatch_reuse(self):
         sleep_time = 0.5
         stopwatch = Stopwatch()
