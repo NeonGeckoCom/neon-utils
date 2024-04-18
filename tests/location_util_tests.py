@@ -76,7 +76,7 @@ class LocationUtilTests(unittest.TestCase):
 
         # Test 'hamlet' location
         location = get_location(34.46433387046654, -81.99487538579375)
-        self.assertIsInstance(location['city'], str)
+        self.assertIsInstance(location[0], str)
 
     def test_get_timezone_from_coords(self):
         from neon_utils.location_utils import get_timezone
