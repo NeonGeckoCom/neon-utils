@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.9.2a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a5) (2024-04-18)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a4...1.9.2a5)
+
+**Fixed bugs:**
+
+- \[BUG\] "hamlet" not handled as "city" [\#511](https://github.com/NeonGeckoCom/neon-utils/issues/511)
+
+**Merged pull requests:**
+
+- Treat 'hamlet' location as a 'city' [\#512](https://github.com/NeonGeckoCom/neon-utils/pull/512) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.9.2a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a4) (2024-04-09)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a3...1.9.2a4)
