@@ -126,7 +126,8 @@ def get_location(lat, lng) -> (str, str, str, str):
     LOG.debug(f"{location.raw.get('address')}")
     city = location.raw.get('address').get('city') or \
         location.raw.get('address').get('town') or \
-        location.raw.get('address').get('village')
+        location.raw.get('address').get('village') or \
+        location.raw.get('address').get('hamlet')
     county = location.raw.get('address').get('county')
     state = location.raw.get('address').get('state')
     country = location.raw.get('address').get('country')
