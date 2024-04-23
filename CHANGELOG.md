@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.0](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.0) (2024-04-23)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a5...1.10.0)
+
+**Implemented enhancements:**
+
+- \[FEAT\] Allows ovos-utils \<0.2.0 [\#506](https://github.com/NeonGeckoCom/neon-utils/issues/506)
+
 ## [1.9.2a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a5) (2024-04-18)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a4...1.9.2a5)
