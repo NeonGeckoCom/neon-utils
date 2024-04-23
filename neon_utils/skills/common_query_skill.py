@@ -46,8 +46,9 @@ from os.path import dirname
 from ovos_workshop.decorators.layers import IntentLayers
 from ovos_workshop.skills.common_query_skill import CQSMatchLevel, CQSVisualMatchLevel
 from ovos_workshop.skills.common_query_skill import CommonQuerySkill as _CQS
+from ovos_workshop.decorators.compat import backwards_compat
 from ovos_utils.file_utils import resolve_resource_file
-from ovos_utils.log import log_deprecation
+from ovos_utils.log import log_deprecation, LOG
 from neon_utils.skills.neon_skill import NeonSkill
 
 
@@ -76,6 +77,9 @@ class CommonQuerySkill(NeonSkill, _CQS):
     answers from several skills presenting the best one available.
     """
     def __init__(self, *args, **kwargs):
+        log_deprecation("This base class is deprecated. Implement "
+                        "`ovos_workshop.skills.common_query_skill."
+                        "CommonQuerySkill`", "2.0.0")
         # these should probably be configurable
         self.level_confidence = {
             CQSMatchLevel.EXACT: 0.9,
@@ -130,7 +134,7 @@ class CommonQuerySkill(NeonSkill, _CQS):
         else:
             return 0.0  # should never happen
 
-    def __handle_query_action(self, message):
+    def __handle_query_classic(self, message):
         """Message handler for question:action.
 
         Extracts phrase and data from message forward this to the skills
@@ -139,8 +143,31 @@ class CommonQuerySkill(NeonSkill, _CQS):
         if message.data["skill_id"] != self.skill_id:
             # Not for this skill!
             return
+        LOG.debug(f"handling for ovos-core 0.0.7")
         phrase = message.data["phrase"]
         data = message.data.get("callback_data")
+        # Invoke derived class to provide playback data
+        self.CQS_action(phrase, data)
+        self.bus.emit(message.forward("mycroft.skill.handler.complete",
+                                      {"handler": "common_query"}))
+
+    @backwards_compat(classic_core=__handle_query_classic,
+                      pre_008=__handle_query_classic)
+    def __handle_query_action(self, message):
+        """
+        If this skill's response was spoken to the user, this method is called.
+        Phrase and callback data from `CQS_match_query_phrase` will be passed
+        to the `CQS_action` method.
+        @param message: `question:action` message
+        """
+        if message.data["skill_id"] != self.skill_id:
+            # Not for this skill!
+            return
+        LOG.debug(f"handling for ovos-core 0.0.8")
+        phrase = message.data["phrase"]
+        data = message.data.get("callback_data") or {}
+        if data.get("answer"):
+            self.speak(data["answer"])
         # Invoke derived class to provide playback data
         self.CQS_action(phrase, data)
         self.bus.emit(message.forward("mycroft.skill.handler.complete",
