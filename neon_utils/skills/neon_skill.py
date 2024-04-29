@@ -44,7 +44,6 @@ from dateutil.tz import gettz
 from ovos_utils.gui import is_gui_connected
 from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
-from ovos_utils.skills.settings import save_settings, get_local_settings
 from ovos_utils.log import deprecated, log_deprecation
 from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
@@ -76,6 +75,23 @@ SPEED_MODE_EXTENSION_TIME = {
 DEFAULT_SPEED_MODE = "thoughtful"
 CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
 
+@deprecated("deprecated without replacement, skill settings no longer shipped in skill folder", "2.0.0")
+def save_settings(skill_dir, skill_settings):
+    """Save skill settings to file."""
+    if skill_dir.endswith("/settings.json"):
+        settings_path = skill_dir
+    else:
+        settings_path = os.path.join(skill_dir, 'settings.json')
+
+    settings = JsonStorage(settings_path)
+    for k, v in skill_settings.items():
+        settings[k] = v
+    try:
+        settings.store()
+    except Exception:
+        LOG.exception(f'error saving skill settings to {settings_path}')
+    else:
+        LOG.info(f'Skill settings successfully saved to {settings_path}')
 
 class NeonSkill(OVOSSkill):
     def __init__(self, name=None, bus=None, **kwargs):
