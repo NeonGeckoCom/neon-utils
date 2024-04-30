@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a2) (2024-04-30)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.1a1...1.10.1a2)
+
+**Merged pull requests:**
+
+- Update location\_utils to use HANA [\#518](https://github.com/NeonGeckoCom/neon-utils/pull/518) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.10.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a1) (2024-04-29)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.0...1.10.1a1)
