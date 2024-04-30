@@ -174,6 +174,7 @@ class PackagingUtilTests(unittest.TestCase):
 beta_package            0.2.2b3
 alpha_package           0.0.0a0
 date_package            24.4.30
+post_package            2.0.0post10
 """.encode("utf-8")
         from neon_utils.packaging_utils import get_installed_prereleases
         prereleases = get_installed_prereleases()
