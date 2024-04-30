@@ -53,7 +53,7 @@ from neon_utils.cache_utils import LRUCache
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.location_utils import to_system_time
 from neon_utils.message_utils import dig_for_message, resolve_message, get_message_user
-from neon_utils.skills.neon_skill import CACHE_TIME_OFFSET, DEFAULT_SPEED_MODE, SPEED_MODE_EXTENSION_TIME
+from neon_utils.skills.neon_skill import CACHE_TIME_OFFSET, DEFAULT_SPEED_MODE, SPEED_MODE_EXTENSION_TIME, NeonSkill
 from neon_utils.user_utils import get_user_prefs
 
 
