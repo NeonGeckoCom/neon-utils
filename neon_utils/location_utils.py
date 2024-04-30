@@ -31,12 +31,11 @@ import pendulum
 from datetime import datetime
 from typing import Optional, Union
 from dateutil.tz import tzlocal
-from geopy.exc import GeocoderServiceError
-from geopy.geocoders import Nominatim
 from timezonefinder import TimezoneFinder
 from re import sub
 from ovos_utils.log import LOG
 
+from neon_utils.hana_utils import request_backend
 
 # geocode.maps.co nominatim.openstreetmap.org
 _NOMINATIM_DOMAIN = "nominatim.openstreetmap.org"
@@ -63,22 +62,21 @@ def get_full_location(address: Union[str, tuple],
         None if service is not available
     """
     try:
-        nominatim = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
-                              timeout=10)
         if isinstance(address, str):
-            location = nominatim.geocode(address, addressdetails=True,
-                                         language=lang)
+            response = request_backend("proxy/geolocation/geocode",
+                                       {"address": address})
+            coords = (response.get('lat'), response.get('lon'))
         else:
-            location = nominatim.reverse(address, addressdetails=True,
-                                         language=lang)
+            coords = address
 
-        dict_location = location.raw
+        location = request_backend("proxy/geolocation/reverse",
+                                   {"lat": coords[0], "lon": coords[1]})
+
+        dict_location = location.get('address')
         dict_location['address']['country'] = sub(f'[0-9]', '',
                                                   dict_location['address'].
                                                   get('country'))
         return dict_location
-    except GeocoderServiceError as e:
-        LOG.error(e)
     except Exception as e:
         LOG.exception(e)
     return None
@@ -90,14 +88,13 @@ def get_coordinates(gps_loc: dict) -> (float, float):
     :param gps_loc: dict of "city", "state", "country"
     :return: lat, lng float values
     """
-    coordinates = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
-                            timeout=10)
     try:
-        location = coordinates.geocode(gps_loc)
+        request_str = (f"{gps_loc.get('city')}, {gps_loc.get('state')} "
+                       f"{gps_loc.get('country')}")
+        location = request_backend("proxy/geolocation/geocode",
+                                   {"address": request_str})
         LOG.debug(f"{location}")
-        return location.latitude, location.longitude
-    except GeocoderServiceError as e:
-        LOG.error(e)
+        return float(location.get('lat')), float(location.get('lon'))
     except Exception as x:
         LOG.exception(x)
     return -1, -1
@@ -112,25 +109,21 @@ def get_location(lat, lng) -> (str, str, str, str):
     :return: city, county, state, country
     """
     try:
-        address = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
-                            timeout=10)
-    except GeocoderServiceError as e:
-        LOG.error(e)
-        return None
+        location = request_backend("proxy/geolocation/reverse",
+                                   {"lat": lat, "lon": lng})
+
+        dict_location = location.get('address')
     except Exception as x:
         LOG.exception(x)
         return None
-    location = address.reverse([lat, lng], language="en-US")
     LOG.debug(f"{location}")
-    LOG.debug(f"{location.raw}")
-    LOG.debug(f"{location.raw.get('address')}")
-    city = location.raw.get('address').get('city') or \
-        location.raw.get('address').get('town') or \
-        location.raw.get('address').get('village') or \
-        location.raw.get('address').get('hamlet')
-    county = location.raw.get('address').get('county')
-    state = location.raw.get('address').get('state')
-    country = location.raw.get('address').get('country')
+    city = dict_location.get('address').get('city') or \
+        dict_location.get('address').get('town') or \
+        dict_location.get('address').get('village') or \
+        dict_location.get('address').get('hamlet')
+    county = dict_location.get('address').get('county')
+    state = dict_location.get('address').get('state')
+    country = dict_location.get('address').get('country')
     return city, county, state, country
 
 
