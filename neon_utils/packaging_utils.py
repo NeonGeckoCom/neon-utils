@@ -296,3 +296,21 @@ def install_packages_from_pip(core_module: str, packages: List[str]) -> int:
     if result != 0:
         return result
     return 0
+
+
+def get_installed_prereleases() -> List[Tuple[str, str]]:
+    """
+    Get a list of installed pre-release packages.
+    @return: List of tuple (pkg_name, version)
+    """
+    from subprocess import run
+    packages = run(["pip", "list"],
+                   capture_output=True).stdout.decode("utf-8")
+    prerelease_pkgs = list()
+    for line in packages.split('\n'):
+        if not line:
+            continue
+        name, version = line.split()
+        if not version.replace('.', '').isnumeric():
+            prerelease_pkgs.append((name, version))
+    return prerelease_pkgs

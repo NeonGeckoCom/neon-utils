@@ -168,6 +168,19 @@ class PackagingUtilTests(unittest.TestCase):
             self.assertEqual(0, test_result)
             mock_method.assert_called_once()
 
+    @patch("subprocess.run")
+    def test_get_installed_prereleases(self, run):
+        run.return_value.stdout = """stable_package          1.0.0
+beta_package            0.2.2b3
+alpha_package           0.0.0a0
+date_package            24.4.30
+""".encode("utf-8")
+        from neon_utils.packaging_utils import get_installed_prereleases
+        prereleases = get_installed_prereleases()
+        self.assertEqual(len(prereleases), 2)
+        for pkg in prereleases:
+            self.assertTrue(pkg[0].endswith("_package"))
+            self.assertEqual(len(pkg[1].split('.')), 3)
 
 
 if __name__ == '__main__':
