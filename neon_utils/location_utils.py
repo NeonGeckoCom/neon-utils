@@ -69,10 +69,8 @@ def get_full_location(address: Union[str, tuple],
         else:
             coords = address
 
-        location = request_backend("proxy/geolocation/reverse",
-                                   {"lat": coords[0], "lon": coords[1]})
-
-        dict_location = location.get('address')
+        dict_location = request_backend("proxy/geolocation/reverse",
+                                        {"lat": coords[0], "lon": coords[1]})
         dict_location['address']['country'] = sub(f'[0-9]', '',
                                                   dict_location['address'].
                                                   get('country'))
@@ -89,8 +87,9 @@ def get_coordinates(gps_loc: dict) -> (float, float):
     :return: lat, lng float values
     """
     try:
-        request_str = (f"{gps_loc.get('city')}, {gps_loc.get('state')} "
-                       f"{gps_loc.get('country')}")
+        request_str = ', '.join((x for x in [gps_loc.get('city'),
+                                             gps_loc.get('state'),
+                                             gps_loc.get('country')] if x))
         location = request_backend("proxy/geolocation/geocode",
                                    {"address": request_str})
         LOG.debug(f"{location}")
@@ -117,13 +116,13 @@ def get_location(lat, lng) -> (str, str, str, str):
         LOG.exception(x)
         return None
     LOG.debug(f"{location}")
-    city = dict_location.get('address').get('city') or \
-        dict_location.get('address').get('town') or \
-        dict_location.get('address').get('village') or \
-        dict_location.get('address').get('hamlet')
-    county = dict_location.get('address').get('county')
-    state = dict_location.get('address').get('state')
-    country = dict_location.get('address').get('country')
+    city = dict_location.get('city') or \
+        dict_location.get('town') or \
+        dict_location.get('village') or \
+        dict_location.get('hamlet')
+    county = dict_location.get('county')
+    state = dict_location.get('state')
+    country = dict_location.get('country')
     return city, county, state, country
 
 
