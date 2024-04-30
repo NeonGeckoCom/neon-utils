@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a3) (2024-04-30)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.1a2...1.10.1a3)
+
+**Merged pull requests:**
+
+- Add backwards-compat import to `neon_fallback_skill` module [\#519](https://github.com/NeonGeckoCom/neon-utils/pull/519) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.10.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a2) (2024-04-30)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.1a1...1.10.1a2)
