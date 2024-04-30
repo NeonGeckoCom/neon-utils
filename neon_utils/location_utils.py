@@ -74,6 +74,16 @@ def get_full_location(address: Union[str, tuple],
         dict_location['address']['country'] = sub(f'[0-9]', '',
                                                   dict_location['address'].
                                                   get('country'))
+        if lang:
+            try:
+                from geopy.geocoders import Nominatim
+                resp = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
+                                 timeout=10).reverse(coords, language=lang)
+                return resp.raw
+            except ImportError:
+                LOG.error("geopy not installed")
+            except Exception as e:
+                LOG.exception(e)
         return dict_location
     except Exception as e:
         LOG.exception(e)
