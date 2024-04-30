@@ -1,56 +1,32 @@
 # Changelog
 
-## [1.10.0](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.0) (2024-04-23)
+## [1.10.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a3) (2024-04-30)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a5...1.10.0)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.1a2...1.10.1a3)
+
+**Merged pull requests:**
+
+- Add backwards-compat import to `neon_fallback_skill` module [\#519](https://github.com/NeonGeckoCom/neon-utils/pull/519) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.10.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a2) (2024-04-30)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.1a1...1.10.1a2)
+
+**Merged pull requests:**
+
+- Update location\_utils to use HANA [\#518](https://github.com/NeonGeckoCom/neon-utils/pull/518) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.10.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a1) (2024-04-29)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.0...1.10.1a1)
 
 **Implemented enhancements:**
 
-- \[FEAT\] Allows ovos-utils \<0.2.0 [\#506](https://github.com/NeonGeckoCom/neon-utils/issues/506)
-
-## [1.9.2a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a5) (2024-04-18)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a4...1.9.2a5)
-
-**Fixed bugs:**
-
-- \[BUG\] "hamlet" not handled as "city" [\#511](https://github.com/NeonGeckoCom/neon-utils/issues/511)
+- \[FEAT\] resolve import errors with ovos-utils 0.1.0 [\#514](https://github.com/NeonGeckoCom/neon-utils/issues/514)
 
 **Merged pull requests:**
 
-- Treat 'hamlet' location as a 'city' [\#512](https://github.com/NeonGeckoCom/neon-utils/pull/512) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.9.2a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a4) (2024-04-09)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a3...1.9.2a4)
-
-**Merged pull requests:**
-
-- Update stopwatch to include error handling with unit tests [\#510](https://github.com/NeonGeckoCom/neon-utils/pull/510) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.9.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a3) (2024-04-04)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a2...1.9.2a3)
-
-**Merged pull requests:**
-
-- Add ovos-core 0.0.8 compat. for CommonQuery skills [\#508](https://github.com/NeonGeckoCom/neon-utils/pull/508) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.9.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a2) (2024-04-02)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a1...1.9.2a2)
-
-**Merged pull requests:**
-
-- Loosen ovos-utils dependency to allow 0.1 [\#507](https://github.com/NeonGeckoCom/neon-utils/pull/507) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.9.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a1) (2024-03-07)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.1...1.9.2a1)
-
-**Merged pull requests:**
-
-- Mark `neon_must_respond` method as deprecated [\#505](https://github.com/NeonGeckoCom/neon-utils/pull/505) ([NeonDaniel](https://github.com/NeonDaniel))
+- slight refactor for ovos-utils 0.1.0 [\#515](https://github.com/NeonGeckoCom/neon-utils/pull/515) ([mikejgray](https://github.com/mikejgray))
 
 
 
