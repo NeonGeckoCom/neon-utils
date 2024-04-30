@@ -292,6 +292,9 @@ def get_installed_prereleases() -> List[Tuple[str, str]]:
             continue
         name, version = line.split()
         if not version.replace('.', '').isnumeric():
+            if "post" in version:
+                LOG.debug(f"post release {name}:{version}")
+                continue
             prerelease_pkgs.append((name, version))
     return prerelease_pkgs
 
