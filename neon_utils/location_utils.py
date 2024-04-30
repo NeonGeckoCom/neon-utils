@@ -76,6 +76,7 @@ def get_full_location(address: Union[str, tuple],
                                                   get('country'))
         if lang:
             try:
+                # TODO: make this optional with a deprecation notice
                 from geopy.geocoders import Nominatim
                 resp = Nominatim(user_agent="neon-ai", domain=_NOMINATIM_DOMAIN,
                                  timeout=10).reverse(coords, language=lang)
