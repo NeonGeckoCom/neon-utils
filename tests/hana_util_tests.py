@@ -129,7 +129,7 @@ class HanaUtilTests(unittest.TestCase):
     def test_config_path(self):
         from neon_utils.hana_utils import _get_client_config_path
         path_1 = _get_client_config_path("https://hana.neonaialpha.com")
-        default = _get_client_config_path()
+        default = _get_client_config_path("https://hana.neonaiservices.com")
         self.assertNotEqual(path_1, default)
         self.assertEqual(dirname(path_1), dirname(default))
 
