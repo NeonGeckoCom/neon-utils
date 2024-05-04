@@ -135,6 +135,25 @@ class HanaUtilTests(unittest.TestCase):
 
         # TODO: Test invalid refresh
 
+    @patch("ovos_config.config.Configuration")
+    def test_set_default_backend_url(self, config):
+        import neon_utils.hana_utils
+        from neon_utils.hana_utils import set_default_backend_url
+        neon_utils.hana_utils._DEFAULT_BACKEND_URL = None
+        config.return_value = dict()
+
+        set_default_backend_url()
+        self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
+                         "https://hana.neonaiservices.com")
+
+        set_default_backend_url("https://hana.neonaialpha.com")
+        self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
+                         "https://hana.neonaialpha.com")
+
+        set_default_backend_url()
+        self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
+                         "https://hana.neonaiservices.com")
+
 
 if __name__ == '__main__':
     unittest.main()
