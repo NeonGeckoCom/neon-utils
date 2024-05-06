@@ -152,7 +152,7 @@ def request_backend(endpoint: str, request_data: dict,
         set_default_backend_url()
         server_url = _DEFAULT_BACKEND_URL
     if server_url != _DEFAULT_BACKEND_URL and _client_config:
-        LOG.warning(f"Using new remote: {server_url}")
+        LOG.info(f"Using new remote: {server_url}")
         _client_config = {}
         _headers = {}
     _init_client(server_url)
