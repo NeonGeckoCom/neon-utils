@@ -1,32 +1,12 @@
 # Changelog
 
-## [1.10.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a3) (2024-04-30)
+## [1.10.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a1) (2024-05-07)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.1a2...1.10.1a3)
-
-**Merged pull requests:**
-
-- Add backwards-compat import to `neon_fallback_skill` module [\#519](https://github.com/NeonGeckoCom/neon-utils/pull/519) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.10.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a2) (2024-04-30)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.1a1...1.10.1a2)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.1...1.10.2a1)
 
 **Merged pull requests:**
 
-- Update location\_utils to use HANA [\#518](https://github.com/NeonGeckoCom/neon-utils/pull/518) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.10.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.1a1) (2024-04-29)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.0...1.10.1a1)
-
-**Implemented enhancements:**
-
-- \[FEAT\] resolve import errors with ovos-utils 0.1.0 [\#514](https://github.com/NeonGeckoCom/neon-utils/issues/514)
-
-**Merged pull requests:**
-
-- slight refactor for ovos-utils 0.1.0 [\#515](https://github.com/NeonGeckoCom/neon-utils/pull/515) ([mikejgray](https://github.com/mikejgray))
+- Enable `hana` backend URL to be configured [\#521](https://github.com/NeonGeckoCom/neon-utils/pull/521) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
