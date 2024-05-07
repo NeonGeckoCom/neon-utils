@@ -129,11 +129,30 @@ class HanaUtilTests(unittest.TestCase):
     def test_config_path(self):
         from neon_utils.hana_utils import _get_client_config_path
         path_1 = _get_client_config_path("https://hana.neonaialpha.com")
-        default = _get_client_config_path()
+        default = _get_client_config_path("https://hana.neonaiservices.com")
         self.assertNotEqual(path_1, default)
         self.assertEqual(dirname(path_1), dirname(default))
 
         # TODO: Test invalid refresh
+
+    @patch("ovos_config.config.Configuration")
+    def test_set_default_backend_url(self, config):
+        import neon_utils.hana_utils
+        from neon_utils.hana_utils import set_default_backend_url
+        neon_utils.hana_utils._DEFAULT_BACKEND_URL = None
+        config.return_value = dict()
+
+        set_default_backend_url()
+        self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
+                         "https://hana.neonaiservices.com")
+
+        set_default_backend_url("https://hana.neonaialpha.com")
+        self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
+                         "https://hana.neonaialpha.com")
+
+        set_default_backend_url()
+        self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
+                         "https://hana.neonaiservices.com")
 
 
 if __name__ == '__main__':
