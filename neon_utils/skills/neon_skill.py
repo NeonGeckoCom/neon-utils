@@ -69,12 +69,12 @@ except ImportError:
 # TODO if accepted, make changes to QASkill and WikipediaSkill
 # Available_modes are 1) quick; 2) thoughtful.
 SPEED_MODE_EXTENSION_TIME = {
-SPEED_MODE_EXTENSION_TIME = {
     "quick": 1,
     "thoughtful": 10
 }
 DEFAULT_SPEED_MODE = "thoughtful"
 CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
+
 
 @deprecated("deprecated without replacement, skill settings no longer shipped in skill folder", "2.0.0")
 def save_settings(skill_dir, skill_settings):
