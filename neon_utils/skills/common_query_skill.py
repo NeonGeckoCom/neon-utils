@@ -65,7 +65,6 @@ def handles_visuals(platform):
     return platform in VISUAL_DEVICES
 
 
-# TODO: Consider deprecation and implementing ovos_workshop directly
 class CommonQuerySkill(NeonSkill, _CQS):
     """Question answering skills should be based on this class.
 
@@ -166,8 +165,8 @@ class CommonQuerySkill(NeonSkill, _CQS):
         LOG.debug(f"handling for ovos-core 0.0.8")
         phrase = message.data["phrase"]
         data = message.data.get("callback_data") or {}
-        if message.data.get("answer"):
-            self.speak(message.data["answer"])
+        if data.get("answer"):
+            self.speak(data["answer"])
         else:
             LOG.error(f"no answer provided in: {message.data.keys()}")
         # Invoke derived class to provide playback data
@@ -193,6 +192,7 @@ class CommonQuerySkill(NeonSkill, _CQS):
             level = result[1]
             answer = result[2]
             callback = result[3] if len(result) > 3 else None
+            callback["answer"] = answer
             confidence = self.__calc_confidence(match, search_phrase, level)
             self.bus.emit(message.response({"phrase": search_phrase,
                                             "skill_id": self.skill_id,
