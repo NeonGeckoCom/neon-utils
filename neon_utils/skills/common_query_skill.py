@@ -168,6 +168,8 @@ class CommonQuerySkill(NeonSkill, _CQS):
         data = message.data.get("callback_data") or {}
         if data.get("answer"):
             self.speak(data["answer"])
+        else:
+            LOG.error(f"no answer provided in: {data}")
         # Invoke derived class to provide playback data
         self.CQS_action(phrase, data)
         self.bus.emit(message.forward("mycroft.skill.handler.complete",
