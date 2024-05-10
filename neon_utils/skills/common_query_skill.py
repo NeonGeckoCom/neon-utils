@@ -166,10 +166,10 @@ class CommonQuerySkill(NeonSkill, _CQS):
         LOG.debug(f"handling for ovos-core 0.0.8")
         phrase = message.data["phrase"]
         data = message.data.get("callback_data") or {}
-        if data.get("answer"):
-            self.speak(data["answer"])
+        if message.data.get("answer"):
+            self.speak(message.data["answer"])
         else:
-            LOG.error(f"no answer provided in: {data}")
+            LOG.error(f"no answer provided in: {message.data.keys()}")
         # Invoke derived class to provide playback data
         self.CQS_action(phrase, data)
         self.bus.emit(message.forward("mycroft.skill.handler.complete",
