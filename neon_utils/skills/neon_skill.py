@@ -94,6 +94,7 @@ def save_settings(skill_dir, skill_settings):
     else:
         LOG.info(f'Skill settings successfully saved to {settings_path}')
 
+
 class NeonSkill(OVOSSkill):
     def __init__(self, name=None, bus=None, **kwargs):
         OVOSSkill.__init__(self, name, bus, **kwargs)
