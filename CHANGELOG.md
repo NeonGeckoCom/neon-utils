@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.2a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a4) (2024-05-11)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a3...1.10.2a4)
+
+**Merged pull requests:**
+
+- Update deprecated import to supported path [\#524](https://github.com/NeonGeckoCom/neon-utils/pull/524) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.10.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a3) (2024-05-10)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a2...1.10.2a3)
