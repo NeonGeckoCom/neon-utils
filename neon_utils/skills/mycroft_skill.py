@@ -37,7 +37,7 @@ from json_database import JsonStorage
 from ovos_bus_client.message import Message
 from ovos_utils.log import log_deprecation
 from ovos_workshop.skills.mycroft_skill import MycroftSkill
-from ovos_utils.skills.settings import get_local_settings
+from ovos_backend_client.settings import get_local_settings
 
 from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
 from neon_utils.logger import LOG
