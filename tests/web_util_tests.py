@@ -43,7 +43,8 @@ class WebUtilTests(unittest.TestCase):
             # TODO: Update test to validate absolute and relative URL paths
             # Relative href
             self.assertIn(links["company"],
-                          ("https://neon.ai/company",))
+                          ("https://neon.ai/company",
+                           "https://neon.ai/company/"))
         except ConnectTimeout:
             LOG.error("Github testing breaks here")
 
