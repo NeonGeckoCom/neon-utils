@@ -39,7 +39,7 @@ class WebUtilTests(unittest.TestCase):
         try:
             links = scrape_page_for_links("neon.ai")
             self.assertIsInstance(links, dict)
-            self.assertIn("about us", links.keys())
+            self.assertIn("company", links.keys())
             # TODO: Update test to validate absolute and relative URL paths
             # Relative href
             self.assertIn(links["company"],
