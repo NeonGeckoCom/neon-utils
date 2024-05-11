@@ -44,7 +44,6 @@ from ovos_plugin_manager.language import OVOSLangDetectionFactory, OVOSLangTrans
 from ovos_utils.gui import is_gui_connected
 from ovos_utils.log import LOG, log_deprecation, deprecated
 from ovos_utils.skills import get_non_properties
-from ovos_utils.skills.settings import save_settings
 from ovos_utils.xdg_utils import xdg_cache_home
 from ovos_workshop.skills import OVOSSkill
 from ovos_workshop.skills.fallback import FallbackSkillV1
@@ -53,7 +52,8 @@ from neon_utils.cache_utils import LRUCache
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.location_utils import to_system_time
 from neon_utils.message_utils import dig_for_message, resolve_message, get_message_user
-from neon_utils.skills.neon_skill import CACHE_TIME_OFFSET, DEFAULT_SPEED_MODE, SPEED_MODE_EXTENSION_TIME, NeonSkill
+from neon_utils.skills.neon_skill import CACHE_TIME_OFFSET, DEFAULT_SPEED_MODE, SPEED_MODE_EXTENSION_TIME, NeonSkill, \
+    save_settings
 from neon_utils.user_utils import get_user_prefs
 
 
