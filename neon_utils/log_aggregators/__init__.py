@@ -33,9 +33,9 @@ _service_name_to_handler = {
 }
 
 
-def init_log_aggregators():
+def init_log_aggregators(config: dict = None):
     from ovos_config.config import Configuration
-    config = Configuration()
+    config = config or Configuration()
     for service_name, handler in _service_name_to_handler.items():
         service_config = _get_log_aggregator_config(config=config, name=service_name)
         if bool(service_config.get('enabled')):
