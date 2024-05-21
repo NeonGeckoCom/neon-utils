@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.2a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a5) (2024-05-21)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a4...1.10.2a5)
+
+**Merged pull requests:**
+
+- Refactor to use HANA to send email instead of MQ [\#526](https://github.com/NeonGeckoCom/neon-utils/pull/526) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.10.2a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a4) (2024-05-11)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a3...1.10.2a4)
