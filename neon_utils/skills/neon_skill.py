@@ -51,13 +51,8 @@ from neon_utils.message_utils import dig_for_message, resolve_message, get_messa
 from neon_utils.cache_utils import LRUCache
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.user_utils import get_user_prefs
+from neon_utils.hana_utils import request_backend, ServerException
 from ovos_workshop.skills.ovos import OVOSSkill
-
-try:
-    from neon_utils.mq_utils import send_mq_request
-except ImportError:
-    LOG.warning("MQ Dependencies not installed")
-    send_mq_request = None
 
 try:
     from ovos_plugin_manager.language import OVOSLangDetectionFactory, \
@@ -381,15 +376,18 @@ class NeonSkill(OVOSSkill):
         if not email_addr and message:
             email_addr = get_user_prefs(message)["user"].get("email")
 
-        if email_addr and send_mq_request:
+        if email_addr:
             LOG.info("Send email via Neon Server")
             request_data = {"recipient": email_addr,
                             "subject": title,
                             "body": body,
                             "attachments": attachments}
-            data = send_mq_request("/neon_emails", request_data,
-                                   "neon_emails_input")
-            return data.get("success")
+            try:
+                request_backend("/email", request_data)
+                return True
+            except ServerException as e:
+                LOG.error(e)
+                return False
         else:
             LOG.warning("Attempting to send email via Mycroft Backend")
             super().send_email(title, body)
