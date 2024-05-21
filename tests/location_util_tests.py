@@ -35,10 +35,6 @@ from dateutil.tz import gettz, tzlocal
 
 
 class LocationUtilTests(unittest.TestCase):
-    def setUp(self):
-        from neon_utils.hana_utils import set_default_backend_url
-        set_default_backend_url('https://hana.neonaialpha.com')
-
     def test_get_coordinates_complete(self):
         from neon_utils.location_utils import get_coordinates
 
