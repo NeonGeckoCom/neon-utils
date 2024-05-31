@@ -198,8 +198,7 @@ class KioskSkill(NeonSkill):
         if user in self._active_users:
             self.end_interaction(message)
 
-    def _on_event_error(self, error, message, handler_info,
-                        skill_data, speak_errors):
+    def _on_event_error(self, error, message, *args, **kwargs):
         """
         Override error handling to speak custom exception for active sessions
         """
@@ -208,5 +207,4 @@ class KioskSkill(NeonSkill):
             LOG.exception(error)
             self.handle_error(message)
         else:
-            super()._on_event_error(error, message, handler_info,
-                                    skill_data, speak_errors)
+            super()._on_event_error(error, message, *args, **kwargs)
