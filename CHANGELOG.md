@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.2a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a6) (2024-05-31)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a5...1.10.2a6)
+
+**Merged pull requests:**
+
+- Resolve Test Failures [\#528](https://github.com/NeonGeckoCom/neon-utils/pull/528) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.10.2a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a5) (2024-05-21)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a4...1.10.2a5)
