@@ -875,23 +875,3 @@ class NeonFallbackSkill(FallbackSkillV1):
         """
         log_deprecation("Use `load_dialog_files`", "2.0.0")
         self.load_dialog_files(root_directory)
-
-    def add_event(self, name: str, handler: callable,
-                  handler_info: Optional[str] = None, once: bool = False,
-                  speak_errors: bool = True):
-        # TODO: Remove with ovos-workshop==0.0.13
-        try:
-            # Patching FakeBus compat. with MessageBusClient
-            if hasattr(self.bus, "ee"):
-                emitter = self.bus.ee
-            else:
-                emitter = self.bus.emitter
-            if handler_info == "mycroft.skill.handler" and \
-                    emitter.listeners(name):
-                LOG.warning(f"Not re-registering intent handler {name}")
-                return
-        except Exception as e:
-            LOG.exception(e)
-        OVOSSkill.add_event(self, name, handler, handler_info, once,
-                            speak_errors)
-
