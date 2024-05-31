@@ -25,6 +25,7 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from time import time
 
 import pytz
 
@@ -147,7 +148,10 @@ def get_timezone(lat, lng) -> (str, float):
     :return: timezone name, offset in hours from UTC
     """
     timezone = TimezoneFinder().timezone_at(lng=float(lng), lat=float(lat))
-    offset = pytz.timezone(timezone).utcoffset(datetime.utcnow()).seconds / 3600.0
+    _time = time()
+    utc_timestamp = datetime.utcfromtimestamp(_time).timestamp()
+    local_timestamp = datetime.fromtimestamp(_time, tz=pytz.timezone(timezone)).timestamp()
+    offset = (local_timestamp - utc_timestamp) / 3600
     return timezone, offset
 
 
