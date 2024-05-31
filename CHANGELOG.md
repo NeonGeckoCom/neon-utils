@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.2a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a7) (2024-05-31)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a6...1.10.2a7)
+
+**Merged pull requests:**
+
+- Refactor to use pytz instead of pendulum [\#527](https://github.com/NeonGeckoCom/neon-utils/pull/527) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.10.2a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a6) (2024-05-31)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a5...1.10.2a6)
