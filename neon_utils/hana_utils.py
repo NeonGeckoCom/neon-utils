@@ -162,9 +162,14 @@ def request_backend(endpoint: str, request_data: dict,
         except ServerException as e:
             LOG.error(e)
             _get_token(server_url)
-    resp = requests.post(f"{server_url}/{endpoint.lstrip('/')}",
-                         json=request_data, headers=_headers)
+    request_kwargs = {"url": f"{server_url}/{endpoint.lstrip('/')}",
+                      "json": request_data, "headers": _headers}
+    resp = requests.post(**request_kwargs)
+    if resp.status_code == 502:
+        # This is raised occasionally on valid requests. Need to resolve in HANA
+        resp = requests.post(**request_kwargs)
     if resp.ok:
         return resp.json()
+
     else:
         raise ServerException(f"Error response {resp.status_code}: {resp.text}")
