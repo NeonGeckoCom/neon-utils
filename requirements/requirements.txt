@@ -8,4 +8,5 @@ ovos-lingua-franca~=0.4
 ovos_utils~=0.0,>=0.0.35
 geopy~=2.1
 ovos-config~=0.0.9
-ovos-workshop~=0.0.15
+#ovos-workshop~=0.0.15
+ovos-workshop @ git+https://github.com/openvoiceos/ovos-workshop@FIX_MycroftSkillCompat
