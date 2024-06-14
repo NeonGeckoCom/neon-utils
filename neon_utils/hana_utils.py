@@ -156,7 +156,7 @@ def request_backend(endpoint: str, request_data: dict,
         _client_config = {}
         _headers = {}
     _init_client(server_url)
-    if time() >= _client_config.get("expiration", 0) + 30:
+    if _client_config.get("expiration", 0) - time() < 30:
         try:
             _refresh_token(server_url)
         except ServerException as e:
