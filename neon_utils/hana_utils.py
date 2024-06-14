@@ -156,7 +156,7 @@ def request_backend(endpoint: str, request_data: dict,
         _client_config = {}
         _headers = {}
     _init_client(server_url)
-    if time() >= _client_config.get("expiration", 0):
+    if time() >= _client_config.get("expiration", 0) + 30:
         try:
             _refresh_token(server_url)
         except ServerException as e:
@@ -172,4 +172,16 @@ def request_backend(endpoint: str, request_data: dict,
         return resp.json()
 
     else:
+        try:
+            error = resp.json()["detail"]
+            # Token is actually expired, refresh and retry
+            if error == "Invalid or expired token.":
+                LOG.warning(f"Token is expired. time={time()}|"
+                            f"expiration={_client_config.get('expiration')}")
+                _refresh_token(server_url)
+                resp = requests.post(**request_kwargs)
+                if resp.ok:
+                    return resp.json()
+        except Exception as e:
+            LOG.error(e)
         raise ServerException(f"Error response {resp.status_code}: {resp.text}")
