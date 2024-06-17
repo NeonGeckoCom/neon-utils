@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.2a8](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a8) (2024-06-17)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a7...1.10.2a8)
+
+**Merged pull requests:**
+
+- Mitigate issues with expired HANA tokens [\#529](https://github.com/NeonGeckoCom/neon-utils/pull/529) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.10.2a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a7) (2024-05-31)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a6...1.10.2a7)
