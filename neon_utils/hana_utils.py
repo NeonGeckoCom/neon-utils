@@ -132,6 +132,11 @@ def _refresh_token(backend_address: str):
         raise ServerException(f"Error updating token from {backend_address}. "
                               f"{update.status_code}: {update.text}")
     _client_config = update.json()
+
+    # Update request headers with new token
+    global _headers
+    _headers['Authorization'] = f"Bearer {_client_config['access_token']}"
+
     client_config_path = _get_client_config_path(backend_address)
     with open(client_config_path, "w+") as f:
         json.dump(_client_config, f, indent=2)
