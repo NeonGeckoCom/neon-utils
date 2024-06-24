@@ -189,4 +189,7 @@ def request_backend(endpoint: str, request_data: dict,
                     return resp.json()
         except Exception as e:
             LOG.error(e)
+            # Clear cached config to force re-evaluation on next request
+            _client_config = {}
+            _headers = {}
         raise ServerException(f"Error response {resp.status_code}: {resp.text}")
