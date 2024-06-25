@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.10.2a9](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a9) (2024-06-25)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a8...1.10.2a9)
+
+**Merged pull requests:**
+
+- Fix bug causing old token to be used with requests after refreshing [\#530](https://github.com/NeonGeckoCom/neon-utils/pull/530) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.10.2a8](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a8) (2024-06-17)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a7...1.10.2a8)
