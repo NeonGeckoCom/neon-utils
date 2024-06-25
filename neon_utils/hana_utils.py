@@ -61,7 +61,7 @@ def set_default_backend_url(url: Optional[str] = None):
 
 
 def _get_client_config_path(url: str):
-    url_key = hash(url)
+    url_key = url.split('/')[2]
     return join(xdg_cache_home(), "neon", f"hana_token_{url_key}.json")
 
 
@@ -132,6 +132,11 @@ def _refresh_token(backend_address: str):
         raise ServerException(f"Error updating token from {backend_address}. "
                               f"{update.status_code}: {update.text}")
     _client_config = update.json()
+
+    # Update request headers with new token
+    global _headers
+    _headers['Authorization'] = f"Bearer {_client_config['access_token']}"
+
     client_config_path = _get_client_config_path(backend_address)
     with open(client_config_path, "w+") as f:
         json.dump(_client_config, f, indent=2)
@@ -184,4 +189,7 @@ def request_backend(endpoint: str, request_data: dict,
                     return resp.json()
         except Exception as e:
             LOG.error(e)
+            # Clear cached config to force re-evaluation on next request
+            _client_config = {}
+            _headers = {}
         raise ServerException(f"Error response {resp.status_code}: {resp.text}")
