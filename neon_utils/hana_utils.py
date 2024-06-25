@@ -61,7 +61,7 @@ def set_default_backend_url(url: Optional[str] = None):
 
 
 def _get_client_config_path(url: str):
-    url_key = hash(url)
+    url_key = url.split('/')[2]
     return join(xdg_cache_home(), "neon", f"hana_token_{url_key}.json")
 
 
