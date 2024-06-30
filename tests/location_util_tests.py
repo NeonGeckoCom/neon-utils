@@ -74,6 +74,10 @@ class LocationUtilTests(unittest.TestCase):
         self.assertEqual(location, ("Seattle", "King County", "Washington",
                                     "United States"))
 
+        # Test 'hamlet' location
+        location = get_location(34.46433387046654, -81.99487538579375)
+        self.assertIsInstance(location[0], str)
+
     def test_get_timezone_from_coords(self):
         from neon_utils.location_utils import get_timezone
         lat = 47.6038321
@@ -83,6 +87,12 @@ class LocationUtilTests(unittest.TestCase):
         self.assertEqual(timezone, "America/Los_Angeles")
         self.assertIsInstance(offset, float)
         self.assertIn(offset, (-7.0, -8.0))
+
+        lat = 35.0000
+        lon = 103.000
+        timezone, offset = get_timezone(lat, lon)
+        self.assertEqual(timezone, "Asia/Shanghai")
+        self.assertEqual(offset, 8.0)
 
     def test_to_system_time(self):
         from neon_utils.location_utils import to_system_time

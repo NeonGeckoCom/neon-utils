@@ -33,6 +33,8 @@ import socket
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
+TCP_TEST = "mq.neonaiservices.com"
+
 
 class NetUtilTests(unittest.TestCase):
     @classmethod
@@ -119,18 +121,18 @@ class NetUtilTests(unittest.TestCase):
     def test_check_url_connection_invalid_url(self):
         from neon_utils.net_utils import check_url_response
 
-        self.assertFalse(check_url_response("https://api.neon.ai"))
+        self.assertFalse(check_url_response(f"https://{TCP_TEST}"))
 
     def test_check_online_valid_online(self):
         from neon_utils.net_utils import check_online
         self.assertTrue(check_online())
         self.assertTrue(check_online(("google.com", "github.com")))
-        self.assertTrue(check_online(("api.neon.ai", "google.com")))
+        self.assertTrue(check_online((TCP_TEST, "google.com")))
         self.assertTrue(check_online(("", "google.com")))
 
     def test_check_online_invalid_offline(self):
         from neon_utils.net_utils import check_online
-        self.assertFalse(check_online(("api.neon.ai",)))
+        self.assertFalse(check_online((TCP_TEST,)))
         self.assertFalse(check_online(("",)))
 
     def test_check_online_valid_offline(self):
@@ -152,7 +154,7 @@ class NetUtilTests(unittest.TestCase):
 
     def test_check_port_is_open(self):
         from neon_utils.net_utils import check_port_is_open
-        self.assertTrue(check_port_is_open("api.neon.ai", 5672))
+        self.assertTrue(check_port_is_open(TCP_TEST, 5672))
         self.assertFalse(check_port_is_open("www.neon.ai", 5672))
 
 

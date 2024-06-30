@@ -44,7 +44,6 @@ from dateutil.tz import gettz
 from ovos_utils.gui import is_gui_connected
 from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
-from ovos_utils.skills.settings import save_settings, get_local_settings
 from ovos_utils.log import deprecated, log_deprecation
 from neon_utils.location_utils import to_system_time
 from neon_utils.logger import LOG
@@ -52,13 +51,8 @@ from neon_utils.message_utils import dig_for_message, resolve_message, get_messa
 from neon_utils.cache_utils import LRUCache
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.user_utils import get_user_prefs
+from neon_utils.hana_utils import request_backend, ServerException
 from ovos_workshop.skills.ovos import OVOSSkill
-
-try:
-    from neon_utils.mq_utils import send_mq_request
-except ImportError:
-    LOG.warning("MQ Dependencies not installed")
-    send_mq_request = None
 
 try:
     from ovos_plugin_manager.language import OVOSLangDetectionFactory, \
@@ -75,6 +69,25 @@ SPEED_MODE_EXTENSION_TIME = {
 }
 DEFAULT_SPEED_MODE = "thoughtful"
 CACHE_TIME_OFFSET = 24*60*60  # seconds in 24 hours
+
+
+@deprecated("deprecated without replacement, skill settings no longer shipped in skill folder", "2.0.0")
+def save_settings(skill_dir, skill_settings):
+    """Save skill settings to file."""
+    if skill_dir.endswith("/settings.json"):
+        settings_path = skill_dir
+    else:
+        settings_path = os.path.join(skill_dir, 'settings.json')
+
+    settings = JsonStorage(settings_path)
+    for k, v in skill_settings.items():
+        settings[k] = v
+    try:
+        settings.store()
+    except Exception:
+        LOG.exception(f'error saving skill settings to {settings_path}')
+    else:
+        LOG.info(f'Skill settings successfully saved to {settings_path}')
 
 
 class NeonSkill(OVOSSkill):
@@ -363,15 +376,18 @@ class NeonSkill(OVOSSkill):
         if not email_addr and message:
             email_addr = get_user_prefs(message)["user"].get("email")
 
-        if email_addr and send_mq_request:
+        if email_addr:
             LOG.info("Send email via Neon Server")
             request_data = {"recipient": email_addr,
                             "subject": title,
                             "body": body,
                             "attachments": attachments}
-            data = send_mq_request("/neon_emails", request_data,
-                                   "neon_emails_input")
-            return data.get("success")
+            try:
+                request_backend("/email", request_data)
+                return True
+            except ServerException as e:
+                LOG.error(e)
+                return False
         else:
             LOG.warning("Attempting to send email via Mycroft Backend")
             super().send_email(title, body)
@@ -877,22 +893,3 @@ class NeonSkill(OVOSSkill):
         """
         log_deprecation("Use `load_dialog_files`", "2.0.0")
         self.load_dialog_files(root_directory)
-
-    def add_event(self, name: str, handler: callable,
-                  handler_info: Optional[str] = None, once: bool = False,
-                  speak_errors: bool = True):
-        # TODO: Remove with ovos-workshop==0.0.13
-        try:
-            # Patching FakeBus compat. with MessageBusClient
-            if hasattr(self.bus, "ee"):
-                emitter = self.bus.ee
-            else:
-                emitter = self.bus.emitter
-            if handler_info == "mycroft.skill.handler" and \
-                    emitter.listeners(name):
-                LOG.warning(f"Not re-registering intent handler {name}")
-                return
-        except Exception as e:
-            LOG.exception(e)
-        OVOSSkill.add_event(self, name, handler, handler_info, once,
-                            speak_errors)

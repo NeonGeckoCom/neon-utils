@@ -48,7 +48,7 @@ from ovos_utils.log import log_deprecation
 
 from neon_utils.skills.neon_skill import NeonSkill
 
-from ovos_utils.skills.audioservice import AudioServiceInterface as AudioService
+from ovos_bus_client.apis.ocp import ClassicAudioServiceInterface as AudioService
 
 
 class CPSMatchLevel(Enum):

@@ -759,7 +759,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
             test_results["validator"] = True
             return False
 
-        on_fail = Mock()
+        on_fail = Mock(return_value="fail")
 
         def skill_response_thread(s: MycroftSkill, idx: str):
             resp = s.get_response(test_dialog, validator=is_valid,

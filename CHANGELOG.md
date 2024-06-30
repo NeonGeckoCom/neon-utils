@@ -1,28 +1,76 @@
 # Changelog
 
-## [1.9.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a3) (2024-04-04)
+## [1.10.2a9](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a9) (2024-06-25)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a2...1.9.2a3)
-
-**Merged pull requests:**
-
-- Add ovos-core 0.0.8 compat. for CommonQuery skills [\#508](https://github.com/NeonGeckoCom/neon-utils/pull/508) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.9.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a2) (2024-04-02)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.2a1...1.9.2a2)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a8...1.10.2a9)
 
 **Merged pull requests:**
 
-- Loosen ovos-utils dependency to allow 0.1 [\#507](https://github.com/NeonGeckoCom/neon-utils/pull/507) ([NeonDaniel](https://github.com/NeonDaniel))
+- Fix bug causing old token to be used with requests after refreshing [\#530](https://github.com/NeonGeckoCom/neon-utils/pull/530) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.9.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.9.2a1) (2024-03-07)
+## [1.10.2a8](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a8) (2024-06-17)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.9.1...1.9.2a1)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a7...1.10.2a8)
 
 **Merged pull requests:**
 
-- Mark `neon_must_respond` method as deprecated [\#505](https://github.com/NeonGeckoCom/neon-utils/pull/505) ([NeonDaniel](https://github.com/NeonDaniel))
+- Mitigate issues with expired HANA tokens [\#529](https://github.com/NeonGeckoCom/neon-utils/pull/529) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.10.2a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a7) (2024-05-31)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a6...1.10.2a7)
+
+**Merged pull requests:**
+
+- Refactor to use pytz instead of pendulum [\#527](https://github.com/NeonGeckoCom/neon-utils/pull/527) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.10.2a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a6) (2024-05-31)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a5...1.10.2a6)
+
+**Merged pull requests:**
+
+- Resolve Test Failures [\#528](https://github.com/NeonGeckoCom/neon-utils/pull/528) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.10.2a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a5) (2024-05-21)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a4...1.10.2a5)
+
+**Merged pull requests:**
+
+- Refactor to use HANA to send email instead of MQ [\#526](https://github.com/NeonGeckoCom/neon-utils/pull/526) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.10.2a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a4) (2024-05-11)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a3...1.10.2a4)
+
+**Merged pull requests:**
+
+- Update deprecated import to supported path [\#524](https://github.com/NeonGeckoCom/neon-utils/pull/524) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.10.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a3) (2024-05-10)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a2...1.10.2a3)
+
+**Merged pull requests:**
+
+- Fix ovos-core 0.0.8 Common Query compat. [\#523](https://github.com/NeonGeckoCom/neon-utils/pull/523) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.10.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a2) (2024-05-08)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.2a1...1.10.2a2)
+
+**Merged pull requests:**
+
+- Remove old patch [\#522](https://github.com/NeonGeckoCom/neon-utils/pull/522) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.10.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.10.2a1) (2024-05-07)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.10.1...1.10.2a1)
+
+**Merged pull requests:**
+
+- Enable `hana` backend URL to be configured [\#521](https://github.com/NeonGeckoCom/neon-utils/pull/521) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 

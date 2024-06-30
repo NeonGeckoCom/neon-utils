@@ -67,7 +67,11 @@ class Stopwatch:
         self.start_time = time()
 
     def stop(self):
-        self.time = time() - self.start_time
+        try:
+            self.time = time() - self.start_time
+        except TypeError:
+            LOG.error("stop called before start!")
+            self.time = None
         return self.time
 
     def report(self):
