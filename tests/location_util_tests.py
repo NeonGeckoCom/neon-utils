@@ -88,6 +88,12 @@ class LocationUtilTests(unittest.TestCase):
         self.assertIsInstance(offset, float)
         self.assertIn(offset, (-7.0, -8.0))
 
+        lat = 35.0000
+        lon = 103.000
+        timezone, offset = get_timezone(lat, lon)
+        self.assertEqual(timezone, "Asia/Shanghai")
+        self.assertEqual(offset, 8.0)
+
     def test_to_system_time(self):
         from neon_utils.location_utils import to_system_time
         tz_aware_dt = datetime.now(gettz("America/NewYork"))

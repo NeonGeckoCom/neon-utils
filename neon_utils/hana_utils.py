@@ -29,19 +29,39 @@
 import requests
 import json
 
+from typing import Optional
 from os import makedirs
 from os.path import join, isfile, isdir, dirname
 from time import time
 from ovos_utils.log import LOG
 from ovos_utils.xdg_utils import xdg_cache_home
 
-_DEFAULT_BACKEND_URL = "https://hana.neonaiservices.com"
+_DEFAULT_BACKEND_URL = None
 _client_config = {}
 _headers = {}
 
 
-def _get_client_config_path(url: str = _DEFAULT_BACKEND_URL):
-    url_key = hash(url)
+def set_default_backend_url(url: Optional[str] = None):
+    """
+    Set the default backend URL
+    @param url: HANA backend url to use, else read from configuration
+    """
+    global _DEFAULT_BACKEND_URL
+    if not url:
+        from ovos_config.config import Configuration
+        url = Configuration().get('hana', {}).get('url') or \
+            "https://hana.neonaiservices.com"
+    if url and url != _DEFAULT_BACKEND_URL:
+        LOG.info(f"Updating HANA backend URL to {url}")
+        _DEFAULT_BACKEND_URL = url
+        global _client_config
+        global _headers
+        _client_config = {}
+        _headers = {}
+
+
+def _get_client_config_path(url: str):
+    url_key = url.split('/')[2]
     return join(xdg_cache_home(), "neon", f"hana_token_{url_key}.json")
 
 
@@ -112,6 +132,11 @@ def _refresh_token(backend_address: str):
         raise ServerException(f"Error updating token from {backend_address}. "
                               f"{update.status_code}: {update.text}")
     _client_config = update.json()
+
+    # Update request headers with new token
+    global _headers
+    _headers['Authorization'] = f"Bearer {_client_config['access_token']}"
+
     client_config_path = _get_client_config_path(backend_address)
     with open(client_config_path, "w+") as f:
         json.dump(_client_config, f, indent=2)
@@ -126,16 +151,45 @@ def request_backend(endpoint: str, request_data: dict,
     @param server_url: Base URL of Hana server to query
     @returns: dict response
     """
+    global _client_config
+    global _headers
+    if not server_url:
+        set_default_backend_url()
+        server_url = _DEFAULT_BACKEND_URL
+    if server_url != _DEFAULT_BACKEND_URL and _client_config:
+        LOG.info(f"Using new remote: {server_url}")
+        _client_config = {}
+        _headers = {}
     _init_client(server_url)
-    if time() >= _client_config.get("expiration", 0):
+    if _client_config.get("expiration", 0) - time() < 30:
         try:
             _refresh_token(server_url)
         except ServerException as e:
             LOG.error(e)
             _get_token(server_url)
-    resp = requests.post(f"{server_url}/{endpoint.lstrip('/')}",
-                         json=request_data, headers=_headers)
+    request_kwargs = {"url": f"{server_url}/{endpoint.lstrip('/')}",
+                      "json": request_data, "headers": _headers}
+    resp = requests.post(**request_kwargs)
+    if resp.status_code == 502:
+        # This is raised occasionally on valid requests. Need to resolve in HANA
+        resp = requests.post(**request_kwargs)
     if resp.ok:
         return resp.json()
+
     else:
+        try:
+            error = resp.json()["detail"]
+            # Token is actually expired, refresh and retry
+            if error == "Invalid or expired token.":
+                LOG.warning(f"Token is expired. time={time()}|"
+                            f"expiration={_client_config.get('expiration')}")
+                _refresh_token(server_url)
+                resp = requests.post(**request_kwargs)
+                if resp.ok:
+                    return resp.json()
+        except Exception as e:
+            LOG.error(e)
+            # Clear cached config to force re-evaluation on next request
+            _client_config = {}
+            _headers = {}
         raise ServerException(f"Error response {resp.status_code}: {resp.text}")

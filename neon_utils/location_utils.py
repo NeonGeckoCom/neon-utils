@@ -25,11 +25,13 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from time import time
 
-import pendulum
+import pytz
 
 from datetime import datetime
 from typing import Optional, Union
+
 from dateutil.tz import tzlocal
 from timezonefinder import TimezoneFinder
 from re import sub
@@ -143,10 +145,11 @@ def get_timezone(lat, lng) -> (str, float):
     Note that some coordinates do not have a city, but may have a county.
     :param lat: latitude
     :param lng: longitude
-    :return: timezone name, offset from GMT
+    :return: timezone name, offset in hours from UTC
     """
     timezone = TimezoneFinder().timezone_at(lng=float(lng), lat=float(lat))
-    offset = pendulum.from_timestamp(0, timezone).offset_hours
+    offset = pytz.timezone(timezone).utcoffset(
+        datetime.now()).total_seconds() / 3600
     return timezone, offset
 
 

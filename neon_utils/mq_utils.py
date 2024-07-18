@@ -29,8 +29,10 @@
 import logging
 import uuid
 
-from ovos_utils.log import deprecated
+from ovos_utils.log import deprecated, log_deprecation
 
+log_deprecation("This module has moved to neon_mq_connector.utils.client_utils",
+                "2.0.0")
 try:
     from threading import Event
     from pika.channel import Channel
@@ -47,7 +49,7 @@ from neon_utils.socket_utils import b64_to_dict
 logging.getLogger("pika").setLevel(logging.CRITICAL)
 
 _default_mq_config = {
-    "server": "api.neon.ai",
+    "server": "mq.neonaiservices.com",
     "port": 5672,
     "users": {
         "mq_handler": {
@@ -60,6 +62,8 @@ _default_mq_config = {
 
 class NeonMQHandler(MQConnector):
     def __init__(self, config: dict, service_name: str, vhost: str):
+        log_deprecation("Import from neon_mq_connector.utils.client_utils",
+                        "2.0.0")
         super().__init__(config, service_name)
         self.vhost = vhost
         import pika
@@ -70,13 +74,11 @@ class NeonMQHandler(MQConnector):
 @deprecated("Use `neon_mq_connector.client.send_mq_request`", "2.0.0")
 def get_mq_response(vhost: str, request_data: dict, target_queue: str,
                     response_queue: str = None, timeout: int = 30) -> dict:
-    # TODO: Remove in v1.0.0 DM
     return send_mq_request(vhost, request_data, target_queue, response_queue,
                            timeout, True)
 
 
-# TODO: Mark deprecation after stable neon_mq_connector release
-# @deprecated("Use `neon_mq_connector.client.send_mq_request`", "2.0.0")
+@deprecated("Import from neon_mq_connector.utils.client_utils", "2.0.0")
 def send_mq_request(vhost: str, request_data: dict, target_queue: str,
                     response_queue: str = None, timeout: int = 30,
                     expect_response: bool = True) -> dict:

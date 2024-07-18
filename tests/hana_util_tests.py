@@ -25,10 +25,13 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
 import json
 import unittest
+
 from os import remove
 from os.path import join, dirname, isfile
+from time import time
 from unittest.mock import patch
 
 
@@ -69,6 +72,28 @@ class HanaUtilTests(unittest.TestCase):
         self.assertEqual(resp['lang_code'], "en-us")
         self.assertIsInstance(resp['answer'], str)
         # TODO: Test invalid route, invalid request data
+
+    @patch("neon_utils.hana_utils._get_client_config_path")
+    @patch("neon_utils.hana_utils._refresh_token")
+    def test_request_backend_refresh_token(self, refresh_token, config_path):
+        config_path.return_value = self.test_path
+
+        import neon_utils.hana_utils
+        from neon_utils.hana_utils import request_backend
+        neon_utils.hana_utils.set_default_backend_url(self.test_server)
+        neon_utils.hana_utils._init_client(self.test_server)
+        real_client_config = neon_utils.hana_utils._client_config
+        neon_utils.hana_utils._client_config['expiration'] = time() + 29
+        neon_utils.hana_utils._refresh_token = refresh_token
+        resp = request_backend("/neon/get_response",
+                               {"lang_code": "en-us",
+                                "utterance": "how are you",
+                                "user_profile": {}}, self.test_server)
+        self.assertEqual(resp['lang_code'], "en-us")
+        self.assertIsInstance(resp['answer'], str)
+        refresh_token.assert_called_once_with(self.test_server)
+
+        neon_utils.hana_utils._client_config = real_client_config
 
     @patch("neon_utils.hana_utils._get_client_config_path")
     def test_00_get_token(self, config_path):
@@ -129,11 +154,30 @@ class HanaUtilTests(unittest.TestCase):
     def test_config_path(self):
         from neon_utils.hana_utils import _get_client_config_path
         path_1 = _get_client_config_path("https://hana.neonaialpha.com")
-        default = _get_client_config_path()
+        default = _get_client_config_path("https://hana.neonaiservices.com")
         self.assertNotEqual(path_1, default)
         self.assertEqual(dirname(path_1), dirname(default))
 
         # TODO: Test invalid refresh
+
+    @patch("ovos_config.config.Configuration")
+    def test_set_default_backend_url(self, config):
+        import neon_utils.hana_utils
+        from neon_utils.hana_utils import set_default_backend_url
+        neon_utils.hana_utils._DEFAULT_BACKEND_URL = None
+        config.return_value = dict()
+
+        set_default_backend_url()
+        self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
+                         "https://hana.neonaiservices.com")
+
+        set_default_backend_url("https://hana.neonaialpha.com")
+        self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
+                         "https://hana.neonaialpha.com")
+
+        set_default_backend_url()
+        self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
+                         "https://hana.neonaiservices.com")
 
 
 if __name__ == '__main__':
