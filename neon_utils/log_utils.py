@@ -202,6 +202,12 @@ def init_log(config: dict = None, log_name: str = None) -> type(LOG):
     from ovos_config.config import Configuration
     _cfg = config or Configuration()
     _logs_conf = _cfg.get("logs") or _cfg.get("logging") or {}
+
+    # OVOS implementation allow for null `name`. For backwards-compat,
+    # ensure a non-null name is defined
+    LOG.name = LOG.name or log_name or _logs_conf.get("name") or "neon-utils"
+
+    # Global overrides for packages like `filelock` and `pika` which are noisy
     overrides = _logs_conf.get('level_overrides') or {}
     for log in overrides.get("error") or []:
         logging.getLogger(log).setLevel(logging.ERROR)
