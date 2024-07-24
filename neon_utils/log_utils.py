@@ -196,14 +196,12 @@ def init_log(config: dict = None, log_name: str = None) -> type(LOG):
     :param log_name: Optional LOG.name override, else use Configuration or default
     :returns: LOG singleton
     """
+    from ovos_utils.log import init_service_logger
+    init_service_logger(log_name)
+
     from ovos_config.config import Configuration
     _cfg = config or Configuration()
-    _log_level = _cfg.get("log_level", "INFO")
-    _logs_conf = _cfg.get("logs") or {}
-    _logs_conf["level"] = _log_level
-    LOG.name = log_name or _logs_conf.get("name") or "neon-utils"
-    LOG.debug(f"Initializing logger with: {_logs_conf}")
-    LOG.init(_logs_conf)  # read log level from config
+    _logs_conf = _cfg.get("logs") or _cfg.get("logging") or {}
     overrides = _logs_conf.get('level_overrides') or {}
     for log in overrides.get("error") or []:
         logging.getLogger(log).setLevel(logging.ERROR)
