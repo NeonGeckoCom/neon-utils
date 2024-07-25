@@ -196,24 +196,22 @@ def init_log(config: dict = None, log_name: str = None) -> type(LOG):
     :param log_name: Optional LOG.name override, else use Configuration or default
     :returns: LOG singleton
     """
-
+    log_name = log_name or "neon-utils"
     if not config:
         from ovos_utils.log import init_service_logger
         init_service_logger(log_name)
         from ovos_config.config import Configuration
         _cfg = Configuration()
     else:
+        # TODO: This is not apparently used anywhere; consider deprecation
         _cfg = config
         _log_level = _cfg.get("log_level", "INFO")
         _logs_conf = _cfg.get("logs") or {}
         LOG.debug(f"Initializing logger with: {_logs_conf}")
         LOG.init(_logs_conf)  # read log level from config
+        LOG.name = log_name
 
     _logs_conf = _cfg.get("logs") or _cfg.get("logging") or {}
-
-    # OVOS implementation allow for null `name`. For backwards-compat,
-    # ensure a non-null name is defined
-    LOG.name = LOG.name or log_name or _logs_conf.get("name") or "neon-utils"
 
     # Global overrides for packages like `filelock` and `pika` which are noisy
     overrides = _logs_conf.get('level_overrides') or {}
