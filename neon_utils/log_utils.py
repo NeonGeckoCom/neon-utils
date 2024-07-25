@@ -196,11 +196,19 @@ def init_log(config: dict = None, log_name: str = None) -> type(LOG):
     :param log_name: Optional LOG.name override, else use Configuration or default
     :returns: LOG singleton
     """
-    from ovos_utils.log import init_service_logger
-    init_service_logger(log_name)
 
-    from ovos_config.config import Configuration
-    _cfg = config or Configuration()
+    if not config:
+        from ovos_utils.log import init_service_logger
+        init_service_logger(log_name)
+        from ovos_config.config import Configuration
+        _cfg = Configuration()
+    else:
+        _cfg = config
+        _log_level = _cfg.get("log_level", "INFO")
+        _logs_conf = _cfg.get("logs") or {}
+        LOG.debug(f"Initializing logger with: {_logs_conf}")
+        LOG.init(_logs_conf)  # read log level from config
+
     _logs_conf = _cfg.get("logs") or _cfg.get("logging") or {}
 
     # OVOS implementation allow for null `name`. For backwards-compat,
