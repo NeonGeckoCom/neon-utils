@@ -205,8 +205,8 @@ def init_log(config: dict = None, log_name: str = None) -> type(LOG):
     else:
         # TODO: This is not apparently used anywhere; consider deprecation
         _cfg = config
-        _log_level = _cfg.get("log_level", "INFO")
         _logs_conf = _cfg.get("logs") or {}
+        _logs_conf["level"] = _cfg.get("log_level", "INFO")
         LOG.debug(f"Initializing logger with: {_logs_conf}")
         LOG.init(_logs_conf)  # read log level from config
         LOG.name = log_name
