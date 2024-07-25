@@ -209,7 +209,7 @@ def init_log(config: dict = None, log_name: str = None) -> type(LOG):
         _logs_conf["level"] = _cfg.get("log_level", "INFO")
         LOG.debug(f"Initializing logger with: {_logs_conf}")
         LOG.init(_logs_conf)  # read log level from config
-        LOG.name = log_name
+        LOG.name = _logs_conf.get('name') or log_name
 
     _logs_conf = _cfg.get("logs") or _cfg.get("logging") or {}
 
