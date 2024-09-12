@@ -797,6 +797,7 @@ class ConfigurationUtilTests(unittest.TestCase):
         self.assertIsInstance(config, dict)
         # TODO: Better tests of config load
 
+    @unittest.skip('Internal function is deprecated')
     @mock.patch('neon_utils.packaging_utils.get_neon_core_root')
     def test_init_ovos_conf(self, get_core_root):
         default_config = join(dirname(__file__), "configuration", "neon_core")

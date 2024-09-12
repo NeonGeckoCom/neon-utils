@@ -466,7 +466,6 @@ def _init_ovos_conf(name: str, force_reload: bool = False):
     :param name: Name of calling module to configure to use `neon.yaml`
     :param force_reload: If true, force reload of configuration modules
     """
-    from ovos_config.utils import init_module_config
 
     from neon_utils.packaging_utils import get_neon_core_root
     try:
@@ -483,22 +482,19 @@ def _init_ovos_conf(name: str, force_reload: bool = False):
         LOG.error(e)
         default_config_path = None
 
-    module_config = {
-        "xdg": True,
-        "base_folder": "neon",
-        "config_filename": "neon.yaml"
-    }
-    if default_config_path:
-        module_config['default_config_path'] = default_config_path
+    os.environ["OVOS_CONFIG_BASE_FOLDER"] = "neon"
+    os.environ["OVOS_CONFIG_FILENAME"] = "neon.yaml"
+    os.environ["OVOS_DEFAULT_CONFIG"] = default_config_path
 
-    try:
-        init_module_config(name, "neon_core", module_config)
-        if name == "neon_core":
-            # Also configure neon_core.skills.skill_manager
-            init_module_config("neon_core.skills.skill_manager",
-                               "neon_core", module_config)
-    except RuntimeError:
-        LOG.exception(f"Failed to init config module_config={module_config}")
+    import ovos_config
+    # Default config changed, remove any cached configuration
+    del ovos_config.config.Configuration
+    del ovos_config.Configuration
+
+    import ovos_config.models
+    importlib.reload(ovos_config.models)
+    importlib.reload(ovos_config.config)
+    importlib.reload(ovos_config)
 
     try:
         import mycroft.configuration
@@ -581,11 +577,14 @@ def init_config_dir():
     configuration is loaded. Repeated calls or calls after configuration is
     loaded may lead to inconsistent behavior.
     """
-    if os.getenv("OVOS_CONFIG_BASE_FOLDER") == "neon" and \
+    if os.getenv("OVOS_CONFIG_BASE_FOLDER") and \
             os.getenv("OVOS_CONFIG_FILENAME"):
         LOG.info("Configuration set via envvars")
         return
 
+    log_deprecation("This handling is deprecated. Set "
+                    "`OVOS_CONFIG_BASE_FOLDER`, `OVOS_CONFIG_FILENAME`, and "
+                    "`OVOS_DEFAULT_CONFIG` envvars", "2.0.0")
     old_config_file = _check_legacy_config()
 
     # Ensure envvars are consistent and valid (read/writeable)
