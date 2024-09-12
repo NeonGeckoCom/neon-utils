@@ -1038,7 +1038,7 @@ class ConfigurationUtilTests(unittest.TestCase):
                               "from_user": True,
                               "not_from_user": False
                           }})
-        shutil.rmtree(join(config_dir, os.environ["XDG_CONFIG_BASE_FOLDER"]))
+        shutil.rmtree(join(config_dir, os.environ["OVOS_CONFIG_BASE_FOLDER"]))
 
 
 class DeprecatedConfigTests(unittest.TestCase):
