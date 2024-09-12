@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a2) (2024-09-12)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a1...1.11.1a2)
+
+**Merged pull requests:**
+
+- Enable dependency resolution of latest ovos packages [\#533](https://github.com/NeonGeckoCom/neon-utils/pull/533) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.11.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a1) (2024-07-25)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.0...1.11.1a1)
