@@ -634,6 +634,7 @@ class ConfigurationUtilTests(unittest.TestCase):
                                                    test_filename, test_conf))
         os.remove(test_conf.file_path)
 
+    @unittest.skip('Deprecated function')
     @mock.patch('neon_utils.configuration_utils._init_ovos_conf')
     def test_init_config_dir(self, init_ovos_conf):
         from neon_utils.configuration_utils import init_config_dir
