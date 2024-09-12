@@ -484,7 +484,8 @@ def _init_ovos_conf(name: str, force_reload: bool = False):
 
     os.environ["OVOS_CONFIG_BASE_FOLDER"] = "neon"
     os.environ["OVOS_CONFIG_FILENAME"] = "neon.yaml"
-    os.environ["OVOS_DEFAULT_CONFIG"] = default_config_path
+    if default_config_path is not None:
+        os.environ["OVOS_DEFAULT_CONFIG"] = default_config_path
 
     import ovos_config
     # Default config changed, remove any cached configuration
