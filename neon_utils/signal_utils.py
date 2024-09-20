@@ -27,19 +27,23 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import inspect
-import ovos_utils.signal
 
 from time import time, sleep
+from typing import Optional, Callable
+
+from mock.mock import Mock
 from ovos_bus_client import MessageBusClient, Message
+from ovos_utils.log import log_deprecation
+
 from neon_utils.logger import LOG
 
-_BUS: MessageBusClient = None
-_MAX_TIMEOUT: int = None
+_BUS: Optional[MessageBusClient] = None
+_MAX_TIMEOUT: Optional[int] = None
 
-_create_signal = None
-_check_for_signal = None
-_wait_for_signal_clear = None
-_wait_for_signal_create = None
+_create_signal: Optional[Callable] = None
+_check_for_signal: Optional[Callable] = None
+_wait_for_signal_clear: Optional[Callable] = None
+_wait_for_signal_create: Optional[Callable] = None
 
 
 def create_signal(*args, **kwargs):
@@ -101,8 +105,10 @@ def init_signal_handlers():
     global _wait_for_signal_create
     global _MAX_TIMEOUT
     from ovos_config.config import Configuration
-    _MAX_TIMEOUT = int(dict(Configuration()).get("signal", {}).get(
-        "max_wait_seconds") or '300')
+    signal_config = Configuration().get("signal") or dict()
+    patch_imports = signal_config.get("patch_imports", True)
+    _MAX_TIMEOUT = int(signal_config.get("max_wait_seconds") or 300)
+
     if check_signal_manager_available():
         LOG.info("Signal Manager Available")
         _create_signal = _manager_create_signal
@@ -110,26 +116,40 @@ def init_signal_handlers():
         _wait_for_signal_clear = _manager_wait_for_signal_clear
         _wait_for_signal_create = _manager_wait_for_signal_create
 
-        ovos_utils.signal.check_for_signal = _check_for_signal
-        ovos_utils.signal.create_signal = _create_signal
+        if patch_imports:
+            log_deprecation("Import patching will be deprecated. Disable in "
+                            "configuration by setting `signal`.`patch_imports` "
+                            "to `False`", "2.0.0")
+            import ovos_utils.signal
+            ovos_utils.signal.check_for_signal = _check_for_signal
+            ovos_utils.signal.create_signal = _create_signal
+            try:
+                import mycroft.util.signal
+                mycroft.util.signal.create_signal = _create_signal
+                mycroft.util.signal.check_for_signal = _check_for_signal
+                LOG.info(f"Overrode mycroft.util.signal methods")
+            except (ImportError, AttributeError) as e:
+                LOG.debug(e)
+            except TypeError as e:
+                # This comes from tests overriding MessageBusClient()
+                LOG.error(e)
 
     else:
-        LOG.warning("No signal manager available; falling back to FS signals")
-        _create_signal = ovos_utils.signal.create_signal
-        _check_for_signal = ovos_utils.signal.check_for_signal
-        _wait_for_signal_clear = _fs_wait_for_signal_clear
-        _wait_for_signal_create = _fs_wait_for_signal_create
-
-    try:
-        import mycroft.util.signal
-        mycroft.util.signal.create_signal = _create_signal
-        mycroft.util.signal.check_for_signal = _check_for_signal
-        LOG.info(f"Overrode mycroft.util.signal methods")
-    except (ImportError, AttributeError) as e:
-        LOG.debug(e)
-    except TypeError as e:
-        # This comes from tests overriding MessageBusClient()
-        LOG.error(e)
+        LOG.warning("FS signals are deprecated. Signal methods will have no effect.")
+        if patch_imports:
+            log_deprecation("Import patching will be deprecated. Disable in "
+                            "configuration by setting `signal`.`patch_imports` "
+                            "to `False`", "2.0.0")
+            import ovos_utils.signal
+            _create_signal = ovos_utils.signal.create_signal
+            _check_for_signal = ovos_utils.signal.check_for_signal
+            _wait_for_signal_clear = _fs_wait_for_signal_clear
+            _wait_for_signal_create = _fs_wait_for_signal_create
+        else:
+            _create_signal = Mock(return_value=False)
+            _check_for_signal = Mock(return_value=False)
+            _wait_for_signal_clear = Mock(return_value=False)
+            _wait_for_signal_create = Mock(return_value=False)
 
 
 def check_signal_manager_available() -> bool:
