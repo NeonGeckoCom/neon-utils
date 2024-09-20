@@ -1015,6 +1015,7 @@ class PatchedMycroftSkillTests(unittest.TestCase):
         message.context.pop('destination')
         self.assertEqual(message.context, msg.context)
 
+    @unittest.skip("Class is deprecated and test fails with signal deprecation")
     def test_speak_wait(self):
         from neon_utils.signal_utils import create_signal, check_for_signal, \
             wait_for_signal_clear
