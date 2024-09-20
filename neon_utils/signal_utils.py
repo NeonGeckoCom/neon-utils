@@ -136,10 +136,20 @@ def init_signal_handlers():
 
     else:
         LOG.warning("FS signals are deprecated. Signal methods will have no effect.")
-        _create_signal = Mock(return_value=False)
-        _check_for_signal = Mock(return_value=False)
-        _wait_for_signal_clear = Mock(return_value=False)
-        _wait_for_signal_create = Mock(return_value=False)
+        if patch_imports:
+            log_deprecation("Import patching will be deprecated. Disable in "
+                            "configuration by setting `signal`.`patch_imports` "
+                            "to `False`", "2.0.0")
+            import ovos_utils.signal
+            _create_signal = ovos_utils.signal.create_signal
+            _check_for_signal = ovos_utils.signal.check_for_signal
+            _wait_for_signal_clear = _fs_wait_for_signal_clear
+            _wait_for_signal_create = _fs_wait_for_signal_create
+        else:
+            _create_signal = Mock(return_value=False)
+            _check_for_signal = Mock(return_value=False)
+            _wait_for_signal_clear = Mock(return_value=False)
+            _wait_for_signal_create = Mock(return_value=False)
 
 
 def check_signal_manager_available() -> bool:

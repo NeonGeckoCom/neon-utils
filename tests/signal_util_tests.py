@@ -157,7 +157,6 @@ class SignalUtilsTests(unittest.TestCase):
         self.assertEqual(ovos_utils.signal.create_signal,
                          neon_utils.signal_utils._manager_create_signal)
 
-    @unittest.skip("File-based signal handling is deprecated")
     def test_signal_utils_manager_unavailable(self):
         import ovos_utils.signal
         neon_utils.signal_utils.init_signal_handlers()
