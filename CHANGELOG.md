@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a4) (2024-09-20)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a3...1.11.1a4)
+
+**Merged pull requests:**
+
+- Address deprecation warnings [\#535](https://github.com/NeonGeckoCom/neon-utils/pull/535) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.11.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a3) (2024-09-13)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a2...1.11.1a3)
