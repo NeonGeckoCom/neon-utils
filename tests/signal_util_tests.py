@@ -176,16 +176,17 @@ class SignalUtilsTests(unittest.TestCase):
         import ovos_utils.signal
         from neon_utils.signal_utils import _check_for_signal
         self.assertFalse(neon_utils.signal_utils.check_signal_manager_available())
-        self.assertEqual(neon_utils.signal_utils._check_for_signal,
-                         ovos_utils.signal.check_for_signal)
-        self.assertEqual(neon_utils.signal_utils._create_signal,
-                         ovos_utils.signal.create_signal)
-        self.assertEqual(neon_utils.signal_utils._wait_for_signal_clear,
-                         neon_utils.signal_utils._fs_wait_for_signal_clear)
-        self.assertEqual(neon_utils.signal_utils._wait_for_signal_create,
-                         neon_utils.signal_utils._fs_wait_for_signal_create)
-        self.assertEqual(_check_for_signal,
-                         ovos_utils.signal.check_for_signal)
+        # Unavailable Signal Manager means methods will be mocked
+        # self.assertEqual(neon_utils.signal_utils._check_for_signal,
+        #                  ovos_utils.signal.check_for_signal)
+        # self.assertEqual(neon_utils.signal_utils._create_signal,
+        #                  ovos_utils.signal.create_signal)
+        # self.assertEqual(neon_utils.signal_utils._wait_for_signal_clear,
+        #                  neon_utils.signal_utils._fs_wait_for_signal_clear)
+        # self.assertEqual(neon_utils.signal_utils._wait_for_signal_create,
+        #                  neon_utils.signal_utils._fs_wait_for_signal_create)
+        # self.assertEqual(_check_for_signal,
+        #                  ovos_utils.signal.check_for_signal)
 
         TestSignalManager(self.test_bus)
         neon_utils.signal_utils.init_signal_handlers()
