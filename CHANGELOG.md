@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a5) (2024-10-03)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a4...1.11.1a5)
+
+**Merged pull requests:**
+
+- Integration with Sentry [\#509](https://github.com/NeonGeckoCom/neon-utils/pull/509) ([NeonKirill](https://github.com/NeonKirill))
+
 ## [1.11.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a4) (2024-09-20)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a3...1.11.1a4)
