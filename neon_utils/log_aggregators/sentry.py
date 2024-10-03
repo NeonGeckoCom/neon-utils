@@ -28,6 +28,11 @@
 
 import sentry_sdk
 
+SENTRY_SDK_REQUIRED_KEYS = {'dsn'}
+
 
 def init_sentry(config: dict):
+    missing_required_keys = SENTRY_SDK_REQUIRED_KEYS.difference(config.keys())
+    if missing_required_keys:
+        raise KeyError(f'Sentry SDK configuration missing required keys: {missing_required_keys}')
     return sentry_sdk.init(**config)
