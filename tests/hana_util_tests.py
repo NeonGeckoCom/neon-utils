@@ -96,7 +96,7 @@ class HanaUtilTests(unittest.TestCase):
         neon_utils.hana_utils._client_config = real_client_config
 
     @patch("neon_utils.hana_utils._get_client_config_path")
-    @patch("ovos_config.configuration.Configuration")
+    @patch("ovos_config.config.Configuration")
     def test_00_get_token(self, config, config_path):
         config.return_value = {}
         config_path.return_value = self.test_path
