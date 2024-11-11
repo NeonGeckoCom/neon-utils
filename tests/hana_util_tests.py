@@ -96,18 +96,26 @@ class HanaUtilTests(unittest.TestCase):
         neon_utils.hana_utils._client_config = real_client_config
 
     @patch("neon_utils.hana_utils._get_client_config_path")
-    def test_00_get_token(self, config_path):
+    @patch("ovos_config.configuration.Configuration")
+    def test_00_get_token(self, config, config_path):
+        config.return_value = {}
         config_path.return_value = self.test_path
         from neon_utils.hana_utils import _get_token
 
-        # Test valid request
+        # Test valid default request
         _get_token(self.test_server)
         from neon_utils.hana_utils import _client_config
         self.assertTrue(isfile(self.test_path))
         with open(self.test_path) as f:
             credentials_on_disk = json.load(f)
         self.assertEqual(credentials_on_disk, _client_config)
-        # TODO: Test invalid request, rate-limited request
+
+        # Test with configured invalid login
+        config.return_value = {"hana": {"username": "guest",
+                                        "password": "password"}}
+        from neon_utils.hana_utils import ServerException
+        with self.assertRaises(ServerException):
+            _get_token(self.test_server)
 
     @patch("neon_utils.hana_utils._get_client_config_path")
     @patch("neon_utils.hana_utils._get_token")

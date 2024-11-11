@@ -25,6 +25,8 @@
 # LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+from _socket import gethostname
+from datetime import datetime
 
 import requests
 import json
@@ -33,6 +35,7 @@ from typing import Optional
 from os import makedirs
 from os.path import join, isfile, isdir, dirname
 from time import time
+
 from ovos_utils.log import LOG
 from ovos_utils.xdg_utils import xdg_cache_home
 
@@ -91,20 +94,22 @@ def _init_client(backend_address: str):
         _headers = {"Authorization": f"Bearer {_client_config['access_token']}"}
 
 
-def _get_token(backend_address: str, username: str = "guest",
-               password: str = "password"):
+def _get_token(backend_address: str):
     """
     Get new auth tokens from the specified server. This will cache the returned
     token, overwriting any previous data at the cache path.
     @param backend_address: Hana server URL to connect to
-    @param username: Username to authorize
-    @param password: Password for specified username
     """
+    from ovos_config.config import Configuration
     global _client_config
-    # TODO: username/password from configuration
+    hana_config = Configuration().get('hana', {})
+    username = hana_config.get("username") or "guest"
+    password = hana_config.get("password") or "password"
+    token_name = f"{gethostname()} {datetime.utcnow().isoformat()}"
     resp = requests.post(f"{backend_address}/auth/login",
                          json={"username": username,
-                               "password": password})
+                               "password": password,
+                               "token_name": token_name})
     if not resp.ok:
         raise ServerException(f"Error logging into {backend_address}. "
                               f"{resp.status_code}: {resp.text}")
