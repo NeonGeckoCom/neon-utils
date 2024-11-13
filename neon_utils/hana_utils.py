@@ -105,7 +105,7 @@ def _get_token(backend_address: str):
     hana_config = Configuration().get('hana', {})
     username = hana_config.get("username") or "guest"
     password = hana_config.get("password") or "password"
-    token_name = f"{gethostname()} {datetime.utcnow().isoformat()}"
+    token_name = f"{gethostname()}_{datetime.utcnow().isoformat()}"
     resp = requests.post(f"{backend_address}/auth/login",
                          json={"username": username,
                                "password": password,

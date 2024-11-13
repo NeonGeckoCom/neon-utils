@@ -112,7 +112,7 @@ class HanaUtilTests(unittest.TestCase):
 
         # Test with configured invalid login
         config.return_value = {"hana": {"username": "guest",
-                                        "password": "password"}}
+                                        "password": "fake_password"}}
         from neon_utils.hana_utils import ServerException
         with self.assertRaises(ServerException):
             _get_token(self.test_server)
