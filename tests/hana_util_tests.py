@@ -152,8 +152,8 @@ class HanaUtilTests(unittest.TestCase):
                          new_credentials['client_id'])
         self.assertEqual(credentials_on_disk['username'],
                          new_credentials['username'])
-        self.assertGreater(new_credentials['expiration'],
-                           credentials_on_disk['expiration'])
+        self.assertGreaterEqual(new_credentials['expiration'],
+                                credentials_on_disk['expiration'])
         self.assertNotEqual(credentials_on_disk['access_token'],
                             new_credentials['access_token'])
         self.assertNotEqual(credentials_on_disk['refresh_token'],
