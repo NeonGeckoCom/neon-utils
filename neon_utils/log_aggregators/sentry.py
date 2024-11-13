@@ -26,12 +26,13 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-import sentry_sdk
 
 SENTRY_SDK_REQUIRED_KEYS = {'dsn'}
 
 
 def init_sentry(config: dict):
+    import sentry_sdk
+
     missing_required_keys = SENTRY_SDK_REQUIRED_KEYS.difference(config.keys())
     if missing_required_keys:
         raise KeyError(f'Sentry SDK configuration missing required keys: {missing_required_keys}')
