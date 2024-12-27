@@ -78,7 +78,8 @@ def _init_client(backend_address: str):
     """
     global _client_config
     global _headers
-    # TODO: Config on disk could be invalid here!
+    # TODO: Config on disk could be invalid here; consider validating tokens now
+    #   instead of waiting for exception handling with a failed request
     if not _client_config:
         client_config_path = _get_client_config_path(backend_address)
         if isfile(client_config_path):

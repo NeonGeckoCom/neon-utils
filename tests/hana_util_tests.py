@@ -31,7 +31,7 @@ import unittest
 
 from os import remove
 from os.path import join, dirname, isfile
-from shutil import move, copy
+from shutil import copy
 from time import time
 from unittest.mock import patch
 
