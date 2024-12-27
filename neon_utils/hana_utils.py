@@ -30,7 +30,7 @@ import requests
 import json
 
 from typing import Optional
-from os import makedirs
+from os import makedirs, remove
 from os.path import join, isfile, isdir, dirname
 from time import time
 from ovos_utils.log import LOG
@@ -78,7 +78,7 @@ def _init_client(backend_address: str):
     """
     global _client_config
     global _headers
-
+    # TODO: Config on disk could be invalid here!
     if not _client_config:
         client_config_path = _get_client_config_path(backend_address)
         if isfile(client_config_path):
@@ -175,7 +175,6 @@ def request_backend(endpoint: str, request_data: dict,
         resp = requests.post(**request_kwargs)
     if resp.ok:
         return resp.json()
-
     else:
         try:
             error = resp.json()["detail"]
@@ -192,4 +191,10 @@ def request_backend(endpoint: str, request_data: dict,
             # Clear cached config to force re-evaluation on next request
             _client_config = {}
             _headers = {}
+            if resp.status_code == 403:
+                # Invalid token supplied; remove it from local cache
+                config_file = _get_client_config_path(server_url)
+                if isfile(config_file):
+                    LOG.warning(f"Removing invalid token cache: {config_file}")
+                    remove(config_file)
         raise ServerException(f"Error response {resp.status_code}: {resp.text}")
