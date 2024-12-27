@@ -32,7 +32,7 @@ import unittest
 from os import remove
 from os.path import join, dirname, isfile
 from shutil import copy
-from time import time
+from time import time, sleep
 from unittest.mock import patch
 
 
@@ -152,6 +152,7 @@ class HanaUtilTests(unittest.TestCase):
         self.assertEqual(credentials_on_disk, _client_config)
 
         # Test refresh of existing token (no auth)
+        sleep(1)  # sleep to ensure new credentials expire later than existing
         _refresh_token(self.test_server)
         get_token.assert_called_once()
         with open(self.test_path) as f:
