@@ -31,7 +31,8 @@ import unittest
 
 from os import remove
 from os.path import join, dirname, isfile
-from time import time
+from shutil import copy
+from time import time, sleep
 from unittest.mock import patch
 
 
@@ -71,6 +72,22 @@ class HanaUtilTests(unittest.TestCase):
                                 "user_profile": {}}, self.test_server)
         self.assertEqual(resp['lang_code'], "en-us")
         self.assertIsInstance(resp['answer'], str)
+
+        # Test expired/invalid token
+        old_token_path = join(dirname(__file__), "outdated_hana_token.json")
+        copy(old_token_path, self.test_path)
+        neon_utils.hana_utils._client_config = {}
+        neon_utils.hana_utils._headers = {}
+        from neon_utils.hana_utils import ServerException
+        with self.assertRaises(ServerException):
+            # Request fails due to invalid token
+            request_backend("/neon/get_response",
+                            {"lang_code": "en-us",
+                             "utterance": "who are you",
+                             "user_profile": {}}, self.test_server)
+        # Invalid cached token is removed
+        self.assertFalse(isfile(self.test_path))
+
         # TODO: Test invalid route, invalid request data
 
     @patch("neon_utils.hana_utils._get_client_config_path")
@@ -135,6 +152,7 @@ class HanaUtilTests(unittest.TestCase):
         self.assertEqual(credentials_on_disk, _client_config)
 
         # Test refresh of existing token (no auth)
+        sleep(1)  # sleep to ensure new credentials expire later than existing
         _refresh_token(self.test_server)
         get_token.assert_called_once()
         with open(self.test_path) as f:
