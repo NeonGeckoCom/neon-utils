@@ -1,12 +1,20 @@
 # Changelog
 
-## [1.11.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a5) (2024-10-03)
+## [1.11.1a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a7) (2024-12-27)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a4...1.11.1a5)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a6...1.11.1a7)
 
 **Merged pull requests:**
 
-- Integration with Sentry [\#509](https://github.com/NeonGeckoCom/neon-utils/pull/509) ([NeonKirill](https://github.com/NeonKirill))
+- Handle removal of invalid cached HANA tokens [\#538](https://github.com/NeonGeckoCom/neon-utils/pull/538) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.11.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a6) (2024-10-08)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a5...1.11.1a6)
+
+## [1.11.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a5) (2024-10-03)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a4...1.11.1a5)
 
 ## [1.11.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a4) (2024-09-20)
 
