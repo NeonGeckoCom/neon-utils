@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.11.1a8](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a8) (2025-01-14)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a7...1.11.1a8)
+
+**Merged pull requests:**
+
+- Update Python versions in tests [\#540](https://github.com/NeonGeckoCom/neon-utils/pull/540) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.11.1a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a7) (2024-12-27)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a6...1.11.1a7)
