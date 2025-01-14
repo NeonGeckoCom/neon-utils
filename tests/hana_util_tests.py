@@ -35,13 +35,12 @@ from shutil import copy
 from time import time, sleep
 from unittest.mock import patch
 
-
 valid_config = {}
 valid_headers = {}
 
 
 class HanaUtilTests(unittest.TestCase):
-    test_server = "https://hana.neonaialpha.com"
+    test_server = "https://hana.neonaibeta.com"
     test_path = join(dirname(__file__), "hana_test.json")
 
     def tearDown(self) -> None:
@@ -76,18 +75,26 @@ class HanaUtilTests(unittest.TestCase):
         # Test expired/invalid token
         old_token_path = join(dirname(__file__), "outdated_hana_token.json")
         copy(old_token_path, self.test_path)
+        with open(self.test_path, 'r') as f:
+            old_contents = f.read()
         neon_utils.hana_utils._client_config = {}
         neon_utils.hana_utils._headers = {}
-        from neon_utils.hana_utils import ServerException
-        with self.assertRaises(ServerException):
-            # Request fails due to invalid token
-            request_backend("/neon/get_response",
-                            {"lang_code": "en-us",
-                             "utterance": "who are you",
-                             "user_profile": {}}, self.test_server)
-        # Invalid cached token is removed
-        self.assertFalse(isfile(self.test_path))
 
+        # Request generates an updated token
+        resp = request_backend("/neon/get_response",
+                               {"lang_code": "en-us",
+                                "utterance": "who are you",
+                                "user_profile": {}}, self.test_server)
+        self.assertEqual(resp['lang_code'], "en-us")
+        self.assertIsInstance(resp['answer'], str)
+
+        # New token is created at expected path
+        self.assertTrue(isfile(self.test_path))
+        with open(self.test_path, 'r') as f:
+            new_contents = f.read()
+        self.assertNotEqual(new_contents, old_contents)
+
+        # TODO: Test token refresh fails, old token is removed
         # TODO: Test invalid route, invalid request data
 
     @patch("neon_utils.hana_utils._get_client_config_path")
