@@ -35,9 +35,9 @@ from threading import Event
 from typing import Optional
 from json_database import JsonStorage
 from ovos_bus_client.message import Message
-from ovos_utils.log import log_deprecation
+from ovos_utils.log import log_deprecation, deprecated
 from ovos_workshop.skills.mycroft_skill import MycroftSkill
-from ovos_utils.skills.settings import get_local_settings
+# from ovos_utils.skills.settings import get_local_settings
 
 from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal
 from neon_utils.logger import LOG
@@ -45,6 +45,19 @@ from neon_utils.message_utils import get_message_user, dig_for_message, resolve_
 from neon_utils.configuration_utils import dict_update_keys, \
     parse_skill_default_settings, get_mycroft_compatible_location
 from neon_utils.user_utils import get_user_prefs
+
+
+@deprecated("deprecated without replacement, skill settings no longer shipped in skill folder", "0.1.0")
+def get_local_settings(skill_dir, skill_name=None) -> dict:
+    """Build a JsonStorage using the JSON string stored in settings.json."""
+    if skill_name:
+        log_deprecation("skill_name is an unused legacy argument", "0.1.0")
+    if skill_dir.endswith("/settings.json"):
+        settings_path = skill_dir
+    else:
+        settings_path = os.path.join(skill_dir, 'settings.json')
+    LOG.info(settings_path)
+    return JsonStorage(settings_path)
 
 
 class PatchedMycroftSkill(MycroftSkill):

@@ -26,11 +26,22 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from ovos_utils.log import LOG
-from neon_utils.log_aggregators import init_log_aggregators
+import importlib
 
-if LOG.name == 'OVOS':
-    LOG.name = 'neon-utils'
-# TODO: Deprecate this backwards-compat import in 2.0.0
+_service_name_to_handler = {
+    'sentry': 'init_sentry'
+}
 
-init_log_aggregators()
+
+def init_log_aggregators(config: dict = None):
+    from ovos_config.config import Configuration
+    config = config or Configuration()
+    for service_name, handler in _service_name_to_handler.items():
+        service_config = _get_log_aggregator_config(config=config, name=service_name)
+        if bool(service_config.pop('enabled', False)):
+            service_module = importlib.import_module(f'.{service_name}', __name__)
+            getattr(service_module, handler)(config=service_config)
+
+
+def _get_log_aggregator_config(config: dict, name: str):
+    return config.get('logs', {}).get('aggregators', {}).get(name, {})

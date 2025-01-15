@@ -1,11 +1,11 @@
-ovos-bus-client~=0.0.3
+ovos-bus-client~=0.0,>=0.0.3
 combo-lock~=0.2
 pytz>=2022.1
 timezonefinder~=5.2
 nltk~=3.5
 pyyaml>=5.4,<7.0
 ovos-lingua-franca~=0.4
-ovos_utils~=0.0,>=0.0.35
+ovos-utils~=0.0,>=0.0.35
 geopy~=2.1
-ovos-config~=0.0.9
-ovos-workshop~=0.0.15
+ovos-config~=0.0,>=0.0.9
+ovos-workshop~=0.0,>=0.0.15

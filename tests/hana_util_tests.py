@@ -31,16 +31,16 @@ import unittest
 
 from os import remove
 from os.path import join, dirname, isfile
-from time import time
+from shutil import copy
+from time import time, sleep
 from unittest.mock import patch
-
 
 valid_config = {}
 valid_headers = {}
 
 
 class HanaUtilTests(unittest.TestCase):
-    test_server = "https://hana.neonaialpha.com"
+    test_server = "https://hana.neonaibeta.com"
     test_path = join(dirname(__file__), "hana_test.json")
 
     def tearDown(self) -> None:
@@ -71,6 +71,30 @@ class HanaUtilTests(unittest.TestCase):
                                 "user_profile": {}}, self.test_server)
         self.assertEqual(resp['lang_code'], "en-us")
         self.assertIsInstance(resp['answer'], str)
+
+        # Test expired/invalid token
+        old_token_path = join(dirname(__file__), "outdated_hana_token.json")
+        copy(old_token_path, self.test_path)
+        with open(self.test_path, 'r') as f:
+            old_contents = f.read()
+        neon_utils.hana_utils._client_config = {}
+        neon_utils.hana_utils._headers = {}
+
+        # Request generates an updated token
+        resp = request_backend("/neon/get_response",
+                               {"lang_code": "en-us",
+                                "utterance": "who are you",
+                                "user_profile": {}}, self.test_server)
+        self.assertEqual(resp['lang_code'], "en-us")
+        self.assertIsInstance(resp['answer'], str)
+
+        # New token is created at expected path
+        self.assertTrue(isfile(self.test_path))
+        with open(self.test_path, 'r') as f:
+            new_contents = f.read()
+        self.assertNotEqual(new_contents, old_contents)
+
+        # TODO: Test token refresh fails, old token is removed
         # TODO: Test invalid route, invalid request data
 
     @patch("neon_utils.hana_utils._get_client_config_path")
@@ -135,6 +159,7 @@ class HanaUtilTests(unittest.TestCase):
         self.assertEqual(credentials_on_disk, _client_config)
 
         # Test refresh of existing token (no auth)
+        sleep(1)  # sleep to ensure new credentials expire later than existing
         _refresh_token(self.test_server)
         get_token.assert_called_once()
         with open(self.test_path) as f:

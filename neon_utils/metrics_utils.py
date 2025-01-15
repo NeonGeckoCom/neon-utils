@@ -29,7 +29,7 @@
 from socket import gethostname
 from time import time, strftime
 from ovos_bus_client import Message, MessageBusClient
-from ovos_utils.log import LOG
+from ovos_utils.log import LOG, deprecated
 
 from neon_utils.message_utils import dig_for_message
 
@@ -86,15 +86,16 @@ class Stopwatch:
                                             "duration": self.time}))
 
 
+@deprecated("Emit `neon.metric` message instead of calling this function.",
+            "2.0.0")
 def report_metric(name: str, **kwargs):
     """
     Report a metric over the MQ bus.
     :param name: Name of the metric to report
     :param kwargs: Arbitrary data to include with metric report
     """
-    # TODO: Deprecate and move to PHAL plugin
     try:
-        from neon_utils.mq_utils import send_mq_request
+        from neon_mq_connector.utils.client_utils import send_mq_request
         send_mq_request("/neon_metrics", {**{"name": name}, **kwargs},
                         "neon_metrics_input", expect_response=False)
         return True
