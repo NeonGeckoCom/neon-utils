@@ -29,6 +29,8 @@
 import os
 import sys
 import unittest
+from unittest import skip
+
 import pika
 
 from threading import Thread
@@ -65,6 +67,7 @@ class TestMQConnector(MQConnector):
         channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
+@skip("MQ Utils have moved to `neon-mq-connector`")
 class MqUtilTests(unittest.TestCase):
     test_connector = None
 
