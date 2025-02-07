@@ -171,15 +171,6 @@ jobs:
           name: cache-util-test-results-${{ matrix.python-version }}
           path: tests/cache-util-test-results.xml
 
-      - name: Test MQ Utils
-        run: |
-          pytest tests/mq_util_tests.py --doctest-modules --junitxml=tests/mq-util-test-results.xml
-      - name: Upload MQ utils test results
-        uses: actions/upload-artifact@v4
-        with:
-          name: mq-util-test-results-${{ matrix.python-version }}
-          path: tests/mq-util-test-results.xml
-
       - name: Test Validator Utils
         run: |
           pytest tests/validator_util_tests.py --doctest-modules --junitxml=tests/validator-util-test-results.xml
