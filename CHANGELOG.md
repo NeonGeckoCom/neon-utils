@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a2) (2025-02-07)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a1...1.12.1a2)
+
+**Merged pull requests:**
+
+- Handle missing `mock` dependency in `signal_utils` and add optional extras [\#543](https://github.com/NeonGeckoCom/neon-utils/pull/543) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.12.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a1) (2025-02-07)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.0...1.12.1a1)
