@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a3) (2025-02-07)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a2...1.12.1a3)
+
+**Merged pull requests:**
+
+- Update license notices to 2025 [\#545](https://github.com/NeonGeckoCom/neon-utils/pull/545) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.12.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a2) (2025-02-07)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a1...1.12.1a2)
