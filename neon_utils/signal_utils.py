@@ -31,12 +31,16 @@ import inspect
 from time import time, sleep
 from typing import Optional, Callable
 
-from mock.mock import Mock
 from ovos_bus_client import MessageBusClient, Message
 from ovos_utils.log import log_deprecation
 
 from neon_utils.logger import LOG
 
+try:
+    from mock.mock import Mock
+except ImportError:
+    raise ImportError("`mock` is not installed,"
+                      " pip install neon-utils[signal]")
 _BUS: Optional[MessageBusClient] = None
 _MAX_TIMEOUT: Optional[int] = None
 
