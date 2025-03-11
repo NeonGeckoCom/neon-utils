@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a4) (2025-03-11)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a3...1.12.1a4)
+
+**Merged pull requests:**
+
+- Update gitignore [\#546](https://github.com/NeonGeckoCom/neon-utils/pull/546) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.12.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a3) (2025-02-07)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a2...1.12.1a3)
