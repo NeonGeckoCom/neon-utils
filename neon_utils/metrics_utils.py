@@ -106,7 +106,7 @@ def report_metric(name: str, **kwargs):
 
 def announce_connection():
     try:
-        from neon_utils.mq_utils import send_mq_request
+        from neon_mq_connector.utils.client_utils import send_mq_request
         from neon_core.version import __version__
         from ovos_config.config import Configuration
         data = {"time": strftime('%Y-%m-%d %H:%M:%S'),
