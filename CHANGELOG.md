@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a6) (2025-03-17)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a5...1.12.1a6)
+
+**Merged pull requests:**
+
+- Refactor deprecated import [\#548](https://github.com/NeonGeckoCom/neon-utils/pull/548) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.12.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a5) (2025-03-17)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a4...1.12.1a5)
