@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.12.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a5) (2025-03-17)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a4...1.12.1a5)
+
+**Implemented enhancements:**
+
+- \[FEAT\] Python 3.12+ Support [\#542](https://github.com/NeonGeckoCom/neon-utils/issues/542)
+
+**Merged pull requests:**
+
+- Update unit test automation for Python 3.12 support [\#547](https://github.com/NeonGeckoCom/neon-utils/pull/547) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.12.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a4) (2025-03-11)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a3...1.12.1a4)
