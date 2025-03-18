@@ -1,6 +1,6 @@
 # NEON AI (TM) SOFTWARE, Software Development Kit & Application Framework
 # All trademark and other rights reserved by their respective owners
-# Copyright 2008-2022 Neongecko.com Inc.
+# Copyright 2008-2025 Neongecko.com Inc.
 # Contributors: Daniel McKnight, Guy Daniels, Elon Gasper, Richard Leeds,
 # Regina Bloomstine, Casimiro Ferreira, Andrii Pernatii, Kirill Hrymailo
 # BSD-3 License
@@ -106,7 +106,7 @@ def report_metric(name: str, **kwargs):
 
 def announce_connection():
     try:
-        from neon_utils.mq_utils import send_mq_request
+        from neon_mq_connector.utils.client_utils import send_mq_request
         from neon_core.version import __version__
         from ovos_config.config import Configuration
         data = {"time": strftime('%Y-%m-%d %H:%M:%S'),

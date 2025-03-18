@@ -1,60 +1,56 @@
 # Changelog
 
-## [1.11.1a8](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a8) (2025-01-14)
+## [1.12.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a6) (2025-03-17)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a7...1.11.1a8)
-
-**Merged pull requests:**
-
-- Update Python versions in tests [\#540](https://github.com/NeonGeckoCom/neon-utils/pull/540) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.11.1a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a7) (2024-12-27)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a6...1.11.1a7)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a5...1.12.1a6)
 
 **Merged pull requests:**
 
-- Handle removal of invalid cached HANA tokens [\#538](https://github.com/NeonGeckoCom/neon-utils/pull/538) ([NeonDaniel](https://github.com/NeonDaniel))
+- Refactor deprecated import [\#548](https://github.com/NeonGeckoCom/neon-utils/pull/548) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.11.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a6) (2024-10-08)
+## [1.12.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a5) (2025-03-17)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a5...1.11.1a6)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a4...1.12.1a5)
 
-## [1.11.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a5) (2024-10-03)
+**Implemented enhancements:**
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a4...1.11.1a5)
-
-## [1.11.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a4) (2024-09-20)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a3...1.11.1a4)
+- \[FEAT\] Python 3.12+ Support [\#542](https://github.com/NeonGeckoCom/neon-utils/issues/542)
 
 **Merged pull requests:**
 
-- Address deprecation warnings [\#535](https://github.com/NeonGeckoCom/neon-utils/pull/535) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update unit test automation for Python 3.12 support [\#547](https://github.com/NeonGeckoCom/neon-utils/pull/547) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.11.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a3) (2024-09-13)
+## [1.12.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a4) (2025-03-11)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a2...1.11.1a3)
-
-**Merged pull requests:**
-
-- Patch backwards-compat method removed from ovos-utils 0.1 [\#534](https://github.com/NeonGeckoCom/neon-utils/pull/534) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.11.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a2) (2024-09-12)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.1a1...1.11.1a2)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a3...1.12.1a4)
 
 **Merged pull requests:**
 
-- Enable dependency resolution of latest ovos packages [\#533](https://github.com/NeonGeckoCom/neon-utils/pull/533) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update gitignore [\#546](https://github.com/NeonGeckoCom/neon-utils/pull/546) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.11.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.11.1a1) (2024-07-25)
+## [1.12.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a3) (2025-02-07)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.11.0...1.11.1a1)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a2...1.12.1a3)
 
 **Merged pull requests:**
 
-- Update `init_log` for better integration with `ovos-utils` and configuration changes [\#532](https://github.com/NeonGeckoCom/neon-utils/pull/532) ([NeonDaniel](https://github.com/NeonDaniel))
+- Update license notices to 2025 [\#545](https://github.com/NeonGeckoCom/neon-utils/pull/545) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.12.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a2) (2025-02-07)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a1...1.12.1a2)
+
+**Merged pull requests:**
+
+- Handle missing `mock` dependency in `signal_utils` and add optional extras [\#543](https://github.com/NeonGeckoCom/neon-utils/pull/543) ([NeonDaniel](https://github.com/NeonDaniel))
+
+## [1.12.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a1) (2025-02-07)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.0...1.12.1a1)
+
+**Merged pull requests:**
+
+- Skip tests for deprecated MQ utils module [\#544](https://github.com/NeonGeckoCom/neon-utils/pull/544) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 

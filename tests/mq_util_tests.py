@@ -1,6 +1,6 @@
 # NEON AI (TM) SOFTWARE, Software Development Kit & Application Framework
 # All trademark and other rights reserved by their respective owners
-# Copyright 2008-2022 Neongecko.com Inc.
+# Copyright 2008-2025 Neongecko.com Inc.
 # Contributors: Daniel McKnight, Guy Daniels, Elon Gasper, Richard Leeds,
 # Regina Bloomstine, Casimiro Ferreira, Andrii Pernatii, Kirill Hrymailo
 # BSD-3 License
@@ -29,6 +29,8 @@
 import os
 import sys
 import unittest
+from unittest import skip
+
 import pika
 
 from threading import Thread
@@ -65,6 +67,7 @@ class TestMQConnector(MQConnector):
         channel.basic_ack(delivery_tag=method.delivery_tag)
 
 
+@skip("MQ Utils have moved to `neon-mq-connector`")
 class MqUtilTests(unittest.TestCase):
     test_connector = None
 
