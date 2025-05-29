@@ -205,8 +205,9 @@ class HanaUtilTests(unittest.TestCase):
                          "https://hana.neonaiservices.com")
 
     @patch("neon_utils.hana_utils._get_client_config_path")
+    @patch("neon_utils.hana_utils._refresh_token")
     @patch("neon_utils.hana_utils.requests.post")
-    def test_request_backend_ssl_verify(self, mock_post, config_path):
+    def test_request_backend_ssl_verify(self, mock_post, mock_refresh, config_path):
         config_path.return_value = self.test_path
 
         # Mock successful response
@@ -215,9 +216,13 @@ class HanaUtilTests(unittest.TestCase):
         mock_response.json.return_value = {"lang_code": "en-us", "answer": "test"}
         mock_post.return_value = mock_response
 
-        # Use valid config to skip auth
+        # Use valid config to skip auth and set expiration far in future
         import neon_utils.hana_utils
-        neon_utils.hana_utils._client_config = valid_config
+        test_config = valid_config.copy() if valid_config else {
+            "access_token": "test_token",
+            "expiration": time() + 3600
+        }
+        neon_utils.hana_utils._client_config = test_config
         neon_utils.hana_utils._headers = valid_headers
         from neon_utils.hana_utils import request_backend
 
