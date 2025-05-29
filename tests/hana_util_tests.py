@@ -204,6 +204,47 @@ class HanaUtilTests(unittest.TestCase):
         self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
                          "https://hana.neonaiservices.com")
 
+    @patch("neon_utils.hana_utils._get_client_config_path")
+    @patch("neon_utils.hana_utils.requests.post")
+    def test_request_backend_ssl_verify(self, mock_post, config_path):
+        config_path.return_value = self.test_path
+
+        # Mock successful response
+        mock_response = unittest.mock.MagicMock()
+        mock_response.ok = True
+        mock_response.json.return_value = {"lang_code": "en-us", "answer": "test"}
+        mock_post.return_value = mock_response
+
+        # Use valid config to skip auth
+        import neon_utils.hana_utils
+        neon_utils.hana_utils._client_config = valid_config
+        neon_utils.hana_utils._headers = valid_headers
+        from neon_utils.hana_utils import request_backend
+
+        # Test default SSL verification (should be True)
+        request_backend("/neon/get_response",
+                       {"lang_code": "en-us", "utterance": "test"},
+                       self.test_server)
+        mock_post.assert_called()
+        call_kwargs = mock_post.call_args[1]
+        self.assertTrue(call_kwargs.get('verify'))
+
+        # Test explicit SSL verification True
+        mock_post.reset_mock()
+        request_backend("/neon/get_response",
+                       {"lang_code": "en-us", "utterance": "test"},
+                       self.test_server, ssl_verify=True)
+        call_kwargs = mock_post.call_args[1]
+        self.assertTrue(call_kwargs.get('verify'))
+
+        # Test SSL verification disabled
+        mock_post.reset_mock()
+        request_backend("/neon/get_response",
+                       {"lang_code": "en-us", "utterance": "test"},
+                       self.test_server, ssl_verify=False)
+        call_kwargs = mock_post.call_args[1]
+        self.assertFalse(call_kwargs.get('verify'))
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -144,12 +144,14 @@ def _refresh_token(backend_address: str):
 
 
 def request_backend(endpoint: str, request_data: dict,
-                    server_url: str = _DEFAULT_BACKEND_URL) -> dict:
+                    server_url: str = _DEFAULT_BACKEND_URL,
+                    ssl_verify: bool = True) -> dict:
     """
     Make a request to a Hana backend server and return the json response
     @param endpoint: server endpoint to query
     @param request_data: dict data to send in request body
     @param server_url: Base URL of Hana server to query
+    @param ssl_verify: If False, disables SSL verification
     @returns: dict response
     """
     global _client_config
@@ -169,7 +171,8 @@ def request_backend(endpoint: str, request_data: dict,
             LOG.error(e)
             _get_token(server_url)
     request_kwargs = {"url": f"{server_url}/{endpoint.lstrip('/')}",
-                      "json": request_data, "headers": _headers}
+                      "json": request_data, "headers": _headers,
+                      "verify": ssl_verify}
     resp = requests.post(**request_kwargs)
     if resp.status_code == 502:
         # This is raised occasionally on valid requests. Need to resolve in HANA
