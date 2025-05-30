@@ -115,7 +115,8 @@ class HanaUtilTests(unittest.TestCase):
                                 "user_profile": {}}, self.test_server)
         self.assertEqual(resp['lang_code'], "en-us")
         self.assertIsInstance(resp['answer'], str)
-        refresh_token.assert_called_once_with(self.test_server)
+        refresh_token.assert_called_once_with(self.test_server,
+                                              ssl_verify=True)
 
         neon_utils.hana_utils._client_config = real_client_config
 
