@@ -115,7 +115,8 @@ class HanaUtilTests(unittest.TestCase):
                                 "user_profile": {}}, self.test_server)
         self.assertEqual(resp['lang_code'], "en-us")
         self.assertIsInstance(resp['answer'], str)
-        refresh_token.assert_called_once_with(self.test_server)
+        refresh_token.assert_called_once_with(self.test_server,
+                                              ssl_verify=True)
 
         neon_utils.hana_utils._client_config = real_client_config
 
@@ -203,6 +204,52 @@ class HanaUtilTests(unittest.TestCase):
         set_default_backend_url()
         self.assertEqual(neon_utils.hana_utils._DEFAULT_BACKEND_URL,
                          "https://hana.neonaiservices.com")
+
+    @patch("neon_utils.hana_utils._get_client_config_path")
+    @patch("neon_utils.hana_utils._refresh_token")
+    @patch("neon_utils.hana_utils.requests.post")
+    def test_request_backend_ssl_verify(self, mock_post, mock_refresh, config_path):
+        config_path.return_value = self.test_path
+
+        # Mock successful response
+        mock_response = unittest.mock.MagicMock()
+        mock_response.ok = True
+        mock_response.json.return_value = {"lang_code": "en-us", "answer": "test"}
+        mock_post.return_value = mock_response
+
+        # Use valid config to skip auth and set expiration far in future
+        import neon_utils.hana_utils
+        test_config = valid_config.copy() if valid_config else {
+            "access_token": "test_token",
+            "expiration": time() + 3600
+        }
+        neon_utils.hana_utils._client_config = test_config
+        neon_utils.hana_utils._headers = valid_headers
+        from neon_utils.hana_utils import request_backend
+
+        # Test default SSL verification (should be True)
+        request_backend("/neon/get_response",
+                       {"lang_code": "en-us", "utterance": "test"},
+                       self.test_server)
+        mock_post.assert_called()
+        call_kwargs = mock_post.call_args[1]
+        self.assertTrue(call_kwargs.get('verify'))
+
+        # Test explicit SSL verification True
+        mock_post.reset_mock()
+        request_backend("/neon/get_response",
+                       {"lang_code": "en-us", "utterance": "test"},
+                       self.test_server, ssl_verify=True)
+        call_kwargs = mock_post.call_args[1]
+        self.assertTrue(call_kwargs.get('verify'))
+
+        # Test SSL verification disabled
+        mock_post.reset_mock()
+        request_backend("/neon/get_response",
+                       {"lang_code": "en-us", "utterance": "test"},
+                       self.test_server, ssl_verify=False)
+        call_kwargs = mock_post.call_args[1]
+        self.assertFalse(call_kwargs.get('verify'))
 
 
 if __name__ == '__main__':
