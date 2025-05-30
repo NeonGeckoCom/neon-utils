@@ -131,7 +131,7 @@ def _refresh_token(backend_address: str, ssl_verify: bool = True):
         "access_token": _client_config.get("access_token"),
         "refresh_token": _client_config.get("refresh_token"),
         "client_id": _client_config.get("client_id")},
-        ssl_verify=ssl_verify)
+        verify=ssl_verify)
     if not update.ok:
         raise ServerException(f"Error updating token from {backend_address}. "
                               f"{update.status_code}: {update.text}")
