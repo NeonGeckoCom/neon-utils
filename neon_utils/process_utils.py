@@ -101,7 +101,7 @@ def start_health_check_server(
             BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
 
         def do_GET(self):
-            if self.path == "/health":
+            if self.path == "/status":
                 if self.service_status.state == ProcessState.NOT_STARTED:
                     resp_code = 503
                     content = "Service not started"
