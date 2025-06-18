@@ -150,7 +150,7 @@ def start_health_check_server(
                 self.end_headers()
 
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
-    HealthCheckHandler.service_status = service_status
+    server.service_status = service_status
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     LOG.info(f"Started health check endpoint at {server.server_address}")
