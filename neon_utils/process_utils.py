@@ -96,48 +96,32 @@ def start_health_check_server(
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
     class HealthCheckHandler(BaseHTTPRequestHandler):
-        service_status: ProcessStatus = None
-        def __init__(self, *args, **kwargs):
-            BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
-
         def do_GET(self):
             if self.path == "/status":
-                if self.service_status.state == ProcessState.NOT_STARTED:
+                if self.server.service_status.state == ProcessState.NOT_STARTED:
                     resp_code = 503
                     content = "Service not started"
-                elif self.service_status.state == ProcessState.STARTED:
+                elif self.server.service_status.state == ProcessState.STARTED:
                     resp_code = 200
                     content = "Starting"
-                elif self.service_status.state == ProcessState.ALIVE:
+                elif self.server.service_status.state == ProcessState.ALIVE:
                     resp_code = 200
                     content = "Starting"
-                elif self.service_status.state == ProcessState.READY:
+                elif self.server.service_status.state == ProcessState.READY:
                     resp_code = 200
                     content = "Ready"
-                elif self.service_status.state == ProcessState.STOPPING:
+                elif self.server.service_status.state == ProcessState.STOPPING:
                     resp_code = 503
                     content = "Stopping"
-                elif self.service_status.state == ProcessState.STOPPED:
+                elif self.server.service_status.state == ProcessState.STOPPED:
                     resp_code = 503
                     content = "Stopped"
-                elif self.service_status.state == ProcessState.ERROR:
+                elif self.server.service_status.state == ProcessState.ERROR:
                     resp_code = 500
                     content = "Error"
                 else:
                     resp_code = 500
                     content = f"Unknown state: {self.service_status.state}"
-                self.service_status = (
-                    self.server.service_status
-                )  # Assuming you pass this to the server
-                if self.service_status.state == ProcessState.ALIVE:
-                    resp_code = 200
-                    content = "Starting"
-                elif self.service_status.state == ProcessState.READY:
-                    resp_code = 200
-                    content = "Ready"
-                else:
-                    resp_code = 500
-                    content = "Error"
 
                 self.send_response(resp_code)
                 self.send_header("Content-Type", "application/json")
