@@ -95,10 +95,10 @@ def start_health_check_server(
     import json
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    class HealthCheckHandler(HTTPServer):
-        def __init__(self, server_address, request_handler_class, service_status):
-            HTTPServer.__init__(self, server_address, request_handler_class)
-            self.service_status: ProcessStatus = service_status
+    class HealthCheckHandler(BaseHTTPRequestHandler):
+        service_status: ProcessStatus = None
+        def __init__(self, *args, **kwargs):
+            BaseHTTPRequestHandler.__init__(self, *args, **kwargs)
 
         def do_GET(self):
             if self.path == "/status":
@@ -149,7 +149,8 @@ def start_health_check_server(
                 self.send_response(404)
                 self.end_headers()
 
-    server = HealthCheckHandler(("0.0.0.0", port), HealthCheckHandler, service_status)
+    server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+    HealthCheckHandler.service_status = service_status
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     LOG.info(f"Started health check endpoint at {server.server_address}")
