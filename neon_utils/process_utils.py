@@ -113,9 +113,6 @@ def start_health_check_server(
                 elif self.server.service_status.state == ProcessState.STOPPING:
                     resp_code = 503
                     content = "Stopping"
-                elif self.server.service_status.state == ProcessState.STOPPED:
-                    resp_code = 503
-                    content = "Stopped"
                 elif self.server.service_status.state == ProcessState.ERROR:
                     resp_code = 500
                     content = "Error"
