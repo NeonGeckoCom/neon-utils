@@ -98,11 +98,11 @@ def start_health_check_server(
 
     class HealthCheckHandler(BaseHTTPRequestHandler):
         def do_GET(self):
-            if self.status_callback is not None:
+            if self.server.status_callback is not None:
                 try:
-                    self.status_callback()
+                    self.server.status_callback()
                 except Exception as e:
-                    self.service_status.set_error(str(e))
+                    self.server.service_status.set_error(str(e))
             if self.path == "/status":
                 if self.server.service_status.state == ProcessState.NOT_STARTED:
                     resp_code = 503
