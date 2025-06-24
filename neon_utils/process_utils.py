@@ -86,7 +86,8 @@ def start_systemd_service(service: callable, **kwargs):
 
 
 def start_health_check_server(
-    service_status: ProcessStatus, port: int = 8000
+    service_status: ProcessStatus, port: int = 8000,
+    status_callback: Optional[callable] = None
 ) -> Thread:
     """
     Starts an HTTP server to report the status of a module that implements a
@@ -97,6 +98,11 @@ def start_health_check_server(
 
     class HealthCheckHandler(BaseHTTPRequestHandler):
         def do_GET(self):
+            if self.status_callback is not None:
+                try:
+                    self.status_callback()
+                except Exception as e:
+                    self.service_status.set_error(str(e))
             if self.path == "/status":
                 if self.server.service_status.state == ProcessState.NOT_STARTED:
                     resp_code = 503
@@ -132,6 +138,7 @@ def start_health_check_server(
 
     server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
     server.service_status = service_status
+    server.status_callback = status_callback
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     LOG.info(f"Started health check endpoint at {server.server_address}")
