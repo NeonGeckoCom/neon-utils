@@ -104,6 +104,10 @@ def start_health_check_server(
     from http.server import BaseHTTPRequestHandler, HTTPServer
 
     class HealthCheckHandler(BaseHTTPRequestHandler):
+        def log_message(self, format, *args):
+            # Override logging to use LOG singleton
+            LOG.debug(format % args)
+
         def do_GET(self):
             if self.server.status_callback is not None:
                 try:
