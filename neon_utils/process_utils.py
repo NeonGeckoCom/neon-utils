@@ -91,7 +91,14 @@ def start_health_check_server(
 ) -> Thread:
     """
     Starts an HTTP server to report the status of a module that implements a
-    ProcessStatus object.
+    ProcessStatus object. A specified `status_callback` is expected to modify
+    the `service_status` object as any returned value is ignored. If the
+    `status_callback` raises an exception, the `service_status` will be
+    updated here to set the error state.
+
+    :param service_status: ProcessStatus object to get status from
+    :param port: Port to run the health check server on
+    :param status_callback: Optional callback to run on each health check
     """
     import json
     from http.server import BaseHTTPRequestHandler, HTTPServer
