@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.2a2) (2025-06-25)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.2a1...1.12.2a2)
+
+**Merged pull requests:**
+
+- Add helper to start a health check server [\#551](https://github.com/NeonGeckoCom/neon-utils/pull/551) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.12.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.2a1) (2025-05-30)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1...1.12.2a1)
