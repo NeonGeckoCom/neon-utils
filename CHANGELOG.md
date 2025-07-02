@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.12.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.2a3) (2025-07-02)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.2a2...1.12.2a3)
+
+**Merged pull requests:**
+
+- Override `/status` server endpoint logging [\#552](https://github.com/NeonGeckoCom/neon-utils/pull/552) ([NeonDaniel](https://github.com/NeonDaniel))
+
 ## [1.12.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.2a2) (2025-06-25)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.2a1...1.12.2a2)
