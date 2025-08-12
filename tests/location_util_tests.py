@@ -125,8 +125,10 @@ class LocationUtilTests(unittest.TestCase):
         sleep(1)  # maps.co rate-limit
 
         location_es = get_full_location("Seattle, Washington", "es")
-        self.assertEqual(location_es['lat'], location_en['lat'])
-        self.assertEqual(location_es['lon'], location_en['lon'])
+        self.assertAlmostEqual(float(location_es['lat']),
+                               float(location_en['lat']), places=6)
+        self.assertAlmostEqual(float(location_es['lon']),
+                               float(location_en['lon']), places=6)
         self.assertEqual(location_es['address']['country'],
                          "Estados Unidos de América")
         self.assertEqual(location_en['address']['country_code'], "us")

@@ -1,56 +1,28 @@
 # Changelog
 
-## [1.12.1a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a6) (2025-03-17)
+## [1.12.2a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.2a3) (2025-07-02)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a5...1.12.1a6)
-
-**Merged pull requests:**
-
-- Refactor deprecated import [\#548](https://github.com/NeonGeckoCom/neon-utils/pull/548) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.12.1a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a5) (2025-03-17)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a4...1.12.1a5)
-
-**Implemented enhancements:**
-
-- \[FEAT\] Python 3.12+ Support [\#542](https://github.com/NeonGeckoCom/neon-utils/issues/542)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.2a2...1.12.2a3)
 
 **Merged pull requests:**
 
-- Update unit test automation for Python 3.12 support [\#547](https://github.com/NeonGeckoCom/neon-utils/pull/547) ([NeonDaniel](https://github.com/NeonDaniel))
+- Override `/status` server endpoint logging [\#552](https://github.com/NeonGeckoCom/neon-utils/pull/552) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.12.1a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a4) (2025-03-11)
+## [1.12.2a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.2a2) (2025-06-25)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a3...1.12.1a4)
-
-**Merged pull requests:**
-
-- Update gitignore [\#546](https://github.com/NeonGeckoCom/neon-utils/pull/546) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.12.1a3](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a3) (2025-02-07)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a2...1.12.1a3)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.2a1...1.12.2a2)
 
 **Merged pull requests:**
 
-- Update license notices to 2025 [\#545](https://github.com/NeonGeckoCom/neon-utils/pull/545) ([NeonDaniel](https://github.com/NeonDaniel))
+- Add helper to start a health check server [\#551](https://github.com/NeonGeckoCom/neon-utils/pull/551) ([NeonDaniel](https://github.com/NeonDaniel))
 
-## [1.12.1a2](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a2) (2025-02-07)
+## [1.12.2a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.2a1) (2025-05-30)
 
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1a1...1.12.1a2)
-
-**Merged pull requests:**
-
-- Handle missing `mock` dependency in `signal_utils` and add optional extras [\#543](https://github.com/NeonGeckoCom/neon-utils/pull/543) ([NeonDaniel](https://github.com/NeonDaniel))
-
-## [1.12.1a1](https://github.com/NeonGeckoCom/neon-utils/tree/1.12.1a1) (2025-02-07)
-
-[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.0...1.12.1a1)
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.12.1...1.12.2a1)
 
 **Merged pull requests:**
 
-- Skip tests for deprecated MQ utils module [\#544](https://github.com/NeonGeckoCom/neon-utils/pull/544) ([NeonDaniel](https://github.com/NeonDaniel))
+- Make HANA SSL optional [\#550](https://github.com/NeonGeckoCom/neon-utils/pull/550) ([NeonDaniel](https://github.com/NeonDaniel))
 
 
 
