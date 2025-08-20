@@ -238,7 +238,6 @@ class NeonSkill(OVOSSkill):
             """Boilerplate for returning the response to the sender."""
 
             def wrapper(message):
-                start_time = time()
                 result = None
                 error = None
                 try:
@@ -258,7 +257,6 @@ class NeonSkill(OVOSSkill):
                 message.context["skill_id"] = self.skill_id
                 self.bus.emit(message.response(data={'result': result,
                                                      'error': error}))
-                LOG.info(f"API method completed in {time() - start_time}s")
             return wrapper
 
         from ovos_utils.skills import get_non_properties
