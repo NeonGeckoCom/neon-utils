@@ -227,6 +227,102 @@ class NeonSkill(OVOSSkill):
         except Exception as x:
             LOG.error(x)
 
+    # Duplicated from OVOSSkill for backwards-compat with skills using ovos-workshop 0.X
+    def _register_public_api(self):
+        """
+        Find and register API methods decorated with `@api_method` and create a
+        messagebus handler for fetching the api info if any handlers exist.
+        """
+
+        def wrap_method(fn, arg_model=None):
+            """Boilerplate for returning the response to the sender."""
+
+            def wrapper(message):
+                result = None
+                error = None
+                try:
+                    if arg_model:
+                        result = fn(arg_model(*message.data['args'], 
+                                              **message.data['kwargs']))
+                    else:
+                        result = fn(*message.data.get('args', []), 
+                                    **message.data.get('kwargs', {}))
+                    try:
+                        result = result.model_dump()
+                    except AttributeError:
+                        # Response is not a Pydantic model
+                        pass
+                except Exception as e:
+                    error = str(e)
+                message.context["skill_id"] = self.skill_id
+                self.bus.emit(message.response(data={'result': result,
+                                                     'error': error}))
+            return wrapper
+
+        from ovos_utils.skills import get_non_properties
+        methods = [attr_name for attr_name in get_non_properties(self)
+                   if hasattr(getattr(self, attr_name), '__name__')]
+
+        for attr_name in methods:
+            method = getattr(self, attr_name)
+
+            if hasattr(method, 'api_method'):
+                doc = method.__doc__ or ''
+                name = method.__name__
+
+                # Extract method signature and return type
+                import inspect
+                signature = inspect.signature(method)
+                schema = None
+                return_schema = None
+                request_class = None
+                try:
+                    from pydantic import BaseModel
+                    parameters = signature.parameters
+
+                    for arg_name, param in parameters.items():
+                        if arg_name == 'self':
+                            continue
+                        if issubclass(param.annotation, BaseModel):
+                            # Get the JSON schema for the BaseModel
+                            schema = param.annotation.model_json_schema()
+                            request_class = param.annotation
+                            break
+                    if signature.return_annotation and issubclass(signature.return_annotation, BaseModel):
+                        # Get the JSON schema for the return type
+                        return_schema = signature.return_annotation.model_json_schema()
+                except ImportError:
+                    # If pydantic is not installed, there is no schema to extract
+                    pass
+
+                self.public_api[name] = {
+                    'help': doc,
+                    'type': f'{self.skill_id}.{name}',
+                    'func': method,
+                    'signature': str(signature),
+                    'request_schema': schema,
+                    'response_schema': return_schema,
+                    'request_class': request_class
+                }
+        for key in self.public_api:
+            if ('type' in self.public_api[key] and
+                    'func' in self.public_api[key]):
+                self.log.debug(f"Adding api method: "
+                               f"{self.public_api[key]['type']}")
+
+                # remove the function member since it shouldn't be
+                # reused and can't be sent over the messagebus
+                func = self.public_api[key].pop('func')
+                req_class = self.public_api[key].pop('request_class', None)
+                self.add_event(self.public_api[key]['type'],
+                               wrap_method(func, req_class), speak_errors=False)
+
+        if self.public_api:
+            # TODO: Think about always registering this, so queries get an 
+            #  empty response, rather than waiting for a timeout
+            self.add_event(f'{self.skill_id}.public_api',
+                           self._send_public_api, speak_errors=False)
+
     @resolve_message
     def update_skill_settings(self, new_preferences: dict,
                               message: Message = None, skill_global=True):
