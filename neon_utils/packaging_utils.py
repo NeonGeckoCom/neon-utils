@@ -33,7 +33,6 @@ import importlib.util
 from typing import Tuple, Optional, List
 from tempfile import mkstemp
 
-import pkg_resources
 import sysconfig
 
 from os.path import exists, join, isfile
@@ -63,13 +62,16 @@ def get_package_version_spec(pkg: str):
     """
     Locate an installed package and return its reported version
     :param pkg: string package name to locate
-    :returns: Version string as reported by pkg_resources
-    :raises: ModuleNotFoundError if requested package isn't installed
+    :returns: Version string as reported by importlib.metadata
+    :raises: PackageNotFoundError if requested package isn't installed
     """
     try:
-        return pkg_resources.get_distribution(pkg).version
-    except pkg_resources.DistributionNotFound:
-        raise ModuleNotFoundError(f"{pkg} not found")
+        from importlib.metadata import version
+    except ImportError:
+        # Fallback for Python < 3.8
+        from importlib_metadata import version
+    
+    return version(pkg)
 
 
 def get_package_dependencies(pkg: str):
@@ -77,15 +79,20 @@ def get_package_dependencies(pkg: str):
     Get the dependencies for an installed package
     :param pkg: string package name to evaluate
     :returns: list of string dependencies (equivalent to requirements.txt)
-    :raises ModuleNotFoundError if requested package isn't installed
+    :raises PackageNotFoundError if requested package isn't installed
     """
     try:
-        constraints = pkg_resources.working_set.by_key[pkg].requires()
-        constraints_spec = [str(c).split('[', 1)[0] for c in constraints]
-        LOG.debug(constraints_spec)
-        return constraints_spec
-    except KeyError:
-        raise ModuleNotFoundError(f"{pkg} not found")
+        from importlib.metadata import requires
+    except ImportError:
+        # Fallback for Python < 3.8
+        from importlib_metadata import requires
+    
+    requirements = requires(pkg)
+    if requirements is None:
+        return []
+    constraints_spec = [req.split('[', 1)[0] for req in requirements]
+    LOG.debug(constraints_spec)
+    return constraints_spec
 
 
 @deprecated("Reference `neon_core.version.__version__` directly", "2.0.0")
