@@ -10,6 +10,7 @@ jobs:
     uses: neongeckocom/.github/.github/workflows/python_build_tests.yml@master
   skill_object_tests:
     strategy:
+      max-parallel: 2
       matrix:
         python-version: [ 3.9, '3.10', '3.11', '3.12' ]
     runs-on: ubuntu-latest
