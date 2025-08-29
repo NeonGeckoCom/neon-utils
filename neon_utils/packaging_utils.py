@@ -90,7 +90,7 @@ def get_package_dependencies(pkg: str):
     requirements = requires(pkg)
     if requirements is None:
         return []
-    constraints_spec = [req.split('[', 1)[0] for req in requirements]
+    constraints_spec = [req.split('[', 1)[0].split(';', 1)[0] for req in requirements]
     LOG.debug(constraints_spec)
     return constraints_spec
 

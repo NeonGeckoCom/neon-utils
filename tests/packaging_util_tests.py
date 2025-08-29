@@ -114,16 +114,19 @@ class PackagingUtilTests(unittest.TestCase):
 
     def test_get_package_dependencies(self):
         self_deps = get_package_dependencies("neon-utils")
-        requirements_file = os.path.join(os.path.dirname(os.path.dirname(__file__)),
-                                 "requirements", "requirements.txt")
-        with open(requirements_file) as f:
-            spec_requirements = f.read().split('\n')
+        requirements_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "requirements")
+        spec_requirements = []
+        for _, _, files in os.walk(requirements_dir):
+            for file in files:
+                with open(os.path.join(requirements_dir, file)) as f:
+                    spec_requirements += f.read().split('\n')
+
         spec_requirements = [r for r in spec_requirements
                              if r and not r.startswith('#')]
-        # Extra dependencies may change by environment, so just spot check the
-        # required dependencies are present
-        for dep in spec_requirements:
-            self.assertIn(dep, self_deps)
+
+        # Version specs aren't order-dependent, so they can't be compared
+        # Also, constraints are normalized so elements cannot be compared
+        self.assertEqual(len(self_deps), len(spec_requirements))
         with self.assertRaises(ModuleNotFoundError):
             get_package_dependencies("fakeneongeckopackage")
 
