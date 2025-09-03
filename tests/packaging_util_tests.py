@@ -148,26 +148,25 @@ class PackagingUtilTests(unittest.TestCase):
     # TODO: Actually validate exception cases? DM
         
     def test_install_packages_from_pip(self):
-        import pip
+        import subprocess
         from neon_utils.packaging_utils import install_packages_from_pip
 
-        with patch.object(pip, 'main', return_value=0) as mock_method:
+        with patch.object(subprocess, 'check_call', return_value=0) as mock_method:
             test_result = install_packages_from_pip("neon-utils", ["pip-install-test"])
         
             args, kwargs = mock_method.call_args
             self.assertEqual(0, test_result)
-            mock_method.assert_called_once_with(['install', '-r', args[0][2], '-c', args[0][4]])
+            mock_method.assert_called_once_with([sys.executable, '-m', 'pip', 'install', '-r', args[0][5], '-c', args[0][7]])
 
-            with open(args[0][2], "r", encoding="utf8") as f:
+            with open(args[0][5], "r", encoding="utf8") as f:
                 line = f.readline()
                 self.assertEqual("pip-install-test\n", line)
 
             mock_method.reset_mock()
-            test_result = install_packages_from_pip("neon-utils", ["pip-install-test", "pip-install-another"])
+            test_result = install_packages_from_pip("neon-utils", ["pip-install-test", "pip-install-another"], force_reinstall=True)
 
             self.assertEqual(0, test_result)
-            mock_method.assert_called_once()
-
+            self.assertEqual(mock_method.call_count, 2)
 
 
 if __name__ == '__main__':
