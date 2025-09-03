@@ -282,13 +282,11 @@ def install_packages_from_pip(core_module: str, packages: List[str],
             result = subprocess.check_call([sys.executable, '-m', 'pip'] + command_args)
             return result
         except subprocess.CalledProcessError as e:
-            LOG.error(f"Error installing {install_str}: {e}")
+            LOG.error(f"Error installing {command_args}: {e}")
             return e.returncode
 
     _, tmp_constraints_file = mkstemp()
     _, tmp_requirements_file = mkstemp()
-
-    install_str = " ".join(packages)
 
     with open(tmp_constraints_file, 'w', encoding="utf8") as f:
         constraints = '\n'.join(get_package_dependencies(core_module))
@@ -299,13 +297,13 @@ def install_packages_from_pip(core_module: str, packages: List[str],
         for pkg in packages:
             f.write(f"{pkg}\n")
 
-    LOG.info(f"Requested installation of plugins: {install_str}")
+    LOG.info(f"Requested installation of plugins: {packages}")
     pip_args = ['install', '-r', tmp_requirements_file, '-c', tmp_constraints_file]
     if stat := _pip_install(pip_args) != 0:
         return stat
 
     if force_reinstall:
-        LOG.info(f"Requested forced re-installation of plugins: {install_str}")
+        LOG.info(f"Requested forced re-installation of plugins: {packages}")
         pip_args.extend(['--no-deps', '--force-reinstall'])
         stat = _pip_install(pip_args)
 
