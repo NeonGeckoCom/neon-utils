@@ -58,7 +58,7 @@ jobs:
           python -m pip install --upgrade pip setuptools
           pip install wheel "cython<3.0.0"  # TODO: cython patching https://github.com/yaml/pyyaml/issues/724
           pip install --no-build-isolation pyyaml~=5.4  # TODO: patching https://github.com/yaml/pyyaml/issues/724
-          pip install .[test,audio,network,configuration]
+          pip install .[test,audio,network,configuration,skills]
       - name: Change Test File Permissions
         run: |
           sudo chown -R nobody:nogroup tests/configuration/unwritable_path
@@ -224,3 +224,12 @@ jobs:
         with:
           name: hana-util-test-results-${{ matrix.python-version }}
           path: tests/hana-util-test-results.xml
+
+      - name: Test Skill Utils
+        run: |
+          pytest tests/skill_util_tests.py --doctest-modules --junitxml=tests/skill-util-test-results.xml
+      - name: Upload skill utils test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: skill-util-test-results-${{ matrix.python-version }}
+          path: tests/skill-util-test-results.xml
