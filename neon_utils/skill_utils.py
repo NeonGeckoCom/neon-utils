@@ -185,7 +185,7 @@ def _get_skill_data_readme(readme_md: str) -> dict:
     Returns:
         dict: Skill metadata
     """
-    from neon_utils.text_utils import clean_quotes
+    from neon_utils.parse_utils import clean_quotes
 
     lines = readme_md.split("\n")
 
