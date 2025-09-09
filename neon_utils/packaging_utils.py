@@ -180,6 +180,7 @@ def get_mycroft_core_root():
     raise FileNotFoundError("Could not determine core directory")
 
 
+@deprecated("Use neon_utils.skill_utils.get_skill_metadata", "2.0.0")
 def build_skill_spec(skill_dir: str) -> dict:
     """
     Build dict contents of a skill.json file.

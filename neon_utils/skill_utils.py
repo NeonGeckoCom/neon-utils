@@ -27,9 +27,33 @@
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 from os import getcwd, chdir
-from os.path import isfile, dirname, abspath
+from os.path import isfile, dirname, abspath, join
 from mock import Mock, patch
 from importlib.util import spec_from_file_location, module_from_spec
+
+from ovos_utils.log import LOG
+
+
+def get_skill_metadata(skill_dir: str) -> dict:
+    """
+    Get a metadata object for a skill in a given directory.
+    """
+    setup_py = join(skill_dir, "setup.py")
+    pyproject_toml = join(skill_dir, "pyproject.toml")
+    readme_md = join(skill_dir, "README.md")
+
+    if isfile(pyproject_toml):
+        return _get_skill_data_poetry(pyproject_toml)
+    elif isfile(setup_py):
+        return _get_skill_data_setuptools(setup_py)
+    elif isfile(readme_md):
+        with open(readme_md, encoding="utf-8") as f:
+            readme_data = f.read()
+        return _get_skill_data_readme(readme_data)
+    else:
+        raise FileNotFoundError(
+            f"No setup.py or pyproject.toml found in {skill_dir}"
+        )
 
 
 def _get_skill_data_poetry(pyproject: str) -> dict:
@@ -80,7 +104,18 @@ def _get_skill_data_poetry(pyproject: str) -> dict:
         "python": [f"{k}{v}" for k, v in python_requirements.items()]
     }
 
-    return skill_data
+    if data["tool"]["poetry"].get("readme"):
+        readme_path = join(
+            dirname(pyproject), data["tool"]["poetry"]["readme"]
+        )
+        with open(readme_path) as f:
+            readme_data = f.read()
+        try:
+            readme_metadata = _get_skill_data_readme(readme_data)
+        except Exception as e:
+            LOG.error(f"Failed to parse README for {skill_data['name']}: {e}")
+            readme_metadata = {}
+    return {**readme_metadata, **skill_data}
 
 
 def _get_skill_data_setuptools(setup_py: str) -> dict:
@@ -173,7 +208,12 @@ def _get_skill_data_setuptools(setup_py: str) -> dict:
         else []
     }
 
-    readme_data = _get_skill_data_readme(skill_data["long_description"])
+    if "long_description" in captured_kwargs:
+        readme_data = _get_skill_data_readme(
+            captured_kwargs["long_description"]
+        )
+    else:
+        readme_data = {}
     return {**readme_data, **skill_data}
 
 
@@ -298,4 +338,3 @@ def _get_skill_data_readme(readme_md: str) -> dict:
         parsed_data["credits"] = parsed_data["credits"][0].split(" ")
 
     return parsed_data
-

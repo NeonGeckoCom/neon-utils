@@ -32,52 +32,127 @@ import tempfile
 import shutil
 import subprocess
 
+from mock import patch
+
 
 class SkillUtilTests(unittest.TestCase):
-    
     @classmethod
     def setUpClass(cls):
         """Set up test fixtures, downloading the test skill repository"""
         cls.test_dir = tempfile.mkdtemp(prefix="skill_util_tests_")
 
         # Set up setuptools test repository
-        cls.setuptools_repo_url = "https://github.com/NeonGeckoCom/skill-caffeinewiz.git"
+        cls.setuptools_repo_url = (
+            "https://github.com/NeonGeckoCom/skill-caffeinewiz.git"
+        )
         cls.setuptools_skill_branch = "0.3.1"
-        cls.setuptools_skill_repo_path = os.path.join(cls.test_dir, "skill-caffeinewiz")
-        subprocess.run([
-            "git", "clone", "--branch", cls.setuptools_skill_branch, "--depth", "1",
-            cls.setuptools_repo_url, cls.setuptools_skill_repo_path
-        ], check=True, capture_output=True, text=True, timeout=30)
-        cls.setup_py_path = os.path.join(cls.setuptools_skill_repo_path, "setup.py")
-        
+        cls.setuptools_skill_repo_path = os.path.join(
+            cls.test_dir, "skill-caffeinewiz"
+        )
+        subprocess.run(
+            [
+                "git",
+                "clone",
+                "--branch",
+                cls.setuptools_skill_branch,
+                "--depth",
+                "1",
+                cls.setuptools_repo_url,
+                cls.setuptools_skill_repo_path,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        cls.setup_py_path = os.path.join(
+            cls.setuptools_skill_repo_path, "setup.py"
+        )
+
         # Set up poetry test repository
-        cls.poetry_repo_url = "https://github.com/OscillateLabsLLC/skill-homeassistant.git"
+        cls.poetry_repo_url = (
+            "https://github.com/OscillateLabsLLC/skill-homeassistant.git"
+        )
         cls.poetry_skill_branch = "v0.5.1"
-        cls.poetry_skill_repo_path = os.path.join(cls.test_dir, "skill-homeassistant")
-        subprocess.run([
-            "git", "clone", "--branch", cls.poetry_skill_branch, "--depth", "1",
-            cls.poetry_repo_url, cls.poetry_skill_repo_path
-        ], check=True, capture_output=True, text=True, timeout=30)
-        cls.pyproject_toml_path = os.path.join(cls.poetry_skill_repo_path, "pyproject.toml")
-    
+        cls.poetry_skill_repo_path = os.path.join(
+            cls.test_dir, "skill-homeassistant"
+        )
+        subprocess.run(
+            [
+                "git",
+                "clone",
+                "--branch",
+                cls.poetry_skill_branch,
+                "--depth",
+                "1",
+                cls.poetry_repo_url,
+                cls.poetry_skill_repo_path,
+            ],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        cls.pyproject_toml_path = os.path.join(
+            cls.poetry_skill_repo_path, "pyproject.toml"
+        )
+
     @classmethod
     def tearDownClass(cls):
         """Clean up test fixtures"""
-        if hasattr(cls, 'test_dir') and os.path.exists(cls.test_dir):
+        if hasattr(cls, "test_dir") and os.path.exists(cls.test_dir):
             shutil.rmtree(cls.test_dir)
-    
+
+    @patch("neon_utils.skill_utils._get_skill_data_poetry")
+    @patch("neon_utils.skill_utils._get_skill_data_setuptools")
+    def test_get_skill_metadata(self, mock_setuptools, mock_poetry):
+        """Test that get_skill_metadata calls appropriate internal methods based on file existence"""
+        from neon_utils.skill_utils import get_skill_metadata
+
+        # Set up mock return values
+        mock_poetry_data = {"name": "skill-homeassistant", "source": "poetry"}
+        mock_setuptools_data = {
+            "name": "skill-caffeinewiz",
+            "source": "setuptools",
+        }
+        mock_poetry.return_value = mock_poetry_data
+        mock_setuptools.return_value = mock_setuptools_data
+
+        # Test poetry skill (homeassistant)
+        result_poetry = get_skill_metadata(self.poetry_skill_repo_path)
+        mock_poetry.assert_called_with(self.pyproject_toml_path)
+        mock_setuptools.assert_not_called()
+        self.assertEqual(result_poetry, mock_poetry_data)
+
+        # Reset mocks
+        mock_poetry.reset_mock()
+        mock_setuptools.reset_mock()
+
+        # Test setuptools skill (caffeinewiz)
+        result_setuptools = get_skill_metadata(self.setuptools_skill_repo_path)
+        mock_setuptools.assert_called_with(self.setup_py_path)
+        mock_poetry.assert_not_called()
+        self.assertEqual(result_setuptools, mock_setuptools_data)
+
+        # Test FileNotFoundError for non-existent directory
+        with self.assertRaises(FileNotFoundError):
+            get_skill_metadata("/non/existent/directory")
+
     def test_get_skill_data_poetry(self):
-        """Test extracting skill metadata from pyproject.toml files"""
         from neon_utils.skill_utils import _get_skill_data_poetry
-        
+
         # Test with real skill-homeassistant pyproject.toml file
-        self.assertTrue(os.path.exists(self.pyproject_toml_path), 
-                       f"pyproject.toml not found at {self.pyproject_toml_path}")
-        
+        self.assertTrue(
+            os.path.exists(self.pyproject_toml_path),
+            f"pyproject.toml not found at {self.pyproject_toml_path}",
+        )
+
         skill_metadata = _get_skill_data_poetry(self.pyproject_toml_path)
         self.assertIsInstance(skill_metadata, dict)
         self.assertEqual(skill_metadata.get("name"), "skill-homeassistant")
-        self.assertEqual(skill_metadata.get("package_name"), "skill-homeassistant")
+        self.assertEqual(
+            skill_metadata.get("package_name"), "skill-homeassistant"
+        )
         self.assertEqual(skill_metadata.get("pip_spec"), "skill-homeassistant")
         self.assertEqual(skill_metadata.get("version"), "0.5.1")
         self.assertEqual(skill_metadata.get("license"), "Apache-2.0")
@@ -85,35 +160,54 @@ class SkillUtilTests(unittest.TestCase):
         self.assertEqual(skill_metadata.get("title"), "skill-homeassistant")
         self.assertIsInstance(skill_metadata.get("tags"), list)
         self.assertIn("neon", skill_metadata.get("tags"))
-        self.assertIsInstance(skill_metadata.get("requirements", {}).get("python"), list)
-        self.assertGreaterEqual(len(skill_metadata['requirements']['python']), 1)
-        
+        self.assertIsInstance(
+            skill_metadata.get("requirements", {}).get("python"), list
+        )
+        self.assertGreaterEqual(
+            len(skill_metadata["requirements"]["python"]), 1
+        )
+
+        # Test params from README
+        self.assertIsInstance(skill_metadata["troubleshooting"], str)
+        self.assertIsInstance(skill_metadata["summary"], str)
+
         # Test FileNotFoundError for non-existent file
         with self.assertRaises(FileNotFoundError):
             _get_skill_data_poetry("non_existent_file.toml")
 
     def test_get_skill_data_setuptools(self):
         from neon_utils.skill_utils import _get_skill_data_setuptools
+
         # Test with real skill-caffeinewiz setup.py file
-        self.assertTrue(os.path.exists(self.setup_py_path), 
-                       f"setup.py not found at {self.setup_py_path}")
-        
+        self.assertTrue(
+            os.path.exists(self.setup_py_path),
+            f"setup.py not found at {self.setup_py_path}",
+        )
+
         skill_metadata = _get_skill_data_setuptools(self.setup_py_path)
         self.assertIsInstance(skill_metadata, dict)
         self.assertEqual(skill_metadata.get("authorname"), "NeonGeckoCom")
         self.assertEqual(skill_metadata.get("skillname"), "skill-caffeinewiz")
-        self.assertEqual(skill_metadata['package_name'], 'neon-skill-caffeinewiz')
-        self.assertEqual(skill_metadata['pip_spec'], 'neon-skill-caffeinewiz')
-        self.assertIn("BSD-3", skill_metadata['license'])
-        self.assertIsInstance(skill_metadata['author'], str)
-        self.assertEqual(skill_metadata['version'], '0.3.1')
-        self.assertIsInstance(skill_metadata['url'], str)
-        self.assertEqual(skill_metadata['name'], 'neon-skill-caffeinewiz')
-        self.assertEqual(skill_metadata['title'], 'neon-skill-caffeinewiz')
-        self.assertIn('Neongecko', skill_metadata['credits'])
-        self.assertIsInstance(skill_metadata['requirements']['python'], list)
-        self.assertGreaterEqual(len(skill_metadata['requirements']['python']), 1)
-        
+        self.assertEqual(
+            skill_metadata["package_name"], "neon-skill-caffeinewiz"
+        )
+        self.assertEqual(skill_metadata["pip_spec"], "neon-skill-caffeinewiz")
+        self.assertIn("BSD-3", skill_metadata["license"])
+        self.assertIsInstance(skill_metadata["author"], str)
+        self.assertEqual(skill_metadata["version"], "0.3.1")
+        self.assertIsInstance(skill_metadata["url"], str)
+        self.assertEqual(skill_metadata["name"], "neon-skill-caffeinewiz")
+        self.assertEqual(skill_metadata["title"], "neon-skill-caffeinewiz")
+        self.assertIn("Neongecko", skill_metadata["credits"])
+        self.assertIsInstance(skill_metadata["requirements"]["python"], list)
+        self.assertGreaterEqual(
+            len(skill_metadata["requirements"]["python"]), 1
+        )
+
+        # Test params from README
+        self.assertIsInstance(skill_metadata["troubleshooting"], str)
+        self.assertIsInstance(skill_metadata["summary"], str)
+
         # Test FileNotFoundError for non-existent file
         with self.assertRaises(FileNotFoundError):
             _get_skill_data_setuptools("non_existent_setup.py")
@@ -122,15 +216,11 @@ class SkillUtilTests(unittest.TestCase):
         """Test extracting skill metadata from README.md files"""
         # TODO: Implement test for valid README.md file
         pass
-        
-        # TODO: Test FileNotFoundError for non-existent file
-        # with self.assertRaises(FileNotFoundError):
-        #     _get_skill_data_readme("non_existent_readme.md")
-        
+
         # TODO: Test parsing of markdown headers and content
         # TODO: Test extraction of skill description and examples
         # TODO: Test handling of various README formats
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()
