@@ -87,7 +87,8 @@ setuptools.setup(
         "network": get_requirements("network.txt"),
         "configuration": get_requirements("configuration.txt"),
         "sentry": get_requirements("sentry.txt"),
-        "signal": get_requirements("signal.txt")
+        "signal": get_requirements("signal.txt"),
+        "skills": get_requirements("skills.txt"),
     },
     entry_points={
         'console_scripts': [
