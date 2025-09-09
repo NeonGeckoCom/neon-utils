@@ -143,7 +143,7 @@ class PackagingUtilTests(unittest.TestCase):
         skill_spec["url"] = "https://github.com/NeonGeckoCom/skill-alerts"
         with open(join(test_dir, "skill.json")) as f:
             valid_spec = json.load(f)
-        self.assertEqual(valid_spec, skill_spec)
+        self.assertEqual(valid_spec, skill_spec, f"actual={skill_spec}")
 
     # TODO: Actually validate exception cases? DM
         

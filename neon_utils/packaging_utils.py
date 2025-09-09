@@ -35,7 +35,7 @@ from tempfile import mkstemp
 import pkg_resources
 import sysconfig
 
-from os.path import exists, join, expanduser, isdir
+from os.path import exists, join, isfile
 from ovos_utils.log import LOG, deprecated
 
 
@@ -188,7 +188,45 @@ def build_skill_spec(skill_dir: str) -> dict:
     :returns: dict skill.json spec
     """
     from neon_utils.skill_utils import get_skill_metadata
-    return get_skill_metadata(skill_dir)
+
+    # Non-packaged skills are deprecated. Support is patched in here for
+    # Backwards-compatibility only
+
+    def get_skill_license():
+        try:
+            with open(join(skill_dir, "LICENSE.md")) as f:
+                contents = f.read()
+        except FileNotFoundError:
+            return "Unknown"
+        except Exception as e:
+            LOG.error(e)
+            return "Unknown"
+        if "BSD-3" in contents:
+            return "BSD-3-Clause"
+        if "Apache License" in contents:
+            return "Apache 2.0"
+        if "Neon AI Non-commercial Friendly License 2.0" in contents:
+            return "Neon 2.0"
+        if "Neon AI Non-commercial Friendly License" in contents:
+            return "Neon 1.0"
+
+    skill_meta = get_skill_metadata(skill_dir)
+    if skill_meta.get("license") is None:
+        skill_meta["license"] = get_skill_license()
+
+    if skill_meta["requirements"].get("python") is None and \
+            isfile(join(skill_dir, "requirements.txt")):
+        try:
+            with open(join(skill_dir, "requirements.txt")) as f:
+                requirements = f.read().split('\n')
+            requirements = [r for r in requirements
+                            if r and not r.startswith('#')]
+            skill_meta["requirements"]["python"] = requirements
+        except Exception as e:
+            LOG.error(e)
+            skill_meta["requirements"]["python"] = []
+
+    return skill_meta
 
 def install_packages_from_pip(core_module: str, packages: List[str]) -> int:
     """

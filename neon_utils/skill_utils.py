@@ -43,17 +43,32 @@ def get_skill_metadata(skill_dir: str) -> dict:
     readme_md = join(skill_dir, "README.md")
 
     if isfile(pyproject_toml):
-        return _get_skill_data_poetry(pyproject_toml)
+        meta = _get_skill_data_poetry(pyproject_toml)
     elif isfile(setup_py):
-        return _get_skill_data_setuptools(setup_py)
+        meta = _get_skill_data_setuptools(setup_py)
     elif isfile(readme_md):
         with open(readme_md, encoding="utf-8") as f:
             readme_data = f.read()
-        return _get_skill_data_readme(readme_data)
+        meta = _get_skill_data_readme(readme_data)
     else:
         raise FileNotFoundError(
             f"No setup.py or pyproject.toml found in {skill_dir}"
         )
+
+    # Adding params for backwards-compat.
+    meta["desktopFile"] = False
+    meta["warning"] = ""
+    meta["systemDeps"] = False
+    meta.setdefault("requirements", {})
+    meta["requirements"].setdefault("system", {})
+    meta["requirements"].setdefault("skill", [])
+    meta.setdefault("incompatible_skills", [])
+    meta["platforms"] = ["i386", "x86_64", "ia64", "arm64", "arm"]
+    meta["branch"] = "master"
+    meta["foldername"] = None
+    meta.setdefault("short_description", meta.get("summary"))
+
+    return meta
 
 
 def _get_skill_data_poetry(pyproject: str) -> dict:
@@ -238,6 +253,12 @@ def _get_skill_data_readme(readme_md: str) -> dict:
         "tags",
         "credits",
     )
+    valid_sections = list_sections + (
+        "summary",
+        "short_description",
+        "description",
+        "warning",
+    )
     section = "header"
     category = None
     parsed_data = {}
@@ -321,7 +342,9 @@ def _get_skill_data_readme(readme_md: str) -> dict:
                     parsed_data[section] = list()
                 parsed_data[section].append(parsed_line)
             else:
-                if section not in parsed_data:
+                if section not in valid_sections:
+                    continue
+                elif section not in parsed_data:
                     parsed_data[section] = parsed_line
                 else:
                     parsed_data[section] = " ".join(

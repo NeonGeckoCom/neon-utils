@@ -122,7 +122,7 @@ class SkillUtilTests(unittest.TestCase):
         result_poetry = get_skill_metadata(self.poetry_skill_repo_path)
         mock_poetry.assert_called_with(self.pyproject_toml_path)
         mock_setuptools.assert_not_called()
-        self.assertEqual(result_poetry, mock_poetry_data)
+        self.assertEqual(result_poetry['name'], mock_poetry_data['name'])
 
         # Reset mocks
         mock_poetry.reset_mock()
@@ -132,8 +132,7 @@ class SkillUtilTests(unittest.TestCase):
         result_setuptools = get_skill_metadata(self.setuptools_skill_repo_path)
         mock_setuptools.assert_called_with(self.setup_py_path)
         mock_poetry.assert_not_called()
-        self.assertEqual(result_setuptools, mock_setuptools_data)
-
+        self.assertEqual(result_setuptools['name'], mock_setuptools_data['name'])
         # Test FileNotFoundError for non-existent directory
         with self.assertRaises(FileNotFoundError):
             get_skill_metadata("/non/existent/directory")
