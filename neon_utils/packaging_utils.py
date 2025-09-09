@@ -187,86 +187,8 @@ def build_skill_spec(skill_dir: str) -> dict:
     :param skill_dir: path to skill directory to parse
     :returns: dict skill.json spec
     """
-    import shutil
-    from ovos_skills_manager.local_skill import get_skill_data_from_directory
-    from neon_utils.file_utils import parse_skill_readme_file
-    from neon_utils.configuration_utils import dict_merge
-
-    def get_skill_license():  # TODO: Implement OSM version of this
-        try:
-            with open(join(skill_dir, "LICENSE.md")) as f:
-                contents = f.read()
-        except FileNotFoundError:
-            return "Unknown"
-        except Exception as e:
-            LOG.error(e)
-            return "Unknown"
-        if "BSD-3" in contents:
-            return "BSD-3-Clause"
-        if "Apache License" in contents:
-            return "Apache 2.0"
-        if "Neon AI Non-commercial Friendly License 2.0" in contents:
-            return "Neon 2.0"
-        if "Neon AI Non-commercial Friendly License" in contents:
-            return "Neon 1.0"
-
-    _invalid_skill_data_keys = ("appstore", "appstore_url", "credits",
-                                "skill_id")
-    _invalid_readme_keys = ("contact support", "details")
-    default_skill = {"title": "",
-                     "url": "",
-                     "summary": "",
-                     "short_description": "",
-                     "description": "",
-                     "examples": [],
-                     "desktopFile": False,
-                     "warning": "",
-                     "systemDeps": False,
-                     "requirements": {
-                         "python": [],
-                         "system": {},
-                         "skill": []
-                     },
-                     "incompatible_skills": [],
-                     "platforms": ["i386",
-                                   "x86_64",
-                                   "ia64",
-                                   "arm64",
-                                   "arm"],
-                     "branch": "master",
-                     "license": "",
-                     "icon": "",
-                     "category": "",
-                     "categories": [],
-                     "tags": [],
-                     "credits": [],
-                     "skillname": "",
-                     "authorname": "",
-                     "foldername": None}
-
-    skill_dir = expanduser(skill_dir)
-    if not isdir(skill_dir):
-        raise FileNotFoundError(f"Not a Directory: {skill_dir}")
-    LOG.debug(f"skill_dir={skill_dir}")
-    skill_json = join(skill_dir, "skill.json")
-    backup = join(skill_dir, "skill_json.bak")
-    shutil.move(skill_json, backup)
-    skill_data = get_skill_data_from_directory(skill_dir)
-    shutil.move(backup, skill_json)
-    skill_data['foldername'] = None
-    for key in _invalid_skill_data_keys:
-        if key in skill_data:
-            skill_data.pop(key)
-    readme_data = parse_skill_readme_file(join(skill_dir, "README.md"))
-    for key in _invalid_readme_keys:
-        if key in readme_data:
-            readme_data.pop(key)
-    readme_data["short_description"] = readme_data.get("summary")
-    readme_data["license"] = get_skill_license()
-    readme_data["branch"] = "master"
-    skill_data = dict_merge(default_skill, skill_data)
-    skill_data["requirements"]["python"].sort()
-    return dict(dict_merge(skill_data, readme_data))
+    from neon_utils.skill_utils import get_skill_metadata
+    return get_skill_metadata(skill_dir)
 
 def install_packages_from_pip(core_module: str, packages: List[str]) -> int:
     """
