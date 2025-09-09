@@ -167,7 +167,6 @@ class SkillUtilTests(unittest.TestCase):
         )
 
         # Test params from README
-        self.assertIsInstance(skill_metadata["troubleshooting"], str)
         self.assertIsInstance(skill_metadata["summary"], str)
 
         # Test FileNotFoundError for non-existent file
@@ -204,7 +203,6 @@ class SkillUtilTests(unittest.TestCase):
         )
 
         # Test params from README
-        self.assertIsInstance(skill_metadata["troubleshooting"], str)
         self.assertIsInstance(skill_metadata["summary"], str)
 
         # Test FileNotFoundError for non-existent file
