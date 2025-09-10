@@ -32,6 +32,7 @@ import tempfile
 import shutil
 import subprocess
 
+from os.path import join, dirname
 from mock import patch
 
 
@@ -210,14 +211,30 @@ class SkillUtilTests(unittest.TestCase):
             _get_skill_data_setuptools("non_existent_setup.py")
 
     def test_get_skill_data_readme(self):
-        """Test extracting skill metadata from README.md files"""
-        # TODO: Implement test for valid README.md file
-        pass
+        from neon_utils.skill_utils import _get_skill_data_readme
 
-        # TODO: Test parsing of markdown headers and content
-        # TODO: Test extraction of skill description and examples
-        # TODO: Test handling of various README formats
+        valid_readme_file = join(dirname(__file__), "test_skill_json", "README.md")
 
+        with open(valid_readme_file, 'r') as f:
+            readme_contents = f.read()
+
+        skill_metadata = _get_skill_data_readme(readme_contents)
+        self.assertIsInstance(skill_metadata, dict)
+        self.assertIsInstance(skill_metadata['examples'], list)
+        self.assertIsInstance(skill_metadata['incompatible_skills'], list)
+        self.assertIsInstance(skill_metadata['categories'], list)
+        self.assertIsInstance(skill_metadata['tags'], list)
+        self.assertIsInstance(skill_metadata['credits'], list)
+
+        self.assertIsInstance(skill_metadata['summary'], str)
+        self.assertIsInstance(skill_metadata['description'], str)
+
+        self.assertIsInstance(skill_metadata['title'], str)
+        self.assertIsInstance(skill_metadata['icon'], str)
+
+        # Test invalid README contents
+        with self.assertRaises(ValueError):
+            _get_skill_data_readme("")
 
 if __name__ == "__main__":
     unittest.main()

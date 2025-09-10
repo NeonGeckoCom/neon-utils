@@ -243,6 +243,8 @@ def _get_skill_data_readme(readme_md: str) -> dict:
     from neon_utils.parse_utils import clean_quotes
 
     lines = readme_md.split("\n")
+    if not lines or len(lines) <= 1:
+        raise ValueError("Empty README data")
 
     # Initialize parser params
     list_sections = (
