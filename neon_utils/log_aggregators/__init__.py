@@ -28,6 +28,8 @@
 
 import importlib
 
+from ovos_utils.log import LOG
+
 _service_name_to_handler = {
     'sentry': 'init_sentry'
 }
@@ -42,8 +44,8 @@ def init_log_aggregators(config: dict = None):
             if bool(service_config.pop('enabled', False)):
                 service_module = importlib.import_module(f'.{service_name}', __name__)
                 getattr(service_module, handler)(config=service_config)
-        except Exception as e:
-            pass
+        except ModuleNotFoundError as e:
+            LOG.error(f"Failed to load log aggregator {service_name}: {e}")
 
 
 def _get_log_aggregator_config(config: dict, name: str):
