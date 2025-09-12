@@ -291,6 +291,8 @@ def get_installed_prereleases() -> List[Tuple[str, str]]:
         if not line:
             continue
         name, version = line.split()
+        if name == "Package" or not name.replace('-', ''):
+            continue
         if not version.replace('.', '').isnumeric():
             if "post" in version:
                 LOG.debug(f"post release {name}:{version}")
