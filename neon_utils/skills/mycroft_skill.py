@@ -36,7 +36,10 @@ from typing import Optional
 from json_database import JsonStorage
 from ovos_bus_client.message import Message
 from ovos_utils.log import log_deprecation, deprecated
-from ovos_workshop.skills.mycroft_skill import MycroftSkill
+try:
+    from ovos_workshop.skills.mycroft_skill import MycroftSkill
+except ImportError:
+    from ovos_workshop.skills.ovos import OVOSSkill as MycroftSkill
 # from ovos_utils.skills.settings import get_local_settings
 
 from neon_utils.signal_utils import wait_for_signal_clear, check_for_signal

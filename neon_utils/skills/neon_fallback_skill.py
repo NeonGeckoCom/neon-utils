@@ -44,14 +44,14 @@ from ovos_utils.gui import is_gui_connected
 from ovos_utils.log import LOG, log_deprecation, deprecated
 from ovos_utils.skills import get_non_properties
 from ovos_utils.xdg_utils import xdg_cache_home
-from ovos_workshop.skills import OVOSSkill
-from ovos_workshop.skills.fallback import FallbackSkillV1
+from ovos_workshop.skills.ovos import OVOSSkill
+from ovos_workshop.skills.fallback import FallbackSkill
 
 from neon_utils.cache_utils import LRUCache
 from neon_utils.file_utils import resolve_neon_resource_file
 from neon_utils.location_utils import to_system_time
 from neon_utils.message_utils import dig_for_message, resolve_message, get_message_user
-from neon_utils.skills.neon_skill import CACHE_TIME_OFFSET, DEFAULT_SPEED_MODE, SPEED_MODE_EXTENSION_TIME, NeonSkill, \
+from neon_utils.skills.neon_skill import CACHE_TIME_OFFSET, DEFAULT_SPEED_MODE, SPEED_MODE_EXTENSION_TIME, \
     save_settings
 from neon_utils.user_utils import get_user_prefs
 
@@ -62,7 +62,7 @@ except ImportError:
     OVOSLangTranslationFactory = None
 
 
-class NeonFallbackSkill(FallbackSkillV1):
+class NeonFallbackSkill(FallbackSkill):
     """
     Class that extends the NeonSkill and FallbackSkill classes to provide
     NeonSkill functionality to any Fallback skill subclassing this class.
@@ -72,9 +72,9 @@ class NeonFallbackSkill(FallbackSkillV1):
                         "`ovos_workshop.skills.fallback.FallbackSkill`",
                         "2.0.0")
 
-        FallbackSkillV1.__init__(self, *args, **kwargs)
-        LOG.debug(f"instance_handlers={self.instance_fallback_handlers}")
-        LOG.debug(f"class_handlers={FallbackSkillV1.fallback_handlers}")
+        FallbackSkill.__init__(self, *args, **kwargs)
+        # LOG.debug(f"instance_handlers={self.instance_fallback_handlers}")
+        # LOG.debug(f"class_handlers={FallbackSkill.fallback_handlers}")
 
         # Manual init of NeonSkill
         self.cache_loc = os.path.join(xdg_cache_home(), "neon")

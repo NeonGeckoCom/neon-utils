@@ -28,7 +28,11 @@
 
 from lingua_franca import parse, set_default_lang
 
-from ovos_workshop.skills.mycroft_skill import MycroftSkill
+try:
+    # TODO: Remove this import and use OVOSSkill with neon-utils 2.0.0
+    from ovos_workshop.skills.mycroft_skill import MycroftSkill
+except ImportError:
+    from ovos_workshop.skills.ovos import OVOSSkill as MycroftSkill
 
 
 def numeric_confirmation_validator(confirmation_num: str, lang: str = "en"):
