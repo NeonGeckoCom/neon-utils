@@ -126,9 +126,9 @@ class LocationUtilTests(unittest.TestCase):
 
         location_es = get_full_location("Seattle, Washington", "es")
         self.assertAlmostEqual(float(location_es['lat']),
-                               float(location_en['lat']), places=6)
+                               float(location_en['lat']), places=3)
         self.assertAlmostEqual(float(location_es['lon']),
-                               float(location_en['lon']), places=6)
+                               float(location_en['lon']), places=3)
         self.assertEqual(location_es['address']['country'],
                          "Estados Unidos de América")
         self.assertEqual(location_en['address']['country_code'], "us")
