@@ -37,14 +37,14 @@ from neon_utils.web_utils import *
 class WebUtilTests(unittest.TestCase):
     def test_scrape_page_for_links(self):
         try:
-            links = scrape_page_for_links("neon.ai")
+            links = scrape_page_for_links("2025.neon.ai")
             self.assertIsInstance(links, dict)
             self.assertIn("company", links.keys())
             # TODO: Update test to validate absolute and relative URL paths
             # Relative href
             self.assertIn(links["company"],
-                          ("https://neon.ai/company",
-                           "https://neon.ai/company/"))
+                          ("https://2025.neon.ai/company",
+                           "https://2025.neon.ai/company/"))
         except ConnectTimeout:
             LOG.error("Github testing breaks here")
 
