@@ -128,7 +128,7 @@ def init_signal_handlers():
                 import mycroft.util.signal
                 mycroft.util.signal.create_signal = _create_signal
                 mycroft.util.signal.check_for_signal = _check_for_signal
-                LOG.info(f"Overrode mycroft.util.signal methods")
+                LOG.info("Overrode mycroft.util.signal methods")
             except (ImportError, AttributeError) as e:
                 LOG.debug(e)
             except TypeError as e:
@@ -141,9 +141,6 @@ def init_signal_handlers():
             log_deprecation("Import patching will be deprecated. Disable in "
                             "configuration by setting `signal`.`patch_imports` "
                             "to `False`", "2.0.0")
-            import ovos_utils.signal
-            _create_signal = ovos_utils.signal.create_signal
-            _check_for_signal = ovos_utils.signal.check_for_signal
             _wait_for_signal_clear = _fs_wait_for_signal_clear
             _wait_for_signal_create = _fs_wait_for_signal_create
         else:
