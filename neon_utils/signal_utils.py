@@ -124,9 +124,6 @@ def init_signal_handlers():
             log_deprecation("Import patching will be deprecated. Disable in "
                             "configuration by setting `signal`.`patch_imports` "
                             "to `False`", "2.0.0")
-            import ovos_utils.signal
-            ovos_utils.signal.check_for_signal = _check_for_signal
-            ovos_utils.signal.create_signal = _create_signal
             try:
                 import mycroft.util.signal
                 mycroft.util.signal.create_signal = _create_signal

@@ -33,7 +33,6 @@ import unittest
 from threading import Event
 from os.path import join, dirname
 
-import ovos_utils.signal
 from ovos_bus_client import Message
 from ovos_utils.messagebus import FakeBus
 
@@ -132,7 +131,7 @@ class SignalUtilsTests(unittest.TestCase):
         self.assertEqual(msg.data, {'signal_name': 'test_signal'})
         self.assertEqual(msg.context['origin_module'],
                          'tests.signal_util_tests')
-        self.assertEqual(msg.context['origin_line'], 130)
+        self.assertEqual(msg.context['origin_line'], 129)
 
     def test_signal_utils_manager_available(self):
         TestSignalManager(self.test_bus)
@@ -151,40 +150,21 @@ class SignalUtilsTests(unittest.TestCase):
         self.assertEqual(neon_utils.signal_utils._wait_for_signal_create,
                          neon_utils.signal_utils._manager_wait_for_signal_create)
 
-        # Check ovos_utils references
-        self.assertEqual(ovos_utils.signal.check_for_signal,
-                         neon_utils.signal_utils._manager_check_for_signal)
-        self.assertEqual(ovos_utils.signal.create_signal,
-                         neon_utils.signal_utils._manager_create_signal)
-
     def test_signal_utils_manager_unavailable(self):
-        import ovos_utils.signal
         neon_utils.signal_utils.init_signal_handlers()
         self.assertFalse(neon_utils.signal_utils.check_signal_manager_available())
         self.assertIsInstance(neon_utils.signal_utils._MAX_TIMEOUT, int)
-        self.assertEqual(neon_utils.signal_utils._check_for_signal,
-                         ovos_utils.signal.check_for_signal)
-        self.assertEqual(neon_utils.signal_utils._create_signal,
-                         ovos_utils.signal.create_signal)
         self.assertEqual(neon_utils.signal_utils._wait_for_signal_clear,
                          neon_utils.signal_utils._fs_wait_for_signal_clear)
         self.assertEqual(neon_utils.signal_utils._wait_for_signal_create,
                          neon_utils.signal_utils._fs_wait_for_signal_create)
 
     def test_signal_utils_reload(self):
-        import ovos_utils.signal
-        from neon_utils.signal_utils import _check_for_signal
         self.assertFalse(neon_utils.signal_utils.check_signal_manager_available())
-        self.assertEqual(neon_utils.signal_utils._check_for_signal,
-                         ovos_utils.signal.check_for_signal)
-        self.assertEqual(neon_utils.signal_utils._create_signal,
-                         ovos_utils.signal.create_signal)
         self.assertEqual(neon_utils.signal_utils._wait_for_signal_clear,
                          neon_utils.signal_utils._fs_wait_for_signal_clear)
         self.assertEqual(neon_utils.signal_utils._wait_for_signal_create,
                          neon_utils.signal_utils._fs_wait_for_signal_create)
-        self.assertEqual(_check_for_signal,
-                         ovos_utils.signal.check_for_signal)
 
         TestSignalManager(self.test_bus)
         neon_utils.signal_utils.init_signal_handlers()
@@ -197,13 +177,8 @@ class SignalUtilsTests(unittest.TestCase):
         self.assertEqual(neon_utils.signal_utils._wait_for_signal_create,
                          neon_utils.signal_utils._manager_wait_for_signal_create)
 
-        # Previously imported method is not updated
-        self.assertEqual(_check_for_signal,
-                         ovos_utils.signal.check_for_signal)
-
     def test_check_signal_manager_available_lazy_load_bus(self):
         from ovos_bus_client import MessageBusClient
-        from neon_utils.signal_utils import check_signal_manager_available
         neon_utils.signal_utils._BUS = None
         neon_utils.signal_utils.check_signal_manager_available()
         self.assertIsInstance(neon_utils.signal_utils._BUS, MessageBusClient)
