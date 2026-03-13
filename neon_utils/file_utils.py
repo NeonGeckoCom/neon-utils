@@ -34,8 +34,7 @@ import wave
 from tempfile import mkstemp
 
 from typing import Optional, List
-from ovos_utils.signal import ensure_directory_exists
-
+from ovos_utils.file_utils import ensure_directory_exists
 from neon_utils.logger import LOG
 
 
