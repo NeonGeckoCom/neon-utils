@@ -141,6 +141,9 @@ def init_signal_handlers():
             import os
             import tempfile
             from ovos_utils.file_utils import ensure_directory_exists
+            log_deprecation("Import patching will be deprecated. Disable in "
+                "configuration by setting `signal`.`patch_imports` "
+                "to `False`", "2.0.0")
 
             def get_ipc_directory(domain=None, config=None):
                 """Get the directory used for Inter Process Communication
