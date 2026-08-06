@@ -104,7 +104,14 @@ def get_user_prefs(message: Message = None) -> dict:
     for profile in message.context.get(profile_key):
         try:
             if profile["user"]["username"] == username:
-                return dict(dict_update_keys(profile, default_user_config))
+                merged = dict(dict_update_keys(profile, default_user_config))
+                # `dict_update_keys` fills absent keys only, so location keys
+                # sent explicitly as null never inherit the configured default
+                default_location = default_user_config.get("location") or {}
+                location = merged.setdefault("location", {})
+                for key, value in default_location.items():
+                    location[key] = location.get(key) or value
+                return merged
         except KeyError:
             LOG.error(f"Malformed profile in message context: {profile}")
     LOG.warning(f"No preferences found for {username} in {message.context}")

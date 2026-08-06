@@ -228,6 +228,60 @@ class UserUtilTests(unittest.TestCase):
                          {'lat', 'lng', 'city', 'state', 'country', 'tz',
                           'utc'})
 
+    @patch("ovos_config.config.Configuration")
+    def test_get_user_prefs_heals_null_location(self, config):
+        from ovos_config.models import LocalConf
+        test_config_dir = os.path.join(os.path.dirname(__file__),
+                                       "user_util_test_config")
+        config.return_value = LocalConf(join(test_config_dir, "mycroft",
+                                             "mycroft.conf"))
+        import importlib
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
+        from neon_utils.user_utils import get_user_prefs
+
+        null_location_profile = {
+            "user": {"username": "null_location_user"},
+            "location": {"lat": None, "lng": None, "city": None,
+                         "state": None, "country": None, "tz": None,
+                         "utc": None}}
+        prefs = get_user_prefs(Message("test_message", {}, {
+            "username": "null_location_user",
+            "user_profiles": [null_location_profile]}))
+        self.assertEqual(prefs["location"],
+                         {"lat": '38.971669',
+                          "lng": '-95.23525',
+                          "tz": 'America/Chicago',
+                          "utc": '-6.0',
+                          "city": 'Kirkland',
+                          "state": 'Washington',
+                          "country": "United States"})
+
+    @patch("ovos_config.config.Configuration")
+    def test_get_user_prefs_keeps_configured_location(self, config):
+        from ovos_config.models import LocalConf
+        test_config_dir = os.path.join(os.path.dirname(__file__),
+                                       "user_util_test_config")
+        config.return_value = LocalConf(join(test_config_dir, "mycroft",
+                                             "mycroft.conf"))
+        import importlib
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
+        from neon_utils.user_utils import get_user_prefs
+
+        user_location_profile = {
+            "user": {"username": "located_user"},
+            "location": {"lat": '29.4241', "lng": '-98.4936',
+                         "city": 'San Antonio', "state": 'Texas',
+                         "country": "United States", "tz": 'America/Chicago',
+                         "utc": '-6.0'}}
+        prefs = get_user_prefs(Message("test_message", {}, {
+            "username": "located_user",
+            "user_profiles": [user_location_profile]}))
+        self.assertEqual(prefs["location"]["city"], 'San Antonio')
+        self.assertEqual(prefs["location"]["lat"], '29.4241')
+        self.assertEqual(prefs["location"]["state"], 'Texas')
+
 
 if __name__ == '__main__':
     unittest.main()
