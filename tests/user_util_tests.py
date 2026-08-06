@@ -282,6 +282,39 @@ class UserUtilTests(unittest.TestCase):
         self.assertEqual(prefs["location"]["lat"], '29.4241')
         self.assertEqual(prefs["location"]["state"], 'Texas')
 
+    @patch("ovos_config.config.Configuration")
+    def test_get_user_prefs_keeps_null_outside_location(self, config):
+        from ovos_config.models import LocalConf
+        test_config_dir = os.path.join(os.path.dirname(__file__),
+                                       "user_util_test_config")
+        config.return_value = LocalConf(join(test_config_dir, "mycroft",
+                                             "mycroft.conf"))
+        import importlib
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
+        from neon_utils.user_utils import get_user_prefs
+
+        # Healing is scoped to `location`; a null elsewhere is left alone
+        null_email_profile = {"user": {"username": "null_email_user",
+                                       "email": None}}
+        prefs = get_user_prefs(Message("test_message", {}, {
+            "username": "null_email_user",
+            "user_profiles": [null_email_profile]}))
+        self.assertIsNone(prefs["user"]["email"])
+
+    def test_dict_update_keys_preserves_explicit_null(self):
+        from neon_utils.configuration_utils import dict_update_keys
+
+        # Skill settings merge through this helper and persist to disk, so a
+        # deliberately-nulled setting must not inherit the metadata default
+        settings = {"api_key": None, "endpoint": "https://custom"}
+        merged = dict_update_keys(settings, {"api_key": "DEFAULT_KEY",
+                                             "endpoint": "https://default",
+                                             "added_key": "added_value"})
+        self.assertIsNone(merged["api_key"])
+        self.assertEqual(merged["endpoint"], "https://custom")
+        self.assertEqual(merged["added_key"], "added_value")
+
 
 if __name__ == '__main__':
     unittest.main()
