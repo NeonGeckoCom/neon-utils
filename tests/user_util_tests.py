@@ -283,7 +283,7 @@ class UserUtilTests(unittest.TestCase):
         self.assertEqual(prefs["location"]["state"], 'Texas')
 
     @patch("ovos_config.config.Configuration")
-    def test_get_user_prefs_keeps_null_outside_location(self, config):
+    def test_get_user_prefs_heals_null_outside_location(self, config):
         from ovos_config.models import LocalConf
         test_config_dir = os.path.join(os.path.dirname(__file__),
                                        "user_util_test_config")
@@ -295,7 +295,7 @@ class UserUtilTests(unittest.TestCase):
         from neon_utils.user_utils import get_user_prefs, \
             get_default_user_config
 
-        # Healing is not scoped to `location`; any null inherits its default
+        # A null anywhere in the profile inherits its configured default
         null_profile = {"user": {"username": "null_prefs_user",
                                  "email": None},
                         "units": {"measure": None, "date": "YMD"},
