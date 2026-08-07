@@ -122,8 +122,11 @@ def get_phonemes(phrase: str) -> str:
     download_path = os.path.expanduser("~/.local/share/neon")
     if not os.path.isdir(download_path):
         os.makedirs(download_path)
+    # nltk authorizes download targets against `nltk.data.path`, so the path
+    # must be registered before the download, not after
+    if download_path not in nltk.data.path:
+        nltk.data.path.append(download_path)
     nltk.download('cmudict', download_dir=download_path)
-    nltk.data.path.append(download_path)
 
     output = ''
     for word in phrase.split():
