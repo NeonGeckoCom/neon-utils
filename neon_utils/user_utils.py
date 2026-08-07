@@ -26,6 +26,7 @@
 # NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE,  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+from collections.abc import MutableMapping
 from os.path import isfile, join
 from ovos_bus_client import Message, MessageBusClient
 from ovos_utils.log import LOG
@@ -72,6 +73,21 @@ def apply_local_user_profile_updates(updated_profile: dict,
         _DEFAULT_USER_CONFIG = user_config.content
 
 
+def _drop_null_values(profile: MutableMapping) -> MutableMapping:
+    """
+    Recursively remove keys with null values so a merge against default
+    configuration fills them, rather than treating null as a set value.
+    :param profile: user profile to modify and return
+    :returns: profile with all null-valued keys removed
+    """
+    for key, value in list(profile.items()):
+        if isinstance(value, MutableMapping):
+            _drop_null_values(value)
+        elif value is None:
+            profile.pop(key)
+    return profile
+
+
 @resolve_message
 def get_user_prefs(message: Message = None) -> dict:
     """
@@ -104,14 +120,10 @@ def get_user_prefs(message: Message = None) -> dict:
     for profile in message.context.get(profile_key):
         try:
             if profile["user"]["username"] == username:
-                merged = dict(dict_update_keys(profile, default_user_config))
-                # `dict_update_keys` fills absent keys only, so location keys
-                # sent explicitly as null never inherit the configured default
-                default_location = default_user_config.get("location") or {}
-                location = merged.setdefault("location", {})
-                for key, value in default_location.items():
-                    location[key] = location.get(key) or value
-                return merged
+                # `dict_update_keys` fills absent keys only, so any key sent
+                # explicitly as null would mask the configured default
+                _drop_null_values(profile)
+                return dict(dict_update_keys(profile, default_user_config))
         except KeyError:
             LOG.error(f"Malformed profile in message context: {profile}")
     LOG.warning(f"No preferences found for {username} in {message.context}")

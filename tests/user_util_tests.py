@@ -292,15 +292,49 @@ class UserUtilTests(unittest.TestCase):
         import importlib
         from neon_utils import user_utils
         importlib.reload(user_utils)
+        from neon_utils.user_utils import get_user_prefs, \
+            get_default_user_config
+
+        # Healing is not scoped to `location`; any null inherits its default
+        null_profile = {"user": {"username": "null_prefs_user",
+                                 "email": None},
+                        "units": {"measure": None, "date": "YMD"},
+                        "speech": {"tts_language": None}}
+        prefs = get_user_prefs(Message("test_message", {}, {
+            "username": "null_prefs_user",
+            "user_profiles": [null_profile]}))
+        default = get_default_user_config()
+        self.assertEqual(prefs["user"]["email"], default["user"]["email"])
+        self.assertEqual(prefs["units"]["measure"],
+                         default["units"]["measure"])
+        self.assertEqual(prefs["speech"]["tts_language"],
+                         default["speech"]["tts_language"])
+        # A non-null value is still preferred over the default
+        self.assertEqual(prefs["units"]["date"], "YMD")
+
+    @patch("ovos_config.config.Configuration")
+    def test_get_user_prefs_heals_null_in_message_context(self, config):
+        from ovos_config.models import LocalConf
+        test_config_dir = os.path.join(os.path.dirname(__file__),
+                                       "user_util_test_config")
+        config.return_value = LocalConf(join(test_config_dir, "mycroft",
+                                             "mycroft.conf"))
+        import importlib
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
         from neon_utils.user_utils import get_user_prefs
 
-        # Healing is scoped to `location`; a null elsewhere is left alone
-        null_email_profile = {"user": {"username": "null_email_user",
-                                       "email": None}}
-        prefs = get_user_prefs(Message("test_message", {}, {
-            "username": "null_email_user",
-            "user_profiles": [null_email_profile]}))
-        self.assertIsNone(prefs["user"]["email"])
+        # `get_user_prefs` back-fills the context profile in place, so the
+        # healed value must land there too rather than a null being restored
+        null_profile = {"user": {"username": "healed_user"},
+                        "units": {"measure": None}}
+        message = Message("test_message", {}, {
+            "username": "healed_user",
+            "user_profiles": [null_profile]})
+        prefs = get_user_prefs(message)
+        self.assertEqual(message.context["user_profiles"][0], prefs)
+        self.assertIsNotNone(
+            message.context["user_profiles"][0]["units"]["measure"])
 
     def test_dict_update_keys_preserves_explicit_null(self):
         from neon_utils.configuration_utils import dict_update_keys
