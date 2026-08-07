@@ -304,13 +304,43 @@ class UserUtilTests(unittest.TestCase):
             "username": "null_prefs_user",
             "user_profiles": [null_profile]}))
         default = get_default_user_config()
-        self.assertEqual(prefs["user"]["email"], default["user"]["email"])
+        # These defaults are non-null, so the null cannot have survived
         self.assertEqual(prefs["units"]["measure"],
                          default["units"]["measure"])
         self.assertEqual(prefs["speech"]["tts_language"],
                          default["speech"]["tts_language"])
+        self.assertIsNotNone(prefs["units"]["measure"])
+        self.assertIsNotNone(prefs["speech"]["tts_language"])
+        # `user.email` defaults to an empty string, so assert the type changed
+        self.assertEqual(prefs["user"]["email"], default["user"]["email"])
+        self.assertIsNotNone(prefs["user"]["email"])
         # A non-null value is still preferred over the default
         self.assertEqual(prefs["units"]["date"], "YMD")
+
+    @patch("ovos_config.config.Configuration")
+    def test_get_user_prefs_keeps_falsy_values(self, config):
+        from ovos_config.models import LocalConf
+        test_config_dir = os.path.join(os.path.dirname(__file__),
+                                       "user_util_test_config")
+        config.return_value = LocalConf(join(test_config_dir, "mycroft",
+                                             "mycroft.conf"))
+        import importlib
+        from neon_utils import user_utils
+        importlib.reload(user_utils)
+        from neon_utils.user_utils import get_user_prefs
+
+        # Only null is absent; False, 0, and '' are deliberate user values and
+        # must not inherit a truthy default (i.e. a privacy opt-out reverting)
+        falsy_profile = {"user": {"username": "falsy_user", "email": ""},
+                         "privacy": {"save_audio": False, "save_text": False},
+                         "units": {"time": 0}}
+        prefs = get_user_prefs(Message("test_message", {}, {
+            "username": "falsy_user",
+            "user_profiles": [falsy_profile]}))
+        self.assertFalse(prefs["privacy"]["save_audio"])
+        self.assertFalse(prefs["privacy"]["save_text"])
+        self.assertEqual(prefs["user"]["email"], "")
+        self.assertEqual(prefs["units"]["time"], 0)
 
     @patch("ovos_config.config.Configuration")
     def test_get_user_prefs_heals_null_in_message_context(self, config):
