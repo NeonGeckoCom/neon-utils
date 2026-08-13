@@ -29,7 +29,6 @@
 
 from abc import ABC
 from html.parser import HTMLParser
-from threading import Event
 
 
 from neon_utils.logger import LOG
@@ -130,6 +129,5 @@ def scrape_page_for_links(url: str) -> dict:
             if retry_count >= 7:  # last attempt
                 raise e
         retry_count += 1
-        Event().wait(1.0)  # wait a second before retrying
 
     return available_links
