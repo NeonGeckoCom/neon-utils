@@ -42,6 +42,10 @@ except ImportError:
     raise ImportError("requests or bs4 not available,"
                       " pip install neon-utils[network]")
 
+# Some hosts reject requests that don't identify as a browser
+_USER_AGENT = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 "
+               "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
 
 def strip_tags(html):  # TODO: Document this! DM
     class MLStripper(HTMLParser, ABC):
@@ -82,7 +86,8 @@ def scrape_page_for_links(url: str) -> dict:
         url = url if url.startswith("http") else f"https://{url}"
         LOG.info(f"Resolved {url}")
         try:
-            html = requests.get(url, timeout=2.0).text
+            html = requests.get(url, timeout=2.0,
+                                headers={"User-Agent": _USER_AGENT}).text
         except ConnectTimeout as e:
             raise e
         except Exception as e:
