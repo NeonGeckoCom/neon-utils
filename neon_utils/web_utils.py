@@ -133,12 +133,14 @@ def scrape_page_for_links(url: str) -> dict:
 
         LOG.debug(available_links)
 
-    try:
-        _get_links(url)
-    except ConnectTimeout as e:
-        retry_count += 1
-        if retry_count < 8:
+    while retry_count < 8:
+        try:
             _get_links(url)
-        else:
-            raise e
+            if available_links:
+                break
+        except ConnectTimeout as e:
+            if retry_count > 8:
+                raise e
+        retry_count += 1
+
     return available_links
