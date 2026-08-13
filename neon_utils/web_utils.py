@@ -104,17 +104,12 @@ def scrape_page_for_links(url: str) -> dict:
                     LOG.warning(e)
                     html = None
             url = request_url
+            LOG.info(f"Resolved {url}")
 
-        LOG.debug(url)
         soup = BeautifulSoup(html, 'lxml')
-        # LOG.debug(html)
-        # LOG.debug(soup)
 
         # Look through the page and find all anchor tags
         for i in soup.find_all("a", href=True):
-            # LOG.debug(f"DM: found link: {i.text.rstrip()}")
-            # LOG.debug(f"DM: found href: {i['href']}")
-
             if '://' not in i['href']:
                 # Assume this is a relative address
                 href = url + i['href'].lower()
@@ -140,14 +135,10 @@ def scrape_page_for_links(url: str) -> dict:
 
     try:
         _get_links(url)
-    except ConnectTimeout:
+    except ConnectTimeout as e:
         retry_count += 1
         if retry_count < 8:
             _get_links(url)
         else:
-            raise ConnectTimeout
-    except Exception as x:
-        LOG.error(x)
-        LOG.debug(available_links)
-        raise ReferenceError
+            raise e
     return available_links
