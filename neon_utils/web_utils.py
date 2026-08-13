@@ -29,6 +29,7 @@
 
 from abc import ABC
 from html.parser import HTMLParser
+from threading import Event
 
 
 from neon_utils.logger import LOG
@@ -78,14 +79,7 @@ def scrape_page_for_links(url: str) -> dict:
 
     def _get_links(url):
         LOG.debug(url)
-        try:
-            html = requests.get(url, timeout=2.0).text
-        except ConnectTimeout as e:
-            raise e
-        except Exception as e:
-            LOG.warning(e)
-            html = None
-        if not str(url).startswith("http") and not html:
+        if not str(url).startswith("http"):
             request_url = f"https://{url}"
             try:
                 html = requests.get(request_url, timeout=2.0).text
@@ -142,5 +136,6 @@ def scrape_page_for_links(url: str) -> dict:
             if retry_count >= 7:  # last attempt
                 raise e
         retry_count += 1
+        Event().wait(1.0)  # wait a second before retrying
 
     return available_links
