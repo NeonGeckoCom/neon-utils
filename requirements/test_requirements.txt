@@ -1,6 +1,7 @@
 pytest
 pytest-timeout
 pytest-cov
+pytest-rerunfailures
 mock
 ovos-plugin-manager~=0.1
 neon-lang-plugin-libretranslate

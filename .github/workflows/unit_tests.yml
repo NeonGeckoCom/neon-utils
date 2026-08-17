@@ -218,9 +218,15 @@ jobs:
           name: language-util-test-results-${{ matrix.python-version }}
           path: tests/language-util-test-results.xml
 
+      # HANA rate-limits `/auth/login` to 6 requests per minute per client IP.
+      # This file spends 4 of those, so parallel matrix jobs sharing a runner
+      # egress address can exhaust the bucket. Reruns are delayed past the 60s
+      # bucket replenish window and scoped to backend communication errors so
+      # that genuine assertion failures still fail the run.
       - name: Test Hana Utils
         run: |
-          pytest tests/hana_util_tests.py --doctest-modules --junitxml=tests/hana-util-test-results.xml
+          pytest tests/hana_util_tests.py --doctest-modules --junitxml=tests/hana-util-test-results.xml \
+            --reruns 3 --reruns-delay 60 --only-rerun ServerException
       - name: Upload hana utils test results
         uses: actions/upload-artifact@v4
         with:
