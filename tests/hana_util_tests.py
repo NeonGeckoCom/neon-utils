@@ -29,6 +29,7 @@
 import json
 import unittest
 
+from copy import deepcopy
 from os import remove
 from os.path import join, dirname, isfile
 from shutil import copy
@@ -56,14 +57,33 @@ class HanaUtilTests(unittest.TestCase):
         neon_utils.hana_utils._client_config = {}
         neon_utils.hana_utils._headers = {}
 
+    @classmethod
+    def _use_valid_credentials(cls):
+        """
+        Install known-valid credentials so a test can make an authenticated
+        request without spending an `/auth/login` call. HANA rate-limits logins
+        per client IP, so tests that need a valid token as a precondition
+        (rather than as the behavior under test) must reuse an existing one.
+        Authenticates only if no credentials have been captured yet, so
+        individual tests can still be run in isolation.
+        """
+        import neon_utils.hana_utils
+        if valid_config and valid_headers:
+            neon_utils.hana_utils._client_config = deepcopy(valid_config)
+            neon_utils.hana_utils._headers = deepcopy(valid_headers)
+        else:
+            neon_utils.hana_utils._init_client(cls.test_server)
+
     @patch("neon_utils.hana_utils._get_client_config_path")
     def test_request_backend(self, config_path):
         config_path.return_value = self.test_path
 
-        # Use a valid config and skip extra auth
+        # Use a valid config and skip extra auth. The default backend URL has
+        # to match the requested server first, else `request_backend` treats
+        # this as a remote change and discards the credentials installed here.
         import neon_utils.hana_utils
-        neon_utils.hana_utils._client_config = valid_config
-        neon_utils.hana_utils._headers = valid_headers
+        neon_utils.hana_utils.set_default_backend_url(self.test_server)
+        self._use_valid_credentials()
         from neon_utils.hana_utils import request_backend
         resp = request_backend("/neon/get_response",
                                {"lang_code": "en-us",
