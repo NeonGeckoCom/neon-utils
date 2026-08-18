@@ -43,9 +43,10 @@ _DEFAULT_BACKEND_URL = None
 _client_config = {}
 _headers = {}
 
-# Transient upstream/gateway errors that are worth retrying. Rate-limit
-# responses intentionally remain errors for backwards-compatible behavior.
-_TRANSIENT_HTTP_CODES = (502, 503, 504)
+# Transient server errors that are worth retrying. HANA returns these
+# intermittently on otherwise valid requests. Rate-limit responses
+# intentionally remain errors for backwards-compatible behavior.
+_TRANSIENT_HTTP_CODES = (500, 502, 503, 504)
 _DEFAULT_REQUEST_RETRIES = 1
 _DEFAULT_RETRY_BACKOFF = 1.0
 
@@ -81,7 +82,7 @@ class ServerException(Exception):
 def _post_with_retries(num_retries: int = _DEFAULT_REQUEST_RETRIES,
                        **request_kwargs):
     """
-    POST to HANA, retrying transient gateway errors with exponential backoff.
+    POST to HANA, retrying transient server errors with exponential backoff.
     Rate-limit responses are returned immediately for the caller to raise.
 
     @param num_retries: Number of retries after the initial request

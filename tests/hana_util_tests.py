@@ -291,8 +291,8 @@ class HanaUtilTests(unittest.TestCase):
 
     @patch("neon_utils.hana_utils.sleep")
     @patch("neon_utils.hana_utils.requests.post")
-    def test_post_with_retries_gateway_error(self, mock_post, mock_sleep):
-        """Gateway errors retry once by default and honor num_retries."""
+    def test_post_with_retries_server_error(self, mock_post, mock_sleep):
+        """Transient server errors retry once by default, honoring num_retries."""
         from neon_utils.hana_utils import _post_with_retries
 
         fail = unittest.mock.MagicMock()
@@ -311,6 +311,16 @@ class HanaUtilTests(unittest.TestCase):
         self.assertTrue(resp.ok)
         self.assertEqual(mock_post.call_count, 2)
         mock_sleep.assert_called_once_with(1.0)
+
+        # HANA intermittently returns 500 on otherwise valid requests
+        for code in (500, 503, 504):
+            mock_post.reset_mock()
+            mock_sleep.reset_mock()
+            fail.status_code = code
+            mock_post.side_effect = [fail, ok]
+            resp = _post_with_retries(url="https://example/test", json={})
+            self.assertTrue(resp.ok, f"no retry on {code}")
+            self.assertEqual(mock_post.call_count, 2, f"no retry on {code}")
 
         # Default behavior is capped at one retry.
         mock_post.reset_mock()
