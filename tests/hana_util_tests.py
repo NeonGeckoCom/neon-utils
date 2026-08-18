@@ -43,6 +43,9 @@ valid_headers = {}
 class HanaUtilTests(unittest.TestCase):
     test_server = "https://hana.neonaibeta.com"
     test_path = join(dirname(__file__), "hana_test.json")
+    # Tests run against a live server, concurrently across the CI matrix, so
+    # allow more retries on transient server errors than the library default.
+    request_retries = 3
 
     def tearDown(self) -> None:
         global valid_config
@@ -72,7 +75,8 @@ class HanaUtilTests(unittest.TestCase):
             neon_utils.hana_utils._client_config = deepcopy(valid_config)
             neon_utils.hana_utils._headers = deepcopy(valid_headers)
         else:
-            neon_utils.hana_utils._init_client(cls.test_server)
+            neon_utils.hana_utils._init_client(
+                cls.test_server, num_retries=cls.request_retries)
 
     @patch("neon_utils.hana_utils._get_client_config_path")
     def test_request_backend(self, config_path):
@@ -88,7 +92,8 @@ class HanaUtilTests(unittest.TestCase):
         resp = request_backend("/neon/get_response",
                                {"lang_code": "en-us",
                                 "utterance": "who are you",
-                                "user_profile": {}}, self.test_server)
+                                "user_profile": {}}, self.test_server,
+                               num_retries=self.request_retries)
         self.assertEqual(resp['lang_code'], "en-us")
         self.assertIsInstance(resp['answer'], str)
 
@@ -104,7 +109,8 @@ class HanaUtilTests(unittest.TestCase):
         resp = request_backend("/neon/get_response",
                                {"lang_code": "en-us",
                                 "utterance": "who are you",
-                                "user_profile": {}}, self.test_server)
+                                "user_profile": {}}, self.test_server,
+                               num_retries=self.request_retries)
         self.assertEqual(resp['lang_code'], "en-us")
         self.assertIsInstance(resp['answer'], str)
 
@@ -125,19 +131,21 @@ class HanaUtilTests(unittest.TestCase):
         import neon_utils.hana_utils
         from neon_utils.hana_utils import request_backend
         neon_utils.hana_utils.set_default_backend_url(self.test_server)
-        neon_utils.hana_utils._init_client(self.test_server)
+        neon_utils.hana_utils._init_client(
+            self.test_server, num_retries=self.request_retries)
         real_client_config = neon_utils.hana_utils._client_config
         neon_utils.hana_utils._client_config['expiration'] = time() + 29
         neon_utils.hana_utils._refresh_token = refresh_token
         resp = request_backend("/neon/get_response",
                                {"lang_code": "en-us",
                                 "utterance": "how are you",
-                                "user_profile": {}}, self.test_server)
+                                "user_profile": {}}, self.test_server,
+                               num_retries=self.request_retries)
         self.assertEqual(resp['lang_code'], "en-us")
         self.assertIsInstance(resp['answer'], str)
-        refresh_token.assert_called_once_with(self.test_server,
-                                              ssl_verify=True,
-                                              num_retries=1)
+        refresh_token.assert_called_once_with(
+            self.test_server, ssl_verify=True,
+            num_retries=self.request_retries)
 
         neon_utils.hana_utils._client_config = real_client_config
 
@@ -149,7 +157,7 @@ class HanaUtilTests(unittest.TestCase):
         from neon_utils.hana_utils import _get_token
 
         # Test valid default request
-        _get_token(self.test_server)
+        _get_token(self.test_server, num_retries=self.request_retries)
         from neon_utils.hana_utils import _client_config
         self.assertTrue(isfile(self.test_path))
         with open(self.test_path) as f:
@@ -161,7 +169,7 @@ class HanaUtilTests(unittest.TestCase):
                                         "password": "fake_password"}}
         from neon_utils.hana_utils import ServerException
         with self.assertRaises(ServerException):
-            _get_token(self.test_server)
+            _get_token(self.test_server, num_retries=self.request_retries)
 
     @patch("neon_utils.hana_utils._get_client_config_path")
     @patch("neon_utils.hana_utils._get_token")
@@ -180,7 +188,7 @@ class HanaUtilTests(unittest.TestCase):
         self.assertFalse(isfile(self.test_path))
 
         # Test valid request (auth + refresh)
-        _refresh_token(self.test_server)
+        _refresh_token(self.test_server, num_retries=self.request_retries)
         get_token.assert_called_once()
         from neon_utils.hana_utils import _client_config
         self.assertTrue(isfile(self.test_path))
@@ -190,7 +198,7 @@ class HanaUtilTests(unittest.TestCase):
 
         # Test refresh of existing token (no auth)
         sleep(1)  # sleep to ensure new credentials expire later than existing
-        _refresh_token(self.test_server)
+        _refresh_token(self.test_server, num_retries=self.request_retries)
         get_token.assert_called_once()
         with open(self.test_path) as f:
             new_credentials = json.load(f)
