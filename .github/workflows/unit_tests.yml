@@ -219,22 +219,13 @@ jobs:
           path: tests/language-util-test-results.xml
 
       # HANA rate-limits `/auth/login` to 6 requests per minute per client IP.
-      # This file spends 3 of those (two in `test_00_get_token`, one more when
-      # `test_request_backend` recovers from an expired token), so parallel
-      # matrix jobs sharing a runner egress address can exhaust the bucket.
       # Reruns are delayed past the 60s bucket replenish window and are scoped
-      # to rate-limit responses only. Both patterns identify an HTTP 429: by
-      # status code as it appears in the raised `ServerException` message, and
-      # by the "Too many ... requests" detail HANA returns alongside it. Any
-      # other failure, whether a genuine assertion error or a backend outage
-      # such as a 504 from HANA's gateway, fails the run immediately instead
-      # of burning three more 60s delays on an error that will never clear.
+      # to rate-limit responses only.
       - name: Test Hana Utils
         run: |
           pytest tests/hana_util_tests.py --doctest-modules --junitxml=tests/hana-util-test-results.xml \
             --reruns 3 --reruns-delay 60 \
-            --only-rerun 'ServerException.*\b429:' \
-            --only-rerun 'ServerException.*Too many \w+ requests'
+            --only-rerun 'ServerException.*\b429:'
       - name: Upload hana utils test results
         uses: actions/upload-artifact@v4
         with:
