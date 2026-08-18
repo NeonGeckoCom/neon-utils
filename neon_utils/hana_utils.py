@@ -34,7 +34,7 @@ import json
 from typing import Optional
 from os import makedirs, remove
 from os.path import join, isfile, isdir, dirname
-from time import time
+from time import time, sleep
 
 from ovos_utils.log import LOG
 from ovos_utils.xdg_utils import xdg_cache_home
@@ -42,6 +42,12 @@ from ovos_utils.xdg_utils import xdg_cache_home
 _DEFAULT_BACKEND_URL = None
 _client_config = {}
 _headers = {}
+
+# Transient upstream/gateway errors that are worth retrying. Rate-limit
+# responses intentionally remain errors for backwards-compatible behavior.
+_TRANSIENT_HTTP_CODES = (502, 503, 504)
+_DEFAULT_REQUEST_RETRIES = 1
+_DEFAULT_RETRY_BACKOFF = 1.0
 
 
 def set_default_backend_url(url: Optional[str] = None):
@@ -72,12 +78,35 @@ class ServerException(Exception):
     """Exception class representing a backend server communication error"""
 
 
-def _init_client(backend_address: str, ssl_verify: bool = True):
+def _post_with_retries(num_retries: int = _DEFAULT_REQUEST_RETRIES,
+                       **request_kwargs):
+    """
+    POST to HANA, retrying transient gateway errors with exponential backoff.
+    Rate-limit responses are returned immediately for the caller to raise.
+
+    @param num_retries: Number of retries after the initial request
+    """
+    attempt = 0
+    while True:
+        resp = requests.post(**request_kwargs)
+        if (resp.ok or resp.status_code not in _TRANSIENT_HTTP_CODES
+                or attempt >= num_retries):
+            return resp
+        attempt += 1
+        wait = _DEFAULT_RETRY_BACKOFF * (2 ** (attempt - 1))
+        LOG.warning(f"Transient HANA error {resp.status_code}; "
+                    f"retry {attempt}/{num_retries} in {wait}s")
+        sleep(wait)
+
+
+def _init_client(backend_address: str, ssl_verify: bool = True,
+                 num_retries: int = _DEFAULT_REQUEST_RETRIES):
     """
     Initialize request headers for making backend requests. If a local cache is
     available it will be used, otherwise an auth request will be made to the
     specified backend server
     @param backend_address: Hana server URL to connect to
+    @param num_retries: Number of retries for transient gateway errors
     """
     global _client_config
     global _headers
@@ -89,18 +118,21 @@ def _init_client(backend_address: str, ssl_verify: bool = True):
             with open(client_config_path) as f:
                 _client_config = json.load(f)
         else:
-            _get_token(backend_address, ssl_verify=ssl_verify)
+            _get_token(backend_address, ssl_verify=ssl_verify,
+                       num_retries=num_retries)
 
     if not _headers:
         _headers = {"Authorization": f"Bearer {_client_config['access_token']}"}
 
 
 def _get_token(backend_address: str,
-               ssl_verify: bool = True):
+               ssl_verify: bool = True,
+               num_retries: int = _DEFAULT_REQUEST_RETRIES):
     """
     Get new auth tokens from the specified server. This will cache the returned
     token, overwriting any previous data at the cache path.
     @param backend_address: Hana server URL to connect to
+    @param num_retries: Number of retries for transient gateway errors
     """
     from ovos_config.config import Configuration
     global _client_config
@@ -108,11 +140,12 @@ def _get_token(backend_address: str,
     username = hana_config.get("username") or "guest"
     password = hana_config.get("password") or "password"
     token_name = f"{gethostname()}_{datetime.utcnow().isoformat()}"
-    resp = requests.post(f"{backend_address}/auth/login",
-                         json={"username": username,
-                               "password": password,
-                               "token_name": token_name},
-                         verify=ssl_verify)
+    resp = _post_with_retries(url=f"{backend_address}/auth/login",
+                              json={"username": username,
+                                    "password": password,
+                                    "token_name": token_name},
+                              verify=ssl_verify,
+                              num_retries=num_retries)
     if not resp.ok:
         raise ServerException(f"Error logging into {backend_address}. "
                               f"{resp.status_code}: {resp.text}")
@@ -124,19 +157,22 @@ def _get_token(backend_address: str,
         json.dump(_client_config, f, indent=2)
 
 
-def _refresh_token(backend_address: str, ssl_verify: bool = True):
+def _refresh_token(backend_address: str, ssl_verify: bool = True,
+                   num_retries: int = _DEFAULT_REQUEST_RETRIES):
     """
     Get new tokens from the specified server using an existing refresh token
     (if it exists). This will update the cached tokens and associated metadata.
     @param backend_address: Hana server URL to connect to
+    @param num_retries: Number of retries for transient gateway errors
     """
     global _client_config
-    _init_client(backend_address)
-    update = requests.post(f"{backend_address}/auth/refresh", json={
+    _init_client(backend_address, ssl_verify=ssl_verify,
+                 num_retries=num_retries)
+    update = _post_with_retries(url=f"{backend_address}/auth/refresh", json={
         "access_token": _client_config.get("access_token"),
         "refresh_token": _client_config.get("refresh_token"),
         "client_id": _client_config.get("client_id")},
-        verify=ssl_verify)
+        verify=ssl_verify, num_retries=num_retries)
     if not update.ok:
         raise ServerException(f"Error updating token from {backend_address}. "
                               f"{update.status_code}: {update.text}")
@@ -153,13 +189,15 @@ def _refresh_token(backend_address: str, ssl_verify: bool = True):
 
 def request_backend(endpoint: str, request_data: dict,
                     server_url: str = _DEFAULT_BACKEND_URL,
-                    ssl_verify: bool = True) -> dict:
+                    ssl_verify: bool = True,
+                    num_retries: int = _DEFAULT_REQUEST_RETRIES) -> dict:
     """
     Make a request to a Hana backend server and return the json response
     @param endpoint: server endpoint to query
     @param request_data: dict data to send in request body
     @param server_url: Base URL of Hana server to query
     @param ssl_verify: If False, disables SSL verification
+    @param num_retries: Number of retries for transient gateway errors
     @returns: dict response
     """
     global _client_config
@@ -171,20 +209,20 @@ def request_backend(endpoint: str, request_data: dict,
         LOG.info(f"Using new remote: {server_url}")
         _client_config = {}
         _headers = {}
-    _init_client(server_url, ssl_verify=ssl_verify)
+    _init_client(server_url, ssl_verify=ssl_verify,
+                 num_retries=num_retries)
     if _client_config.get("expiration", 0) - time() < 30:
         try:
-            _refresh_token(server_url, ssl_verify=ssl_verify)
+            _refresh_token(server_url, ssl_verify=ssl_verify,
+                           num_retries=num_retries)
         except ServerException as e:
             LOG.error(e)
-            _get_token(server_url, ssl_verify=ssl_verify)
+            _get_token(server_url, ssl_verify=ssl_verify,
+                       num_retries=num_retries)
     request_kwargs = {"url": f"{server_url}/{endpoint.lstrip('/')}",
                       "json": request_data, "headers": _headers,
                       "verify": ssl_verify}
-    resp = requests.post(**request_kwargs)
-    if resp.status_code == 502:
-        # This is raised occasionally on valid requests. Need to resolve in HANA
-        resp = requests.post(**request_kwargs)
+    resp = _post_with_retries(num_retries=num_retries, **request_kwargs)
     if resp.ok:
         return resp.json()
     else:
@@ -194,8 +232,10 @@ def request_backend(endpoint: str, request_data: dict,
             if error == "Invalid or expired token.":
                 LOG.warning(f"Token is expired. time={time()}|"
                             f"expiration={_client_config.get('expiration')}")
-                _refresh_token(server_url, ssl_verify=ssl_verify)
-                resp = requests.post(**request_kwargs)
+                _refresh_token(server_url, ssl_verify=ssl_verify,
+                               num_retries=num_retries)
+                resp = _post_with_retries(num_retries=num_retries,
+                                          **request_kwargs)
                 if resp.ok:
                     return resp.json()
         except Exception as e:
