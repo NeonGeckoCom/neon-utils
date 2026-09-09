@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.2a5](https://github.com/NeonGeckoCom/neon-utils/tree/1.14.2a5) (2026-09-09)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.14.2a4...1.14.2a5)
+
+**Merged pull requests:**
+
+- feat: add shared node.invoke\_native helper [\#568](https://github.com/NeonGeckoCom/neon-utils/pull/568) ([mikejgray](https://github.com/mikejgray))
+
 ## [1.14.2a4](https://github.com/NeonGeckoCom/neon-utils/tree/1.14.2a4) (2026-08-18)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.14.2a3...1.14.2a4)
