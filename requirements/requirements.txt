@@ -9,5 +9,6 @@ ovos-utils~=0.8,>=0.8.5
 geopy~=2.1
 ovos-config~=0.1
 ovos-workshop~=0.0,>=0.0.15
+neon-data-models~=0.0,>=0.0.2
 # TODO: Refactor to remove `pkg_resources` imports
 setuptools<82.0.0
