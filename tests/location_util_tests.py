@@ -79,8 +79,8 @@ class LocationUtilTests(unittest.TestCase):
         self._assert_in_box(*coords, _SEATTLE_METRO_BOX)
         sleep(1)  # maps.co rate-limit
 
-        # No city specified
-        coords = get_coordinates({"state": "Washington",
+        # No city specified. "Washington State" disambiguates from DC.
+        coords = get_coordinates({"state": "Washington State",
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
