@@ -37,9 +37,12 @@ from multiprocessing import Event
 from os.path import join
 from threading import Thread
 from time import sleep, time
+from typing import Optional
 
 from ovos_bus_client import Message
 from ovos_utils.messagebus import FakeBus
+from ovos_workshop.decorators import skill_api_method
+from pydantic import BaseModel, Field, RootModel
 from mock import Mock
 
 from neon_utils.skills import NeonSkill, CommonMessageSkill, CommonPlaySkill, CommonQuerySkill, NeonFallbackSkill
@@ -1306,6 +1309,66 @@ class SkillGuiTests(unittest.TestCase):
                                 "file://remote_url/skills/skill_id/ui/test_page2"])
 
         self.skill.find_resource = real_method
+
+
+class LocationRequest(BaseModel):
+    location: Optional[str] = Field(default=None,
+                                    description="Location to look up")
+
+
+class YearResponse(RootModel):
+    root: str = Field(description="Year (YYYY)")
+
+
+class TypedApiSkill(NeonSkill):
+    @skill_api_method
+    def get_year(self, request: LocationRequest) -> YearResponse:
+        """Get the year for a location"""
+        return f"{type(request).__name__}:{request.location}"
+
+
+class GenericApiSkill(NeonSkill):
+    @skill_api_method
+    def get_optional(self, value: Optional[str] = None) -> Optional[str]:
+        """Echo an optional value"""
+        return value
+
+
+class NeonSkillPublicApiTests(unittest.TestCase):
+    @staticmethod
+    def _get_skill(skill_class, skill_id):
+        bus = FakeBus()
+        skill = skill_class(skill_id=skill_id, bus=bus)
+        return skill, bus
+
+    def test_typed_api_method(self):
+        skill, bus = self._get_skill(TypedApiSkill, "typed.test")
+        api = bus.wait_for_response(Message("typed.test.public_api")).data
+        method = api["get_year"]
+        self.assertEqual(method["type"], "typed.test.get_year")
+        self.assertEqual(method["request_schema"],
+                         LocationRequest.model_json_schema())
+        self.assertEqual(method["response_schema"],
+                         YearResponse.model_json_schema())
+
+        # JSON kwargs from the bus are validated into the request model
+        response = bus.wait_for_response(
+            Message("typed.test.get_year",
+                    {"args": [], "kwargs": {"location": "Tokyo"}})).data
+        self.assertEqual(response, {"result": "LocationRequest:Tokyo",
+                                    "error": None})
+
+    def test_generic_annotations(self):
+        skill, bus = self._get_skill(GenericApiSkill, "generic.test")
+        api = bus.wait_for_response(Message("generic.test.public_api")).data
+        method = api["get_optional"]
+        self.assertIsNone(method["request_schema"])
+        self.assertIsNone(method["response_schema"])
+
+        response = bus.wait_for_response(
+            Message("generic.test.get_optional",
+                    {"args": [], "kwargs": {"value": "test"}})).data
+        self.assertEqual(response, {"result": "test", "error": None})
 
 
 if __name__ == '__main__':
