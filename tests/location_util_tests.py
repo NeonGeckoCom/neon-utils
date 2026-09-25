@@ -33,8 +33,41 @@ from time import sleep
 
 from dateutil.tz import gettz, tzlocal
 
+# Wide enough that Nominatim/HANA centroid drift does not fail CI, tight
+# enough that a different metro or state still fails. south, north, west, east.
+_SEATTLE_METRO_BOX = (47.0, 48.3, -123.2, -121.4)
+_WASHINGTON_BOX = (45.5, 49.1, -125.0, -116.5)
+
+_SEATTLE_NAMES = {"seattle"}
+_KING_COUNTY_NAMES = {"king county", "king"}
+_WASHINGTON_NAMES = {"washington", "wa"}
+_US_COUNTRY_EN = {"united states", "united states of america", "usa"}
+_US_COUNTRY_ES = {"estados unidos de américa", "estados unidos",
+                  "ee. uu.", "ee.uu.", "eeuu"}
+
+
+def _normalize_name(value):
+    return (value or "").strip().lower()
+
+
+def _address_locality(address: dict):
+    return (address.get('city') or address.get('town') or
+            address.get('village') or address.get('hamlet'))
+
 
 class LocationUtilTests(unittest.TestCase):
+    def _assert_in_box(self, lat, lon, box):
+        south, north, west, east = box
+        lat = float(lat)
+        lon = float(lon)
+        self.assertGreaterEqual(lat, south)
+        self.assertLessEqual(lat, north)
+        self.assertGreaterEqual(lon, west)
+        self.assertLessEqual(lon, east)
+
+    def _assert_name_in(self, value, names):
+        self.assertIn(_normalize_name(value), names)
+
     def test_get_coordinates_complete(self):
         from neon_utils.location_utils import get_coordinates
 
@@ -43,6 +76,7 @@ class LocationUtilTests(unittest.TestCase):
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
+        self._assert_in_box(*coords, _SEATTLE_METRO_BOX)
         sleep(1)  # maps.co rate-limit
 
         # No city specified
@@ -50,6 +84,7 @@ class LocationUtilTests(unittest.TestCase):
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
+        self._assert_in_box(*coords, _WASHINGTON_BOX)
         sleep(1)  # maps.co rate-limit
 
         # No state specified
@@ -57,12 +92,14 @@ class LocationUtilTests(unittest.TestCase):
                                   "country": "United States"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
+        self._assert_in_box(*coords, _SEATTLE_METRO_BOX)
         sleep(1)  # maps.co rate-limit
 
         # No country specified
         coords = get_coordinates({"state": "Washington", "city": "Renton"})
         self.assertIsInstance(coords[0], float)
         self.assertIsInstance(coords[1], float)
+        self._assert_in_box(*coords, _SEATTLE_METRO_BOX)
         sleep(1)  # maps.co rate-limit
 
     def test_get_location_from_coords(self):
@@ -71,8 +108,11 @@ class LocationUtilTests(unittest.TestCase):
         lng = -122.3300624
         location = get_location(lat, lng)
         self.assertEqual(len(location), 4)
-        self.assertEqual(location, ("Seattle", "King County", "Washington",
-                                    "United States"))
+        city, county, state, country = location
+        self._assert_name_in(city, _SEATTLE_NAMES)
+        self._assert_name_in(county, _KING_COUNTY_NAMES)
+        self._assert_name_in(state, _WASHINGTON_NAMES)
+        self._assert_name_in(country, _US_COUNTRY_EN)
 
         # Test 'hamlet' location
         location = get_location(34.46433387046654, -81.99487538579375)
@@ -118,33 +158,36 @@ class LocationUtilTests(unittest.TestCase):
         self.assertIsInstance(location_en['lat'], str)
         self.assertIsInstance(location_en['lon'], str)
         self.assertIsInstance(location_en['address'], dict)
-        self.assertEqual(location_en['address']['city'], "Seattle")
-        self.assertEqual(location_en['address']['state'], "Washington")
-        self.assertEqual(location_en['address']['country'], "United States")
+        self._assert_in_box(location_en['lat'], location_en['lon'],
+                            _SEATTLE_METRO_BOX)
+        self._assert_name_in(_address_locality(location_en['address']),
+                             _SEATTLE_NAMES)
+        self._assert_name_in(location_en['address']['state'],
+                             _WASHINGTON_NAMES)
+        self._assert_name_in(location_en['address']['country'],
+                             _US_COUNTRY_EN)
         self.assertEqual(location_en['address']['country_code'], "us")
         sleep(1)  # maps.co rate-limit
 
         location_es = get_full_location("Seattle, Washington", "es")
-        self.assertAlmostEqual(float(location_es['lat']),
-                               float(location_en['lat']), places=3)
-        self.assertAlmostEqual(float(location_es['lon']),
-                               float(location_en['lon']), places=3)
-        self.assertEqual(location_es['address']['country'],
-                         "Estados Unidos de América")
+        self._assert_in_box(location_es['lat'], location_es['lon'],
+                            _SEATTLE_METRO_BOX)
+        self._assert_name_in(location_es['address']['country'],
+                             _US_COUNTRY_ES)
         self.assertEqual(location_en['address']['country_code'], "us")
         sleep(1)  # maps.co rate-limit
 
         location_from_coords = get_full_location((location_en['lat'],
                                                   location_en['lon']))
-        self.assertAlmostEqual(float(location_from_coords['lat']),
-                               float(location_en['lat']), 3)
-        self.assertAlmostEqual(float(location_from_coords['lon']),
-                               float(location_en['lon']), 3)
-        self.assertEqual(location_from_coords['address']['city'], "Seattle")
-        self.assertEqual(location_from_coords['address']['state'],
-                         "Washington")
-        self.assertEqual(location_from_coords['address']['country'],
-                         "United States")
+        self._assert_in_box(location_from_coords['lat'],
+                            location_from_coords['lon'],
+                            _SEATTLE_METRO_BOX)
+        self._assert_name_in(_address_locality(location_from_coords['address']),
+                             _SEATTLE_NAMES)
+        self._assert_name_in(location_from_coords['address']['state'],
+                             _WASHINGTON_NAMES)
+        self._assert_name_in(location_from_coords['address']['country'],
+                             _US_COUNTRY_EN)
         self.assertEqual(location_from_coords['address']['country_code'], "us")
 
     def test_set_nominatim_domain(self):
