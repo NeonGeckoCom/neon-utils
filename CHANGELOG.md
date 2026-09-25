@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.14.2a7](https://github.com/NeonGeckoCom/neon-utils/tree/1.14.2a7) (2026-09-25)
+
+[Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.14.2a6...1.14.2a7)
+
+**Merged pull requests:**
+
+- Handle typing generics in skill API method annotations [\#571](https://github.com/NeonGeckoCom/neon-utils/pull/571) ([mikejgray](https://github.com/mikejgray))
+
 ## [1.14.2a6](https://github.com/NeonGeckoCom/neon-utils/tree/1.14.2a6) (2026-09-25)
 
 [Full Changelog](https://github.com/NeonGeckoCom/neon-utils/compare/1.14.2a5...1.14.2a6)
