@@ -278,17 +278,24 @@ class NeonSkill(OVOSSkill):
                 request_class = None
                 try:
                     from pydantic import BaseModel
+
+                    def is_model(annotation) -> bool:
+                        # Typing generics like `Optional[str]` are not classes
+                        # and make `issubclass` raise TypeError
+                        return isinstance(annotation, type) and \
+                            issubclass(annotation, BaseModel)
+
                     parameters = signature.parameters
 
                     for arg_name, param in parameters.items():
                         if arg_name == 'self':
                             continue
-                        if issubclass(param.annotation, BaseModel):
+                        if is_model(param.annotation):
                             # Get the JSON schema for the BaseModel
                             schema = param.annotation.model_json_schema()
                             request_class = param.annotation
                             break
-                    if signature.return_annotation and issubclass(signature.return_annotation, BaseModel):
+                    if is_model(signature.return_annotation):
                         # Get the JSON schema for the return type
                         return_schema = signature.return_annotation.model_json_schema()
                 except ImportError:
